@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Artwork Islands</title>
+<style>
+  :root {
+    --grid-minor: #eceaf2;
+    --grid-major: #ddd9e8;
+    --bg: #ffffff;
+    --ink: #1c1b22;
+    --muted: #8a8794;
+    --accent: #5b4ad6;
+    --panel-bg: rgba(255,255,255,0.9);
+    --panel-border: #e7e4ee;
+    --cell: 80px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    height:100%; overflow:hidden; background:var(--bg); color:var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+  #viewport {
+    position:fixed; inset:0; touch-action:none; user-select:none; cursor:grab;
+    background-color:var(--bg);
+    background-image:
+      linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px);
+  }
+  #viewport.panning { cursor:grabbing; }
+
+  #world { position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform; }
+  #links { position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
+
+  .tile {
+    position:absolute; border-radius:10px; overflow:hidden; pointer-events:none;
+    box-shadow: 0 0 0 2px var(--ring, transparent), 0 4px 14px rgba(28,27,34,0.10);
+    background:#fff; transition: box-shadow .25s ease, opacity .2s ease;
+  }
+  .tile svg { display:block; width:100%; height:100%; }
+  .tile.dim { opacity:0.45; }
+  @keyframes pop { 0%{ transform:scale(.55); opacity:0; } 60%{ transform:scale(1.06); opacity:1; } 100%{ transform:scale(1); opacity:1; } }
+  .tile.pop { animation: pop .42s cubic-bezier(.2,.8,.3,1.2); }
+
+  #ghost {
+    position:absolute; border-radius:10px; pointer-events:none; display:none;
+    border:2px dashed var(--accent); background:rgba(91,74,214,0.06);
+    align-items:center; justify-content:center;
+  }
+  #ghost .plus { color:var(--accent); font-size:30px; font-weight:300; line-height:1; }
+  #ghost.blocked { border-color:#d9d6e0; background:rgba(0,0,0,0.015); }
+  #ghost.blocked .plus { display:none; }
+
+  /* chrome */
+  .panel {
+    position:fixed; background:var(--panel-bg); backdrop-filter:blur(10px);
+    border:1px solid var(--panel-border); border-radius:14px;
+  }
+  #identity { left:16px; top:16px; padding:9px 13px; display:flex; align-items:center; gap:9px; font-size:13px; }
+  #identity .dot { width:9px; height:9px; border-radius:50%; background:var(--accent); }
+  #identity b { font-weight:600; }
+
+  #stats { right:16px; top:16px; padding:9px 14px; font-size:12px; color:var(--muted); display:flex; gap:14px; }
+  #stats b { color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+
+  #hud { left:16px; bottom:16px; padding:6px; display:flex; align-items:center; gap:4px; }
+  #hud button {
+    appearance:none; border:none; background:transparent; cursor:pointer; color:var(--ink);
+    width:32px; height:32px; border-radius:9px; font-size:17px; display:grid; place-items:center; font-family:inherit;
+  }
+  #hud button:hover { background:#f1f0f5; }
+  #hud button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  #zoomLabel { min-width:50px; text-align:center; color:var(--muted); font-size:12px; }
+  #hud #reset { width:auto; padding:0 12px; font-size:11px; letter-spacing:.03em; color:var(--muted); }
+
+  #island-card {
+    right:16px; bottom:16px; padding:14px 16px; width:240px; display:none; font-size:13px;
+  }
+  #island-card h4 { font-size:12px; color:var(--muted); font-weight:500; letter-spacing:.04em; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:7px; }
+  #island-card h4 .swatch { width:11px; height:11px; border-radius:3px; }
+  #island-card .row { display:flex; justify-content:space-between; padding:3px 0; }
+  #island-card .row span:first-child { color:var(--muted); }
+  #island-card .row b { font-variant-numeric:tabular-nums; }
+  #island-card .who { margin-top:9px; padding-top:9px; border-top:1px solid var(--panel-border); color:var(--muted); font-size:12px; line-height:1.5; }
+  #island-card .who b { color:var(--ink); font-weight:600; }
+
+  #hint {
+    left:50%; top:16px; transform:translateX(-50%); padding:8px 16px; font-size:12px; color:var(--muted);
+    border-radius:999px; text-align:center; transition:opacity .5s ease;
+  }
+  #hint b { color:var(--ink); font-weight:600; }
+  #share-note { display:block; font-size:10.5px; margin-top:2px; color:var(--accent); }
+
+  #toast {
+    position:fixed; left:50%; bottom:74px; transform:translateX(-50%) translateY(12px);
+    background:var(--ink); color:#fff; font-size:12.5px; padding:9px 15px; border-radius:10px;
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; z-index:50;
+  }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* place modal */
+  #place-modal {
+    position:fixed; inset:0; background:rgba(28,27,34,0.45); backdrop-filter:blur(5px);
+    display:none; align-items:center; justify-content:center; z-index:200;
+  }
+  #place-modal.open { display:flex; }
+  @keyframes modal-in { from { opacity:0; transform:scale(.94) translateY(10px); } to { opacity:1; transform:none; } }
+  #place-modal.open #place-dialog { animation: modal-in .2s cubic-bezier(.2,.8,.3,1.1); }
+  #place-dialog { width:320px; padding:20px; display:flex; flex-direction:column; gap:13px; }
+  #place-dialog h3 { font-size:14px; font-weight:700; letter-spacing:.01em; }
+  #img-upload-area {
+    position:relative; height:148px; border:2px dashed var(--panel-border); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  #img-upload-area:hover, #img-upload-area.drag { border-color:var(--accent); background:rgba(91,74,214,0.04); }
+  #img-upload-area.has-img { border-style:solid; border-color:var(--panel-border); }
+  #img-placeholder { color:var(--muted); font-size:12.5px; text-align:center; pointer-events:none; line-height:1.6; }
+  #img-placeholder .up-icon { font-size:26px; display:block; margin-bottom:4px; }
+  #img-preview { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; pointer-events:none; }
+  #img-remove {
+    position:absolute; top:6px; right:6px; background:rgba(28,27,34,0.65); color:#fff;
+    border:none; border-radius:6px; width:22px; height:22px; font-size:13px; cursor:pointer;
+    display:none; align-items:center; justify-content:center; line-height:1; z-index:2;
+  }
+  #img-remove:hover { background:rgba(28,27,34,0.85); }
+  #img-upload-area.has-img #img-remove { display:flex; }
+  #img-input { position:absolute; inset:0; opacity:0; cursor:pointer; z-index:1; }
+  #img-upload-area.has-img #img-input { pointer-events:none; }
+  #title-input {
+    width:100%; padding:9px 11px; border:1px solid var(--panel-border); border-radius:9px;
+    font-size:13px; font-family:inherit; color:var(--ink); background:#fff; outline:none;
+    transition: border-color .15s ease;
+  }
+  #title-input:focus { border-color:var(--accent); }
+  .modal-actions { display:flex; gap:8px; justify-content:flex-end; padding-top:2px; }
+  .modal-actions button {
+    padding:8px 16px; border-radius:9px; font-size:13px; font-family:inherit; cursor:pointer; border:none; font-weight:500;
+  }
+  #modal-cancel { background:#f1f0f5; color:var(--ink); }
+  #modal-cancel:hover { background:#e7e4ee; }
+  #modal-add { background:var(--accent); color:#fff; font-weight:600; }
+  #modal-add:hover { background:#4a3bc0; }
+
+  .tile-label {
+    position:absolute; bottom:0; left:0; right:0;
+    background:linear-gradient(transparent, rgba(0,0,0,0.58));
+    color:#fff; font-size:8px; font-weight:600; letter-spacing:.02em;
+    padding:10px 4px 3px; text-align:center;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    pointer-events:none;
+  }
+
+  /* block detail modal */
+  #block-modal {
+    position:fixed; inset:0; background:rgba(28,27,34,0.5); backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center; z-index:200;
+  }
+  #block-modal.open { display:flex; }
+  #block-modal.open #block-dialog { animation: modal-in .22s cubic-bezier(.2,.8,.3,1.1); }
+  #block-dialog {
+    width:340px; border-radius:16px; overflow:hidden; display:flex; flex-direction:column;
+    position:relative; background:var(--panel-bg); backdrop-filter:blur(10px);
+    border:1px solid var(--panel-border);
+    box-shadow:0 20px 60px rgba(28,27,34,0.25);
+  }
+  #block-art {
+    width:100%; overflow:hidden; background:#f1f0f5; flex-shrink:0;
+  }
+  #block-art.art-svg { aspect-ratio:1; }
+  #block-art img { width:100%; height:auto; display:block; max-height:65vh; }
+  #block-art svg { width:100%; height:100%; display:block; }
+  #block-info { padding:16px 18px 20px; display:flex; flex-direction:column; gap:6px; }
+  #block-title { font-size:17px; font-weight:700; line-height:1.2; }
+  #block-title.untitled { color:var(--muted); font-style:italic; font-weight:400; }
+  #block-meta { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  #block-meta b { color:var(--ink); font-weight:600; }
+  #block-meta .sep { opacity:.35; }
+  #block-island { display:flex; align-items:center; gap:4px; }
+  #block-island .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  #block-close {
+    position:absolute; top:10px; right:10px; z-index:1;
+    background:rgba(28,27,34,0.55); color:#fff; border:none; border-radius:50%;
+    width:28px; height:28px; font-size:13px; cursor:pointer; display:grid; place-items:center;
+    transition:background .15s ease;
+  }
+  #block-close:hover { background:rgba(28,27,34,0.82); }
+</style>
+</head>
+<body>
+  <div id="viewport">
+    <div id="world">
+      <svg id="links"></svg>
+      <div id="ghost"><span class="plus">+</span></div>
+    </div>
+  </div>
+
+  <div id="hint" class="panel">
+    <span><b>Click any empty cell</b> to place the first artwork · then build outward from neighbors</span>
+    <span id="share-note">Shared canvas — everything you place is visible to everyone here</span>
+  </div>
+
+  <div id="identity" class="panel"><span class="dot"></span>You are <b id="myName">…</b></div>
+  <div id="stats" class="panel"><span><b id="nArt">0</b> artworks</span><span><b id="nIsl">0</b> islands</span></div>
+
+  <div id="hud" class="panel">
+    <button id="zoomOut" aria-label="Zoom out">−</button>
+    <span id="zoomLabel" class="mono">100%</span>
+    <button id="zoomIn" aria-label="Zoom in">+</button>
+    <button id="reset">RESET</button>
+  </div>
+
+  <div id="island-card" class="panel">
+    <h4><span class="swatch"></span><span id="ic-id">Island</span></h4>
+    <div class="row"><span>Artworks</span><b id="ic-size">0</b></div>
+    <div class="row"><span>Inspired-by links</span><b id="ic-links">0</b></div>
+    <div class="who" id="ic-who"></div>
+  </div>
+
+  <div id="toast"></div>
+
+  <div id="block-modal">
+    <div id="block-dialog">
+      <div id="block-art"></div>
+      <div id="block-info">
+        <div id="block-title"></div>
+        <div id="block-meta">
+          <span id="block-author"></span>
+          <span class="sep">·</span>
+          <span id="block-date"></span>
+          <span class="sep">·</span>
+          <span id="block-island"><span class="dot"></span><span id="block-island-label"></span></span>
+        </div>
+      </div>
+      <button id="block-close" aria-label="Close">✕</button>
+    </div>
+  </div>
+
+  <div id="place-modal">
+    <div id="place-dialog" class="panel">
+      <h3>Add Artwork</h3>
+      <div id="img-upload-area">
+        <div id="img-placeholder"><span class="up-icon">🖼</span>Click or drag an image here</div>
+        <img id="img-preview" alt="">
+        <button id="img-remove" aria-label="Remove image">✕</button>
+        <input type="file" id="img-input" accept="image/*">
+      </div>
+      <input type="text" id="title-input" placeholder="Title (optional)" maxlength="40">
+      <div class="modal-actions">
+        <button id="modal-cancel">Cancel</button>
+        <button id="modal-add">Add</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+  const CELL = 80, MARGIN = 6;
+  const viewport = document.getElementById('viewport');
+  const world    = document.getElementById('world');
+  const linksSvg = document.getElementById('links');
+  const ghost    = document.getElementById('ghost');
+
+  // ---------- view state ----------
+  let scale = 1, panX = 0, panY = 0;
+  const MIN = 0.15, MAX = 4;
+
+  function applyTransform() {
+    world.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    const major = CELL * scale;
+    viewport.style.backgroundSize = `${major}px ${major}px, ${major}px ${major}px`;
+    viewport.style.backgroundPosition = `${panX}px ${panY}px, ${panX}px ${panY}px`;
+    document.getElementById('zoomLabel').textContent = Math.round(scale*100) + '%';
+  }
+  const toWorld = (sx, sy) => ({ x:(sx-panX)/scale, y:(sy-panY)/scale });
+  const cellAt  = (sx, sy) => { const w = toWorld(sx,sy); return { cx:Math.floor(w.x/CELL), cy:Math.floor(w.y/CELL) }; };
+  function zoomAt(sx, sy, f) {
+    const next = Math.min(MAX, Math.max(MIN, scale*f)); if (next===scale) return;
+    const w = toWorld(sx,sy); scale = next; panX = sx - w.x*scale; panY = sy - w.y*scale;
+    applyTransform(); render();
+  }
+
+  // ---------- pure model helpers ----------
+  const keyOf = (x,y) => x+','+y;
+  const neighbors = (x,y) => [[x+1,y],[x-1,y],[x,y+1],[x,y-1]];
+  function isPlaceable(x,y) {
+    if (board.has(keyOf(x,y))) return false;
+    if (board.size === 0) return true;
+    return neighbors(x,y).some(([nx,ny]) => board.has(keyOf(nx,ny)));
+  }
+  function computeIslands() {
+    const parent = new Map();
+    for (const k of board.keys()) parent.set(k,k);
+    const find = (k) => { while (parent.get(k)!==k){ parent.set(k, parent.get(parent.get(k))); k = parent.get(k); } return k; };
+    const union = (a,b) => { const ra=find(a), rb=find(b); if (ra===rb) return; if (ra<rb) parent.set(rb,ra); else parent.set(ra,rb); };
+    for (const k of board.keys()) {
+      const [x,y] = k.split(',').map(Number);
+      for (const [nx,ny] of neighbors(x,y)) { const nk = keyOf(nx,ny); if (board.has(nk)) union(k,nk); }
+    }
+    const islandOf = new Map(), members = new Map();
+    for (const k of board.keys()) {
+      const r = find(k); islandOf.set(k,r);
+      if (!members.has(r)) members.set(r,[]); members.get(r).push(k);
+    }
+    return { islandOf, members };
+  }
+  function hueFor(id){ let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return h%360; }
+  const ringColor = (id) => `hsl(${hueFor(id)},68%,58%)`;
+  const linkColor = (id) => `hsl(${hueFor(id)},60%,52%)`;
+
+  // ---------- generative art ----------
+
+
+  // ---------- storage layer (swap this for Convex / Supabase) ----------
+  const BOARD_KEY = 'island-board:v1';
+  const hasStore = !!(window.storage && window.storage.get);
+  let memFallback = { cells:{} };
+
+  async function fetchBoard(){
+    if (!hasStore) return memFallback;
+    try { const r = await window.storage.get(BOARD_KEY, true); return r && r.value ? JSON.parse(r.value) : { cells:{} }; }
+    catch(e){ return { cells:{} }; }
+  }
+  // Read-merge-write so simultaneous placements don't clobber each other.
+  // (A real backend enforces uniqueness on (x,y) with a DB constraint instead.)
+  async function placeCell(rec){
+    if (!hasStore){ const k=keyOf(rec.x,rec.y); if (memFallback.cells[k]) return {ok:false,taken:true,data:memFallback}; memFallback.cells[k]=rec; return {ok:true,data:memFallback}; }
+    let data; try { const r = await window.storage.get(BOARD_KEY, true); data = r && r.value ? JSON.parse(r.value) : { cells:{} }; } catch(e){ data = { cells:{} }; }
+    const k = keyOf(rec.x, rec.y);
+    if (data.cells[k]) return { ok:false, taken:true, data };
+    data.cells[k] = rec;
+    try { await window.storage.set(BOARD_KEY, JSON.stringify(data), true); } catch(e){ return { ok:false, error:true, data }; }
+    return { ok:true, data };
+  }
+  async function getIdentity(){
+    const make = () => ({ id: Math.random().toString(36).slice(2,9), name: randomName() });
+    if (!hasStore) return make();
+    try { const r = await window.storage.get('identity', false); if (r && r.value) return JSON.parse(r.value); } catch(e){}
+    const idn = make();
+    try { await window.storage.set('identity', JSON.stringify(idn), false); } catch(e){}
+    return idn;
+  }
+  const ADJ = ['Cobalt','Amber','Saffron','Violet','Coral','Indigo','Jade','Crimson','Slate','Hazel','Marigold','Teal'];
+  const NOUN = ['Finch','Otter','Heron','Lynx','Moth','Wren','Koi','Fox','Sparrow','Ibis','Marten','Tern'];
+  const randomName = () => ADJ[Math.floor(Math.random()*ADJ.length)] + ' ' + NOUN[Math.floor(Math.random()*NOUN.length)];
+
+  // ---------- runtime state ----------
+  const board = new Map();          // key -> record
+  const tiles = new Map();          // key -> element
+  let islandInfo = { islandOf:new Map(), members:new Map() };
+  let selectedIsland = null;
+  let me = { id:'', name:'' };
+
+  function recordsToBoard(data, animateNew){
+    const incoming = data && data.cells ? data.cells : {};
+    const fresh = [];
+    for (const k in incoming){ if (!board.has(k)){ board.set(k, incoming[k]); if (animateNew) fresh.push(k); } }
+    return fresh;
+  }
+
+  // ---------- rendering ----------
+  function visibleRange(){
+    const pad = 2;
+    const x0 = Math.floor((-panX/scale)/CELL) - pad;
+    const y0 = Math.floor((-panY/scale)/CELL) - pad;
+    const x1 = Math.ceil(((innerWidth - panX)/scale)/CELL) + pad;
+    const y1 = Math.ceil(((innerHeight - panY)/scale)/CELL) + pad;
+    return { x0, y0, x1, y1 };
+  }
+  function ensureTile(k, rec, animate){
+    let el = tiles.get(k);
+    if (!el){
+      el = document.createElement('div');
+      el.className = 'tile' + (animate ? ' pop' : '');
+      el.style.left = (rec.x*CELL + MARGIN) + 'px';
+      el.style.top  = (rec.y*CELL + MARGIN) + 'px';
+      el.style.width = el.style.height = (CELL - 2*MARGIN) + 'px';
+      if (rec.imageUrl) {
+        const img = document.createElement('img');
+        img.src = rec.imageUrl;
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+        el.appendChild(img);
+      } else {
+        el.innerHTML = artSVG(rec.seed);
+      }
+      if (rec.title) {
+        const lbl = document.createElement('div');
+        lbl.className = 'tile-label';
+        lbl.textContent = rec.title;
+        el.appendChild(lbl);
+      }
+      world.appendChild(el);
+      tiles.set(k, el);
+    }
+    return el;
+  }
+  function render(){
+    islandInfo = computeIslands();
+    const { x0, y0, x1, y1 } = visibleRange();
+    const want = new Set();
+
+    for (let cx=x0; cx<=x1; cx++) for (let cy=y0; cy<=y1; cy++){
+      const k = keyOf(cx,cy); const rec = board.get(k); if (!rec) continue;
+      want.add(k);
+      const el = ensureTile(k, rec, false);
+      const island = islandInfo.islandOf.get(k);
+      el.style.setProperty('--ring', ringColor(island));
+      el.classList.toggle('dim', selectedIsland && island !== selectedIsland);
+    }
+    for (const [k, el] of tiles){ if (!want.has(k)){ el.remove(); tiles.delete(k); } }
+
+    drawLinks(want);
+    document.getElementById('nArt').textContent = board.size;
+    document.getElementById('nIsl').textContent = islandInfo.members.size;
+    if (selectedIsland) updateIslandCard();
+  }
+  function drawLinks(visibleKeys){
+    let out = '';
+    for (const k of visibleKeys){
+      const rec = board.get(k); if (!rec || !rec.inspiredBy) continue;
+      const [x,y] = k.split(',').map(Number);
+      const cxk = x*CELL + CELL/2, cyk = y*CELL + CELL/2;
+      const island = islandInfo.islandOf.get(k);
+      const dim = selectedIsland && island !== selectedIsland;
+      for (const pk of rec.inspiredBy){
+        if (!board.has(pk)) continue;
+        if (pk >= k) continue; // draw each undirected edge once
+        const [px,py] = pk.split(',').map(Number);
+        const cxp = px*CELL + CELL/2, cyp = py*CELL + CELL/2;
+        out += `<line x1="${cxk}" y1="${cyk}" x2="${cxp}" y2="${cyp}" stroke="${linkColor(island)}" stroke-width="3" stroke-linecap="round" opacity="${dim?0.12:0.5}"/>`;
+      }
+    }
+    linksSvg.innerHTML = out;
+  }
+
+  // ---------- island card ----------
+  function updateIslandCard(){
+    const members = islandInfo.members.get(selectedIsland);
+    const card = document.getElementById('island-card');
+    if (!members){ card.style.display='none'; selectedIsland=null; return; }
+    card.style.display='block';
+    card.querySelector('.swatch').style.background = ringColor(selectedIsland);
+    document.getElementById('ic-id').textContent = 'Island #' + (hueFor(selectedIsland)).toString().padStart(3,'0');
+    document.getElementById('ic-size').textContent = members.length;
+    let links = 0; const who = new Map();
+    for (const k of members){
+      const rec = board.get(k);
+      who.set(rec.authorName || 'Anon', (who.get(rec.authorName||'Anon')||0)+1);
+      if (rec.inspiredBy) for (const pk of rec.inspiredBy) if (pk < k && board.has(pk)) links++;
+    }
+    document.getElementById('ic-links').textContent = links;
+    const parts = [...who.entries()].sort((a,b)=>b[1]-a[1]).map(([n,c]) => `<b>${n}</b> ×${c}`);
+    document.getElementById('ic-who').innerHTML = parts.length>1 ? parts.join(' · ') : parts[0] || '';
+  }
+
+  // ---------- placement ----------
+  async function tryPlace(cx, cy, title, imageUrl){
+    if (!isPlaceable(cx, cy)) {
+      toast(board.size===0 ? 'Click any cell to start' : 'Place next to an existing artwork');
+      return;
+    }
+    const k = keyOf(cx,cy);
+    const parents = neighbors(cx,cy).map(([nx,ny])=>keyOf(nx,ny)).filter(pk => board.has(pk));
+    const rec = { x:cx, y:cy, seed:(Math.random()*1e9)|0, author:me.id, authorName:me.name, inspiredBy:parents, ts:Date.now() };
+    if (title)    rec.title    = title;
+    if (imageUrl) rec.imageUrl = imageUrl;
+
+    board.set(k, rec);                 // optimistic
+    const el = ensureTile(k, rec, true);
+    render();
+    centerSelectOnRecentless();
+
+    const res = await placeCell(rec);
+    if (!res.ok){
+      board.delete(k); el.remove(); tiles.delete(k);
+      recordsToBoard(res.data, false); render();
+      toast(res.taken ? 'Someone just claimed that cell' : 'Could not save — try again');
+    }
+  }
+  function centerSelectOnRecentless(){ /* placeholder to keep selection stable after placing */ }
+
+  // ---------- pointer interaction (pan vs click) ----------
+  let down=false, moved=false, sx=0, sy=0;
+  const pointers = new Map(); let pinch=0;
+
+  viewport.addEventListener('pointerdown', (e) => {
+    pointers.set(e.pointerId, e);
+    down=true; moved=false; sx=e.clientX; sy=e.clientY;
+    viewport.classList.add('panning'); viewport.setPointerCapture(e.pointerId); hideHint();
+  });
+  viewport.addEventListener('pointermove', (e) => {
+    if (pointers.has(e.pointerId)) pointers.set(e.pointerId, e);
+    if (pointers.size === 2){
+      const [a,b] = [...pointers.values()];
+      const d = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+      const mx=(a.clientX+b.clientX)/2, my=(a.clientY+b.clientY)/2;
+      if (pinch) zoomAt(mx,my, d/pinch); pinch=d; moved=true; return;
+    }
+    if (down){
+      if (Math.hypot(e.clientX-sx, e.clientY-sy) > 4) moved=true;
+      if (moved){ panX += e.clientX - sx; panY += e.clientY - sy; sx=e.clientX; sy=e.clientY; applyTransform(); render(); ghost.style.display='none'; }
+      return;
+    }
+    updateGhost(e.clientX, e.clientY); // hover preview
+  });
+  function endPointer(e){
+    pointers.delete(e.pointerId); if (pointers.size<2) pinch=0;
+    if (down && !moved){
+      const { cx, cy } = cellAt(e.clientX, e.clientY);
+      const k = keyOf(cx,cy);
+      if (board.has(k)){
+        openBlockModal(board.get(k));
+      } else {
+        openPlaceModal(cx, cy);
+      }
+    }
+    down=false; viewport.classList.remove('panning');
+    try { viewport.releasePointerCapture(e.pointerId); } catch(_){}
+  }
+  viewport.addEventListener('pointerup', endPointer);
+  viewport.addEventListener('pointercancel', endPointer);
+  viewport.addEventListener('pointerleave', ()=>{ ghost.style.display='none'; });
+
+  viewport.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const f = e.ctrlKey ? Math.exp(-e.deltaY*0.01) : Math.exp(-e.deltaY*0.0016);
+    zoomAt(e.clientX, e.clientY, f); hideHint();
+  }, { passive:false });
+
+  function updateGhost(mx, my){
+    const { cx, cy } = cellAt(mx, my);
+    if (board.has(keyOf(cx,cy))){ ghost.style.display='none'; return; }
+    const placeable = isPlaceable(cx,cy);
+    ghost.style.display='flex';
+    ghost.classList.toggle('blocked', !placeable);
+    ghost.style.left = (cx*CELL + MARGIN) + 'px';
+    ghost.style.top  = (cy*CELL + MARGIN) + 'px';
+    ghost.style.width = ghost.style.height = (CELL - 2*MARGIN) + 'px';
+  }
+
+  // ---------- hud ----------
+  const ctr = () => ({ x:innerWidth/2, y:innerHeight/2 });
+  document.getElementById('zoomIn').onclick  = () => { const c=ctr(); zoomAt(c.x,c.y,1.25); };
+  document.getElementById('zoomOut').onclick = () => { const c=ctr(); zoomAt(c.x,c.y,1/1.25); };
+  document.getElementById('reset').onclick   = () => { scale=1; panX=innerWidth/2; panY=innerHeight/2; applyTransform(); render(); };
+  addEventListener('keydown', (e)=>{
+    if (e.key==='Escape'){
+      if (document.getElementById('block-modal').classList.contains('open')){ closeBlockModal(); return; }
+      if (document.getElementById('place-modal').classList.contains('open')){ closePlaceModal(); return; }
+      selectedIsland=null; document.getElementById('island-card').style.display='none'; render();
+    }
+    if (e.key==='0' && (e.metaKey||e.ctrlKey)){ e.preventDefault(); document.getElementById('reset').click(); }
+    if (e.key==='+'||e.key==='=') document.getElementById('zoomIn').click();
+    if (e.key==='-'||e.key==='_') document.getElementById('zoomOut').click();
+  });
+
+  // ---------- block detail modal ----------
+  function openBlockModal(rec){
+    const art = document.getElementById('block-art');
+    art.innerHTML = '';
+    if (rec.imageUrl){
+      art.classList.remove('art-svg');
+      const img = document.createElement('img');
+      img.src = rec.imageUrl;
+      art.appendChild(img);
+    } else {
+      art.classList.add('art-svg');
+      art.innerHTML = artSVG(rec.seed);
+    }
+
+    const titleEl = document.getElementById('block-title');
+    if (rec.title){ titleEl.textContent = rec.title; titleEl.classList.remove('untitled'); }
+    else { titleEl.textContent = 'Untitled'; titleEl.classList.add('untitled'); }
+
+    document.getElementById('block-author').innerHTML = 'by <b>' + (rec.authorName || 'Anonymous') + '</b>';
+    const d = new Date(rec.ts);
+    document.getElementById('block-date').textContent = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+
+    const k = keyOf(rec.x, rec.y);
+    const island = islandInfo.islandOf.get(k);
+    if (island){
+      document.getElementById('block-island').querySelector('.dot').style.background = ringColor(island);
+      document.getElementById('block-island-label').textContent = 'Island #' + hueFor(island).toString().padStart(3,'0');
+      document.getElementById('block-island').style.display = 'flex';
+    } else {
+      document.getElementById('block-island').style.display = 'none';
+    }
+
+    document.getElementById('block-modal').classList.add('open');
+  }
+
+  function closeBlockModal(){ document.getElementById('block-modal').classList.remove('open'); }
+
+  document.getElementById('block-close').onclick = closeBlockModal;
+  document.getElementById('block-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('block-modal')) closeBlockModal();
+  });
+
+  // ---------- place modal ----------
+  let pendingCell = null, currentImageUrl = null;
+
+  function openPlaceModal(cx, cy){
+    if (!isPlaceable(cx, cy)){
+      toast(board.size===0 ? 'Click any cell to start' : 'Place next to an existing artwork');
+      return;
+    }
+    pendingCell = { cx, cy };
+    currentImageUrl = null;
+    document.getElementById('img-input').value = '';
+    document.getElementById('img-preview').style.display = 'none';
+    document.getElementById('img-placeholder').style.display = '';
+    document.getElementById('img-upload-area').classList.remove('has-img');
+    document.getElementById('title-input').value = '';
+    document.getElementById('place-modal').classList.add('open');
+    setTimeout(() => document.getElementById('title-input').focus(), 60);
+  }
+
+  function closePlaceModal(){
+    document.getElementById('place-modal').classList.remove('open');
+    pendingCell = null;
+    currentImageUrl = null;
+  }
+
+  document.getElementById('img-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) loadImageFile(file);
+  });
+
+  const MAX_IMG_BYTES = 8 * 1024 * 1024; // 8 MB
+
+  function loadImageFile(file){
+    if (file.size > MAX_IMG_BYTES){ toast('Image too large — max 8 MB'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      currentImageUrl = ev.target.result;
+      const preview = document.getElementById('img-preview');
+      preview.src = currentImageUrl;
+      preview.style.display = 'block';
+      document.getElementById('img-placeholder').style.display = 'none';
+      document.getElementById('img-upload-area').classList.add('has-img');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const uploadArea = document.getElementById('img-upload-area');
+  uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag'); });
+  uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('drag'); });
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault(); uploadArea.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) loadImageFile(file);
+  });
+
+  document.getElementById('img-remove').addEventListener('click', (e) => {
+    e.stopPropagation();
+    currentImageUrl = null;
+    document.getElementById('img-preview').style.display = 'none';
+    document.getElementById('img-placeholder').style.display = '';
+    document.getElementById('img-upload-area').classList.remove('has-img');
+    document.getElementById('img-input').value = '';
+  });
+
+  document.getElementById('modal-cancel').onclick = closePlaceModal;
+
+  document.getElementById('modal-add').onclick = async () => {
+    if (!pendingCell) return;
+    const title = document.getElementById('title-input').value.trim();
+    const imageUrl = currentImageUrl;
+    const { cx, cy } = pendingCell;
+    closePlaceModal();
+    await tryPlace(cx, cy, title, imageUrl);
+  };
+
+  document.getElementById('title-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('modal-add').click();
+  });
+
+  document.getElementById('place-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('place-modal')) closePlaceModal();
+  });
+
+  let hintTimer = setTimeout(hideHint, 6000);
+  function hideHint(){ const h=document.getElementById('hint'); if (h.style.opacity!=='0'){ h.style.opacity='0'; clearTimeout(hintTimer); } }
+  let toastTimer;
+  function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1900); }
+
+  // ---------- realtime-ish sync (poll). Real backend pushes via WebSocket. ----------
+  async function sync(){
+    const data = await fetchBoard();
+    const fresh = recordsToBoard(data, true);
+    if (fresh.length){
+      render();
+      // pop-animate newly arrived remote tiles that are on screen
+      for (const k of fresh){ const el = tiles.get(k); if (el){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } }
+    }
+  }
+
+  // ---------- boot ----------
+  (async () => {
+    me = await getIdentity();
+    document.getElementById('myName').textContent = me.name;
+    const data = await fetchBoard();
+    recordsToBoard(data, false);
+    panX = innerWidth/2; panY = innerHeight/2;   // origin near screen center
+    applyTransform(); render();
+    setInterval(sync, 3500);
+  })();
+})();
+</script>
+</body>
+</html>
