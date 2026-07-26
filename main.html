@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Artwork Islands</title>
+<title>Weavo — Art by Neurodivergent Artists</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script src="profile.js"></script>
 <style>
   :root {
-    --grid-minor: #eceaf2;
-    --grid-major: #ddd9e8;
+    --grid-major: #e0e0e0;
     --bg: #ffffff;
-    --ink: #1c1b22;
-    --muted: #8a8794;
-    --accent: #5b4ad6;
-    --panel-bg: rgba(255,255,255,0.9);
-    --panel-border: #e7e4ee;
+    --ink: #111111;
+    --muted: #888888;
+    --accent: #111111;
+    --panel-bg: rgba(255,255,255,0.92);
+    --panel-border: #e0e0e0;
     --cell: 80px;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -24,62 +28,164 @@
   }
   .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
 
-  #viewport {
+  /* ── World map view ─────────────────────────────────────────────────── */
+  #world-view { position:fixed; inset:0; background:#e4e4e4; }
+  #world-svg  { width:100%; height:100%; display:block; }
+  .country-path {
+    fill:#f0f0f0; stroke:#fff; stroke-width:0.5;
+    cursor:pointer; transition:fill .12s ease;
+  }
+  .country-path:hover { fill:#333333; opacity:0.85; }
+  .country-path.has-art { fill:#b8b8b8; }
+  #country-tooltip {
+    position:fixed; pointer-events:none; z-index:20;
+    padding:5px 11px; font-size:12.5px; font-weight:600;
+    display:none; white-space:nowrap;
+  }
+  #world-title {
+    position:fixed; left:50%; top:16px; transform:translateX(-50%); z-index:10;
+    padding:8px 18px; text-align:center;
+  }
+  #world-title b   { font-size:15px; display:block; margin-bottom:2px; pointer-events:none; }
+  #world-title span { color:var(--muted); font-size:12px; pointer-events:none; }
+
+  #top-tabs { display:flex; background:#f0f0f0; border-radius:10px; padding:3px; gap:3px; margin-top:10px; pointer-events:auto; }
+  #top-tabs button {
+    flex:1; padding:6px 16px; border:none; border-radius:8px; font-size:12px; font-family:inherit;
+    font-weight:500; cursor:pointer; background:transparent; color:var(--muted); transition:background .12s ease, color .12s ease;
+  }
+  #top-tabs button.active { background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,0.10); }
+
+  /* ── Users view ─────────────────────────────────────────────────────── */
+  #users-view {
+    position:fixed; inset:0; background:var(--bg); overflow-y:auto;
+    display:none; padding:118px 24px 48px;
+  }
+  #users-toolbar {
+    max-width:640px; margin:0 auto 14px; display:flex; align-items:center;
+    justify-content:flex-end; gap:8px; font-size:12.5px; color:var(--muted);
+  }
+  #users-sort {
+    appearance:none; border:1px solid var(--panel-border); border-radius:8px;
+    padding:6px 26px 6px 10px; font-size:12.5px; font-family:inherit; color:var(--ink);
+    background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%23888888"/></svg>') no-repeat right 10px center;
+    cursor:pointer; outline:none;
+  }
+  #users-grid {
+    max-width:640px; margin:0 auto;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .user-block {
+    background:#fff; border:1px solid var(--panel-border); border-radius:12px;
+    padding:12px 16px; display:flex; flex-direction:row; align-items:center; gap:14px;
+    text-align:left; transition:box-shadow .15s ease, transform .15s ease;
+  }
+  .user-block:hover { box-shadow:0 6px 18px rgba(0,0,0,0.08); transform:translateY(-2px); }
+  .user-block .avatar, .user-block .avatar-fallback {
+    width:44px; height:44px; border-radius:50%; object-fit:cover; background:#e0e0e0; flex-shrink:0;
+  }
+  .user-block .avatar-fallback { display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:var(--muted); }
+  .user-block .u-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .user-block .u-name { font-weight:600; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+  .user-block .u-bio {
+    font-size:11px; color:var(--muted); line-height:1.4; max-width:100%;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .user-block .u-tags { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:4px; }
+  .nd-tag {
+    display:inline-block; padding:2px 8px; border-radius:999px;
+    background:#f0f0f0; color:var(--muted); font-size:10px; font-weight:600;
+  }
+  .user-block .u-count { font-size:11.5px; color:var(--muted); flex-shrink:0; white-space:nowrap; }
+  #users-empty { text-align:center; color:var(--muted); font-size:13px; padding:60px 0; display:none; }
+
+  /* ── Grid canvas view ───────────────────────────────────────────────── */
+  #grid-viewport {
     position:fixed; inset:0; touch-action:none; user-select:none; cursor:grab;
     background-color:var(--bg);
-    background-image:
-      linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px);
+    display:none;
   }
-  #viewport.panning { cursor:grabbing; }
-
-  #world { position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform; }
+  #grid-viewport.panning { cursor:grabbing; }
+  #world-canvas { position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform; }
   #links { position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
 
   .tile {
-    position:absolute; border-radius:10px; overflow:hidden; pointer-events:none;
-    box-shadow: 0 0 0 2px var(--ring, transparent), 0 4px 14px rgba(28,27,34,0.10);
-    background:#fff; transition: box-shadow .25s ease, opacity .2s ease;
+    position:absolute; overflow:hidden; pointer-events:auto;
+    clip-path: polygon(100% 50%, 75% 0%, 25% 0%, 0% 50%, 25% 100%, 75% 100%);
+    filter: drop-shadow(0 4px 14px rgba(28,27,34,0.10));
+    background:#fff; transition: filter .25s ease, opacity .2s ease, transform .15s ease;
   }
+  .tile:hover { transform: scale(1.12); z-index: 1; }
   .tile svg { display:block; width:100%; height:100%; }
+  .hex-ring {
+    position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible;
+  }
   .tile.dim { opacity:0.45; }
-  @keyframes pop { 0%{ transform:scale(.55); opacity:0; } 60%{ transform:scale(1.06); opacity:1; } 100%{ transform:scale(1); opacity:1; } }
+  .tile.pending { background:#f0f0f0; }
+  @keyframes pop { 0%{ transform:scale(.55); opacity:0; } 60%{ transform:scale(1.06); opacity:1; } 100%{ transform:scale(1); } }
+  @keyframes tile-reveal {
+    0%   { opacity:0; transform:scale(0.42); }
+    62%  { opacity:1; transform:scale(1.06); }
+    100% { opacity:1; transform:scale(1); }
+  }
   .tile.pop { animation: pop .42s cubic-bezier(.2,.8,.3,1.2); }
+  .vacant-tile {
+    position:absolute; overflow:hidden; pointer-events:none;
+    clip-path: polygon(100% 50%, 75% 0%, 25% 0%, 0% 50%, 25% 100%, 75% 100%);
+    background:#e0e0e0;
+  }
 
   #ghost {
-    position:absolute; border-radius:10px; pointer-events:none; display:none;
-    border:2px dashed var(--accent); background:rgba(91,74,214,0.06);
+    position:absolute; pointer-events:none; display:none;
+    clip-path: polygon(100% 50%, 75% 0%, 25% 0%, 0% 50%, 25% 100%, 75% 100%);
+    background:rgba(17,17,17,0.12);
     align-items:center; justify-content:center;
   }
   #ghost .plus { color:var(--accent); font-size:30px; font-weight:300; line-height:1; }
-  #ghost.blocked { border-color:#d9d6e0; background:rgba(0,0,0,0.015); }
+  #ghost.blocked { background:rgba(0,0,0,0.05); }
   #ghost.blocked .plus { display:none; }
 
-  /* chrome */
+  #starter-tile {
+    position:absolute; pointer-events:auto; display:none;
+    clip-path: polygon(100% 50%, 75% 0%, 25% 0%, 0% 50%, 25% 100%, 75% 100%);
+    background: linear-gradient(135deg, #252525 0%, #3a3a3a 100%);
+  }
+  #starter-tile.has-art {
+    background:#fff;
+    filter: drop-shadow(0 0 0 2px #aaaaaa) drop-shadow(0 4px 14px rgba(0,0,0,0.10));
+  }
+  #starter-tile.has-art svg { display:block; width:100%; height:100%; }
+
   .panel {
     position:fixed; background:var(--panel-bg); backdrop-filter:blur(10px);
     border:1px solid var(--panel-border); border-radius:14px;
   }
-  #identity { left:16px; top:16px; padding:9px 13px; display:flex; align-items:center; gap:9px; font-size:13px; }
-  #identity .dot { width:9px; height:9px; border-radius:50%; background:var(--accent); }
-  #identity b { font-weight:600; }
 
-  #stats { right:16px; top:16px; padding:9px 14px; font-size:12px; color:var(--muted); display:flex; gap:14px; }
+  /* identity */
+  #identity { right:16px; top:16px; padding:7px 10px 7px 13px; display:flex; align-items:center; gap:9px; font-size:13px; }
+  #identity .dot { width:9px; height:9px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+  #identity b { font-weight:600; }
+  #myAvatar { width:24px; height:24px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+  #myAvatar.identity-link, #myName.identity-link { cursor:pointer; }
+  #myAvatar.identity-link:hover, #myName.identity-link:hover { opacity:0.7; }
+  .id-btn { appearance:none; border:none; cursor:pointer; font-family:inherit; font-size:11.5px; padding:4px 9px; border-radius:7px; font-weight:500; line-height:1; }
+  #loginBtn  { background:var(--accent); color:#fff; }
+  #loginBtn:hover  { background:#333333; }
+  #logoutBtn { background:#f0f0f0; color:var(--muted); }
+  #logoutBtn:hover { background:#e0e0e0; color:var(--ink); }
+  #editProfileBtn { background:#f0f0f0; color:var(--muted); }
+  #editProfileBtn:hover { background:#e0e0e0; color:var(--ink); }
+
+  #stats { right:16px; top:58px; padding:9px 14px; font-size:12px; color:var(--muted); display:none; gap:14px; }
   #stats b { color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
 
-  #hud { left:16px; bottom:16px; padding:6px; display:flex; align-items:center; gap:4px; }
-  #hud button {
-    appearance:none; border:none; background:transparent; cursor:pointer; color:var(--ink);
-    width:32px; height:32px; border-radius:9px; font-size:17px; display:grid; place-items:center; font-family:inherit;
-  }
-  #hud button:hover { background:#f1f0f5; }
-  #hud button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  #hud { left:16px; bottom:16px; padding:6px; display:none; align-items:center; gap:4px; }
+  #hud button { appearance:none; border:none; background:transparent; cursor:pointer; color:var(--ink); width:32px; height:32px; border-radius:9px; font-size:17px; display:grid; place-items:center; font-family:inherit; }
+  #hud button:hover { background:#f0f0f0; }
   #zoomLabel { min-width:50px; text-align:center; color:var(--muted); font-size:12px; }
   #hud #reset { width:auto; padding:0 12px; font-size:11px; letter-spacing:.03em; color:var(--muted); }
 
-  #island-card {
-    right:16px; bottom:16px; padding:14px 16px; width:240px; display:none; font-size:13px;
-  }
+  #island-card { right:16px; bottom:16px; padding:14px 16px; width:240px; display:none; font-size:13px; }
   #island-card h4 { font-size:12px; color:var(--muted); font-weight:500; letter-spacing:.04em; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:7px; }
   #island-card h4 .swatch { width:11px; height:11px; border-radius:3px; }
   #island-card .row { display:flex; justify-content:space-between; padding:3px 0; }
@@ -90,7 +196,7 @@
 
   #hint {
     left:50%; top:16px; transform:translateX(-50%); padding:8px 16px; font-size:12px; color:var(--muted);
-    border-radius:999px; text-align:center; transition:opacity .5s ease;
+    border-radius:999px; text-align:center; transition:opacity .5s ease; display:none;
   }
   #hint b { color:var(--ink); font-weight:600; }
   #share-note { display:block; font-size:10.5px; margin-top:2px; color:var(--accent); }
@@ -102,22 +208,28 @@
   }
   #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-  /* place modal */
-  #place-modal {
+  .modal-overlay {
     position:fixed; inset:0; background:rgba(28,27,34,0.45); backdrop-filter:blur(5px);
     display:none; align-items:center; justify-content:center; z-index:200;
   }
-  #place-modal.open { display:flex; }
+  .modal-overlay.open { display:flex; }
   @keyframes modal-in { from { opacity:0; transform:scale(.94) translateY(10px); } to { opacity:1; transform:none; } }
-  #place-modal.open #place-dialog { animation: modal-in .2s cubic-bezier(.2,.8,.3,1.1); }
+  .modal-overlay.open > .panel { animation: modal-in .2s cubic-bezier(.2,.8,.3,1.1); }
+
   #place-dialog { width:320px; padding:20px; display:flex; flex-direction:column; gap:13px; }
   #place-dialog h3 { font-size:14px; font-weight:700; letter-spacing:.01em; }
+  #place-tabs { display:none; background:#f0f0f0; border-radius:10px; padding:3px; gap:3px; }
+  #place-tabs button {
+    flex:1; padding:7px; border:none; border-radius:8px; font-size:12.5px; font-family:inherit;
+    font-weight:500; cursor:pointer; background:transparent; color:var(--muted); transition:background .12s ease, color .12s ease;
+  }
+  #place-tabs button.active { background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,0.10); }
   #img-upload-area {
     position:relative; height:148px; border:2px dashed var(--panel-border); border-radius:10px;
     display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer;
     transition: border-color .15s ease, background .15s ease;
   }
-  #img-upload-area:hover, #img-upload-area.drag { border-color:var(--accent); background:rgba(91,74,214,0.04); }
+  #img-upload-area:hover, #img-upload-area.drag { border-color:var(--accent); background:rgba(0,0,0,0.03); }
   #img-upload-area.has-img { border-style:solid; border-color:var(--panel-border); }
   #img-placeholder { color:var(--muted); font-size:12.5px; text-align:center; pointer-events:none; line-height:1.6; }
   #img-placeholder .up-icon { font-size:26px; display:block; margin-bottom:4px; }
@@ -138,39 +250,47 @@
   }
   #title-input:focus { border-color:var(--accent); }
   .modal-actions { display:flex; gap:8px; justify-content:flex-end; padding-top:2px; }
-  .modal-actions button {
-    padding:8px 16px; border-radius:9px; font-size:13px; font-family:inherit; cursor:pointer; border:none; font-weight:500;
-  }
-  #modal-cancel { background:#f1f0f5; color:var(--ink); }
-  #modal-cancel:hover { background:#e7e4ee; }
+  .modal-actions button { padding:8px 16px; border-radius:9px; font-size:13px; font-family:inherit; cursor:pointer; border:none; font-weight:500; }
+  #modal-cancel { background:#f0f0f0; color:var(--ink); }
+  #modal-cancel:hover { background:#e0e0e0; }
   #modal-add { background:var(--accent); color:#fff; font-weight:600; }
-  #modal-add:hover { background:#4a3bc0; }
+  #modal-add:hover { background:#333333; }
+  #modal-add:disabled { background:#999999; cursor:not-allowed; }
 
   .tile-label {
     position:absolute; bottom:0; left:0; right:0;
     background:linear-gradient(transparent, rgba(0,0,0,0.58));
     color:#fff; font-size:8px; font-weight:600; letter-spacing:.02em;
     padding:10px 4px 3px; text-align:center;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    pointer-events:none;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none;
   }
 
-  /* block detail modal */
-  #block-modal {
-    position:fixed; inset:0; background:rgba(28,27,34,0.5); backdrop-filter:blur(6px);
-    display:none; align-items:center; justify-content:center; z-index:200;
+  .text-tile {
+    background:#f5f5f5; display:flex; flex-direction:column; padding:6px 7px; overflow:hidden;
   }
-  #block-modal.open { display:flex; }
-  #block-modal.open #block-dialog { animation: modal-in .22s cubic-bezier(.2,.8,.3,1.1); }
+  .text-tile .tt-body {
+    font-size:7px; line-height:1.45; color:#333333; overflow:hidden; flex:1;
+    word-break:break-word; display:-webkit-box;  -webkit-box-orient:vertical;
+  }
+  .text-tile .tt-author {
+    font-size:6px; color:var(--muted); font-weight:600; margin-top:3px;
+    overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+  }
+
+  #comment-input {
+    width:100%; padding:9px 11px; border:1px solid var(--panel-border); border-radius:9px;
+    font-size:13px; font-family:inherit; color:var(--ink); background:#fff; outline:none;
+    transition: border-color .15s ease; resize:vertical; min-height:96px; line-height:1.5;
+  }
+  #comment-input:focus { border-color:var(--accent); }
+
+  #block-modal { background:rgba(28,27,34,0.5); backdrop-filter:blur(6px); }
   #block-dialog {
     width:340px; border-radius:16px; overflow:hidden; display:flex; flex-direction:column;
     position:relative; background:var(--panel-bg); backdrop-filter:blur(10px);
-    border:1px solid var(--panel-border);
-    box-shadow:0 20px 60px rgba(28,27,34,0.25);
+    border:1px solid var(--panel-border); box-shadow:0 20px 60px rgba(28,27,34,0.25);
   }
-  #block-art {
-    width:100%; overflow:hidden; background:#f1f0f5; flex-shrink:0;
-  }
+  #block-art { width:100%; overflow:hidden; background:#f1f0f5; flex-shrink:0; }
   #block-art.art-svg { aspect-ratio:1; }
   #block-art img { width:100%; height:auto; display:block; max-height:65vh; }
   #block-art svg { width:100%; height:100%; display:block; }
@@ -182,6 +302,17 @@
   #block-meta .sep { opacity:.35; }
   #block-island { display:flex; align-items:center; gap:4px; }
   #block-island .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  #block-like {
+    align-self:flex-start; display:inline-flex; align-items:center; gap:6px;
+    margin-top:2px; padding:5px 11px; border-radius:999px; border:none; cursor:pointer;
+    background:#f0f0f0; color:var(--ink); font-size:12.5px; font-weight:600; font-family:inherit;
+    transition:background .12s ease, color .12s ease;
+  }
+  #block-like:hover { background:#e0e0e0; }
+  #block-like.liked { background:#ffe3e3; color:#c0392b; }
+  #block-like:disabled { opacity:.6; cursor:default; }
+  #block-like .like-icon::before { content:"♡"; }
+  #block-like.liked .like-icon::before { content:"♥"; }
   #block-close {
     position:absolute; top:10px; right:10px; z-index:1;
     background:rgba(28,27,34,0.55); color:#fff; border:none; border-radius:50%;
@@ -189,23 +320,138 @@
     transition:background .15s ease;
   }
   #block-close:hover { background:rgba(28,27,34,0.82); }
+
+  #auth-dialog {
+    width:320px; padding:28px 24px 24px; display:flex; flex-direction:column;
+    gap:16px; align-items:center; text-align:center;
+  }
+  #auth-dialog .auth-icon { font-size:36px; line-height:1; }
+  #auth-dialog h3 { font-size:16px; font-weight:700; }
+  #auth-dialog p { font-size:13px; color:var(--muted); line-height:1.55; max-width:260px; }
+  #google-signin-btn {
+    display:flex; align-items:center; gap:10px; justify-content:center;
+    width:100%; padding:10px 16px; border-radius:10px; border:1px solid var(--panel-border);
+    background:#fff; color:var(--ink); font-size:13.5px; font-weight:600; font-family:inherit;
+    cursor:pointer; transition:background .15s ease, border-color .15s ease;
+  }
+  #google-signin-btn:hover { background:#f5f5f5; border-color:#cccccc; }
+  #auth-close { background:none; border:none; cursor:pointer; color:var(--muted); font-size:12.5px; font-family:inherit; padding:2px 8px; }
+  #auth-close:hover { color:var(--ink); }
+
+  /* profile edit modal */
+  #profile-dialog { width:340px; padding:20px; display:flex; flex-direction:column; gap:14px; }
+  #profile-dialog h3 { font-size:14px; font-weight:700; letter-spacing:.01em; }
+  .profile-field { display:flex; flex-direction:column; gap:6px; }
+  .profile-field label { font-size:12px; font-weight:600; color:var(--ink); }
+  .profile-field .field-hint { font-weight:400; color:var(--muted); }
+  .profile-field input[type="text"], .profile-field textarea {
+    width:100%; padding:9px 11px; border:1px solid var(--panel-border); border-radius:9px;
+    font-size:13px; font-family:inherit; color:var(--ink); background:#fff; outline:none;
+    transition:border-color .15s ease;
+  }
+  .profile-field textarea { resize:vertical; min-height:64px; line-height:1.5; }
+  .profile-field input[type="text"]:focus, .profile-field textarea:focus { border-color:var(--accent); }
+  .field-error { font-size:11px; color:#c0392b; min-height:14px; }
+  .link-inputs { display:flex; flex-direction:column; gap:6px; }
+  .nd-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px 10px; }
+  .nd-option { display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink); cursor:pointer; }
+  .nd-option input { margin:0; accent-color:var(--accent); }
+
+  /* nav bar (country + block views) */
+  #nav-bar { left:16px; top:16px; padding:6px 14px 6px 8px; display:none; align-items:center; gap:10px; font-size:13px; }
+  #back-btn {
+    appearance:none; border:none; background:transparent; cursor:pointer;
+    font-family:inherit; font-size:13px; font-weight:600; color:var(--accent);
+    padding:3px 8px 3px 2px; border-radius:7px; display:flex; align-items:center; gap:3px; line-height:1;
+  }
+  #back-btn:hover { background:#f0f0f0; }
+  #nav-sep  { color:var(--panel-border); }
+  #nav-swatch { width:10px; height:10px; border-radius:3px; flex-shrink:0; display:none; }
+  #nav-label { font-weight:600; }
+  #nav-count { color:var(--muted); }
+
+  /* ── Splash screen ──────────────────────────────────────────────────── */
+  #splash {
+    position:fixed; inset:0; z-index:400; background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    transition:opacity .35s ease;
+  }
+  #splash-logo {
+    width:120px; height:120px; object-fit:contain;
+  }
 </style>
 </head>
 <body>
-  <div id="viewport">
-    <div id="world">
+
+  <!-- Transition splash -->
+  <div id="splash">
+    <img id="splash-logo" src="logo.png" alt="">
+  </div>
+
+  <!-- World map -->
+  <div id="world-view">
+    <svg id="world-svg"></svg>
+  </div>
+  <div id="world-title" class="panel">
+    <b>Weavo</b>
+    <span>Art by neurodivergent artists, from every country</span>
+    <div id="top-tabs">
+      <button id="tab-map" class="active">Map</button>
+      <button id="tab-users">Users</button>
+    </div>
+  </div>
+  <div id="country-tooltip" class="panel"></div>
+
+  <!-- Users list view -->
+  <div id="users-view">
+    <div id="users-toolbar">
+      <label for="users-sort">Sort by</label>
+      <select id="users-sort">
+        <option value="pieces">Most pieces</option>
+        <option value="alpha">Alphabetical</option>
+        <option value="newest">Newest members</option>
+      </select>
+    </div>
+    <div id="users-grid"></div>
+    <div id="users-empty">No users yet.</div>
+  </div>
+
+  <!-- Grid canvas (hidden until country selected) -->
+  <div id="grid-viewport">
+    <div id="world-canvas">
       <svg id="links"></svg>
       <div id="ghost"><span class="plus">+</span></div>
+      <div id="starter-tile"></div>
     </div>
   </div>
 
-  <div id="hint" class="panel">
-    <span><b>Click any empty cell</b> to place the first artwork · then build outward from neighbors</span>
-    <span id="share-note">Shared canvas — everything you place is visible to everyone here</span>
+  <!-- Nav bar (country + block views) -->
+  <div id="nav-bar" class="panel">
+    <button id="back-btn">← Back</button>
+    <span id="nav-sep">|</span>
+    <span id="nav-swatch"></span>
+    <span id="nav-label"></span>
+    <span id="nav-count"></span>
   </div>
 
-  <div id="identity" class="panel"><span class="dot"></span>You are <b id="myName">…</b></div>
-  <div id="stats" class="panel"><span><b id="nArt">0</b> artworks</span><span><b id="nIsl">0</b> islands</span></div>
+  <div id="hint" class="panel">
+    <span>Place your work <b>next to the center piece</b> · grow your island outward from there</span>
+    <span id="share-note">Sign in with Google to share your work</span>
+  </div>
+
+  <div id="identity" class="panel">
+
+    <img id="myAvatar" style="display:none" alt="">
+    <b id="myName">Guest</b>
+    <button id="loginBtn"  class="id-btn">Sign in</button>
+    <button id="editProfileBtn" class="id-btn" style="display:none">Edit profile</button>
+    <button id="logoutBtn" class="id-btn" style="display:none">Sign out</button>
+  </div>
+
+  <div id="stats" class="panel">
+    <span><b id="nArt">0</b> works</span>
+    <span><b id="nIsl">0</b> islands</span>
+  </div>
 
   <div id="hud" class="panel">
     <button id="zoomOut" aria-label="Zoom out">−</button>
@@ -223,7 +469,8 @@
 
   <div id="toast"></div>
 
-  <div id="block-modal">
+  <!-- Block detail modal -->
+  <div id="block-modal" class="modal-overlay">
     <div id="block-dialog">
       <div id="block-art"></div>
       <div id="block-info">
@@ -235,20 +482,33 @@
           <span class="sep">·</span>
           <span id="block-island"><span class="dot"></span><span id="block-island-label"></span></span>
         </div>
+        <button id="block-like" aria-label="Like this piece">
+          <span class="like-icon"></span>
+          <span id="block-like-count">0</span>
+        </button>
+        <div id="block-body" style="font-size:13px;line-height:1.65;color:var(--ink);display:none;white-space:pre-wrap;word-break:break-word;"></div>
       </div>
       <button id="block-close" aria-label="Close">✕</button>
     </div>
   </div>
 
-  <div id="place-modal">
+  <!-- Place modal -->
+  <div id="place-modal" class="modal-overlay">
     <div id="place-dialog" class="panel">
-      <h3>Add Artwork</h3>
-      <div id="img-upload-area">
-        <div id="img-placeholder"><span class="up-icon">🖼</span>Click or drag an image here</div>
-        <img id="img-preview" alt="">
-        <button id="img-remove" aria-label="Remove image">✕</button>
-        <input type="file" id="img-input" accept="image/*">
+      <h3 id="place-dialog-title">Add Artwork</h3>
+      <div id="place-tabs" style="display:none; flex-direction:row;">
+        <button id="tab-artwork" class="active">Artwork</button>
+        <button id="tab-comment">Comment</button>
       </div>
+      <div id="img-upload-section">
+        <div id="img-upload-area">
+          <div id="img-placeholder"><span class="up-icon">🖼</span>Click or drag your artwork here</div>
+          <img id="img-preview" alt="">
+          <button id="img-remove" aria-label="Remove image">✕</button>
+          <input type="file" id="img-input" accept="image/*">
+        </div>
+      </div>
+      <textarea id="comment-input" placeholder="Share your thoughts on this piece… (max 280 characters)" maxlength="280" style="display:none;"></textarea>
       <input type="text" id="title-input" placeholder="Title (optional)" maxlength="40">
       <div class="modal-actions">
         <button id="modal-cancel">Cancel</button>
@@ -257,130 +517,569 @@
     </div>
   </div>
 
+  <!-- Auth modal -->
+  <div id="auth-modal" class="modal-overlay">
+    <div id="auth-dialog" class="panel">
+      <div class="auth-icon">🏝️</div>
+      <h3>Join Insula</h3>
+      <p>A home for neurodivergent and autistic artists to share their work with the world. Sign in to add your art or leave a comment on someone else's.</p>
+      <button id="google-signin-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
+          <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+          <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+        </svg>
+        Continue with Google
+      </button>
+      <button id="auth-close">Browse as guest</button>
+    </div>
+  </div>
+
+  <!-- Profile edit modal -->
+  <div id="profile-modal" class="modal-overlay">
+    <div id="profile-dialog" class="panel">
+      <h3 id="profile-dialog-title">Edit Profile</h3>
+      <p id="profile-required-note" style="display:none; font-size:12px; color:var(--muted); margin-top:-8px;">Set a username to finish creating your account.</p>
+      <div class="profile-field">
+        <label for="username-input">Username</label>
+        <input type="text" id="username-input" placeholder="e.g. inkwell_fox" maxlength="24">
+        <span id="username-error" class="field-error"></span>
+      </div>
+      <div class="profile-field">
+        <label for="bio-input">Bio</label>
+        <textarea id="bio-input" placeholder="A little about you… (max 160 characters)" maxlength="160"></textarea>
+      </div>
+      <div class="profile-field">
+        <label>Neurodivergence <span class="field-hint">(select all that apply)</span></label>
+        <div id="nd-options" class="nd-grid"></div>
+      </div>
+      <div class="profile-field">
+        <label>Links <span class="field-hint">(optional)</span></label>
+        <div class="link-inputs">
+          <input type="text" id="link-instagram" placeholder="Instagram URL">
+          <input type="text" id="link-twitter" placeholder="Twitter / X URL">
+          <input type="text" id="link-tiktok" placeholder="TikTok URL">
+          <input type="text" id="link-website" placeholder="Website URL">
+        </div>
+        <span id="links-error" class="field-error"></span>
+      </div>
+      <div class="modal-actions">
+        <button id="profile-cancel">Cancel</button>
+        <button id="profile-save">Save</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (() => {
   "use strict";
-  const CELL = 80, MARGIN = 6;
-  const viewport = document.getElementById('viewport');
-  const world    = document.getElementById('world');
-  const linksSvg = document.getElementById('links');
-  const ghost    = document.getElementById('ghost');
 
-  // ---------- view state ----------
+  // ── Supabase config ───────────────────────────────────────────────────────
+  const SUPABASE_URL = 'https://kzvheplmtzjmzcxjkxub.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_ohcQ5SUnO_lH_HYGgOtxnQ_umqwx027';
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const CELL = 80, MARGIN = 6;
+  const SQ3    = Math.sqrt(3);
+  const TILE_R = CELL - MARGIN;
+  const HEX_W  = 2 * TILE_R;
+  const HEX_H  = SQ3 * TILE_R;
+
+  function hexToPixel(q, r) {
+    return { x: CELL * 1.5 * q, y: CELL * SQ3 * (r + q * 0.5) };
+  }
+  function hexRound(fq, fr) {
+    const fs = -fq - fr;
+    let rq = Math.round(fq), rr = Math.round(fr), rs = Math.round(fs);
+    const dq = Math.abs(rq - fq), dr = Math.abs(rr - fr), ds = Math.abs(rs - fs);
+    if (dq > dr && dq > ds) rq = -rr - rs;
+    else if (dr > ds)        rr = -rq - rs;
+    return { q: rq, r: rr };
+  }
+  const gridViewport = document.getElementById('grid-viewport');
+  const worldCanvas  = document.getElementById('world-canvas');
+  const linksSvg     = document.getElementById('links');
+  const ghost        = document.getElementById('ghost');
+  const starterTile  = document.getElementById('starter-tile');
+
+  // ---------- ISO numeric → country name ----------
+  const COUNTRY_NAMES = {
+    4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",
+    36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",64:"Bhutan",
+    68:"Bolivia",76:"Brazil",100:"Bulgaria",104:"Myanmar",116:"Cambodia",
+    120:"Cameroon",124:"Canada",140:"Central African Republic",144:"Sri Lanka",
+    152:"Chile",156:"China",170:"Colombia",178:"Congo",180:"DR Congo",
+    188:"Costa Rica",191:"Croatia",192:"Cuba",196:"Cyprus",203:"Czechia",
+    208:"Denmark",218:"Ecuador",818:"Egypt",222:"El Salvador",231:"Ethiopia",
+    246:"Finland",250:"France",266:"Gabon",276:"Germany",288:"Ghana",
+    300:"Greece",320:"Guatemala",324:"Guinea",332:"Haiti",340:"Honduras",
+    348:"Hungary",352:"Iceland",356:"India",360:"Indonesia",364:"Iran",
+    368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",388:"Jamaica",
+    392:"Japan",400:"Jordan",398:"Kazakhstan",404:"Kenya",410:"South Korea",
+    408:"North Korea",414:"Kuwait",418:"Laos",422:"Lebanon",430:"Liberia",
+    434:"Libya",440:"Lithuania",442:"Luxembourg",450:"Madagascar",
+    454:"Malawi",458:"Malaysia",462:"Maldives",466:"Mali",484:"Mexico",
+    496:"Mongolia",504:"Morocco",508:"Mozambique",516:"Namibia",524:"Nepal",
+    528:"Netherlands",554:"New Zealand",558:"Nicaragua",566:"Nigeria",
+    578:"Norway",512:"Oman",586:"Pakistan",591:"Panama",598:"Papua New Guinea",
+    600:"Paraguay",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",
+    634:"Qatar",642:"Romania",643:"Russia",646:"Rwanda",682:"Saudi Arabia",
+    686:"Senegal",694:"Sierra Leone",703:"Slovakia",705:"Slovenia",
+    706:"Somalia",710:"South Africa",728:"South Sudan",724:"Spain",
+    729:"Sudan",752:"Sweden",756:"Switzerland",760:"Syria",158:"Taiwan",
+    762:"Tajikistan",764:"Thailand",768:"Togo",788:"Tunisia",792:"Turkey",
+    800:"Uganda",804:"Ukraine",784:"United Arab Emirates",826:"United Kingdom",
+    840:"United States",858:"Uruguay",860:"Uzbekistan",862:"Venezuela",
+    704:"Vietnam",887:"Yemen",894:"Zambia",716:"Zimbabwe",44:"Bahamas",
+    48:"Bahrain",84:"Belize",204:"Benin",72:"Botswana",96:"Brunei",
+    854:"Burkina Faso",108:"Burundi",132:"Cape Verde",214:"Dominican Republic",
+    384:"Ivory Coast",242:"Fiji",270:"Gambia",478:"Mauritania",480:"Mauritius",
+    562:"Niger",31:"Azerbaijan",51:"Armenia",90:"Solomon Islands",
+    112:"Belarus",174:"Comoros",226:"Equatorial Guinea",232:"Eritrea",
+    262:"Djibouti",268:"Georgia",275:"Palestine",328:"Guyana",
+    340:"Honduras",417:"Kyrgyzstan",426:"Lesotho",498:"Moldova",
+    499:"Montenegro",534:"Sint Maarten",540:"New Caledonia",548:"Vanuatu",
+    626:"Timor-Leste",674:"San Marino",688:"Serbia",706:"Somalia",
+    732:"Western Sahara",740:"Suriname",780:"Trinidad and Tobago",
+    795:"Turkmenistan",807:"North Macedonia"
+  };
+
+  const ISO_ALPHA2 = {
+    4:'af',8:'al',12:'dz',24:'ao',32:'ar',36:'au',40:'at',44:'bs',48:'bh',
+    50:'bd',56:'be',64:'bt',68:'bo',72:'bw',76:'br',84:'bz',96:'bn',
+    100:'bg',104:'mm',108:'bi',116:'kh',120:'cm',124:'ca',132:'cv',
+    140:'cf',144:'lk',152:'cl',156:'cn',158:'tw',170:'co',178:'cg',180:'cd',
+    188:'cr',191:'hr',192:'cu',196:'cy',203:'cz',204:'bj',208:'dk',214:'do',
+    218:'ec',222:'sv',231:'et',242:'fj',246:'fi',250:'fr',266:'ga',270:'gm',
+    276:'de',288:'gh',300:'gr',320:'gt',324:'gn',332:'ht',340:'hn',348:'hu',
+    352:'is',356:'in',360:'id',364:'ir',368:'iq',372:'ie',376:'il',380:'it',
+    384:'ci',388:'jm',392:'jp',398:'kz',400:'jo',404:'ke',408:'kp',410:'kr',
+    414:'kw',418:'la',422:'lb',430:'lr',434:'ly',440:'lt',442:'lu',450:'mg',
+    454:'mw',458:'my',462:'mv',466:'ml',478:'mr',480:'mu',484:'mx',496:'mn',
+    504:'ma',508:'mz',512:'om',516:'na',524:'np',528:'nl',554:'nz',558:'ni',
+    562:'ne',566:'ng',578:'no',586:'pk',591:'pa',598:'pg',600:'py',604:'pe',
+    608:'ph',616:'pl',620:'pt',634:'qa',642:'ro',643:'ru',646:'rw',682:'sa',
+    686:'sn',694:'sl',703:'sk',705:'si',706:'so',710:'za',716:'zw',724:'es',
+    728:'ss',729:'sd',752:'se',756:'ch',760:'sy',762:'tj',764:'th',768:'tg',
+    784:'ae',788:'tn',792:'tr',800:'ug',804:'ua',818:'eg',826:'gb',840:'us',
+    854:'bf',858:'uy',860:'uz',862:'ve',887:'ye',894:'zm',704:'vn',
+    31:'az',51:'am',90:'sb',112:'by',174:'km',226:'gq',232:'er',
+    262:'dj',268:'ge',275:'ps',328:'gy',417:'kg',426:'ls',498:'md',
+    499:'me',548:'vu',626:'tl',688:'rs',732:'eh',740:'sr',780:'tt',
+    795:'tm',807:'mk'
+  };
+
+  // ---------- view / pan state ----------
   let scale = 1, panX = 0, panY = 0;
   const MIN = 0.15, MAX = 4;
 
   function applyTransform() {
-    world.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-    const major = CELL * scale;
-    viewport.style.backgroundSize = `${major}px ${major}px, ${major}px ${major}px`;
-    viewport.style.backgroundPosition = `${panX}px ${panY}px, ${panX}px ${panY}px`;
-    document.getElementById('zoomLabel').textContent = Math.round(scale*100) + '%';
+    worldCanvas.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+    document.getElementById('zoomLabel').textContent = Math.round(scale * 100) + '%';
   }
-  const toWorld = (sx, sy) => ({ x:(sx-panX)/scale, y:(sy-panY)/scale });
-  const cellAt  = (sx, sy) => { const w = toWorld(sx,sy); return { cx:Math.floor(w.x/CELL), cy:Math.floor(w.y/CELL) }; };
+  const toWorld = (sx, sy) => ({ x: (sx - panX) / scale, y: (sy - panY) / scale });
+  const cellAt  = (sx, sy) => {
+    const { x, y } = toWorld(sx, sy);
+    return hexRound((2/3 * x) / CELL, (-1/3 * x + SQ3/3 * y) / CELL);
+  };
   function zoomAt(sx, sy, f) {
-    const next = Math.min(MAX, Math.max(MIN, scale*f)); if (next===scale) return;
-    const w = toWorld(sx,sy); scale = next; panX = sx - w.x*scale; panY = sy - w.y*scale;
+    const next = Math.min(MAX, Math.max(MIN, scale * f)); if (next === scale) return;
+    const w = toWorld(sx, sy); scale = next; panX = sx - w.x * scale; panY = sy - w.y * scale;
     applyTransform(); render();
   }
 
-  // ---------- pure model helpers ----------
-  const keyOf = (x,y) => x+','+y;
-  const neighbors = (x,y) => [[x+1,y],[x-1,y],[x,y+1],[x,y-1]];
-  function isPlaceable(x,y) {
-    if (board.has(keyOf(x,y))) return false;
-    if (board.size === 0) return true;
-    return neighbors(x,y).some(([nx,ny]) => board.has(keyOf(nx,ny)));
+  // ---------- model helpers ----------
+  const keyOf     = (x, y) => x + ',' + y;
+  const neighbors = (q, r) => [[q+1,r],[q-1,r],[q,r+1],[q,r-1],[q+1,r-1],[q-1,r+1]];
+  function isPlaceable(x, y) {
+    if (x === 0 && y === 0) return false;
+    if (board.has(keyOf(x, y))) return false;
+    return neighbors(x, y).some(([nx, ny]) => (nx === 0 && ny === 0) || board.has(keyOf(nx, ny)));
   }
   function computeIslands() {
     const parent = new Map();
-    for (const k of board.keys()) parent.set(k,k);
-    const find = (k) => { while (parent.get(k)!==k){ parent.set(k, parent.get(parent.get(k))); k = parent.get(k); } return k; };
-    const union = (a,b) => { const ra=find(a), rb=find(b); if (ra===rb) return; if (ra<rb) parent.set(rb,ra); else parent.set(ra,rb); };
+    for (const k of board.keys()) parent.set(k, k);
+    const find = k => { while (parent.get(k) !== k) { parent.set(k, parent.get(parent.get(k))); k = parent.get(k); } return k; };
+    const union = (a, b) => { const ra = find(a), rb = find(b); if (ra === rb) return; ra < rb ? parent.set(rb, ra) : parent.set(ra, rb); };
     for (const k of board.keys()) {
-      const [x,y] = k.split(',').map(Number);
-      for (const [nx,ny] of neighbors(x,y)) { const nk = keyOf(nx,ny); if (board.has(nk)) union(k,nk); }
+      const [x, y] = k.split(',').map(Number);
+      for (const [nx, ny] of neighbors(x, y)) { const nk = keyOf(nx, ny); if (board.has(nk)) union(k, nk); }
     }
     const islandOf = new Map(), members = new Map();
     for (const k of board.keys()) {
-      const r = find(k); islandOf.set(k,r);
-      if (!members.has(r)) members.set(r,[]); members.get(r).push(k);
+      const r = find(k); islandOf.set(k, r);
+      if (!members.has(r)) members.set(r, []); members.get(r).push(k);
     }
     return { islandOf, members };
   }
-  function hueFor(id){ let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return h%360; }
-  const ringColor = (id) => `hsl(${hueFor(id)},68%,58%)`;
-  const linkColor = (id) => `hsl(${hueFor(id)},60%,52%)`;
+  function hueFor(id) { let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0; return h % 360; }
+  const ringColor = id => `hsl(0,0%,${30 + (hueFor(id) % 45)}%)`;
+  const linkColor = id => `hsl(0,0%,${25 + (hueFor(id) % 40)}%)`;
 
   // ---------- generative art ----------
-
-
-  // ---------- storage layer (swap this for Convex / Supabase) ----------
-  const BOARD_KEY = 'island-board:v1';
-  const hasStore = !!(window.storage && window.storage.get);
-  let memFallback = { cells:{} };
-
-  async function fetchBoard(){
-    if (!hasStore) return memFallback;
-    try { const r = await window.storage.get(BOARD_KEY, true); return r && r.value ? JSON.parse(r.value) : { cells:{} }; }
-    catch(e){ return { cells:{} }; }
+  function artSVG(seed) {
+    let s = (seed >>> 0) || 1;
+    const rng = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 0xffffffff; };
+    const bgL = (88 + rng() * 8) | 0;
+    let shapes = `<rect width="100" height="100" fill="hsl(0,0%,${bgL}%)"/>`;
+    for (let i = 0; i < 7; i++) {
+      const cx = (rng() * 120 - 10) | 0, cy = (rng() * 120 - 10) | 0, r = (12 + rng() * 28) | 0;
+      const l = (15 + rng() * 65) | 0;
+      shapes += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="hsl(0,0%,${l}%)" opacity="${(0.3 + rng() * 0.5).toFixed(2)}"/>`;
+    }
+    return `<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">${shapes}</svg>`;
   }
-  // Read-merge-write so simultaneous placements don't clobber each other.
-  // (A real backend enforces uniqueness on (x,y) with a DB constraint instead.)
-  async function placeCell(rec){
-    if (!hasStore){ const k=keyOf(rec.x,rec.y); if (memFallback.cells[k]) return {ok:false,taken:true,data:memFallback}; memFallback.cells[k]=rec; return {ok:true,data:memFallback}; }
-    let data; try { const r = await window.storage.get(BOARD_KEY, true); data = r && r.value ? JSON.parse(r.value) : { cells:{} }; } catch(e){ data = { cells:{} }; }
-    const k = keyOf(rec.x, rec.y);
-    if (data.cells[k]) return { ok:false, taken:true, data };
-    data.cells[k] = rec;
-    try { await window.storage.set(BOARD_KEY, JSON.stringify(data), true); } catch(e){ return { ok:false, error:true, data }; }
-    return { ok:true, data };
+
+  // ---------- auth ----------
+  let me = { id: '', name: '', avatar: '', username: '', bio: '', nd: [], links: {} };
+  async function signIn() { await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: location.origin + location.pathname } }); }
+  async function signOut() { await sb.auth.signOut(); }
+  function updateIdentityUI() {
+    window.__authLog = window.__authLog || [];
+    const entry = { t: performance.now().toFixed(1), meId: me.id || '(empty)', stack: new Error().stack };
+    window.__authLog.push(entry);
+    console.log('[auth debug]', entry.t, 'updateIdentityUI, me.id =', entry.meId, '\n', entry.stack);
+    document.getElementById('myName').textContent = me.id ? (me.username || me.name) : 'Guest';
+    const av = document.getElementById('myAvatar');
+    if (me.avatar) { av.src = me.avatar; av.style.display = 'block'; } else { av.style.display = 'none'; }
+    document.getElementById('loginBtn').style.display  = me.id ? 'none' : '';
+    document.getElementById('logoutBtn').style.display = me.id ? '' : 'none';
+    document.getElementById('editProfileBtn').style.display = me.id ? '' : 'none';
+    document.getElementById('myAvatar').classList.toggle('identity-link', !!me.id);
+    document.getElementById('myName').classList.toggle('identity-link', !!me.id);
   }
-  async function getIdentity(){
-    const make = () => ({ id: Math.random().toString(36).slice(2,9), name: randomName() });
-    if (!hasStore) return make();
-    try { const r = await window.storage.get('identity', false); if (r && r.value) return JSON.parse(r.value); } catch(e){}
-    const idn = make();
-    try { await window.storage.set('identity', JSON.stringify(idn), false); } catch(e){}
-    return idn;
+  async function goToMyProfile() {
+    if (!me.id || transitioning) return;
+    if (viewMode === 'block')   await exitBlockView();
+    if (viewMode === 'country') await exitCountryView();
+    if (viewMode === 'profile') return;
+    await enterProfileView(me.id);
   }
-  const ADJ = ['Cobalt','Amber','Saffron','Violet','Coral','Indigo','Jade','Crimson','Slate','Hazel','Marigold','Teal'];
-  const NOUN = ['Finch','Otter','Heron','Lynx','Moth','Wren','Koi','Fox','Sparrow','Ibis','Marten','Tern'];
-  const randomName = () => ADJ[Math.floor(Math.random()*ADJ.length)] + ' ' + NOUN[Math.floor(Math.random()*NOUN.length)];
+  document.getElementById('myAvatar').onclick = goToMyProfile;
+  document.getElementById('myName').onclick   = goToMyProfile;
+  function meFromUser(u) {
+    return {
+      id: u.id, name: u.user_metadata.full_name || u.email.split('@')[0], avatar: u.user_metadata.avatar_url || '',
+      username: '', bio: '', nd: [], links: {}
+    };
+  }
+  async function loadMyProfile() {
+    if (!me.id) return;
+    const { data } = await sb.from('profiles').select('username,bio,neurodivergence,links').eq('id', me.id).maybeSingle();
+    if (data) { me.username = data.username || ''; me.bio = data.bio || ''; me.nd = data.neurodivergence || []; me.links = data.links || {}; }
+  }
+  async function upsertProfile() {
+    if (!me.id) return;
+    await sb.from('profiles').upsert({ id: me.id, name: me.name, avatar_url: me.avatar || null });
+  }
+
+  // ---------- profile edit modal ----------
+  const LINK_PLATFORMS = [
+    { key: 'instagram', label: 'Instagram' },
+    { key: 'twitter',   label: 'Twitter / X' },
+    { key: 'tiktok',    label: 'TikTok' },
+    { key: 'website',   label: 'Website' },
+  ];
+  function normalizeUrl(raw) {
+    const v = raw.trim();
+    if (!v) return '';
+    const withScheme = /^https?:\/\//i.test(v) ? v : `https://${v}`;
+    try {
+      const u = new URL(withScheme);
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+      return u.href;
+    } catch { return null; }
+  }
+  const ND_OPTIONS   = ["Autism", "ADHD", "Dyslexia", "Dyspraxia", "OCD", "Tourette's", "Other", "Prefer not to say", "None"];
+  const ND_EXCLUSIVE = new Set(["None", "Prefer not to say"]);
+  (function buildNdOptions() {
+    const wrap = document.getElementById('nd-options');
+    for (const opt of ND_OPTIONS) {
+      const label = document.createElement('label');
+      label.className = 'nd-option';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.value = opt;
+      cb.addEventListener('change', () => {
+        const all = wrap.querySelectorAll('input[type=checkbox]');
+        if (ND_EXCLUSIVE.has(opt)) {
+          if (cb.checked) all.forEach(o => { if (o !== cb) o.checked = false; });
+        } else if (cb.checked) {
+          all.forEach(o => { if (ND_EXCLUSIVE.has(o.value)) o.checked = false; });
+        }
+      });
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(opt));
+      wrap.appendChild(label);
+    }
+  })();
+  let profileRequired = false;
+  function openProfileModal(forced) {
+    profileRequired = !!forced;
+    document.getElementById('username-input').value = me.username || '';
+    document.getElementById('bio-input').value = me.bio || '';
+    document.getElementById('username-error').textContent = '';
+    const ndSet = new Set(me.nd || []);
+    document.querySelectorAll('#nd-options input[type=checkbox]').forEach(cb => { cb.checked = ndSet.has(cb.value); });
+    document.getElementById('links-error').textContent = '';
+    for (const { key } of LINK_PLATFORMS) document.getElementById('link-' + key).value = (me.links || {})[key] || '';
+    document.getElementById('profile-dialog-title').textContent = profileRequired ? 'Welcome to Insula' : 'Edit Profile';
+    document.getElementById('profile-required-note').style.display = profileRequired ? '' : 'none';
+    document.getElementById('profile-cancel').style.display = profileRequired ? 'none' : '';
+    document.getElementById('profile-modal').classList.add('open');
+  }
+  function closeProfileModal() {
+    if (profileRequired) return;
+    document.getElementById('profile-modal').classList.remove('open');
+  }
+  document.getElementById('editProfileBtn').onclick = () => openProfileModal(false);
+  document.getElementById('profile-cancel').onclick  = closeProfileModal;
+  document.getElementById('profile-modal').addEventListener('click', e => { if (e.target === document.getElementById('profile-modal')) closeProfileModal(); });
+  document.getElementById('profile-save').onclick = async () => {
+    const errEl = document.getElementById('username-error');
+    const usernameRaw = document.getElementById('username-input').value.trim();
+    errEl.textContent = '';
+    if (!usernameRaw) { errEl.textContent = 'Username is required.'; return; }
+    if (!/^[a-zA-Z0-9_]{3,24}$/.test(usernameRaw)) { errEl.textContent = '3-24 characters: letters, numbers, underscore.'; return; }
+    const bio = document.getElementById('bio-input').value.trim().slice(0, 160);
+    const nd  = [...document.querySelectorAll('#nd-options input:checked')].map(cb => cb.value);
+
+    const linksErrEl = document.getElementById('links-error');
+    linksErrEl.textContent = '';
+    const links = {};
+    for (const { key, label } of LINK_PLATFORMS) {
+      const norm = normalizeUrl(document.getElementById('link-' + key).value);
+      if (norm === null) { linksErrEl.textContent = `That ${label} link doesn't look like a valid URL.`; return; }
+      if (norm) links[key] = norm;
+    }
+
+    const saveBtn = document.getElementById('profile-save');
+    saveBtn.disabled = true;
+    const { error } = await sb.from('profiles').upsert({
+      id: me.id, name: me.name, avatar_url: me.avatar || null,
+      username: usernameRaw, bio: bio || null, neurodivergence: nd, links
+    });
+    saveBtn.disabled = false;
+    if (error) { errEl.textContent = error.code === '23505' ? 'That username is taken.' : 'Could not save. Try again.'; return; }
+    me.username = usernameRaw; me.bio = bio; me.nd = nd; me.links = links;
+    updateIdentityUI();
+    profileRequired = false;
+    document.getElementById('profile-cancel').style.display = '';
+    closeProfileModal();
+    toast('Profile saved');
+    if (viewMode === 'users') loadUsers();
+  };
+
+  document.getElementById('loginBtn').onclick  = signIn;
+  document.getElementById('logoutBtn').onclick = signOut;
+
+  function openAuthModal()  { document.getElementById('auth-modal').classList.add('open'); }
+  function closeAuthModal() { document.getElementById('auth-modal').classList.remove('open'); }
+  document.getElementById('google-signin-btn').onclick = signIn;
+  document.getElementById('auth-close').onclick = closeAuthModal;
+  document.getElementById('auth-modal').addEventListener('click', e => { if (e.target === document.getElementById('auth-modal')) closeAuthModal(); });
+
+  // ---------- data ----------
+  function rowToRec(row) {
+    return {
+      x: row.x, y: row.y, seed: row.seed,
+      title:      row.title      || '',
+      imageUrl:   row.image_url  || '',
+      body:       row.body       || '',
+      inspiredBy: row.inspired_by || [],
+      author:     row.author_id,
+      authorName: row.author_name,
+      approved:   row.approved   ?? false,
+      parentKey:  row.parent_key || null,
+      ts: new Date(row.ts).getTime()
+    };
+  }
+
+  async function fetchCellsByParent(parentKey) {
+    const { data, error } = await sb.from('cells').select('*').eq('parent_key', parentKey);
+    const result = new Map();
+    if (error || !data) return result;
+    for (const row of data) result.set(keyOf(row.x, row.y), rowToRec(row));
+    return result;
+  }
+
+  async function placeCell(rec) {
+    const dbKey = `${rec.x},${rec.y}@${rec.parentKey}`;
+    const { error } = await sb.from('cells').insert({
+      key:         dbKey,
+      x:           rec.x,
+      y:           rec.y,
+      seed:        rec.seed,
+      title:       rec.title    || null,
+      image_url:   rec.imageUrl || null,
+      body:        rec.body     || null,
+      inspired_by: rec.inspiredBy,
+      author_id:   rec.author,
+      author_name: rec.authorName,
+      parent_key:  rec.parentKey,
+      ts:          new Date(rec.ts).toISOString()
+    });
+    if (!error) return { ok: true };
+    return { ok: false, taken: error.code === '23505' };
+  }
+
+  async function uploadImage(file) {
+    const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${me.id}/${Date.now()}.${ext}`;
+    const { error } = await sb.storage.from('artwork').upload(path, file, { cacheControl: '3600' });
+    if (error) { toast('Image upload failed'); return null; }
+    return sb.storage.from('artwork').getPublicUrl(path).data.publicUrl;
+  }
+
+  // ---------- realtime ----------
+  function subscribeRealtime() {
+    sb.channel('canvas-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cells' }, ({ new: row }) => {
+        const localK = keyOf(row.x, row.y);
+        const isCountry = row.parent_key === focusedCountryKey && viewMode === 'country';
+        const isBlock   = row.parent_key === focusedBlockKey   && viewMode === 'block';
+        if (!isCountry && !isBlock) return;
+        if (board.has(localK)) return;
+        const rec = rowToRec(row);
+        board.set(localK, rec);
+        if (isCountry) countryBoard.set(localK, rec);
+        render();
+        const el = tiles.get(localK);
+        if (el) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'cells' }, ({ new: row }) => {
+        const localK = keyOf(row.x, row.y);
+        const isCountry = row.parent_key === focusedCountryKey && viewMode === 'country';
+        const isBlock   = row.parent_key === focusedBlockKey   && viewMode === 'block';
+        if (!isCountry && !isBlock) return;
+        const prev = board.get(localK);
+        const rec  = rowToRec(row);
+        board.set(localK, rec);
+        if (isCountry) countryBoard.set(localK, rec);
+        if (!prev || prev.approved !== rec.approved) { const el = tiles.get(localK); if (el) { el.remove(); tiles.delete(localK); } }
+        render();
+        if (rec.approved && (!prev || !prev.approved)) { const el = tiles.get(localK); if (el) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } }
+      })
+      .subscribe();
+  }
 
   // ---------- runtime state ----------
-  const board = new Map();          // key -> record
-  const tiles = new Map();          // key -> element
-  let islandInfo = { islandOf:new Map(), members:new Map() };
-  let selectedIsland = null;
-  let me = { id:'', name:'' };
+  let countryBoard = new Map();
+  let board        = new Map();
+  let tiles        = new Map();
+  let vacantTiles  = new Map();
+  let islandInfo   = { islandOf: new Map(), members: new Map() };
+  let selectedIsland   = null;
+  let viewMode         = 'world'; // 'world' | 'users' | 'profile' | 'country' | 'block'
+  let profileReturnMode = 'users'; // 'world' | 'users' — where exitProfileView should return to
+  let focusedCountryKey  = null;
+  let focusedCountryName = null;
+  let focusedBlockKey  = null;
+  let focusedBlockRec  = null;
+  let savedViewState   = null;
 
-  function recordsToBoard(data, animateNew){
-    const incoming = data && data.cells ? data.cells : {};
-    const fresh = [];
-    for (const k in incoming){ if (!board.has(k)){ board.set(k, incoming[k]); if (animateNew) fresh.push(k); } }
-    return fresh;
+  // ---------- transition helpers ----------
+  let transitioning = false;
+  const FADE_MS = 180;
+
+  function fadeOut(el, ms = FADE_MS) {
+    return new Promise(resolve => {
+      if (getComputedStyle(el).display === 'none') { resolve(); return; }
+      el.style.transition = `opacity ${ms}ms ease`;
+      el.style.opacity = '0';
+      setTimeout(() => {
+        el.style.display = 'none';
+        el.style.transition = '';
+        el.style.opacity = '';
+        resolve();
+      }, ms);
+    });
+  }
+
+  function fadeIn(el, display = 'block', ms = FADE_MS + 20) {
+    return new Promise(resolve => {
+      el.style.opacity = '0';
+      el.style.display = display;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.style.transition = `opacity ${ms}ms ease`;
+        el.style.opacity = '1';
+        setTimeout(() => {
+          el.style.transition = '';
+          el.style.opacity = '';
+          resolve();
+        }, ms);
+      }));
+    });
+  }
+
+  function revealTiles() {
+    const STEP = 52, DUR = 310;
+    const timing = `${DUR}ms cubic-bezier(.2,.8,.3,1.15)`;
+    for (const [k, el] of tiles) {
+      const [q, r] = k.split(',').map(Number);
+      const delay = Math.max(Math.abs(q), Math.abs(r), Math.abs(-q - r)) * STEP;
+      el.style.animation = `tile-reveal ${timing} ${delay}ms both`;
+      el.addEventListener('animationend', () => { el.style.animation = ''; }, { once: true });
+    }
+    if (starterTile.style.display === 'block') {
+      starterTile.style.animation = `tile-reveal ${timing} 0ms both`;
+      starterTile.addEventListener('animationend', () => { starterTile.style.animation = ''; }, { once: true });
+    }
+  }
+
+  function canvasSwap(fn) {
+    return new Promise(async resolve => {
+      worldCanvas.style.transition = `opacity ${FADE_MS}ms ease`;
+      worldCanvas.style.opacity = '0';
+      await new Promise(r => setTimeout(r, FADE_MS));
+      worldCanvas.style.transition = '';
+
+      await fn();
+
+      worldCanvas.style.opacity = '1';
+      revealTiles();
+      resolve();
+    });
   }
 
   // ---------- rendering ----------
-  function visibleRange(){
-    const pad = 2;
-    const x0 = Math.floor((-panX/scale)/CELL) - pad;
-    const y0 = Math.floor((-panY/scale)/CELL) - pad;
-    const x1 = Math.ceil(((innerWidth - panX)/scale)/CELL) + pad;
-    const y1 = Math.ceil(((innerHeight - panY)/scale)/CELL) + pad;
-    return { x0, y0, x1, y1 };
+  function visibleRange() {
+    const pad = 4;
+    const x0 = (-panX) / scale, x1 = (innerWidth  - panX) / scale;
+    const y0 = (-panY) / scale, y1 = (innerHeight - panY) / scale;
+    return {
+      qMin: Math.floor(x0 / (1.5 * CELL)) - pad,
+      qMax: Math.ceil (x1 / (1.5 * CELL)) + pad,
+      rMin: Math.floor(y0 / (SQ3  * CELL)) - pad,
+      rMax: Math.ceil (y1 / (SQ3  * CELL)) + pad,
+    };
   }
-  function ensureTile(k, rec, animate){
+  function ensureTile(k, rec, animate) {
     let el = tiles.get(k);
-    if (!el){
+    if (!el) {
       el = document.createElement('div');
       el.className = 'tile' + (animate ? ' pop' : '');
-      el.style.left = (rec.x*CELL + MARGIN) + 'px';
-      el.style.top  = (rec.y*CELL + MARGIN) + 'px';
-      el.style.width = el.style.height = (CELL - 2*MARGIN) + 'px';
-      if (rec.imageUrl) {
+      const { x: cx, y: cy } = hexToPixel(rec.x, rec.y);
+      el.style.left   = (cx - TILE_R) + 'px';
+      el.style.top    = (cy - HEX_H / 2) + 'px';
+      el.style.width  = HEX_W + 'px';
+      el.style.height = HEX_H + 'px';
+      if (!rec.approved) {
+        el.classList.add('pending');
+        el.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#aaaaaa;opacity:.7;"></div></div>';
+      } else if (rec.body) {
+        el.classList.add('text-tile');
+        const bodyEl = document.createElement('div');
+        bodyEl.className = 'tt-body';
+        bodyEl.textContent = rec.body;
+        el.appendChild(bodyEl);
+        const authorEl = document.createElement('div');
+        authorEl.className = 'tt-author';
+        authorEl.textContent = rec.authorName || 'Anon';
+        el.appendChild(authorEl);
+      } else if (rec.imageUrl) {
         const img = document.createElement('img');
         img.src = rec.imageUrl;
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
@@ -388,327 +1087,743 @@
       } else {
         el.innerHTML = artSVG(rec.seed);
       }
-      if (rec.title) {
+      if (rec.approved && rec.title && !rec.body) {
         const lbl = document.createElement('div');
         lbl.className = 'tile-label';
         lbl.textContent = rec.title;
         el.appendChild(lbl);
       }
-      world.appendChild(el);
+      el.insertAdjacentHTML('beforeend', '<svg class="hex-ring" viewBox="0 0 200 173.2" xmlns="http://www.w3.org/2000/svg"><polygon points="200,86.6 150,0 50,0 0,86.6 50,173.2 150,173.2" fill="none" stroke="var(--ring,transparent)" stroke-width="6"/></svg>');
+      worldCanvas.appendChild(el);
       tiles.set(k, el);
     }
     return el;
   }
-  function render(){
+  function render() {
     islandInfo = computeIslands();
-    const { x0, y0, x1, y1 } = visibleRange();
+    starterTile.style.left   = (-TILE_R) + 'px';
+    starterTile.style.top    = (-HEX_H / 2) + 'px';
+    starterTile.style.width  = HEX_W + 'px';
+    starterTile.style.height = HEX_H + 'px';
+    starterTile.style.display = 'block';
+    if (viewMode === 'block' && focusedBlockRec) {
+      starterTile.classList.add('has-art');
+      if (starterTile._loadedKey !== focusedBlockKey) {
+        starterTile.innerHTML = '';
+        if (focusedBlockRec.imageUrl) {
+          const img = document.createElement('img');
+          img.src = focusedBlockRec.imageUrl;
+          img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+          starterTile.appendChild(img);
+        } else {
+          starterTile.innerHTML = artSVG(focusedBlockRec.seed);
+        }
+        starterTile._loadedKey = focusedBlockKey;
+      }
+    } else if (viewMode === 'country' && focusedCountryKey) {
+      starterTile.classList.add('has-art');
+      if (starterTile._loadedKey !== focusedCountryKey) {
+        starterTile.innerHTML = '';
+        const numId = parseInt(focusedCountryKey.replace('country_', ''), 10);
+        const a2 = ISO_ALPHA2[numId];
+        if (a2) {
+          const img = document.createElement('img');
+          img.src = `https://flagcdn.com/w320/${a2}.png`;
+          img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+          starterTile.appendChild(img);
+        }
+        starterTile._loadedKey = focusedCountryKey;
+      }
+    } else {
+      starterTile.classList.remove('has-art');
+      starterTile.innerHTML = '';
+      starterTile._loadedKey = null;
+    }
+    if (!starterTile.querySelector('.hex-ring'))
+      starterTile.insertAdjacentHTML('beforeend', '<svg class="hex-ring" viewBox="0 0 200 173.2" xmlns="http://www.w3.org/2000/svg"><polygon points="200,86.6 150,0 50,0 0,86.6 50,173.2 150,173.2" fill="none" stroke="#111111" stroke-width="6"/></svg>');
+    const { qMin, qMax, rMin, rMax } = visibleRange();
     const want = new Set();
-
-    for (let cx=x0; cx<=x1; cx++) for (let cy=y0; cy<=y1; cy++){
-      const k = keyOf(cx,cy); const rec = board.get(k); if (!rec) continue;
+    for (let q = qMin; q <= qMax; q++) for (let r = rMin; r <= rMax; r++) {
+      const k = keyOf(q, r), rec = board.get(k); if (!rec) continue;
       want.add(k);
-      const el = ensureTile(k, rec, false);
+      const el     = ensureTile(k, rec, false);
       const island = islandInfo.islandOf.get(k);
       el.style.setProperty('--ring', ringColor(island));
-      el.classList.toggle('dim', selectedIsland && island !== selectedIsland);
+      el.classList.toggle('dim', !!(selectedIsland && island !== selectedIsland));
     }
-    for (const [k, el] of tiles){ if (!want.has(k)){ el.remove(); tiles.delete(k); } }
+    for (const [k, el] of tiles) { if (!want.has(k)) { el.remove(); tiles.delete(k); } }
+
+    // render vacant (placeable but empty) positions as light grey
+    const vacantWant = new Set();
+    for (const k of [...board.keys(), '0,0']) {
+      const [q, r] = k.split(',').map(Number);
+      for (const [nq, nr] of neighbors(q, r)) {
+        const nk = keyOf(nq, nr);
+        if (!board.has(nk) && isPlaceable(nq, nr)) {
+          vacantWant.add(nk);
+          if (!vacantTiles.has(nk)) {
+            const vEl = document.createElement('div');
+            vEl.className = 'vacant-tile';
+            const { x: cx, y: cy } = hexToPixel(nq, nr);
+            vEl.style.left   = (cx - TILE_R) + 'px';
+            vEl.style.top    = (cy - HEX_H / 2) + 'px';
+            vEl.style.width  = HEX_W + 'px';
+            vEl.style.height = HEX_H + 'px';
+            worldCanvas.insertBefore(vEl, linksSvg);
+            vacantTiles.set(nk, vEl);
+          }
+        }
+      }
+    }
+    for (const [k, vEl] of vacantTiles) { if (!vacantWant.has(k)) { vEl.remove(); vacantTiles.delete(k); } }
 
     drawLinks(want);
-    document.getElementById('nArt').textContent = board.size;
-    document.getElementById('nIsl').textContent = islandInfo.members.size;
-    if (selectedIsland) updateIslandCard();
+    if (viewMode === 'country') {
+      document.getElementById('nArt').textContent = countryBoard.size;
+      document.getElementById('nIsl').textContent = islandInfo.members.size;
+      if (selectedIsland) updateIslandCard();
+    } else if (viewMode === 'block') {
+      document.getElementById('nav-count').textContent = board.size + ' piece' + (board.size !== 1 ? 's' : '');
+    }
   }
-  function drawLinks(visibleKeys){
+  function drawLinks(visibleKeys) {
     let out = '';
-    for (const k of visibleKeys){
+    for (const k of visibleKeys) {
       const rec = board.get(k); if (!rec || !rec.inspiredBy) continue;
-      const [x,y] = k.split(',').map(Number);
-      const cxk = x*CELL + CELL/2, cyk = y*CELL + CELL/2;
+      const [q, r] = k.split(',').map(Number);
+      const { x: cxk, y: cyk } = hexToPixel(q, r);
       const island = islandInfo.islandOf.get(k);
       const dim = selectedIsland && island !== selectedIsland;
-      for (const pk of rec.inspiredBy){
-        if (!board.has(pk)) continue;
-        if (pk >= k) continue; // draw each undirected edge once
-        const [px,py] = pk.split(',').map(Number);
-        const cxp = px*CELL + CELL/2, cyp = py*CELL + CELL/2;
-        out += `<line x1="${cxk}" y1="${cyk}" x2="${cxp}" y2="${cyp}" stroke="${linkColor(island)}" stroke-width="3" stroke-linecap="round" opacity="${dim?0.12:0.5}"/>`;
+      for (const pk of rec.inspiredBy) {
+        if (!board.has(pk) || pk >= k) continue;
+        const [pq, pr] = pk.split(',').map(Number);
+        const { x: px2, y: py2 } = hexToPixel(pq, pr);
+        out += `<line x1="${cxk}" y1="${cyk}" x2="${px2}" y2="${py2}" stroke="${linkColor(island)}" stroke-width="3" stroke-linecap="round" opacity="${dim?0.12:0.5}"/>`;
       }
     }
     linksSvg.innerHTML = out;
   }
 
   // ---------- island card ----------
-  function updateIslandCard(){
+  function updateIslandCard() {
     const members = islandInfo.members.get(selectedIsland);
     const card = document.getElementById('island-card');
-    if (!members){ card.style.display='none'; selectedIsland=null; return; }
-    card.style.display='block';
+    if (!members) { card.style.display = 'none'; selectedIsland = null; return; }
+    card.style.display = 'block';
     card.querySelector('.swatch').style.background = ringColor(selectedIsland);
-    document.getElementById('ic-id').textContent = 'Island #' + (hueFor(selectedIsland)).toString().padStart(3,'0');
+    document.getElementById('ic-id').textContent = 'Island #' + hueFor(selectedIsland).toString().padStart(3,'0');
     document.getElementById('ic-size').textContent = members.length;
     let links = 0; const who = new Map();
-    for (const k of members){
+    for (const k of members) {
       const rec = board.get(k);
-      who.set(rec.authorName || 'Anon', (who.get(rec.authorName||'Anon')||0)+1);
+      const name = rec.authorName || 'Anon';
+      who.set(name, (who.get(name) || 0) + 1);
       if (rec.inspiredBy) for (const pk of rec.inspiredBy) if (pk < k && board.has(pk)) links++;
     }
     document.getElementById('ic-links').textContent = links;
-    const parts = [...who.entries()].sort((a,b)=>b[1]-a[1]).map(([n,c]) => `<b>${n}</b> ×${c}`);
-    document.getElementById('ic-who').innerHTML = parts.length>1 ? parts.join(' · ') : parts[0] || '';
+    const parts = [...who.entries()].sort((a,b)=>b[1]-a[1]).map(([n,c])=>`<b>${n}</b> ×${c}`);
+    document.getElementById('ic-who').innerHTML = parts.length > 1 ? parts.join(' · ') : parts[0] || '';
   }
+
+  // ---------- world map ----------
+  async function initWorldMap() {
+    const res       = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    const worldData = await res.json();
+    const W = 960, H = 500;
+
+    const svg = d3.select('#world-svg')
+      .attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
+
+    // ocean
+    svg.append('rect').attr('width', W).attr('height', H).attr('fill', '#d8d8d8');
+
+    const projection = d3.geoNaturalEarth1().scale(153).translate([W/2, H/2]);
+    const path = d3.geoPath().projection(projection);
+
+    const countries = topojson.feature(worldData, worldData.objects.countries);
+    svg.selectAll('.country-path')
+      .data(countries.features)
+      .enter().append('path')
+      .attr('class', 'country-path')
+      .attr('d', path)
+      .on('mousemove', (event, d) => {
+        const name = COUNTRY_NAMES[d.id]; if (!name) return;
+        const tt = document.getElementById('country-tooltip');
+        tt.textContent = name;
+        tt.style.display = 'block';
+        tt.style.left = (event.clientX + 14) + 'px';
+        tt.style.top  = (event.clientY - 10) + 'px';
+      })
+      .on('mouseleave', () => { document.getElementById('country-tooltip').style.display = 'none'; })
+      .on('click', (event, d) => {
+        const name = COUNTRY_NAMES[d.id];
+        if (!name) return;
+        if (transitioning) return;
+        document.getElementById('country-tooltip').style.display = 'none';
+        enterCountryView('country_' + d.id, name);
+      });
+
+    // borders overlay
+    svg.append('path')
+      .datum(topojson.mesh(worldData, worldData.objects.countries, (a,b) => a !== b))
+      .attr('fill', 'none').attr('stroke', 'rgba(255,255,255,0.55)').attr('stroke-width', 0.5)
+      .attr('d', path);
+  }
+
+  // ---------- users view ----------
+  function userBlockEl(p, count) {
+    const block = document.createElement('div');
+    block.className = 'user-block';
+    if (p.avatar_url) {
+      const img = document.createElement('img');
+      img.className = 'avatar'; img.src = p.avatar_url; img.alt = '';
+      block.appendChild(img);
+    } else {
+      const fallback = document.createElement('div');
+      fallback.className = 'avatar-fallback';
+      fallback.textContent = (p.username || p.name || '?').charAt(0).toUpperCase();
+      block.appendChild(fallback);
+    }
+    const info = document.createElement('div');
+    info.className = 'u-info';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'u-name'; nameEl.textContent = p.username || p.name || 'Anonymous';
+    info.appendChild(nameEl);
+    if (p.bio) {
+      const bioEl = document.createElement('div');
+      bioEl.className = 'u-bio'; bioEl.textContent = p.bio;
+      info.appendChild(bioEl);
+    }
+    const tags = (p.neurodivergence || []).filter(t => t !== 'Prefer not to say');
+    if (tags.length) {
+      const tagsEl = document.createElement('div');
+      tagsEl.className = 'u-tags';
+      for (const tag of tags) {
+        const t = document.createElement('span');
+        t.className = 'nd-tag'; t.textContent = tag;
+        tagsEl.appendChild(t);
+      }
+      info.appendChild(tagsEl);
+    }
+    block.appendChild(info);
+    const countEl = document.createElement('div');
+    countEl.className = 'u-count'; countEl.textContent = count + ' piece' + (count !== 1 ? 's' : '');
+    block.appendChild(countEl);
+    block.style.cursor = 'pointer';
+    block.onclick = () => enterProfileView(p.id);
+    return block;
+  }
+  let usersCache = null;
+  let usersSort  = 'pieces';
+  function sortedProfiles() {
+    const { profiles, countMap } = usersCache;
+    const arr = [...profiles];
+    if (usersSort === 'alpha') {
+      arr.sort((a, b) => (a.username || a.name || '').localeCompare(b.username || b.name || '', undefined, { sensitivity: 'base' }));
+    } else if (usersSort === 'newest') {
+      arr.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } else {
+      arr.sort((a, b) => (countMap.get(b.id) || 0) - (countMap.get(a.id) || 0));
+    }
+    return arr;
+  }
+  function renderUsersList() {
+    if (!usersCache) return;
+    const grid = document.getElementById('users-grid');
+    grid.innerHTML = '';
+    for (const p of sortedProfiles()) grid.appendChild(userBlockEl(p, usersCache.countMap.get(p.id) || 0));
+  }
+  async function loadUsers() {
+    const grid  = document.getElementById('users-grid');
+    const empty = document.getElementById('users-empty');
+    const [{ data: profiles, error }, { data: counts, error: countsError }] = await Promise.all([
+      sb.from('profiles').select('id,name,username,avatar_url,bio,neurodivergence,created_at'),
+      sb.from('profile_counts').select('id,piece_count')
+    ]);
+    grid.innerHTML = '';
+    if (error) console.error('loadUsers: profiles query failed', error);
+    if (countsError) console.error('loadUsers: profile_counts query failed', countsError);
+    if (error || !profiles || !profiles.length) {
+      empty.textContent = error ? `Couldn't load users (${error.message})` : 'No users yet.';
+      empty.style.display = 'block'; usersCache = null; return;
+    }
+    empty.style.display = 'none';
+    usersCache = { profiles, countMap: new Map((counts || []).map(c => [c.id, c.piece_count])) };
+    renderUsersList();
+  }
+  document.getElementById('users-sort').onchange = e => { usersSort = e.target.value; renderUsersList(); };
+  async function switchTopTab(tab) {
+    if (transitioning) return;
+    if (tab === 'users' && viewMode === 'users') return;
+    if (tab === 'map'   && viewMode === 'world') return;
+    document.getElementById('tab-map').classList.toggle('active', tab === 'map');
+    document.getElementById('tab-users').classList.toggle('active', tab === 'users');
+    transitioning = true;
+    if (tab === 'users') {
+      viewMode = 'users';
+      loadUsers();
+      await Promise.all([
+        fadeOut(document.getElementById('world-view')),
+        fadeIn(document.getElementById('users-view'), 'block'),
+      ]);
+    } else {
+      viewMode = 'world';
+      await Promise.all([
+        fadeOut(document.getElementById('users-view')),
+        fadeIn(document.getElementById('world-view'), 'block'),
+      ]);
+    }
+    transitioning = false;
+  }
+  document.getElementById('tab-map').onclick   = () => switchTopTab('map');
+  document.getElementById('tab-users').onclick = () => switchTopTab('users');
+
+  // ---------- individual profile view ----------
+  const { enterProfileView, exitProfileView } = ProfileView({
+    sb, me, LINK_PLATFORMS, fadeIn, fadeOut, artSVG, openBlockModal, rowToRec, toast,
+    getViewMode: () => viewMode, setViewMode: v => { viewMode = v; },
+    getTransitioning: () => transitioning, setTransitioning: v => { transitioning = v; },
+    getProfileReturnMode: () => profileReturnMode, setProfileReturnMode: v => { profileReturnMode = v; },
+  });
+
+  // ---------- country view ----------
+  async function enterCountryView(countryKey, countryName) {
+    transitioning = true;
+    viewMode = 'country';
+    focusedCountryKey  = countryKey;
+    focusedCountryName = countryName;
+    selectedIsland = null;
+
+    const dataPromise = fetchCellsByParent(countryKey);
+    await Promise.all([
+      fadeOut(document.getElementById('world-view')),
+      fadeOut(document.getElementById('world-title')),
+    ]);
+
+    document.getElementById('back-btn').textContent       = '← World';
+    document.getElementById('nav-swatch').style.display   = 'none';
+    document.getElementById('nav-label').textContent      = countryName;
+    document.getElementById('nav-count').textContent      = '';
+    document.getElementById('nav-bar').style.display      = 'flex';
+    document.getElementById('stats').style.display        = 'flex';
+    document.getElementById('hud').style.display          = 'flex';
+
+    scale = 1; panX = innerWidth/2; panY = innerHeight/2;
+    applyTransform();
+
+    countryBoard = await dataPromise;
+    board = countryBoard;
+    render();
+
+    document.getElementById('grid-viewport').style.display = 'block';
+    revealTiles();
+
+    const hint = document.getElementById('hint');
+    hint.style.display = '';
+    hint.style.opacity = '1';
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(hideHint, 6000);
+
+    transitioning = false;
+  }
+
+  async function exitCountryView() {
+    transitioning = true;
+
+    document.getElementById('nav-bar').style.display     = 'none';
+    document.getElementById('stats').style.display       = 'none';
+    document.getElementById('hud').style.display         = 'none';
+    document.getElementById('island-card').style.display = 'none';
+    document.getElementById('hint').style.display        = 'none';
+
+    await fadeOut(document.getElementById('grid-viewport'));
+
+    viewMode = 'world';
+    focusedCountryKey = null; focusedCountryName = null;
+    selectedIsland = null;
+
+    for (const el of tiles.values()) el.remove();
+    tiles.clear();
+    for (const el of vacantTiles.values()) el.remove();
+    vacantTiles.clear();
+    board = new Map(); countryBoard = new Map();
+
+    await Promise.all([
+      fadeIn(document.getElementById('world-view'), 'block'),
+      fadeIn(document.getElementById('world-title'), 'block'),
+    ]);
+
+    transitioning = false;
+  }
+
+  // ---------- block view ----------
+  async function enterBlockView(blockKey, blockRec) {
+    const islandColor = ringColor(islandInfo.islandOf.get(blockKey) || blockKey);
+    viewMode = 'block'; focusedBlockKey = blockKey; focusedBlockRec = blockRec;
+    selectedIsland = null;
+    savedViewState = { scale, panX, panY };
+
+    await canvasSwap(async () => {
+      for (const el of tiles.values()) el.remove();
+      tiles.clear();
+      for (const el of vacantTiles.values()) el.remove();
+      vacantTiles.clear();
+      board = new Map();
+
+      document.getElementById('island-card').style.display   = 'none';
+      document.getElementById('back-btn').textContent        = '← ' + focusedCountryName;
+      document.getElementById('nav-swatch').style.display    = 'block';
+      document.getElementById('nav-swatch').style.background = islandColor;
+      document.getElementById('nav-label').textContent       = blockRec.title || 'Untitled';
+      document.getElementById('nav-count').textContent       = 'Loading…';
+
+      scale = 1; panX = innerWidth/2; panY = innerHeight/2;
+      applyTransform();
+
+      board = await fetchCellsByParent(blockKey);
+      render();
+    });
+  }
+
+  async function exitBlockView() {
+    await canvasSwap(async () => {
+      viewMode = 'country'; focusedBlockKey = null; focusedBlockRec = null;
+
+      for (const el of tiles.values()) el.remove();
+      tiles.clear();
+      for (const el of vacantTiles.values()) el.remove();
+      vacantTiles.clear();
+      board = countryBoard;
+
+      document.getElementById('back-btn').textContent      = '← World';
+      document.getElementById('nav-swatch').style.display  = 'none';
+      document.getElementById('nav-label').textContent     = focusedCountryName;
+      document.getElementById('nav-count').textContent     = '';
+
+      if (savedViewState) { scale = savedViewState.scale; panX = savedViewState.panX; panY = savedViewState.panY; savedViewState = null; }
+      applyTransform();
+      render();
+    });
+  }
+
+  // ---------- back button ----------
+  document.getElementById('back-btn').onclick = () => {
+    if (transitioning) return;
+    if (viewMode === 'block')   exitBlockView();
+    else if (viewMode === 'country') exitCountryView();
+    else if (viewMode === 'profile') exitProfileView();
+  };
 
   // ---------- placement ----------
-  async function tryPlace(cx, cy, title, imageUrl){
-    if (!isPlaceable(cx, cy)) {
-      toast(board.size===0 ? 'Click any cell to start' : 'Place next to an existing artwork');
-      return;
-    }
-    const k = keyOf(cx,cy);
-    const parents = neighbors(cx,cy).map(([nx,ny])=>keyOf(nx,ny)).filter(pk => board.has(pk));
-    const rec = { x:cx, y:cy, seed:(Math.random()*1e9)|0, author:me.id, authorName:me.name, inspiredBy:parents, ts:Date.now() };
+  async function tryPlace(q, r, title, imageUrl, body) {
+    if (!isPlaceable(q, r)) { toast('Place next to an existing piece'); return; }
+    const k       = keyOf(q, r);
+    const parents = neighbors(q, r).map(([nq,nr]) => keyOf(nq,nr)).filter(pk => board.has(pk));
+    const parentKey = viewMode === 'block' ? focusedBlockKey : focusedCountryKey;
+    const rec = { x:q, y:r, seed:(Math.random()*1e9)|0, author:me.id, authorName:me.name, inspiredBy:parents, approved:false, ts:Date.now(), parentKey };
     if (title)    rec.title    = title;
     if (imageUrl) rec.imageUrl = imageUrl;
+    if (body)     rec.body     = body;
 
-    board.set(k, rec);                 // optimistic
-    const el = ensureTile(k, rec, true);
-    render();
-    centerSelectOnRecentless();
+    board.set(k, rec);
+    if (viewMode === 'country') countryBoard.set(k, rec);
+    ensureTile(k, rec, true); render();
 
     const res = await placeCell(rec);
-    if (!res.ok){
-      board.delete(k); el.remove(); tiles.delete(k);
-      recordsToBoard(res.data, false); render();
-      toast(res.taken ? 'Someone just claimed that cell' : 'Could not save — try again');
+    if (!res.ok) {
+      board.delete(k);
+      if (viewMode === 'country') countryBoard.delete(k);
+      const el = tiles.get(k); if (el) { el.remove(); tiles.delete(k); }
+      render(); toast(res.taken ? 'Someone just placed there — try another spot' : 'Could not save — try again');
     }
   }
-  function centerSelectOnRecentless(){ /* placeholder to keep selection stable after placing */ }
 
-  // ---------- pointer interaction (pan vs click) ----------
-  let down=false, moved=false, sx=0, sy=0;
-  const pointers = new Map(); let pinch=0;
+  // ---------- pointer ----------
+  let down = false, moved = false, sx = 0, sy = 0;
+  const pointers = new Map(); let pinch = 0;
 
-  viewport.addEventListener('pointerdown', (e) => {
-    pointers.set(e.pointerId, e);
-    down=true; moved=false; sx=e.clientX; sy=e.clientY;
-    viewport.classList.add('panning'); viewport.setPointerCapture(e.pointerId); hideHint();
+  gridViewport.addEventListener('pointerdown', e => {
+    pointers.set(e.pointerId, e); down = true; moved = false; sx = e.clientX; sy = e.clientY;
+    gridViewport.classList.add('panning'); gridViewport.setPointerCapture(e.pointerId); hideHint();
   });
-  viewport.addEventListener('pointermove', (e) => {
+  gridViewport.addEventListener('pointermove', e => {
     if (pointers.has(e.pointerId)) pointers.set(e.pointerId, e);
-    if (pointers.size === 2){
+    if (pointers.size === 2) {
       const [a,b] = [...pointers.values()];
-      const d = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
-      const mx=(a.clientX+b.clientX)/2, my=(a.clientY+b.clientY)/2;
-      if (pinch) zoomAt(mx,my, d/pinch); pinch=d; moved=true; return;
+      const d  = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+      const mx = (a.clientX+b.clientX)/2, my = (a.clientY+b.clientY)/2;
+      if (pinch) zoomAt(mx, my, d/pinch); pinch = d; moved = true; return;
     }
-    if (down){
-      if (Math.hypot(e.clientX-sx, e.clientY-sy) > 4) moved=true;
-      if (moved){ panX += e.clientX - sx; panY += e.clientY - sy; sx=e.clientX; sy=e.clientY; applyTransform(); render(); ghost.style.display='none'; }
+    if (down) {
+      if (Math.hypot(e.clientX-sx, e.clientY-sy) > 4) moved = true;
+      if (moved) { panX += e.clientX-sx; panY += e.clientY-sy; sx = e.clientX; sy = e.clientY; applyTransform(); render(); ghost.style.display = 'none'; }
       return;
     }
-    updateGhost(e.clientX, e.clientY); // hover preview
+    updateGhost(e.clientX, e.clientY);
   });
-  function endPointer(e){
-    pointers.delete(e.pointerId); if (pointers.size<2) pinch=0;
-    if (down && !moved){
-      const { cx, cy } = cellAt(e.clientX, e.clientY);
-      const k = keyOf(cx,cy);
-      if (board.has(k)){
-        openBlockModal(board.get(k));
-      } else {
-        openPlaceModal(cx, cy);
+  function endPointer(e) {
+    pointers.delete(e.pointerId); if (pointers.size < 2) pinch = 0;
+    if (down && !moved) {
+      const { q, r } = cellAt(e.clientX, e.clientY);
+      const k = keyOf(q, r);
+      if (viewMode === 'block') {
+        if (q === 0 && r === 0 && focusedBlockRec) { openBlockModal(focusedBlockRec); }
+        else board.has(k) ? openBlockModal(board.get(k)) : openPlaceModal(q, r);
+      } else if (viewMode === 'country') {
+        board.has(k) ? enterBlockView(k, board.get(k)) : openPlaceModal(q, r);
       }
     }
-    down=false; viewport.classList.remove('panning');
-    try { viewport.releasePointerCapture(e.pointerId); } catch(_){}
+    down = false; gridViewport.classList.remove('panning');
+    try { gridViewport.releasePointerCapture(e.pointerId); } catch (_) {}
   }
-  viewport.addEventListener('pointerup', endPointer);
-  viewport.addEventListener('pointercancel', endPointer);
-  viewport.addEventListener('pointerleave', ()=>{ ghost.style.display='none'; });
-
-  viewport.addEventListener('wheel', (e) => {
+  gridViewport.addEventListener('pointerup',     endPointer);
+  gridViewport.addEventListener('pointercancel', endPointer);
+  gridViewport.addEventListener('pointerleave',  () => { ghost.style.display = 'none'; });
+  gridViewport.addEventListener('wheel', e => {
     e.preventDefault();
-    const f = e.ctrlKey ? Math.exp(-e.deltaY*0.01) : Math.exp(-e.deltaY*0.0016);
-    zoomAt(e.clientX, e.clientY, f); hideHint();
-  }, { passive:false });
+    zoomAt(e.clientX, e.clientY, e.ctrlKey ? Math.exp(-e.deltaY*0.01) : Math.exp(-e.deltaY*0.0016));
+    hideHint();
+  }, { passive: false });
 
-  function updateGhost(mx, my){
-    const { cx, cy } = cellAt(mx, my);
-    if (board.has(keyOf(cx,cy))){ ghost.style.display='none'; return; }
-    const placeable = isPlaceable(cx,cy);
-    ghost.style.display='flex';
-    ghost.classList.toggle('blocked', !placeable);
-    ghost.style.left = (cx*CELL + MARGIN) + 'px';
-    ghost.style.top  = (cy*CELL + MARGIN) + 'px';
-    ghost.style.width = ghost.style.height = (CELL - 2*MARGIN) + 'px';
+  function updateGhost(mx, my) {
+    const { q, r } = cellAt(mx, my);
+    if (board.has(keyOf(q, r))) { ghost.style.display = 'none'; return; }
+    ghost.style.display = 'flex';
+    ghost.classList.toggle('blocked', !isPlaceable(q, r));
+    const { x: cx, y: cy } = hexToPixel(q, r);
+    ghost.style.left   = (cx - TILE_R) + 'px';
+    ghost.style.top    = (cy - HEX_H / 2) + 'px';
+    ghost.style.width  = HEX_W + 'px';
+    ghost.style.height = HEX_H + 'px';
   }
 
-  // ---------- hud ----------
-  const ctr = () => ({ x:innerWidth/2, y:innerHeight/2 });
-  document.getElementById('zoomIn').onclick  = () => { const c=ctr(); zoomAt(c.x,c.y,1.25); };
-  document.getElementById('zoomOut').onclick = () => { const c=ctr(); zoomAt(c.x,c.y,1/1.25); };
+  // ---------- HUD ----------
+  const ctr = () => ({ x: innerWidth/2, y: innerHeight/2 });
+  document.getElementById('zoomIn').onclick  = () => { const c = ctr(); zoomAt(c.x, c.y, 1.25); };
+  document.getElementById('zoomOut').onclick = () => { const c = ctr(); zoomAt(c.x, c.y, 1/1.25); };
   document.getElementById('reset').onclick   = () => { scale=1; panX=innerWidth/2; panY=innerHeight/2; applyTransform(); render(); };
-  addEventListener('keydown', (e)=>{
-    if (e.key==='Escape'){
-      if (document.getElementById('block-modal').classList.contains('open')){ closeBlockModal(); return; }
-      if (document.getElementById('place-modal').classList.contains('open')){ closePlaceModal(); return; }
-      selectedIsland=null; document.getElementById('island-card').style.display='none'; render();
+
+  addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (document.getElementById('block-modal').classList.contains('open'))  { closeBlockModal(); return; }
+      if (document.getElementById('place-modal').classList.contains('open'))  { closePlaceModal(); return; }
+      if (document.getElementById('auth-modal').classList.contains('open'))   { closeAuthModal();  return; }
+      if (viewMode === 'block')   { exitBlockView();   return; }
+      if (viewMode === 'country') { exitCountryView(); return; }
+      if (viewMode === 'profile') { exitProfileView(); return; }
     }
-    if (e.key==='0' && (e.metaKey||e.ctrlKey)){ e.preventDefault(); document.getElementById('reset').click(); }
-    if (e.key==='+'||e.key==='=') document.getElementById('zoomIn').click();
-    if (e.key==='-'||e.key==='_') document.getElementById('zoomOut').click();
+    if (e.key === '0' && (e.metaKey||e.ctrlKey)) { e.preventDefault(); document.getElementById('reset').click(); }
+    if (e.key === '+' || e.key === '=') document.getElementById('zoomIn').click();
+    if (e.key === '-' || e.key === '_') document.getElementById('zoomOut').click();
   });
 
-  // ---------- block detail modal ----------
-  function openBlockModal(rec){
+  // ---------- block modal ----------
+  function openBlockModal(rec) {
     const art = document.getElementById('block-art');
     art.innerHTML = '';
-    if (rec.imageUrl){
-      art.classList.remove('art-svg');
-      const img = document.createElement('img');
-      img.src = rec.imageUrl;
-      art.appendChild(img);
-    } else {
+    if (!rec.approved) {
+      art.style.display = '';
       art.classList.add('art-svg');
-      art.innerHTML = artSVG(rec.seed);
+      art.innerHTML = '<div style="width:100%;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#f0f0f0;color:#888888;"><div style="width:28px;height:28px;border-radius:50%;background:#aaaaaa;"></div><div style="font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;">Pending review</div></div>';
+      document.getElementById('block-title').textContent = 'Awaiting approval';
+      document.getElementById('block-title').classList.remove('untitled');
+      document.getElementById('block-author').innerHTML = '';
+      document.getElementById('block-date').textContent = '';
+      document.getElementById('block-body').style.display = 'none';
+      document.getElementById('block-island').style.display = 'none';
+      document.getElementById('block-like').style.display = 'none';
+      document.getElementById('block-modal').classList.add('open');
+      return;
     }
-
+    if (rec.body && !rec.imageUrl) {
+      art.style.display = 'none';
+    } else {
+      art.style.display = '';
+      if (rec.imageUrl) {
+        art.classList.remove('art-svg');
+        const img = document.createElement('img'); img.src = rec.imageUrl; art.appendChild(img);
+      } else {
+        art.classList.add('art-svg');
+        art.innerHTML = artSVG(rec.seed);
+      }
+    }
     const titleEl = document.getElementById('block-title');
-    if (rec.title){ titleEl.textContent = rec.title; titleEl.classList.remove('untitled'); }
-    else { titleEl.textContent = 'Untitled'; titleEl.classList.add('untitled'); }
-
+    if (rec.title) { titleEl.textContent = rec.title; titleEl.classList.remove('untitled'); }
+    else if (rec.body) { titleEl.textContent = 'Comment'; titleEl.classList.add('untitled'); }
+    else               { titleEl.textContent = 'Untitled'; titleEl.classList.add('untitled'); }
     document.getElementById('block-author').innerHTML = 'by <b>' + (rec.authorName || 'Anonymous') + '</b>';
-    const d = new Date(rec.ts);
-    document.getElementById('block-date').textContent = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-
-    const k = keyOf(rec.x, rec.y);
-    const island = islandInfo.islandOf.get(k);
-    if (island){
+    document.getElementById('block-date').textContent = new Date(rec.ts).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const bodyEl = document.getElementById('block-body');
+    if (rec.body) { bodyEl.textContent = rec.body; bodyEl.style.display = 'block'; }
+    else          { bodyEl.style.display = 'none'; }
+    const k = keyOf(rec.x, rec.y), island = islandInfo.islandOf.get(k);
+    if (island) {
       document.getElementById('block-island').querySelector('.dot').style.background = ringColor(island);
       document.getElementById('block-island-label').textContent = 'Island #' + hueFor(island).toString().padStart(3,'0');
       document.getElementById('block-island').style.display = 'flex';
     } else {
       document.getElementById('block-island').style.display = 'none';
     }
-
+    document.getElementById('block-like').style.display = '';
+    setupLikeButton(rec);
     document.getElementById('block-modal').classList.add('open');
   }
-
-  function closeBlockModal(){ document.getElementById('block-modal').classList.remove('open'); }
-
+  function closeBlockModal() { document.getElementById('block-modal').classList.remove('open'); }
   document.getElementById('block-close').onclick = closeBlockModal;
-  document.getElementById('block-modal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('block-modal')) closeBlockModal();
-  });
+  document.getElementById('block-modal').addEventListener('click', e => { if (e.target === document.getElementById('block-modal')) closeBlockModal(); });
+
+  // ---------- likes ----------
+  let likeRequestId = 0;
+  async function setupLikeButton(rec) {
+    const cellKey = `${rec.x},${rec.y}@${rec.parentKey}`;
+    const btn     = document.getElementById('block-like');
+    const countEl = document.getElementById('block-like-count');
+    const myRequest = ++likeRequestId;
+    btn.disabled = true;
+    btn.classList.remove('liked');
+    countEl.textContent = '…';
+    const { data, error } = await sb.from('cell_likes').select('user_id').eq('cell_key', cellKey);
+    if (myRequest !== likeRequestId) return; // a different piece was opened meanwhile
+    const likes = error || !data ? [] : data;
+    countEl.textContent = likes.length;
+    btn.classList.toggle('liked', me.id ? likes.some(l => l.user_id === me.id) : false);
+    btn.disabled = false;
+    btn.onclick = () => toggleLike(cellKey, btn, countEl);
+  }
+  async function toggleLike(cellKey, btn, countEl) {
+    if (!me.id) { openAuthModal(); return; }
+    const wasLiked = btn.classList.contains('liked');
+    btn.disabled = true;
+    const { error } = wasLiked
+      ? await sb.from('cell_likes').delete().eq('cell_key', cellKey).eq('user_id', me.id)
+      : await sb.from('cell_likes').insert({ cell_key: cellKey, user_id: me.id });
+    btn.disabled = false;
+    if (error) { toast('Could not update like'); return; }
+    btn.classList.toggle('liked', !wasLiked);
+    countEl.textContent = Number(countEl.textContent || 0) + (wasLiked ? -1 : 1);
+  }
 
   // ---------- place modal ----------
-  let pendingCell = null, currentImageUrl = null;
+  let pendingCell = null, currentFile = null;
 
-  function openPlaceModal(cx, cy){
-    if (!isPlaceable(cx, cy)){
-      toast(board.size===0 ? 'Click any cell to start' : 'Place next to an existing artwork');
-      return;
-    }
-    pendingCell = { cx, cy };
-    currentImageUrl = null;
+  function switchPlaceTab(tab) {
+    const isArtwork = tab === 'artwork';
+    document.getElementById('img-upload-section').style.display = isArtwork ? '' : 'none';
+    document.getElementById('comment-input').style.display      = isArtwork ? 'none' : 'block';
+    document.getElementById('tab-artwork').classList.toggle('active',  isArtwork);
+    document.getElementById('tab-comment').classList.toggle('active', !isArtwork);
+    if (!isArtwork) setTimeout(() => document.getElementById('comment-input').focus(), 40);
+  }
+
+  document.getElementById('tab-artwork').onclick = () => switchPlaceTab('artwork');
+  document.getElementById('tab-comment').onclick = () => switchPlaceTab('comment');
+
+  function openPlaceModal(q, r) {
+    if (!me.id) { openAuthModal(); return; }
+    if (!isPlaceable(q, r)) { toast('Place next to an existing piece'); return; }
+    pendingCell = { q, r }; currentFile = null;
+    const isBlock = viewMode === 'block';
+    document.getElementById('place-dialog-title').textContent = isBlock ? 'Add to Thread' : 'Share Your Work';
+    const tabs = document.getElementById('place-tabs');
+    tabs.style.display = isBlock ? 'flex' : 'none';
+    document.getElementById('comment-input').value = '';
+    document.getElementById('title-input').placeholder = 'Title (optional)';
     document.getElementById('img-input').value = '';
     document.getElementById('img-preview').style.display = 'none';
     document.getElementById('img-placeholder').style.display = '';
     document.getElementById('img-upload-area').classList.remove('has-img');
     document.getElementById('title-input').value = '';
+    if (isBlock) switchPlaceTab('artwork');
     document.getElementById('place-modal').classList.add('open');
     setTimeout(() => document.getElementById('title-input').focus(), 60);
   }
+  function closePlaceModal() { document.getElementById('place-modal').classList.remove('open'); pendingCell = null; currentFile = null; }
 
-  function closePlaceModal(){
-    document.getElementById('place-modal').classList.remove('open');
-    pendingCell = null;
-    currentImageUrl = null;
-  }
-
-  document.getElementById('img-input').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) loadImageFile(file);
-  });
-
-  const MAX_IMG_BYTES = 8 * 1024 * 1024; // 8 MB
-
-  function loadImageFile(file){
-    if (file.size > MAX_IMG_BYTES){ toast('Image too large — max 8 MB'); return; }
+  const MAX_IMG_BYTES = 8 * 1024 * 1024;
+  function loadImageFile(file) {
+    if (file.size > MAX_IMG_BYTES) { toast('Image too large — max 8 MB'); return; }
+    currentFile = file;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      currentImageUrl = ev.target.result;
-      const preview = document.getElementById('img-preview');
-      preview.src = currentImageUrl;
-      preview.style.display = 'block';
+    reader.onload = ev => {
+      document.getElementById('img-preview').src = ev.target.result;
+      document.getElementById('img-preview').style.display = 'block';
       document.getElementById('img-placeholder').style.display = 'none';
       document.getElementById('img-upload-area').classList.add('has-img');
     };
     reader.readAsDataURL(file);
   }
 
-  const uploadArea = document.getElementById('img-upload-area');
-  uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag'); });
-  uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('drag'); });
-  uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault(); uploadArea.classList.remove('drag');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) loadImageFile(file);
-  });
+  document.getElementById('img-input').addEventListener('change', e => { const f = e.target.files[0]; if (f) loadImageFile(f); });
 
-  document.getElementById('img-remove').addEventListener('click', (e) => {
-    e.stopPropagation();
-    currentImageUrl = null;
+  const uploadArea = document.getElementById('img-upload-area');
+  uploadArea.addEventListener('dragover',  e => { e.preventDefault(); uploadArea.classList.add('drag'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault(); uploadArea.classList.remove('drag');
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) loadImageFile(f);
+  });
+  document.getElementById('img-remove').addEventListener('click', e => {
+    e.stopPropagation(); currentFile = null;
     document.getElementById('img-preview').style.display = 'none';
     document.getElementById('img-placeholder').style.display = '';
     document.getElementById('img-upload-area').classList.remove('has-img');
     document.getElementById('img-input').value = '';
   });
-
   document.getElementById('modal-cancel').onclick = closePlaceModal;
-
   document.getElementById('modal-add').onclick = async () => {
     if (!pendingCell) return;
     const title = document.getElementById('title-input').value.trim();
-    const imageUrl = currentImageUrl;
-    const { cx, cy } = pendingCell;
+    const file  = currentFile;
+    const body  = document.getElementById('comment-input').value.trim();
+    const { q, r } = pendingCell;
     closePlaceModal();
-    await tryPlace(cx, cy, title, imageUrl);
+    let imageUrl = null;
+    if (file) { toast('Uploading image…'); imageUrl = await uploadImage(file); }
+    await tryPlace(q, r, title, imageUrl, body || null);
   };
+  document.getElementById('title-input').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('modal-add').click(); });
+  document.getElementById('place-modal').addEventListener('click', e => { if (e.target === document.getElementById('place-modal')) closePlaceModal(); });
 
-  document.getElementById('title-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('modal-add').click();
-  });
-
-  document.getElementById('place-modal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('place-modal')) closePlaceModal();
-  });
-
-  let hintTimer = setTimeout(hideHint, 6000);
-  function hideHint(){ const h=document.getElementById('hint'); if (h.style.opacity!=='0'){ h.style.opacity='0'; clearTimeout(hintTimer); } }
-  let toastTimer;
-  function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1900); }
-
-  // ---------- realtime-ish sync (poll). Real backend pushes via WebSocket. ----------
-  async function sync(){
-    const data = await fetchBoard();
-    const fresh = recordsToBoard(data, true);
-    if (fresh.length){
-      render();
-      // pop-animate newly arrived remote tiles that are on screen
-      for (const k of fresh){ const el = tiles.get(k); if (el){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } }
-    }
+  let hintTimer;
+  function hideHint() { const h = document.getElementById('hint'); h.style.opacity = '0'; }
+  function toast(msg) {
+    const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1900);
   }
 
   // ---------- boot ----------
+  const _mapReady = initWorldMap().catch(() => {});
+
   (async () => {
-    me = await getIdentity();
-    document.getElementById('myName').textContent = me.name;
-    const data = await fetchBoard();
-    recordsToBoard(data, false);
-    panX = innerWidth/2; panY = innerHeight/2;   // origin near screen center
-    applyTransform(); render();
-    setInterval(sync, 3500);
+    sb.auth.onAuthStateChange(async (_event, session) => {
+      console.log('[auth debug] onAuthStateChange fired', { event: _event, hasSession: !!session });
+      me = session ? meFromUser(session.user) : { id:'', name:'', avatar:'', username:'', bio:'', nd:[] };
+      if (me.id) { await loadMyProfile(); upsertProfile(); }
+      console.log('[auth debug] updateIdentityUI from onAuthStateChange, me.id =', me.id);
+      updateIdentityUI();
+      if (me.id && !me.username) openProfileModal(true);
+    });
+    const { data: { session }, error } = await sb.auth.getSession();
+    console.log('[auth debug] getSession ->', { session, error });
+    if (session) me = meFromUser(session.user);
+    if (me.id) { await loadMyProfile(); upsertProfile(); }
+    console.log('[auth debug] updateIdentityUI from getSession flow, me.id =', me.id);
+    updateIdentityUI();
+    if (me.id && !me.username) openProfileModal(true);
+    subscribeRealtime();
+    const deepLinkProfile = new URLSearchParams(location.search).get('profile');
+    if (deepLinkProfile) enterProfileView(deepLinkProfile);
+  })();
+
+  // Splash auto-dismiss once map is ready
+  (async () => {
+    await Promise.all([_mapReady, new Promise(r => setTimeout(r, 900))]);
+    const splash = document.getElementById('splash');
+    splash.style.opacity = '0';
+    await new Promise(r => setTimeout(r, 350));
+    splash.style.display = 'none';
   })();
 })();
 </script>
