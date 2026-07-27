@@ -70,11 +70,8 @@
     display:flex;align-items:center;gap:10px;
   }
   .logo::before{
-    content:'';display:block;width:22px;height:22px;background:var(--forest);flex-shrink:0;
-    background-image:
-      linear-gradient(#fff,#fff),linear-gradient(#fff,#fff),linear-gradient(#fff,#fff),linear-gradient(#fff,#fff);
-    background-size:7px 7px;background-repeat:no-repeat;
-    background-position:3px 3px,12px 3px,3px 12px,12px 12px;
+    content:'';display:block;width:22px;height:22px;flex-shrink:0;border-radius:5px;
+    background-image:url('logo.png');background-size:cover;background-position:center;
   }
   .logo:hover{opacity:.75;}
 
@@ -140,7 +137,7 @@
 
   .screen{display:none;flex:1;min-height:0;}
   .screen.active{animation:screenIn .25s ease-out;}
-  .screen[data-screen="project"].active{display:block;overflow-y:auto;}
+  .screen[data-screen="project"].active{display:block;overflow-y:auto;padding-bottom:40px;}
   .screen[data-screen="profile"].active{display:block;overflow-y:auto;}
 
   .empty-note{text-align:center;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:48px 16px;}
@@ -2682,18 +2679,27 @@
       .attr('class', 'pg-label').text(d => truncateLabel(d.label))
       .attr('dy', d => nodeRadius(d) + 12);
 
+    function ticked() {
+      link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+          .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
+      label.attr('x', d => d.x).attr('y', d => d.y);
+    }
     const sim = d3.forceSimulation(nodes)
       .force('link', d3.forceLink(links).id(d => d.id).distance(90).strength(0.6))
       .force('charge', d3.forceManyBody().strength(-260))
       .force('collide', d3.forceCollide(d => nodeRadius(d) + 14))
       .force('x', d3.forceX(width / 2).strength(0.05))
       .force('y', d3.forceY(height / 2).strength(0.05))
-      .on('tick', () => {
-        link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
-            .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
-        node.attr('transform', d => `translate(${d.x},${d.y})`);
-        label.attr('x', d => d.x).attr('y', d => d.y);
-      });
+      .on('tick', ticked);
+    // Paint real coordinates synchronously before the first frame: d3-force's
+    // first tick fires on the next animation frame, so without this the
+    // browser's very first paint sees all <line>s at their zero-length SVG
+    // default (no x1/y1/x2/y2 yet). With auto-start-reverse markers, that
+    // degenerate first paint leaves the arrowhead orientation stuck/invisible
+    // on this <line> even after later ticks move it — which is why arrows
+    // only showed up once a click forced the graph to re-render.
+    ticked();
     graphSim = sim;
 
     let dragMoved = false;
@@ -2710,7 +2716,7 @@
       .on('end', (ev, d) => {
         if (!ev.active) sim.alphaTarget(0);
         if (d.isCenter) { d.fx = width / 2; d.fy = height / 2; }
-        else if (!dragMoved) { d.fx = null; d.fy = null; }
+        else { d.fx = null; d.fy = null; }
       }));
 
     node.on('click', (ev, d) => {
