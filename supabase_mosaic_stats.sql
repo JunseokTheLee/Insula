@@ -1,10 +1,15 @@
 -- Run this once in the Supabase SQL editor (Project → SQL Editor → New query).
--- Run/re-run AFTER supabase_mosaic_versions.sql (needs mosaic_projects.is_archived).
+-- Run/re-run AFTER supabase_mosaic_versions.sql (needs mosaic_projects.is_archived)
+-- and AFTER supabase_profiles.sql (needs public.profiles).
 -- Site-wide aggregate counts for the weavo.html landing hero's stats strip
--- (participating artists, artworks submitted, active projects, overall fill
+-- (registered artists, artworks submitted, active projects, overall fill
 -- rate). A single-row view is cheap for the client to read and keeps the
 -- aggregation server-side instead of pulling full tables down just to count
 -- them.
+--
+-- artist_count is every registered profile, not just those with a
+-- contribution — upsertBaseProfile() in weavo.html creates a profiles row
+-- on first sign-in, so this reflects signups, not just active submitters.
 --
 -- project_count/fill_percent exclude archived projects (reshape leaves the
 -- pre-reshape grid behind, frozen, under its own archived project row —
@@ -14,7 +19,7 @@
 
 create or replace view public.mosaic_stats as
 select
-  (select count(distinct author_id) from public.mosaic_submissions) as artist_count,
+  (select count(*) from public.profiles)                            as artist_count,
   (select count(*) from public.mosaic_submissions)                   as artwork_count,
   (select count(*) from public.mosaic_projects where not is_archived) as project_count,
   (select coalesce(round(100.0 * count(*) filter (where px.filled) / nullif(count(*), 0)), 0)

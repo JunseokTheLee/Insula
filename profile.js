@@ -284,7 +284,7 @@ window.ProfileView = function ProfileView(deps) {
   function profileProjectCardEl(project) {
     const a = document.createElement('a');
     a.className = 'profile-project-card';
-    a.href = `weavo.html?project=${project.id}`;
+    a.href = `/?project=${project.id}`;
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
 
@@ -318,7 +318,7 @@ window.ProfileView = function ProfileView(deps) {
   function profileSavedThumbEl(sub) {
     const a = document.createElement('a');
     a.className = 'profile-thumb';
-    a.href = `weavo.html?project=${sub.project_id}`;
+    a.href = `/?project=${sub.project_id}`;
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
     a.title = sub.art_title || (sub.mosaic_projects && sub.mosaic_projects.title) || '';
