@@ -711,8 +711,9 @@
   .legal-body h4{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin:18px 0 6px;color:var(--forest);}
   .legal-body h4:first-child{margin-top:0;}
   .legal-body p{margin:0 0 10px;color:var(--muted);}
-  .legal-body ul{margin:0 0 10px;padding-left:20px;color:var(--muted);}
+  .legal-body ul,.legal-body ol{margin:0 0 10px;padding-left:20px;color:var(--muted);}
   .legal-body li{margin-bottom:4px;}
+  .legal-body li strong{color:var(--ink);}
   .legal-body a{color:var(--forest);}
 
   #legal-footer{
@@ -1227,8 +1228,13 @@
       <h4 data-i18n="aboutH2">Why we built this</h4>
       <p data-i18n="aboutP2">The project centers neurodivergent and neurotypical artists working side by side, with no separation between the two. Every piece counts equally toward the whole, regardless of who made it or how.</p>
       <h4 data-i18n="aboutH3">How it works</h4>
-      <p data-i18n="aboutP3">Every weavo starts as an empty grid, one cell per contributor. Pick a project, upload a piece of art, and Weavo reads its dominant color and slots it into whichever open cell that color matches best. Nobody moves the pieces by hand — placement is automatic, and where your piece lands isn't decided until it's weighed against every color already on the board.</p>
-      <p data-i18n="aboutP3b">It's the same trick a traditional mosaic uses, just inverted. A mosaicist starts with a picture already in mind and cuts tesserae — chips of stone, tile, or glass — to fit it, piece by piece, under one hand. Weavo starts with nothing but color logic: the artwork comes first, arriving one submission at a time from people who've never seen each other's work, and the picture only exists in hindsight, once enough pieces have landed to resolve into a whole. Step back from a finished weavo and it reads the way any mosaic does — a single image built out of many small pieces. Step closer and each "tessera" turns out to be someone's complete artwork, not a fragment of it.</p>
+      <ol class="about-steps">
+        <li data-i18n-html="aboutStep1"><strong>Pick a project</strong> and upload a piece of art.</li>
+        <li data-i18n-html="aboutStep2"><strong>Weavo reads its dominant color</strong> automatically — no tagging required.</li>
+        <li data-i18n-html="aboutStep3"><strong>It's slotted into an open cell</strong> in the shared grid, wherever that color fits best. Nobody places pieces by hand.</li>
+        <li data-i18n-html="aboutStep4"><strong>The picture builds itself</strong> one submission at a time, and only resolves into a whole once enough pieces have landed.</li>
+      </ol>
+      <p data-i18n="aboutP3b">It's a mosaic in reverse: a mosaicist starts with a picture in mind and cuts pieces to fit it. Weavo starts with nothing but color logic — the artwork comes first, from people who've never seen each other's work, and the image only emerges in hindsight. Step back and it reads like any mosaic. Step closer and each "tile" turns out to be someone's complete artwork.</p>
       <h4 data-i18n="aboutH4">Who's behind it</h4>
       <p data-i18n-html="aboutP4">Weavo is an independent, community-built project. Questions, feedback, or ideas — reach out at <a href="mailto:jadyenthelee@gmail.com">jadyenthelee@gmail.com</a>.</p>
     </div>
@@ -1427,8 +1433,11 @@
       aboutH2: 'Why we built this',
       aboutP2: 'The project centers neurodivergent and neurotypical artists working side by side, with no separation between the two. Every piece counts equally toward the whole, regardless of who made it or how.',
       aboutH3: 'How it works',
-      aboutP3: "Every weavo starts as an empty grid, one cell per contributor. Pick a project, upload a piece of art, and Weavo reads its dominant color and slots it into whichever open cell that color matches best. Nobody moves the pieces by hand — placement is automatic, and where your piece lands isn't decided until it's weighed against every color already on the board.",
-      aboutP3b: "It's the same trick a traditional mosaic uses, just inverted. A mosaicist starts with a picture already in mind and cuts tesserae — chips of stone, tile, or glass — to fit it, piece by piece, under one hand. Weavo starts with nothing but color logic: the artwork comes first, arriving one submission at a time from people who've never seen each other's work, and the picture only exists in hindsight, once enough pieces have landed to resolve into a whole. Step back from a finished weavo and it reads the way any mosaic does — a single image built out of many small pieces. Step closer and each \"tessera\" turns out to be someone's complete artwork, not a fragment of it.",
+      aboutStep1: '<strong>Pick a project</strong> and upload a piece of art.',
+      aboutStep2: "<strong>Weavo reads its dominant color</strong> automatically — no tagging required.",
+      aboutStep3: "<strong>It's slotted into an open cell</strong> in the shared grid, wherever that color fits best. Nobody places pieces by hand.",
+      aboutStep4: '<strong>The picture builds itself</strong> one submission at a time, and only resolves into a whole once enough pieces have landed.',
+      aboutP3b: "It's a mosaic in reverse: a mosaicist starts with a picture in mind and cuts pieces to fit it. Weavo starts with nothing but color logic — the artwork comes first, from people who've never seen each other's work, and the image only emerges in hindsight. Step back and it reads like any mosaic. Step closer and each \"tile\" turns out to be someone's complete artwork.",
       aboutH4: "Who's behind it",
       aboutP4: 'Weavo is an independent, community-built project. Questions, feedback, or ideas — reach out at <a href="mailto:jadyenthelee@gmail.com">jadyenthelee@gmail.com</a>.',
     },
@@ -1554,8 +1563,11 @@
       aboutH2: '이 프로젝트를 만든 이유',
       aboutP2: '이 프로젝트는 신경다양인과 신경전형인 아티스트가 나란히 함께하는 것을 중심에 둡니다. 누가, 어떻게 만들었는지와 상관없이 모든 작품은 전체에 동등하게 기여합니다.',
       aboutH3: '작동 방식',
-      aboutP3: '모든 Weavo는 참여자 한 명당 한 칸씩, 빈 격자에서 시작합니다. 프로젝트를 선택하고 작품을 업로드하면 Weavo가 그 작품의 대표 색상을 읽어 색이 가장 잘 맞는 빈 칸에 자동으로 배치합니다. 누군가 손으로 칸을 옮기는 것이 아니라 배치는 전적으로 자동이며, 이미 놓인 다른 모든 색상과 비교되기 전까지는 내 작품이 어디에 놓일지 아무도 알 수 없습니다.',
-      aboutP3b: '이는 전통 모자이크와 같은 원리를 거꾸로 뒤집은 것입니다. 모자이크 작가는 완성될 그림을 미리 머릿속에 그린 뒤, 돌이나 타일, 유리 조각인 테세라를 한 손으로 하나하나 잘라 그 그림에 맞춰 끼워 넣습니다. 반면 Weavo는 색상 논리만 가진 채 시작합니다 — 작품이 먼저이고, 서로의 그림을 본 적 없는 사람들이 한 점씩 제출하며, 충분한 조각이 모여야 비로소 전체 그림이 드러납니다. 완성된 Weavo를 멀리서 보면 여느 모자이크처럼 여러 개의 작은 조각으로 이루어진 하나의 그림처럼 보이지만, 가까이 다가가면 그 "테세라" 하나하나가 누군가의 온전한 작품이라는 걸 알게 됩니다.',
+      aboutStep1: '<strong>프로젝트를 선택</strong>하고 작품을 업로드하세요.',
+      aboutStep2: '<strong>Weavo가 대표 색상을 자동으로 읽습니다</strong> — 별도의 태그 작업은 필요 없어요.',
+      aboutStep3: '<strong>가장 잘 맞는 빈 칸에 자동으로 배치</strong>됩니다. 누군가 손으로 칸을 옮기지 않아요.',
+      aboutStep4: '<strong>그림은 스스로 완성되어갑니다</strong>. 한 점씩 제출이 쌓이며, 충분한 조각이 모여야 비로소 전체 그림이 드러납니다.',
+      aboutP3b: '이는 전통 모자이크를 거꾸로 뒤집은 방식입니다. 모자이크 작가는 완성될 그림을 미리 그린 뒤 조각을 잘라 맞춰 넣지만, Weavo는 색상 논리만 가진 채 시작합니다 — 작품이 먼저이고, 서로의 그림을 본 적 없는 사람들이 제출하며, 그림은 나중에야 드러납니다. 멀리서 보면 여느 모자이크처럼 보이지만, 가까이 다가가면 조각 하나하나가 누군가의 온전한 작품임을 알게 됩니다.',
       aboutH4: '만든 사람',
       aboutP4: 'Weavo는 독립적으로 커뮤니티가 만들어가는 프로젝트입니다. 질문, 의견, 아이디어가 있다면 <a href="mailto:jadyenthelee@gmail.com">jadyenthelee@gmail.com</a>으로 연락해주세요.',
     }
