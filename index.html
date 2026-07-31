@@ -77,13 +77,13 @@
 
   .nav-right{display:flex;align-items:center;gap:22px;min-width:0;}
   .nav-link{
-    appearance:none;border:none;background:transparent;cursor:pointer;
-    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
-    text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:0 0 2px;
-    border-bottom:1px dotted var(--hairline-strong);
-    transition:color .12s linear,border-color .12s linear;
+    appearance:none;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--forest);
+    background:transparent;border:1px solid var(--hairline-strong);padding:6px 14px;
+    transition:background .12s linear,border-color .12s linear;
   }
-  .nav-link:hover{color:var(--forest);border-bottom-color:var(--forest);}
+  .nav-link:hover{background:var(--forest-08);border-color:var(--forest);}
 
   #identity{
     display:inline-flex;align-items:center;gap:9px;font-size:12px;flex-shrink:0;
@@ -472,6 +472,18 @@
     color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
     text-align:center;padding:0 24px;
   }
+  .screen[data-screen="network"].active{display:block;overflow-y:auto;}
+  .network-page{padding:28px 32px 40px;max-width:1600px;margin:0 auto;animation:fadeIn .3s ease-out;}
+  .network-page-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.01em;color:var(--forest);margin:0 0 10px;}
+  .network-graph-panel{height:min(880px,85vh);margin-top:4px;background:var(--forest-dark);border-color:var(--forest-dark);}
+  .network-graph-panel .profile-graph-empty{color:rgba(247,247,245,.55);}
+  .network-graph-panel .pg-node .pg-ring{stroke:rgba(247,247,245,.35);}
+  .network-graph-panel .pg-node:hover .pg-ring{stroke:var(--mint);}
+  .network-graph-panel .pg-node .pg-fallback{fill:var(--paper);}
+  .network-graph-panel .pg-node .pg-fallback-label{fill:var(--forest-dark);}
+  .network-graph-panel .pg-label{fill:var(--paper);}
+  .network-graph-panel .pg-link{stroke:rgba(247,247,245,.3);}
+  .network-graph-panel .pg-link.pg-mutual{stroke:var(--mint);}
   .pg-node{cursor:pointer;}
   .pg-node .pg-ring{fill:none;stroke:var(--hairline-strong);stroke-width:1.5px;transition:stroke .12s linear,stroke-width .12s linear;}
   .pg-node:hover .pg-ring{stroke:var(--forest);stroke-width:2.5px;}
@@ -817,6 +829,7 @@
   <div class="topnav">
     <div class="logo" id="logoHome">Weavo</div>
     <div class="nav-right">
+      <button type="button" id="network-link" class="nav-link" data-i18n="network">Network</button>
       <button type="button" id="about-link" class="nav-link" data-i18n="about">About</button>
       <div id="identity">
         <div class="lang-toggle" id="langToggle">
@@ -982,6 +995,21 @@
         </div>
         <svg id="profileGraphSvg"></svg>
         <div class="profile-graph-empty" id="profileGraphEmpty" data-i18n="noSavesYet">No saves yet — nothing to map.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN: GLOBAL NETWORK ============ -->
+  <div class="screen" data-screen="network">
+    <div class="backnav">
+      <div class="back" data-back="1">&larr; <span data-i18n="back">Back</span></div>
+    </div>
+    <div class="network-page">
+      <h2 class="network-page-title" data-i18n="network">Network</h2>
+      <div class="profile-graph-desc" data-i18n="globalNetworkDesc">The whole Weavo community, mapped by saves — every arrow points from someone who saved a piece to the artist who made it. Bigger circles have more connections. Drag to rearrange, scroll to zoom, click someone to visit their profile.</div>
+      <div class="profile-graph-panel network-graph-panel" id="globalGraphPanel">
+        <svg id="globalGraphSvg"></svg>
+        <div class="profile-graph-empty" id="globalGraphEmpty" style="display:none;" data-i18n="noSavesYet">No saves yet — nothing to map.</div>
       </div>
     </div>
   </div>
@@ -1251,7 +1279,7 @@
     <p class="legal-updated" data-i18n="lastUpdated">Last updated July 2026</p>
     <div class="legal-body">
       <h4 data-i18n="privacyH1">What we collect</h4>
-      <p data-i18n="privacyP1">When you sign in with Google, we receive your name, email, and profile photo through our authentication provider, Supabase. If you fill out your profile, we also store what you add: username, bio, neurodivergence tags, links, and country/city. Anything you submit — artwork, comments, likes, saves — is stored too.</p>
+      <p data-i18n="privacyP1">When you sign in with Google, we receive your name, email, and profile photo through our authentication provider, Supabase. If you fill out your profile, we also store what you add: username, bio, links, and country/city. Anything you submit — artwork, comments, likes, saves — is stored too.</p>
       <h4 data-i18n="privacyH2">How we use it</h4>
       <p data-i18n="privacyP2">To create and display your public profile and submitted artwork, and to power community features like likes, comments, saved artwork, and artist stats. We don't sell your data or use it for advertising.</p>
       <h4 data-i18n="privacyH3">Where it's stored</h4>
@@ -1286,7 +1314,7 @@
       <h4 data-i18n="disclaimerH1">Community-submitted content</h4>
       <p data-i18n="disclaimerP1">Artwork, bios, and comments are submitted by individual users, who retain full ownership and rights to their own work. Submitting a piece here doesn't transfer ownership to Weavo — it places a copy into the shared weavo and public gallery.</p>
       <h4 data-i18n="disclaimerHSelf">Self-reported, not clinical</h4>
-      <p data-i18n="disclaimerPSelf">Neurodivergence tags and bios are self-reported by users for community context only. They are not medical or diagnostic information, are not verified, and shouldn't be relied on as such. Weavo is not a medical, therapeutic, or diagnostic service, and isn't affiliated with any clinical or advocacy organization.</p>
+      <p data-i18n="disclaimerPSelf">Bios are self-reported by users for community context only. They are not medical or diagnostic information, are not verified, and shouldn't be relied on as such. Weavo is not a medical, therapeutic, or diagnostic service, and isn't affiliated with any clinical or advocacy organization.</p>
       <h4 data-i18n="disclaimerH2">User opinions</h4>
       <p data-i18n="disclaimerP2">Comments and profile content reflect the views of the individual users who posted them, not the views of Weavo.</p>
       <h4 data-i18n="disclaimerH3">No warranty</h4>
@@ -1332,6 +1360,7 @@
       submittedArtwork: 'Submitted Artwork', savedArtwork: 'Saved Artwork', noSavedArtworkYet: 'No saved artwork yet.',
       network: 'Network',
       networkDesc: "Saves connect people to the artists whose work they've bookmarked — an arrow points from saver to artist, and a double-headed link means the save goes both ways. Drag to rearrange, scroll to zoom, click a node to explore.",
+      globalNetworkDesc: "The whole Weavo community, mapped by saves — every arrow points from someone who saved a piece to the artist who made it. Bigger circles have more connections. Drag to rearrange, scroll to zoom, click someone to visit their profile.",
       noSavesYet: 'No saves yet — nothing to map.', viewingNetwork: "viewing {name}'s network", viewProfile: 'View profile →',
       userNotFound: 'User not found', anonymous: 'Anonymous',
       privacyPolicy: 'Privacy Policy', disclaimer: 'Disclaimer', about: 'About',
@@ -1401,7 +1430,7 @@
       goToProject: 'Go to project {n}',
       lastUpdated: 'Last updated July 2026',
       privacyH1: 'What we collect',
-      privacyP1: 'When you sign in with Google, we receive your name, email, and profile photo through our authentication provider, Supabase. If you fill out your profile, we also store what you add: username, bio, neurodivergence tags, links, and country/city. Anything you submit — artwork, comments, likes, saves — is stored too.',
+      privacyP1: 'When you sign in with Google, we receive your name, email, and profile photo through our authentication provider, Supabase. If you fill out your profile, we also store what you add: username, bio, links, and country/city. Anything you submit — artwork, comments, likes, saves — is stored too.',
       privacyH2: 'How we use it',
       privacyP2: "To create and display your public profile and submitted artwork, and to power community features like likes, comments, saved artwork, and artist stats. We don't sell your data or use it for advertising.",
       privacyH3: "Where it's stored",
@@ -1421,7 +1450,7 @@
       disclaimerH1: 'Community-submitted content',
       disclaimerP1: "Artwork, bios, and comments are submitted by individual users, who retain full ownership and rights to their own work. Submitting a piece here doesn't transfer ownership to Weavo — it places a copy into the shared weavo and public gallery.",
       disclaimerHSelf: 'Self-reported, not clinical',
-      disclaimerPSelf: "Neurodivergence tags and bios are self-reported by users for community context only. They are not medical or diagnostic information, are not verified, and shouldn't be relied on as such. Weavo is not a medical, therapeutic, or diagnostic service, and isn't affiliated with any clinical or advocacy organization.",
+      disclaimerPSelf: "Bios are self-reported by users for community context only. They are not medical or diagnostic information, are not verified, and shouldn't be relied on as such. Weavo is not a medical, therapeutic, or diagnostic service, and isn't affiliated with any clinical or advocacy organization.",
       disclaimerH2: 'User opinions',
       disclaimerP2: 'Comments and profile content reflect the views of the individual users who posted them, not the views of Weavo.',
       disclaimerH3: 'No warranty',
@@ -1462,6 +1491,7 @@
       submittedArtwork: '제출한 작품', savedArtwork: '저장한 작품', noSavedArtworkYet: '아직 저장한 작품이 없습니다.',
       network: '네트워크',
       networkDesc: '저장은 사람과 그들이 저장한 작품의 작가를 연결합니다 — 화살표는 저장한 사람에서 작가 쪽을 가리키며, 양쪽 화살표는 서로 저장한 경우입니다. 드래그로 배치를 바꾸고, 스크롤로 확대/축소하고, 노드를 클릭해 둘러보세요.',
+      globalNetworkDesc: '위보 커뮤니티 전체를 저장 관계로 그린 지도입니다 — 화살표는 작품을 저장한 사람에서 그 작가 쪽을 가리킵니다. 원이 클수록 연결이 많은 사람입니다. 드래그로 배치를 바꾸고, 스크롤로 확대/축소하고, 사람을 클릭해 프로필로 이동하세요.',
       noSavesYet: '아직 저장한 작품이 없어 표시할 네트워크가 없습니다.', viewingNetwork: '{name}님의 네트워크 보는 중', viewProfile: '프로필 보기 →',
       userNotFound: '사용자를 찾을 수 없습니다', anonymous: '익명',
       privacyPolicy: '개인정보처리방침', disclaimer: '면책조항', about: '소개',
@@ -1531,7 +1561,7 @@
       goToProject: '{n}번째 프로젝트로 이동',
       lastUpdated: '2026년 7월 최종 수정',
       privacyH1: '수집하는 정보',
-      privacyP1: 'Google로 로그인하면 인증 제공자인 Supabase를 통해 이름, 이메일, 프로필 사진을 받습니다. 프로필을 작성하면 사용자 이름, 소개, 신경다양성 태그, 링크, 국가/도시도 저장됩니다. 작품, 댓글, 좋아요, 저장 등 제출하는 모든 것도 저장됩니다.',
+      privacyP1: 'Google로 로그인하면 인증 제공자인 Supabase를 통해 이름, 이메일, 프로필 사진을 받습니다. 프로필을 작성하면 사용자 이름, 소개, 링크, 국가/도시도 저장됩니다. 작품, 댓글, 좋아요, 저장 등 제출하는 모든 것도 저장됩니다.',
       privacyH2: '사용 방식',
       privacyP2: '공개 프로필과 제출한 작품을 만들고 표시하며, 좋아요·댓글·저장한 작품·아티스트 통계 같은 커뮤니티 기능을 제공하기 위해 사용합니다. 데이터를 판매하거나 광고 목적으로 사용하지 않습니다.',
       privacyH3: '저장 위치',
@@ -1551,7 +1581,7 @@
       disclaimerH1: '커뮤니티 제출 콘텐츠',
       disclaimerP1: '작품, 소개글, 댓글은 개별 사용자가 제출한 것이며, 해당 사용자가 자신의 작업에 대한 모든 소유권과 권리를 보유합니다. 이곳에 작품을 제출해도 Weavo로 소유권이 이전되지 않습니다 — 공동 Weavo와 공개 갤러리에 사본이 배치될 뿐입니다.',
       disclaimerHSelf: '자가 보고 정보이며 임상 정보가 아님',
-      disclaimerPSelf: '신경다양성 태그와 소개글은 커뮤니티 맥락을 위해 사용자가 자율적으로 작성한 정보입니다. 의료적·진단적 정보가 아니며 검증되지 않았으므로 그러한 용도로 신뢰해서는 안 됩니다. Weavo는 의료, 치료, 진단 서비스가 아니며 어떠한 임상 기관이나 지원 단체와도 제휴하지 않습니다.',
+      disclaimerPSelf: '소개글은 커뮤니티 맥락을 위해 사용자가 자율적으로 작성한 정보입니다. 의료적·진단적 정보가 아니며 검증되지 않았으므로 그러한 용도로 신뢰해서는 안 됩니다. Weavo는 의료, 치료, 진단 서비스가 아니며 어떠한 임상 기관이나 지원 단체와도 제휴하지 않습니다.',
       disclaimerH2: '사용자 의견',
       disclaimerP2: '댓글과 프로필 콘텐츠는 이를 게시한 개별 사용자의 견해를 반영하며, Weavo의 견해가 아닙니다.',
       disclaimerH3: '보증하지 않음',
@@ -1920,7 +1950,7 @@
     document.getElementById('lightbox-caption').classList.remove('hidden');
     setupLightboxEngagement(sub);
     const deleteBtn = document.getElementById('lb-delete-btn');
-    deleteBtn.style.display = me.isAdmin ? '' : 'none';
+    deleteBtn.style.display = (me.isAdmin || me.id === sub.author_id) ? '' : 'none';
     deleteBtn.onclick = () => deleteWeavoSubmission(sub);
     const commentsBtn = document.getElementById('lb-comments-btn');
     commentsBtn.classList.add('active');
@@ -2040,7 +2070,7 @@
     toast(wasSaved ? tr('removedFromSaved') : tr('savedToast'));
   }
 
-  // ---------- admin: delete artwork ----------
+  // ---------- delete artwork (own submission, or any submission if admin) ----------
   async function deleteWeavoSubmission(sub) {
     const proceed = await confirmDialog(
       tr('deleteArtworkMessage'),
@@ -2052,6 +2082,8 @@
     // The FK on mosaic_pixels.submission_id already nulled itself out via
     // "on delete set null" — reset the rest of the claim here too, rather
     // than leaving the cell stuck until the 10-minute stale-claim sweep.
+    // Permitted by the existing "claim and fill" pixels policy for the
+    // author's own pixel, and by the admin-management pixels policy otherwise.
     const { error: pxErr } = await sb.from('mosaic_pixels')
       .update({ filled: false, submission_id: null, claimed_by: null, claimed_at: null })
       .eq('id', sub.pixel_id);
@@ -2062,6 +2094,7 @@
       renderWeavoGrid(currentProject);
       renderColorsNeeded(currentProject);
     }
+    if (document.querySelector('.screen.active')?.dataset.screen === 'profile') loadProfileView(me.id);
   }
 
   // ---------- lightbox comments ----------
@@ -2316,6 +2349,7 @@
   // ---------- navigation ----------
   let currentProject = null;
   function showScreen(name) {
+    if (name !== 'network') stopGlobalGraph();
     document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.dataset.screen === name));
     const active = document.querySelector('.screen.active');
     if (active) active.scrollTop = 0;
@@ -2323,6 +2357,7 @@
   function goHome() { currentProject = null; showScreen('home'); renderProjectsGrid(); }
   document.querySelectorAll('[data-back]').forEach(el => el.onclick = goHome);
   document.getElementById('logoHome').onclick = goHome;
+  document.getElementById('network-link').onclick = () => { showScreen('network'); loadGlobalNetwork(); };
   document.getElementById('scrollHint').onclick = () => {
     document.getElementById('projectsPanel').scrollIntoView({ behavior: 'smooth' });
   };
@@ -2425,7 +2460,8 @@
   let profileReturnScreen = 'home';
   async function enterProfileView(userId) {
     const active = document.querySelector('.screen.active');
-    profileReturnScreen = (active && active.dataset.screen === 'project') ? 'project' : 'home';
+    const fromScreen = active && active.dataset.screen;
+    profileReturnScreen = (fromScreen === 'project' || fromScreen === 'network') ? fromScreen : 'home';
     showScreen('profile');
     await loadProfileView(userId);
   }
@@ -2740,6 +2776,157 @@
       renderProfileGraphFor(d.id, d.id === graphRootId);
     });
   }
+
+  // ---------- global network graph (every user, mapped by save relationships) ----------
+  let globalGraphSim = null;
+  let globalGraphToken = 0; // guards against a stale fetch finishing after a newer one started
+  function stopGlobalGraph() {
+    if (globalGraphSim) { globalGraphSim.stop(); globalGraphSim = null; }
+  }
+  function globalNodeRadius(d) { return Math.max(9, Math.min(24, 9 + Math.sqrt(d.degree || 1) * 3.2)); }
+  // Every save across the whole app, collapsed into an undirected pair per
+  // two users with a direction flag each way, so A-saved-B and B-saved-A
+  // (independent facts, same as the per-profile graph) render as one mutual
+  // link instead of two overlapping ones.
+  async function fetchGlobalGraphData() {
+    const { data: rows, error } = await sb.from('mosaic_submission_saves')
+      .select('user_id,mosaic_submissions!inner(author_id)');
+    if (error) { console.error('load global network error:', error); return { nodes: [], links: [] }; }
+
+    const pairs = new Map(); // "smallerId|largerId" -> {a,b,aToB,bToA}
+    for (const row of (rows || [])) {
+      const saverId = row.user_id;
+      const authorId = row.mosaic_submissions && row.mosaic_submissions.author_id;
+      if (!saverId || !authorId || saverId === authorId) continue;
+      const [a, b] = saverId < authorId ? [saverId, authorId] : [authorId, saverId];
+      let p = pairs.get(`${a}|${b}`);
+      if (!p) { p = { a, b, aToB: false, bToA: false }; pairs.set(`${a}|${b}`, p); }
+      if (saverId === a) p.aToB = true; else p.bToA = true;
+    }
+    if (!pairs.size) return { nodes: [], links: [] };
+
+    const degree = new Map();
+    for (const p of pairs.values()) {
+      degree.set(p.a, (degree.get(p.a) || 0) + 1);
+      degree.set(p.b, (degree.get(p.b) || 0) + 1);
+    }
+
+    const { data: profiles, error: profErr } = await sb.from('profiles')
+      .select('id,name,username,avatar_url').in('id', [...degree.keys()]);
+    if (profErr) console.error('load global network profiles error:', profErr);
+    const profileById = new Map((profiles || []).map(p => [p.id, p]));
+
+    const nodes = [...degree.keys()].map(id => {
+      const p = profileById.get(id) || {};
+      return { id, label: p.username || p.name || tr('anonymous'), avatar_url: p.avatar_url || '', degree: degree.get(id) };
+    });
+    const links = [...pairs.values()].map(p => ({
+      source: p.aToB ? p.a : p.b,
+      target: p.aToB ? p.b : p.a,
+      kind: (p.aToB && p.bToA) ? 'mutual' : 'out',
+    }));
+    return { nodes, links };
+  }
+  async function loadGlobalNetwork() {
+    const token = ++globalGraphToken;
+    const panel = document.getElementById('globalGraphPanel');
+    const svgEl = document.getElementById('globalGraphSvg');
+    const empty = document.getElementById('globalGraphEmpty');
+    stopGlobalGraph();
+    svgEl.innerHTML = '';
+    empty.style.display = 'none';
+
+    const { nodes, links } = await fetchGlobalGraphData();
+    if (token !== globalGraphToken) return; // a newer load superseded this one
+
+    empty.style.display = nodes.length ? 'none' : 'flex';
+    if (!nodes.length) return;
+
+    const width  = panel.clientWidth  || 900;
+    const height = panel.clientHeight || 500;
+
+    const svg = d3.select(svgEl).attr('viewBox', `0 0 ${width} ${height}`);
+    const defs = svg.append('defs');
+    const arrow = (id, fill) => defs.append('marker').attr('id', id)
+      .attr('viewBox', '0 -5 10 10').attr('refX', 24).attr('refY', 0)
+      .attr('markerWidth', 6).attr('markerHeight', 6).attr('orient', 'auto-start-reverse')
+      .append('path').attr('d', 'M0,-5L10,0L0,5').attr('fill', fill);
+    arrow('gg-arrow-out', 'rgba(247,247,245,.4)');
+    arrow('gg-arrow-in',  '#9EFFBF');
+
+    const root = svg.append('g');
+    svg.call(d3.zoom().scaleExtent([0.25, 3]).on('zoom', ev => root.attr('transform', ev.transform)));
+
+    const link = root.append('g').selectAll('line').data(links).join('line')
+      .attr('class', d => 'pg-link' + (d.kind === 'mutual' ? ' pg-mutual' : ''))
+      .attr('marker-end', d => `url(#${d.kind === 'mutual' ? 'gg-arrow-in' : 'gg-arrow-out'})`)
+      .attr('marker-start', d => d.kind === 'mutual' ? 'url(#gg-arrow-in)' : null);
+
+    const node = root.append('g').selectAll('g').data(nodes).join('g').attr('class', 'pg-node');
+
+    node.each(function (d) {
+      const g = d3.select(this);
+      const r = globalNodeRadius(d);
+      if (d.avatar_url) {
+        const clipId = 'gg-clip-' + d.id;
+        defs.append('clipPath').attr('id', clipId).append('circle').attr('r', r);
+        g.append('image').attr('href', d.avatar_url)
+          .attr('x', -r).attr('y', -r).attr('width', r * 2).attr('height', r * 2)
+          .attr('clip-path', `url(#${clipId})`).attr('preserveAspectRatio', 'xMidYMid slice');
+        g.append('circle').attr('class', 'pg-ring').attr('r', r);
+      } else {
+        g.append('circle').attr('class', 'pg-ring pg-fallback').attr('r', r);
+        g.append('text').attr('class', 'pg-fallback-label').attr('font-size', r).text(d.label.charAt(0).toUpperCase());
+      }
+      g.append('title').text(d.label);
+    });
+
+    const label = root.append('g').selectAll('text').data(nodes).join('text')
+      .attr('class', 'pg-label').text(d => truncateLabel(d.label))
+      .attr('dy', d => globalNodeRadius(d) + 12);
+
+    function ticked() {
+      link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+          .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
+      label.attr('x', d => d.x).attr('y', d => d.y);
+    }
+    const sim = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink(links).id(d => d.id).distance(90).strength(0.5))
+      .force('charge', d3.forceManyBody().strength(-220))
+      .force('collide', d3.forceCollide(d => globalNodeRadius(d) + 12))
+      .force('x', d3.forceX(width / 2).strength(0.03))
+      .force('y', d3.forceY(height / 2).strength(0.03))
+      .on('tick', ticked);
+    // See the matching comment in renderProfileGraphFor: paints real
+    // coordinates before the first paint so arrowheads aren't stuck
+    // orientation-less on that initial zero-length-line frame.
+    ticked();
+    globalGraphSim = sim;
+
+    let dragMoved = false;
+    node.call(d3.drag()
+      .on('start', (ev, d) => {
+        dragMoved = false;
+        if (!ev.active) sim.alphaTarget(0.3).restart();
+        d.fx = d.x; d.fy = d.y;
+      })
+      .on('drag', (ev, d) => {
+        dragMoved = true;
+        d.fx = ev.x; d.fy = ev.y;
+      })
+      .on('end', (ev, d) => {
+        if (!ev.active) sim.alphaTarget(0);
+        d.fx = null; d.fy = null;
+      }));
+
+    node.on('click', (ev, d) => {
+      if (dragMoved) return;
+      ev.stopPropagation();
+      enterProfileView(d.id);
+    });
+  }
+
   async function loadProfileView(userId) {
     document.getElementById('profileName').textContent = tr('loading');
     document.getElementById('profileMeta').textContent = '';

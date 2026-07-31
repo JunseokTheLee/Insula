@@ -206,17 +206,26 @@ create policy "Signed-in users can submit mosaic artwork"
 grant select on public.mosaic_submissions to anon, authenticated;
 grant insert on public.mosaic_submissions to authenticated;
 
--- ── 5. admin moderation ──────────────────────────────────────────────────
--- Lets admins remove a submitted artwork (weavo.html's lightbox "Delete"
--- button). Cascades to that piece's likes/saves/comments automatically via
--- the existing FK "on delete cascade" constraints, and its mosaic_pixels
--- row's submission_id is set null by "on delete set null" above.
+-- ── 5. moderation & self-service deletion ────────────────────────────────
+-- Lets an author remove their own submitted artwork, or an admin remove
+-- anyone's (weavo.html's lightbox "Delete" button). Cascades to that piece's
+-- likes/saves/comments automatically via the existing FK "on delete cascade"
+-- constraints, and its mosaic_pixels row's submission_id is set null by
+-- "on delete set null" above. The pixel itself is then reset back to fully
+-- open by a client-side update (weavo.html's deleteWeavoSubmission) — no
+-- extra pixels policy needed for the author's own case, since "Signed-in
+-- users can claim and fill mosaic pixels" above already permits resetting a
+-- pixel you're still the claimant of.
 drop policy if exists "Admins can delete mosaic submissions" on public.mosaic_submissions;
-create policy "Admins can delete mosaic submissions"
+drop policy if exists "Author or admin can delete mosaic submissions" on public.mosaic_submissions;
+create policy "Author or admin can delete mosaic submissions"
   on public.mosaic_submissions for delete
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
+  using (
+    auth.uid() = author_id
+    or exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin)
+  );
 
-grant delete on public.mosaic_submissions to authenticated; -- gated to admins by RLS above
+grant delete on public.mosaic_submissions to authenticated; -- gated by RLS above
 
 -- After deleting a submission, the client also resets its now-orphaned
 -- pixel back to fully open (rather than waiting up to 10 minutes for the
