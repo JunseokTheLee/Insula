@@ -75,7 +75,7 @@
   }
   .logo:hover{opacity:.75;}
 
-  .nav-right{display:flex;align-items:center;gap:22px;min-width:0;}
+  .nav-right{display:flex;align-items:center;gap:22px;min-width:0;flex-wrap:wrap;justify-content:flex-end;}
   .nav-link{
     appearance:none;cursor:pointer;
     font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;
@@ -296,6 +296,10 @@
     .carousel-card .info{padding:22px 24px 28px;border-left-width:2px;}
     .carousel-card .p-title{font-size:26px;}
     .topnav,.backnav{padding-left:16px;padding-right:16px;}
+    .nav-right{gap:10px;row-gap:12px;}
+    .nav-link{padding:6px 10px;}
+    #identity{gap:7px;padding:5px 10px 5px 8px;}
+    #loginBtn,#logoutBtn{padding:7px 12px;}
     .hero{padding-left:16px;padding-right:16px;}
     .section-label{margin-left:16px;margin-right:16px;}
     .carousel-header{padding-left:16px;padding-right:16px;}
@@ -445,6 +449,7 @@
   #profileBio{color:var(--muted);font-size:13.5px;line-height:1.6;margin:16px 0 0;max-width:640px;}
   .profile-section{max-width:900px;margin:22px auto 0;padding:22px 32px 4px;background:var(--paper);border-top:1px solid var(--hairline);}
   .profile-section:last-child{padding-bottom:48px;}
+  .profile-section .section-label{margin-left:0;margin-right:0;}
   .profile-projects-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,180px));gap:1px;justify-content:start;}
   .profile-art-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,110px));gap:1px;justify-content:start;}
   .profile-art-thumb{
@@ -495,6 +500,7 @@
   .pg-link.pg-mutual{stroke:var(--forest);stroke-width:1.6px;}
   @media (max-width:640px){
     .profile-head,.profile-section{padding-left:16px;padding-right:16px;}
+    #profileEditBtn{margin-left:0;}
   }
 
   /* ---------- shared form styling (modals) ---------- */
@@ -1128,6 +1134,12 @@
 <!-- Edit profile modal -->
 <div id="edit-profile-modal" class="modal-overlay">
   <div id="edit-profile-dialog" class="modal-panel">
+    <div style="display:flex;justify-content:flex-end;margin:0 0 8px;">
+      <div class="lang-toggle">
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+        <button type="button" class="lang-btn" data-lang="ko">한</button>
+      </div>
+    </div>
     <h3 id="ep-dialog-title" data-i18n="editProfile">Edit Profile</h3>
     <p id="ep-required-note" style="display:none;font-size:12px;color:var(--muted);margin-top:-8px;">Set a username to finish creating your account.</p>
     <div class="field" style="align-items:center;">
@@ -2276,25 +2288,54 @@
     }
     return cells;
   }
-  // "Redmean" weighted distance — a cheap, well-known approximation of
-  // perceptual color difference (used by e.g. ImageMagick's fuzz matching).
-  // Plain Euclidean RGB distance treats R/G/B as equally significant, which
-  // doesn't match human vision (we're far more sensitive to green than
-  // blue) and was producing matches that were numerically "close" but
-  // visibly wrong. Still returns a squared distance — callers that need the
-  // actual distance take Math.sqrt() of the result, same as before.
+  // sRGB -> CIE Lab (D65 white point). Lab separates lightness (L*) from
+  // hue/chroma (a*/b*) far better than RGB does: darkening a color scales
+  // all three RGB channels toward zero together, so two dark colors of
+  // completely different hues (dark green vs dark navy) end up numerically
+  // close in RGB even though they don't look alike, while two colors of the
+  // *same* hue at different lightness (dark green vs light green) end up
+  // numerically far apart. In Lab, a*/b* stay roughly independent of L*, so
+  // hue differences show up as hue differences regardless of shade — and
+  // for desaturated/gray colors a*/b* naturally collapse toward zero, so
+  // (unlike raw HSL hue-angle) there's no spurious "hue" to weight in the
+  // first place.
+  function rgbToLab(r, g, b) {
+    const toLinear = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const lr = toLinear(r), lg = toLinear(g), lb = toLinear(b);
+    const x = (lr * 0.4124564 + lg * 0.3575761 + lb * 0.1804375) / 0.95047;
+    const y = (lr * 0.2126729 + lg * 0.7151522 + lb * 0.0721750) / 1.0;
+    const z = (lr * 0.0193339 + lg * 0.1191920 + lb * 0.9503041) / 1.08883;
+    const f = t => t > 0.008856 ? Math.cbrt(t) : (t * 903.3 + 16) / 116;
+    const fx = f(x), fy = f(y), fz = f(z);
+    return { L: 116 * fy - 16, a: 500 * (fx - fy), b: 200 * (fy - fz) };
+  }
+  // Weighting L* well below its natural scale (rather than 1:1) deliberately
+  // prioritizes hue/chroma matches over shade matches — a dark green and a
+  // light green should be judged "closer" than a dark green and a dark
+  // navy, which is the opposite of what plain RGB distance was doing. 0.2
+  // was picked empirically: it's low enough to flip that dark-green-vs-
+  // dark-navy-vs-light-green ordering for realistic saturated colors, but
+  // not 0 — fully ignoring L* would let a pitch-black and a neon-bright
+  // patch of the "same" hue be treated as interchangeable, which would
+  // wreck the overall light/dark structure (and legibility) of the
+  // finished mosaic. Still returns a squared distance — callers that need
+  // the actual distance take Math.sqrt() of the result, same as before.
+  const LIGHTNESS_WEIGHT = 0.2;
   function colorDistanceSq(a, b) {
-    const rMean = (a.r + b.r) / 2;
-    const dr = a.r - b.r, dg = a.g - b.g, db = a.b - b.b;
-    const wr = 2 + rMean / 256, wg = 4, wb = 2 + (255 - rMean) / 256;
-    return wr * dr * dr + wg * dg * dg + wb * db * db;
+    const la = rgbToLab(a.r, a.g, a.b), lb = rgbToLab(b.r, b.g, b.b);
+    const dL = la.L - lb.L, da = la.a - lb.a, db = la.b - lb.b;
+    return LIGHTNESS_WEIGHT * dL * dL + da * da + db * db;
   }
   function luminance(r, g, b) { return 0.299 * r + 0.587 * g + 0.114 * b; }
-  // Redmean distance ranges 0 (identical) to ~765 (black vs white) — about
-  // 1.7x plain Euclidean's ~441.7 max. Above this, the closest open cell is
+  // Lab distance (with the lightness de-weighting above) tops out around
+  // ~45 for black-vs-white and can reach ~250 for polar-opposite vivid hues
+  // (e.g. pure green vs pure blue) — a much smaller range than the old
+  // RGB-based metric's ~0-765. Above this, the closest open cell is
   // different enough from the artwork's average color that it won't
-  // visually read as a match — flag it for the user.
-  const POOR_MATCH_DISTANCE = 240;
+  // visually read as a match — flag it for the user. Empirically tuned to
+  // the new scale; revisit if submissions start tripping (or never
+  // tripping) this warning.
+  const POOR_MATCH_DISTANCE = 60;
 
   // Greedy nearest-color assignment used when reshaping a project onto a
   // new grid: each already-submitted piece claims the closest still-free
@@ -3041,6 +3082,24 @@
   // no Cancel, no backdrop/Escape dismissal, until they're all filled in.
   // Mirrors the same "finish creating your account" gate main.html used to have.
   let profileEditRequired = false;
+  // Switching language (see the .lang-btn wiring at the bottom of this
+  // script) does a full location.reload() — LANG is read once at boot, so
+  // there's no cheap way to re-render in place. That reload would silently
+  // wipe out anything typed into a still-open edit-profile form (this is
+  // the only modal a user can be stuck behind mid-onboarding), so stash the
+  // in-progress field values across the reload and restore them here.
+  const EP_DRAFT_KEY = 'weavoEpDraft';
+  function stashEditProfileDraftIfOpen() {
+    if (!document.getElementById('edit-profile-modal').classList.contains('open')) return;
+    const links = {};
+    for (const { key } of LINK_PLATFORMS) links[key] = document.getElementById(`ep-link-${key}`).value;
+    sessionStorage.setItem(EP_DRAFT_KEY, JSON.stringify({
+      username: document.getElementById('ep-username').value,
+      bio: document.getElementById('ep-bio').value,
+      countryId: document.getElementById('ep-country').value,
+      links,
+    }));
+  }
   function openEditProfileModal(profile, forced) {
     profileEditRequired = !!forced;
     document.getElementById('ep-country').value = profile.country_id ? String(profile.country_id) : '';
@@ -3049,6 +3108,19 @@
     document.getElementById('ep-bio').value = profile.bio || '';
     for (const { key } of LINK_PLATFORMS) {
       document.getElementById(`ep-link-${key}`).value = (profile.links && profile.links[key]) || '';
+    }
+    const draftRaw = sessionStorage.getItem(EP_DRAFT_KEY);
+    if (draftRaw) {
+      sessionStorage.removeItem(EP_DRAFT_KEY);
+      try {
+        const draft = JSON.parse(draftRaw);
+        document.getElementById('ep-username').value = draft.username || '';
+        document.getElementById('ep-bio').value = draft.bio || '';
+        if (draft.countryId) document.getElementById('ep-country').value = draft.countryId;
+        for (const { key } of LINK_PLATFORMS) {
+          document.getElementById(`ep-link-${key}`).value = (draft.links && draft.links[key]) || '';
+        }
+      } catch (e) { console.error('restore edit-profile draft error:', e); }
     }
     document.getElementById('ep-error').textContent = '';
     document.getElementById('ep-dialog-title').textContent = forced ? (profile.username ? tr('completeYourProfile') : tr('welcomeToWeavo')) : tr('editProfile');
@@ -3362,11 +3434,16 @@
     }
   }
   // Groups still-open cells' exact target colors into clusters of visually
-  // similar shades — a greedy single-pass clustering by actual RGB distance,
-  // not a fixed rounding grid, so colors that only differ by a channel or
-  // two (e.g. 127 vs 129) always land in the same group instead of being
-  // arbitrarily split across a bucket boundary.
-  const COLOR_GROUP_DISTANCE = 120;
+  // similar shades — a greedy single-pass clustering by actual color
+  // distance (same Lab-based metric as matching, see colorDistanceSq), not
+  // a fixed rounding grid, so colors that only differ by a channel or two
+  // (e.g. 127 vs 129) always land in the same group instead of being
+  // arbitrarily split across a bucket boundary. Scaled to the same Lab
+  // range as POOR_MATCH_DISTANCE (see there), at the same 1:2 ratio the old
+  // RGB-based constants used — tighter than the poor-match threshold since
+  // this only groups a display list rather than deciding whether to warn
+  // on submission.
+  const COLOR_GROUP_DISTANCE = 30;
   const MAX_COLOR_SWATCHES = 10;
   async function renderColorsNeeded(project) {
     const wrap = document.getElementById('colorsNeeded');
@@ -3925,6 +4002,7 @@
     btn.classList.toggle('active', btn.dataset.lang === LANG);
     btn.onclick = () => {
       if (btn.dataset.lang === LANG) return;
+      stashEditProfileDraftIfOpen();
       localStorage.setItem('weavoLang', btn.dataset.lang);
       location.reload();
     };
