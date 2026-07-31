@@ -3101,6 +3101,14 @@
     }));
   }
   function openEditProfileModal(profile, forced) {
+    // Supabase's client re-fires onAuthStateChange (e.g. on a token refresh
+    // triggered by the tab regaining focus after switching away and back)
+    // with the same still-incomplete profile, and that handler calls
+    // maybeRequireProfileSetup() -> openEditProfileModal() unconditionally.
+    // Without this guard, every one of those redundant re-fires would
+    // clobber whatever the user had already typed into the still-open
+    // onboarding form back to the stale profile values.
+    if (document.getElementById('edit-profile-modal').classList.contains('open')) return;
     profileEditRequired = !!forced;
     document.getElementById('ep-country').value = profile.country_id ? String(profile.country_id) : '';
     epAvatarPicker.setExisting(profile.avatar_url || me.avatar || '');
