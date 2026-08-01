@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="../logo.ico" type="image/x-icon">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weavo — Disclaimer</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="../css/base.css">
+</head>
+<body>
+
+<div class="app">
+  <div class="topnav">
+    <a class="logo" id="logoHome" href="index.html">Weavo</a>
+    <div class="nav-right">
+      <a href="network.html" class="nav-link">Network</a>
+      <a href="about.html" class="nav-link">About</a>
+      <div id="identity">
+        <div class="lang-toggle" id="langToggle">
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+          <button type="button" class="lang-btn" data-lang="ko">한</button>
+        </div>
+        <img id="myAvatar" alt="">
+        <span id="myName" class="guest">Guest</span>
+        <button id="loginBtn" class="id-btn">Sign in</button>
+        <button id="logoutBtn" class="id-btn" style="display:none">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main main-scroll">
+    <div class="backnav">
+      <a class="back" href="index.html">&larr; Back</a>
+    </div>
+    <div class="legal-page">
+      <h1>Disclaimer</h1>
+      <p class="legal-updated">Last updated July 2026</p>
+      <div class="legal-body">
+        <h2>Community-submitted content</h2>
+        <p>Artwork, bios, and comments are submitted by individual users, who retain full ownership and rights to their own work. Submitting a piece here doesn't transfer ownership to Weavo — it places a copy into the shared weavo and public gallery.</p>
+        <h2>Self-reported, not clinical</h2>
+        <p>Bios are self-reported by users for community context only. They are not medical or diagnostic information, are not verified, and shouldn't be relied on as such. Weavo is not a medical, therapeutic, or diagnostic service, and isn't affiliated with any clinical or advocacy organization.</p>
+        <h2>User opinions</h2>
+        <p>Comments and profile content reflect the views of the individual users who posted them, not the views of Weavo.</p>
+        <h2>No warranty</h2>
+        <p>The site and its content are provided "as is," without warranties of any kind. We do our best to keep things running smoothly but can't guarantee uninterrupted or error-free access.</p>
+        <h2>Changes</h2>
+        <p>This disclaimer and the Privacy Policy may be updated as the project evolves. Continued use of the site means you accept the current version.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="legal-footer">
+  <a href="privacy.html">Privacy Policy</a>
+  <span class="sep" aria-hidden="true">&middot;</span>
+  <a href="disclaimer.html">Disclaimer</a>
+</div>
+
+<!-- Edit profile modal -->
+<div id="edit-profile-modal" class="modal-overlay">
+  <div id="edit-profile-dialog" class="modal-panel">
+    <div style="display:flex;justify-content:flex-end;margin:0 0 8px;">
+      <div class="lang-toggle">
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+        <button type="button" class="lang-btn" data-lang="ko">한</button>
+      </div>
+    </div>
+    <h3 id="ep-dialog-title">Edit Profile</h3>
+    <p id="ep-required-note" style="display:none;font-size:12px;color:var(--muted);margin-top:-8px;">Set a username to finish creating your account.</p>
+    <div class="field" style="align-items:center;">
+      <label style="text-align:center;">Profile Picture <span class="field-hint">(optional)</span></label>
+      <div class="img-upload-area avatar-picker" id="ep-avatar-picker">
+        <div class="img-placeholder"><span class="up-icon">🙂</span><span>Upload</span></div>
+        <img class="img-preview" alt="">
+        <button type="button" class="img-remove" aria-label="Remove profile picture">✕</button>
+        <input type="file" class="img-input" accept="image/*">
+      </div>
+    </div>
+    <div class="field">
+      <label for="ep-username">Username <span class="field-hint" id="ep-username-hint">(optional)</span></label>
+      <input type="text" id="ep-username" placeholder="yourname" maxlength="30">
+    </div>
+    <div class="field">
+      <label for="ep-country">Country</label>
+      <select id="ep-country">
+        <option value="">Select your country&hellip;</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="ep-bio">Bio <span class="field-hint">(optional)</span></label>
+      <textarea id="ep-bio" placeholder="Tell people a bit about yourself…" maxlength="300"></textarea>
+    </div>
+    <div id="ep-links-fields"></div>
+    <div class="field-error" id="ep-error"></div>
+    <div class="modal-actions">
+      <button id="ep-cancel" class="btn-cancel">Cancel</button>
+      <button id="ep-submit" class="btn-primary">Save</button>
+    </div>
+    <div class="ep-danger-zone" id="ep-danger-zone">
+      <button type="button" id="ep-delete-account" class="link-danger">Delete account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Auth modal -->
+<div id="auth-modal" class="modal-overlay">
+  <div id="auth-dialog" class="modal-panel">
+    <div class="auth-icon">🖼️</div>
+    <h3>Join Weavo</h3>
+    <p>Sign in to contribute your artwork to a community weavo.</p>
+    <button id="google-signin-btn">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
+        <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+      </svg>
+      <span>Continue with Google</span>
+    </button>
+    <button id="auth-close">Maybe later</button>
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div id="confirm-modal" class="modal-overlay">
+  <div id="confirm-dialog" class="modal-panel">
+    <h3 id="confirm-title">Are you sure?</h3>
+    <p id="confirm-message" style="font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 4px;"></p>
+    <div class="field" id="confirm-input-wrap" style="display:none;margin:2px 0 0;">
+      <input type="text" id="confirm-input" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="modal-actions">
+      <button id="confirm-cancel" class="btn-cancel">Cancel</button>
+      <button id="confirm-ok" class="btn-primary">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="../js/supabase-client.js"></script>
+<script src="../js/i18n/en.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/auth.js"></script>
+</body>
+</html>

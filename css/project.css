@@ -1,0 +1,102 @@
+/* ============ PROJECT DETAIL ============ */
+#uploadArtBtn{
+  display:flex;align-items:center;gap:8px;border:none;cursor:pointer;
+  padding:11px 20px;border-radius:2px;font-size:11px;font-family:'JetBrains Mono',monospace;
+  text-transform:uppercase;letter-spacing:.08em;background:var(--forest);color:var(--paper);
+  transition:background .12s linear;
+}
+#uploadArtBtn:hover{background:var(--forest-dark);}
+#uploadArtBtn:active{opacity:.85;}
+#uploadArtBtn svg{width:14px;height:14px;flex-shrink:0;}
+
+.project-head{padding:28px 32px 20px;animation:fadeIn .3s ease-out;}
+.project-head h2{margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--forest);letter-spacing:-.01em;}
+.project-head p{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;margin:0 0 12px;max-width:560px;}
+.project-progress{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;}
+
+.archived-banner{
+  margin:14px 0 0;padding:10px 14px;border-radius:2px;background:var(--forest-08);
+  border:1px solid var(--hairline-strong);font-family:'JetBrains Mono',monospace;font-size:11.5px;
+  color:var(--ink);display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.archived-banner a{color:var(--forest);font-weight:600;text-decoration:underline;cursor:pointer;}
+
+.colors-needed{margin-top:18px;animation:fadeIn .3s ease-out;}
+.colors-needed-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.colors-needed-label .field-hint{text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;}
+.color-swatches{display:flex;flex-wrap:wrap;gap:10px;}
+.color-swatch{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:default;}
+.color-swatch .swatch-dot{
+  width:32px;height:32px;border-radius:2px;border:1px solid var(--hairline-strong);
+  box-shadow:none;display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:var(--muted);
+}
+.color-swatch .swatch-dot.more{background:repeating-linear-gradient(45deg,var(--paper),var(--paper) 5px,#ececea 5px,#ececea 10px);}
+.color-swatch .swatch-count{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);font-weight:600;}
+
+.project-view-tabs{
+  display:inline-flex;background:transparent;border:1px solid var(--hairline-strong);border-radius:2px;padding:2px;gap:2px;margin-top:16px;
+}
+.pv-tab{
+  appearance:none;border:none;background:transparent;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em;
+  font-size:10px;font-weight:600;padding:8px 16px;border-radius:2px;color:var(--muted);
+  transition:background .12s linear,color .12s linear;
+}
+.pv-tab.active{background:var(--forest);color:var(--paper);box-shadow:none;}
+
+.weavo-grid-wrap{
+  margin:0 32px 32px;border-radius:0;overflow:hidden;background:var(--forest-dark);animation:fadeIn .3s ease-out;
+  position:relative;height:clamp(360px,66vh,720px);border:1px solid var(--hairline-strong);
+  display:flex;align-items:center;justify-content:center;touch-action:none;
+}
+.weavo-grid-wrap.zoomed{cursor:grab;}
+.weavo-grid-wrap.dragging{cursor:grabbing;}
+.weavo-stage{position:relative;transition:transform .15s ease-out;}
+.weavo-stage.no-transition{transition:none;}
+.weavo-grid{width:100%;height:100%;display:grid;gap:1px;background:var(--forest-dark);}
+.weavo-cell{background-size:cover;background-position:center;background-color:#3a3a38;transition:transform .12s ease-out,outline-color .12s ease-out;}
+.weavo-cell.filled{cursor:zoom-in;}
+.weavo-cell.filled:hover{outline:2px solid var(--mint);outline-offset:-2px;position:relative;z-index:2;transform:scale(1.08);box-shadow:none;}
+
+/* ---------- project detail: list view (all artworks in the project) ---------- */
+.project-list-view{margin:0 32px 32px;animation:fadeIn .3s ease-out;}
+.project-list-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,180px));gap:1px;justify-content:start;}
+
+/* ---------- reference preview (corner "what it's supposed to look like") ---------- */
+.reference-preview{
+  position:absolute;left:14px;bottom:14px;z-index:5;
+  border:1px solid rgba(247,247,245,.3);border-radius:2px;overflow:hidden;
+  width:96px;background:var(--forest-dark);padding:0;line-height:0;cursor:zoom-in;
+  box-shadow:none;
+  transition:width .2s ease-out,border-color .12s linear;
+}
+.reference-preview:hover{border-color:var(--mint);}
+.reference-preview::after{
+  content:'⤢';position:absolute;top:5px;right:5px;width:16px;height:16px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.5);color:var(--paper);font-size:10px;line-height:1;
+  opacity:.75;transition:opacity .12s linear,background .12s linear;pointer-events:none;
+}
+.reference-preview:hover::after{opacity:1;background:var(--mint);color:var(--forest-dark);}
+.reference-preview.enlarged::after{content:'✕';}
+.reference-preview canvas{width:100%;display:block;}
+.reference-preview-label{
+  display:block;padding:4px 6px;background:rgba(0,0,0,.5);color:var(--paper);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;text-align:center;line-height:1.3;
+}
+.reference-preview.enlarged{width:min(50vw,340px);cursor:zoom-out;}
+
+#upload-art-dialog,#reshape-project-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
+#upload-art-dialog h3,#reshape-project-dialog h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin:0 0 10px;color:var(--forest);}
+
+@media (max-width:640px){
+  .reference-preview{width:72px;left:10px;bottom:10px;}
+  .reference-preview.enlarged{width:min(70vw,300px);}
+  .project-head{padding-left:16px;padding-right:16px;}
+  .weavo-grid-wrap{margin-left:16px;margin-right:16px;margin-bottom:56px;}
+  .project-list-view{margin-left:16px;margin-right:16px;margin-bottom:56px;}
+  .color-swatches{gap:9px;}
+  .color-swatch .swatch-dot{width:28px;height:28px;}
+  #uploadArtBtn{padding:10px 16px;font-size:10px;}
+}

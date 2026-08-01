@@ -1,0 +1,136 @@
+// Korean runtime strings — only text that JS still generates at runtime
+// (toasts, confirm dialogs, template messages). Static page text lives
+// directly in each /ko/*.html file instead of a data-i18n attribute.
+window.CURRENT_LANG = 'ko';
+
+const T = {
+  guest: '게스트', signIn: '로그인', myProfile: '내 프로필',
+  loading: '불러오는 중…', anonymous: '익명', optionalHint: '(선택)',
+  moreLabel: '더보기', deleteLabel: '삭제', replyLabel: '답글',
+  writeAReplyPlaceholder: '답글을 입력하세요…',
+  areYouSure: '확실한가요?', continueLabel: '계속',
+  imageUploadFailed: '이미지 업로드에 실패했습니다: {msg}', imageTooLarge: '이미지가 너무 큽니다 — 최대 8MB',
+  couldNotUpdateLike: '좋아요를 업데이트할 수 없습니다', couldNotUpdateSave: '저장을 업데이트할 수 없습니다',
+  removedFromSaved: '저장 목록에서 제거되었습니다', savedToast: '저장되었습니다!',
+  deleteArtworkTitle: '작품을 삭제할까요?',
+  deleteArtworkMessage: '이 작품을 삭제할까요? 되돌릴 수 없으며, 해당 칸은 새로운 제출을 위해 다시 열립니다.',
+  couldNotDeleteArtwork: '작품을 삭제할 수 없습니다', artworkDeleted: '작품이 삭제되었습니다',
+  noCommentsYet: '아직 댓글이 없습니다.',
+  couldNotPostComment: '댓글을 게시할 수 없습니다', couldNotDeleteComment: '댓글을 삭제할 수 없습니다',
+  archivedBadge: '보관됨',
+  viewingNetwork: '{name}님의 네트워크 보는 중',
+  userNotFound: '사용자를 찾을 수 없습니다',
+  completeYourProfile: '프로필을 완성하세요', welcomeToWeavo: 'Weavo에 오신 것을 환영합니다', editProfile: '프로필 수정',
+  requiredNoteCountryOnly: '계정 설정을 완료하려면 국가를 선택하세요.',
+  requiredNoteFull: '계정을 완성하려면 사용자 이름을 설정하고 국가를 선택하세요.',
+  usernameRequired: '계속하려면 사용자 이름이 필요합니다.', pleaseSelectCountry: '국가를 선택해주세요.',
+  invalidLinkUrl: '{label} 링크가 올바른 URL 형식이 아닙니다.',
+  usernameTaken: '이미 사용 중인 사용자 이름입니다.', couldNotSaveTryAgain: '저장할 수 없습니다. 다시 시도해주세요.',
+  welcomeToast: '환영합니다!', profileSavedToast: '프로필이 저장되었습니다',
+  deleteAccountTitle: '계정을 삭제할까요?', deleteAccountConfirmLabel: '계정 삭제하기',
+  deleteAccountMessage: '계정, 프로필, 작품, 댓글, 저장한 항목이 모두 영구적으로 삭제됩니다. 되돌릴 수 없습니다. 확인하려면 아래에 사용자 이름 {username}을(를) 입력하세요.',
+  couldNotDeleteAccount: '계정을 삭제할 수 없습니다. 다시 시도해주세요.', accountDeleted: '계정이 삭제되었습니다.',
+  couldNotLoadProjects: '프로젝트를 불러올 수 없습니다',
+  goToProject: '{n}번째 프로젝트로 이동',
+  projectNotFound: '프로젝트를 찾을 수 없습니다',
+  archivedIterationLabel: '이전 버전(v{version})입니다 — 재구성 전 모습 그대로 보존되었습니다.',
+  enlargePreview: '미리보기 확대', shrinkPreview: '미리보기 축소',
+  couldNotLoadWeavo: 'Weavo를 불러올 수 없습니다',
+  titleRequired: '제목을 입력해주세요.', addReferenceImage: '참조 이미지를 추가해주세요.',
+  widthHeightRange: '너비와 높이는 1~100 사이여야 하며, 전체 칸 수는 10,000칸을 넘을 수 없습니다.',
+  creatingProject: '프로젝트를 만드는 중…',
+  imageFullyTransparent: '이 이미지는 완전히 투명하여 Weavo를 만들 수 없습니다.',
+  couldNotCreateProjectMsg: '프로젝트를 생성할 수 없습니다: {msg}',
+  couldNotCreateProjectRetry: '프로젝트를 생성할 수 없습니다 — 다시 시도해주세요',
+  couldNotReshapeProjectRetry: '프로젝트를 재구성할 수 없습니다 — 다시 시도해주세요.',
+  reshapeTooSmallMsg: '이미 제출된 {have}개의 작품을 담으려면 새 그리드에 최소 {needed}칸이 필요합니다 — 더 큰 그리드를 선택해주세요.',
+  reshapeConfirmMessage: '이미 제출된 작품 {count}개가 색상이 가장 가까운 칸으로 새 그리드에 재배치됩니다. 되돌릴 수 없습니다. 계속할까요?',
+  reshapeConfirmTitle: '이 Weavo를 재구성할까요?', reshapeConfirmOk: '재구성',
+  reshapingProject: '그리드를 재구성하고 작품을 재배치하는 중…',
+  couldNotReshapeProjectMsg: '프로젝트를 재구성할 수 없습니다: {msg}',
+  projectReshaped: '그리드가 재구성되었습니다 — 작품이 재배치되었습니다!',
+  addImageFirst: '먼저 이미지를 추가해주세요.', linkMustBeValidUrl: '링크는 올바른 http(s) URL이어야 합니다.',
+  findingBestSpot: '가장 알맞은 자리를 찾는 중…', couldNotSubmitRetry: '제출할 수 없습니다 — 다시 시도해주세요',
+  weavoComplete: '이 Weavo는 이미 완성되었습니다!',
+  noCloseMatchTitle: '일치하는 색상을 찾지 못했습니다', submitAnyway: '그래도 제출',
+  noCloseMatchMessage: '이 작품의 색상이 남은 빈 칸과 잘 맞지 않습니다. 그래도 가장 가까운 칸에 배치되지만, 자연스럽게 어우러지지 않고 눈에 띌 수 있어요. 그래도 제출할까요?',
+  uploadingToast: '업로드 중…',
+  rearrangingToast: '가장 잘 맞도록 Weavo를 재배치하는 중…',
+  artworkSubmittedToast: '작품이 Weavo의 일부가 되었습니다!',
+  projectCreated: '프로젝트가 생성되었습니다!',
+};
+
+function tr(key, vars) {
+  let s = T[key] ?? key;
+  if (vars) for (const k in vars) s = s.split(`{${k}}`).join(vars[k]);
+  return s;
+}
+function fmtJoined(dateStr) {
+  const d = new Date(dateStr);
+  return `${d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })} 가입`;
+}
+function fmtShortDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+}
+function pieceContributedText(n) {
+  return `${n}점 참여`;
+}
+function filledText(filled, total) {
+  return `${filled} / ${total} 완성`;
+}
+function openCellTooltip(c) {
+  return `rgb(${c.r}, ${c.g}, ${c.b}) — 빈 칸 ${c.count}개`;
+}
+function moreCellsTooltip(remainder) {
+  return `다른 색조의 빈 칸 ${remainder}개 더`;
+}
+function projectCreatedToast(skipped) {
+  if (!skipped) return tr('projectCreated');
+  return `프로젝트가 생성되었습니다! (투명한 칸 ${skipped}개 제외됨)`;
+}
+
+// ISO 3166-1 numeric → country name, same ids main.html's world map uses
+// for country_id, so a profile's country stays consistent with any
+// map/flag lookups elsewhere in the app.
+const COUNTRY_NAMES = {
+  4:"아프가니스탄",8:"알바니아",12:"알제리",24:"앙골라",32:"아르헨티나",
+  36:"호주",40:"오스트리아",50:"방글라데시",56:"벨기에",64:"부탄",
+  68:"볼리비아",76:"브라질",100:"불가리아",104:"미얀마",116:"캄보디아",
+  120:"카메룬",124:"캐나다",140:"중앙아프리카공화국",144:"스리랑카",
+  152:"칠레",156:"중국",170:"콜롬비아",178:"콩고",180:"콩고민주공화국",
+  188:"코스타리카",191:"크로아티아",192:"쿠바",196:"키프로스",203:"체코",
+  208:"덴마크",218:"에콰도르",818:"이집트",222:"엘살바도르",231:"에티오피아",
+  246:"핀란드",250:"프랑스",266:"가봉",276:"독일",288:"가나",
+  300:"그리스",320:"과테말라",324:"기니",332:"아이티",340:"온두라스",
+  348:"헝가리",352:"아이슬란드",356:"인도",360:"인도네시아",364:"이란",
+  368:"이라크",372:"아일랜드",376:"이스라엘",380:"이탈리아",388:"자메이카",
+  392:"일본",400:"요르단",398:"카자흐스탄",404:"케냐",410:"대한민국",
+  408:"북한",414:"쿠웨이트",418:"라오스",422:"레바논",430:"라이베리아",
+  434:"리비아",440:"리투아니아",442:"룩셈부르크",450:"마다가스카르",
+  454:"말라위",458:"말레이시아",462:"몰디브",466:"말리",484:"멕시코",
+  496:"몽골",504:"모로코",508:"모잠비크",516:"나미비아",524:"네팔",
+  528:"네덜란드",554:"뉴질랜드",558:"니카라과",566:"나이지리아",
+  578:"노르웨이",512:"오만",586:"파키스탄",591:"파나마",598:"파푸아뉴기니",
+  600:"파라과이",604:"페루",608:"필리핀",616:"폴란드",620:"포르투갈",
+  634:"카타르",642:"루마니아",643:"러시아",646:"르완다",682:"사우디아라비아",
+  686:"세네갈",694:"시에라리온",703:"슬로바키아",705:"슬로베니아",
+  706:"소말리아",710:"남아프리카공화국",728:"남수단",724:"스페인",
+  729:"수단",752:"스웨덴",756:"스위스",760:"시리아",158:"대만",
+  762:"타지키스탄",764:"태국",768:"토고",788:"튀니지",792:"튀르키예",
+  800:"우간다",804:"우크라이나",784:"아랍에미리트",826:"영국",
+  840:"미국",858:"우루과이",860:"우즈베키스탄",862:"베네수엘라",
+  704:"베트남",887:"예멘",894:"잠비아",716:"짐바브웨",44:"바하마",
+  48:"바레인",84:"벨리즈",204:"베냉",72:"보츠와나",96:"브루나이",
+  854:"부르키나파소",108:"부룬디",132:"카보베르데",214:"도미니카공화국",
+  384:"코트디부아르",242:"피지",270:"감비아",478:"모리타니",480:"모리셔스",
+  562:"니제르",31:"아제르바이잔",51:"아르메니아",90:"솔로몬 제도",
+  112:"벨라루스",174:"코모로",226:"적도기니",232:"에리트레아",
+  262:"지부티",268:"조지아",275:"팔레스타인",328:"가이아나",
+  417:"키르기스스탄",426:"레소토",498:"몰도바",
+  499:"몬테네그로",534:"신트마르턴",540:"누벨칼레도니",548:"바누아투",
+  626:"동티모르",674:"산마리노",688:"세르비아",
+  732:"서사하라",740:"수리남",780:"트리니다드 토바고",
+  795:"투르크메니스탄",807:"북마케도니아"
+};
+function countryName(id) { return COUNTRY_NAMES[id] || ''; }

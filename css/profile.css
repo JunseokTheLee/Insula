@@ -1,0 +1,72 @@
+/* ============ PROFILE ============ */
+.profile-head{padding:28px 32px 8px;max-width:900px;margin:0 auto;animation:fadeIn .3s ease-out;background:var(--paper);}
+.profile-head-top{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+#profileEditBtn{
+  appearance:none;border:1px solid var(--forest-20);cursor:pointer;
+  font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;
+  padding:9px 16px;border-radius:2px;background:transparent;color:var(--forest);
+  transition:background .12s linear;flex-shrink:0;margin-left:auto;
+}
+#profileEditBtn:hover{background:var(--forest-08);}
+.profile-avatar-lg{width:72px;height:72px;border-radius:0;object-fit:cover;background:var(--hairline);flex-shrink:0;display:block;border:1px solid var(--hairline-strong);}
+.profile-avatar-fallback-lg{
+  width:72px;height:72px;border-radius:0;background:var(--forest);color:var(--paper);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;
+}
+.profile-head-info{min-width:0;}
+.profile-head-info h2{margin:0 0 6px;font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;letter-spacing:-.01em;color:var(--forest);}
+.profile-meta{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+.profile-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.profile-link-chip{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:2px;border:1px solid var(--forest-20);
+  background:transparent;color:var(--forest);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;text-decoration:none;
+  transition:background .12s linear;
+}
+.profile-link-chip:hover{background:var(--forest-08);}
+#profileBio{color:var(--muted);font-size:13.5px;line-height:1.6;margin:16px 0 0;max-width:640px;}
+.profile-section{max-width:900px;margin:22px auto 0;padding:22px 32px 4px;background:var(--paper);border-top:1px solid var(--hairline);}
+.profile-section:last-child{padding-bottom:48px;}
+.profile-section .section-label{margin-left:0;margin-right:0;}
+.profile-projects-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,180px));gap:1px;justify-content:start;}
+.profile-art-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,110px));gap:1px;justify-content:start;}
+.profile-art-thumb{
+  position:relative;aspect-ratio:1;border-radius:0;overflow:hidden;cursor:pointer;
+  background:var(--paper);border:none;box-shadow:0 0 0 0.5px var(--hairline-strong);
+  transition:background .12s linear;
+}
+.profile-art-thumb:hover{background:#fff;}
+.profile-art-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.profile-graph-desc{color:var(--muted);font-size:12px;line-height:1.6;margin:-6px 0 14px;max-width:640px;}
+.profile-graph-panel{position:relative;border:1px solid var(--hairline-strong);border-radius:2px;background:#fff;height:360px;overflow:hidden;}
+.profile-graph-panel svg{width:100%;height:100%;display:block;cursor:grab;}
+.profile-graph-panel svg:active{cursor:grabbing;}
+.profile-graph-crumb{
+  position:absolute;top:10px;left:10px;z-index:2;display:none;align-items:center;gap:8px;
+  background:rgba(247,247,245,.94);border:1px solid var(--hairline-strong);border-radius:2px;
+  padding:4px 10px 4px 6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;max-width:calc(100% - 20px);
+}
+#profileGraphBack{appearance:none;border:none;background:none;cursor:pointer;font:inherit;font-weight:600;color:var(--forest);padding:2px 4px;flex-shrink:0;}
+#profileGraphCrumbLabel{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#profileGraphCrumbVisit{color:var(--forest);font-weight:600;text-decoration:none;flex-shrink:0;}
+#profileGraphCrumbVisit:hover{text-decoration:underline;}
+.profile-graph-empty{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+  text-align:center;padding:0 24px;
+}
+
+/* ---------- shared save-relationship graph marks (profile + network pages) ---------- */
+.pg-node{cursor:pointer;}
+.pg-node .pg-ring{fill:none;stroke:var(--hairline-strong);stroke-width:1.5px;transition:stroke .12s linear,stroke-width .12s linear;}
+.pg-node:hover .pg-ring{stroke:var(--forest);stroke-width:2.5px;}
+.pg-node.pg-center .pg-ring{stroke:var(--forest);stroke-width:2px;}
+.pg-node .pg-fallback{fill:var(--forest);}
+.pg-node .pg-fallback-label{fill:var(--paper);font-family:'Space Grotesk',sans-serif;font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none;}
+.pg-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;fill:var(--ink);text-anchor:middle;pointer-events:none;}
+.pg-link{stroke:var(--hairline-strong);stroke-width:1.4px;fill:none;}
+.pg-link.pg-mutual{stroke:var(--forest);stroke-width:1.6px;}
+
+@media (max-width:640px){
+  .profile-head,.profile-section{padding-left:16px;padding-right:16px;}
+  #profileEditBtn{margin-left:0;}
+}
