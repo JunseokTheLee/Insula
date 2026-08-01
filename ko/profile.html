@@ -1,24 +1,40 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<link rel="icon" href="../logo.ico" type="image/x-icon">
+<link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Weavo — 프로필</title>
+<meta name="description" content="Weavo의 작가 프로필입니다.">
+<link rel="canonical" href="https://weavo.art/ko/artists">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/artists">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/artists">
+<link rel="alternate" hreflang="x-default" href="https://weavo.art/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Weavo">
+<meta property="og:title" content="Weavo — 프로필">
+<meta property="og:description" content="Weavo의 작가 프로필입니다.">
+<meta property="og:url" content="https://weavo.art/ko/artists">
+<meta property="og:image" content="https://weavo.art/logo.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Weavo — 프로필">
+<meta name="twitter:description" content="Weavo의 작가 프로필입니다.">
+<meta name="twitter:image" content="https://weavo.art/logo.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="../css/base.css">
-<link rel="stylesheet" href="../css/profile.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/profile.css">
 </head>
 <body>
 
 <div class="app">
-  <div class="topnav">
-    <a class="logo" id="logoHome" href="landing.html">Weavo</a>
-    <div class="nav-right">
-      <a href="network.html" class="nav-link">네트워크</a>
-      <a href="about.html" class="nav-link">소개</a>
+  <header class="topnav">
+    <a class="logo" id="logoHome" href="/ko/">Weavo</a>
+    <nav class="nav-right">
+      <a href="/ko/network" class="nav-link">네트워크</a>
+      <a href="/ko/about" class="nav-link">소개</a>
       <div id="identity">
         <div class="lang-toggle" id="langToggle">
           <button type="button" class="lang-btn" data-lang="en">EN</button>
@@ -29,18 +45,18 @@
         <button id="loginBtn" class="id-btn">로그인</button>
         <button id="logoutBtn" class="id-btn" style="display:none">로그아웃</button>
       </div>
-    </div>
-  </div>
+    </nav>
+  </header>
 
-  <div class="main main-scroll">
+  <main class="main main-scroll">
     <div class="backnav">
-      <a class="back" id="profileBackBtn" href="index.html">&larr; 뒤로</a>
+      <a class="back" id="profileBackBtn" href="/ko/projects">&larr; 뒤로</a>
     </div>
     <div class="profile-head">
       <div class="profile-head-top">
         <div id="profileAvatarWrap"></div>
         <div class="profile-head-info">
-          <h2 id="profileName">불러오는 중…</h2>
+          <h1 id="profileName">불러오는 중…</h1>
           <div class="profile-meta" id="profileMeta"></div>
           <div class="profile-links" id="profileLinksList"></div>
         </div>
@@ -49,21 +65,21 @@
       <p id="profileBio" style="display:none;"></p>
     </div>
     <div class="profile-section" id="profileProjectsSection" style="display:none;">
-      <div class="section-label">참여한 프로젝트</div>
+      <h2 class="section-label">참여한 프로젝트</h2>
       <div class="profile-projects-grid" id="profileProjectsGrid"></div>
     </div>
     <div class="profile-section">
-      <div class="section-label">제출한 작품</div>
+      <h2 class="section-label">제출한 작품</h2>
       <div class="profile-art-grid" id="profileSubmittedGrid"></div>
       <div class="empty-note" id="profileSubmittedEmpty" style="display:none;">아직 제출된 작품이 없습니다.</div>
     </div>
     <div class="profile-section">
-      <div class="section-label">저장한 작품</div>
+      <h2 class="section-label">저장한 작품</h2>
       <div class="profile-art-grid" id="profileSavedGrid"></div>
       <div class="empty-note" id="profileSavedEmpty" style="display:none;">아직 저장한 작품이 없습니다.</div>
     </div>
     <div class="profile-section">
-      <div class="section-label">네트워크</div>
+      <h2 class="section-label">네트워크</h2>
       <div class="profile-graph-desc">저장은 사람과 그들이 저장한 작품의 작가를 연결합니다 — 화살표는 저장한 사람에서 작가 쪽을 가리키며, 양쪽 화살표는 서로 저장한 경우입니다. 드래그로 배치를 바꾸고, 스크롤로 확대/축소하고, 노드를 클릭해 둘러보세요.</div>
       <div class="profile-graph-panel" id="profileGraphPanel">
         <div class="profile-graph-crumb" id="profileGraphCrumb">
@@ -75,11 +91,11 @@
         <div class="profile-graph-empty" id="profileGraphEmpty">아직 저장한 작품이 없어 표시할 네트워크가 없습니다.</div>
       </div>
     </div>
-  </div>
+  </main>
   <footer id="legal-footer">
-    <a href="privacy.html">개인정보처리방침</a>
+    <a href="/ko/privacy">개인정보처리방침</a>
     <span class="sep" aria-hidden="true">&middot;</span>
-    <a href="disclaimer.html">면책조항</a>
+    <a href="/ko/disclaimer">면책조항</a>
   </footer>
 </div>
 
@@ -99,7 +115,7 @@
     <div id="lightbox-artist-card">
       <div id="lightbox-artist-avatar-wrap"></div>
       <div class="lb-artist-info">
-        <button type="button" id="lightbox-artist-name" class="lb-artist-name"></button>
+        <a id="lightbox-artist-name" class="lb-artist-name"></a>
       </div>
     </div>
     <div id="lightbox-artist-about">
@@ -107,7 +123,7 @@
       <div id="lightbox-artist-bio" class="lb-artist-bio"></div>
     </div>
     <div id="lightbox-cap-desc"></div>
-    <a id="lightbox-cap-link" target="_blank" rel="noopener noreferrer"></a>
+    <a id="lightbox-cap-link" target="_blank" rel="ugc nofollow noopener noreferrer"></a>
     <div class="lightbox-actions">
       <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="이 작품 좋아요">
         <span class="icon"></span><span id="lb-like-count">0</span>
@@ -218,12 +234,12 @@
 
 <div id="toast"></div>
 
-<script src="../js/supabase-client.js"></script>
-<script src="../js/i18n/ko.js"></script>
-<script src="../js/common.js"></script>
-<script src="../js/auth.js"></script>
-<script src="../js/lightbox.js"></script>
-<script src="../js/graph-common.js"></script>
-<script src="../js/profile-view.js"></script>
+<script src="/js/supabase-client.js"></script>
+<script src="/js/i18n/ko.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/lightbox.js"></script>
+<script src="/js/graph-common.js"></script>
+<script src="/js/profile-view.js"></script>
 </body>
 </html>

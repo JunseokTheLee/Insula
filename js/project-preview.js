@@ -1,7 +1,7 @@
 // Shared "paint a project's grid as a small canvas, filled cells cropped to
 // a thumbnail of the submitted artwork" renderer. Used by home.js (project
-// cards + carousel, on index.html) and landing.js (hero preview, on
-// landing.html) — split out here so neither page duplicates it.
+// cards + carousel, on projects.html) and landing.js (hero preview, on
+// index.html) — split out here so neither page duplicates it.
 // Needs sb (supabase-client.js), loadImageEl (common.js), luminance
 // (color-engine.js) and filledText (js/i18n/{en,ko}.js) already loaded.
 "use strict";

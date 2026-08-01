@@ -47,7 +47,7 @@ function renderLightboxArtistCard(sub) {
   cardEl.style.display = '';
   avatarWrap.appendChild(miniAvatarEl(sub.author_name, sub.author_avatar_url, sub.author_id, 'lb-artist-avatar'));
   nameBtn.textContent = sub.author_name || '';
-  nameBtn.onclick = () => { location.href = profileUrl(sub.author_id); };
+  nameBtn.href = profileUrl(sub.author_id);
 }
 let lbArtistDetailsToken = 0;
 async function loadLightboxArtistDetails(sub) {
@@ -99,9 +99,18 @@ async function renderLightboxCountryMap(countryId) {
   wrap.style.display = 'block';
 }
 
-function openLightbox(sub) {
+// Fills in every piece of the shared lightbox/artwork markup from a
+// submission row. Used both by openLightbox() below (the in-context modal
+// on project.html/profile.html) and directly by artwork.js on the
+// standalone /artworks/{id} page, which reuses this same markup inline
+// (no modal chrome, nothing to open/close) so a single implementation
+// backs both surfaces.
+function populateLightboxContent(sub) {
   lbCurrentSub = sub;
   lbImg.src = sub.image_url;
+  lbImg.alt = sub.art_title
+    ? tr('artworkThumbAlt', { title: sub.art_title, name: sub.author_name || tr('anonymous') })
+    : tr('artworkImgAltFallback', { name: sub.author_name || tr('anonymous') });
   document.getElementById('lightbox-cap-title').textContent = sub.art_title || '';
   renderLightboxArtistCard(sub);
   loadLightboxArtistDetails(sub);
@@ -121,14 +130,20 @@ function openLightbox(sub) {
   document.getElementById('lightbox-comments').classList.add('open');
   document.getElementById('lightbox-comment-input').value = '';
   loadLightboxComments(sub);
-  resetLbZoom();
-  document.getElementById('lightbox-modal').classList.add('open');
 }
-function closeLightbox() { document.getElementById('lightbox-modal').classList.remove('open'); }
+// The modal wrapper only exists on project.html/profile.html — absent on
+// the standalone artwork page, which has nothing to open/close itself into.
+const lbModal = document.getElementById('lightbox-modal');
+function openLightbox(sub) {
+  populateLightboxContent(sub);
+  resetLbZoom();
+  lbModal?.classList.add('open');
+}
+function closeLightbox() { lbModal?.classList.remove('open'); }
 window.closeLightbox = closeLightbox;
-document.getElementById('lightbox-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeLightbox(); });
+lbModal?.addEventListener('click', e => { if (e.target === e.currentTarget) closeLightbox(); });
 lbStage.addEventListener('click', e => { if (e.target === lbStage) closeLightbox(); });
-document.getElementById('lightbox-close').onclick = closeLightbox;
+document.getElementById('lightbox-close')?.addEventListener('click', closeLightbox);
 lbZoomInBtn.onclick = () => setLbZoom(lbScale + LB_ZOOM_STEP);
 lbZoomOutBtn.onclick = () => setLbZoom(lbScale - LB_ZOOM_STEP);
 lbImg.addEventListener('dblclick', () => setLbZoom(lbScale > 1 ? 1 : 2.5));
@@ -301,10 +316,9 @@ function commentItemEl(c, isReply) {
   el.className = 'lb-comment' + (isReply ? ' lb-comment-reply' : '');
   const head = document.createElement('div'); head.className = 'lbc-head';
   head.appendChild(miniAvatarEl(c.author_name, c.author_avatar_url, c.author_id));
-  const nameBtn = document.createElement('button');
-  nameBtn.type = 'button';
+  const nameBtn = document.createElement('a');
   nameBtn.className = 'lbc-author'; nameBtn.textContent = c.author_name || tr('anonymous');
-  nameBtn.onclick = () => { location.href = profileUrl(c.author_id); };
+  nameBtn.href = profileUrl(c.author_id);
   head.appendChild(nameBtn);
   const time = document.createElement('span'); time.className = 'lbc-time';
   time.textContent = fmtShortDate(c.created_at);

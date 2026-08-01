@@ -46,7 +46,7 @@ function updateIdentityUI() {
   nameEl.textContent = me.id ? me.name : tr('guest');
   nameEl.classList.toggle('guest', !me.id);
   const av = document.getElementById('myAvatar');
-  if (me.avatar) { av.src = me.avatar; av.style.display = 'inline-block'; } else { av.style.display = 'none'; }
+  if (me.avatar) { av.src = me.avatar; av.alt = tr('artistAvatarAlt', { name: me.name }); av.style.display = 'inline-block'; } else { av.style.display = 'none'; }
   document.getElementById('loginBtn').style.display = me.id ? 'none' : '';
   document.getElementById('logoutBtn').style.display = me.id ? '' : 'none';
   const newProjectBtn = document.getElementById('newProjectBtn');
@@ -222,6 +222,26 @@ document.getElementById('ep-submit').onclick = async () => {
   if (typeof window.onProfileSaved === 'function') window.onProfileSaved();
 };
 
+// Removes every file this user has ever uploaded to the `artwork` bucket —
+// avatar + artwork originals live under `${uid}/...`, thumbnails under
+// `thumb/${uid}/...` (see common.js's uploadImage/uploadArtworkImage). The
+// delete_own_account() RPC below only cleans up database rows (Storage
+// objects aren't reachable from plain SQL — see supabase_delete_account_storage.sql
+// for the RLS policies this needs), and this has to run *before* that RPC:
+// once the account is gone, auth.uid() no longer matches anything, and
+// those policies stop letting these calls through. Best-effort — a failed
+// cleanup here shouldn't block the actual account deletion, so errors are
+// logged rather than surfaced.
+async function deleteMyStorageFiles() {
+  for (const prefix of [me.id, `thumb/${me.id}`]) {
+    const { data: entries, error: listErr } = await sb.storage.from('artwork').list(prefix);
+    if (listErr) { console.error('list storage files error:', listErr); continue; }
+    if (!entries || !entries.length) continue;
+    const { error: removeErr } = await sb.storage.from('artwork').remove(entries.map(e => `${prefix}/${e.name}`));
+    if (removeErr) console.error('remove storage files error:', removeErr);
+  }
+}
+
 // Permanently deletes the signed-in user's account. The actual delete
 // happens server-side via the delete_own_account() RPC (supabase_delete_account.sql)
 // — the client SDK has no self-serve "delete my account" call, only an
@@ -236,6 +256,7 @@ document.getElementById('ep-delete-account').onclick = async () => {
   if (!proceed) return;
   const btn = document.getElementById('ep-delete-account');
   btn.disabled = true;
+  await deleteMyStorageFiles();
   const { error } = await sb.rpc('delete_own_account');
   if (error) {
     console.error('delete account error:', error);
@@ -246,7 +267,7 @@ document.getElementById('ep-delete-account').onclick = async () => {
   closeEditProfileModal();
   await signOut();
   toast(tr('accountDeleted'));
-  location.href = 'index.html';
+  location.href = `/${CURRENT_LANG}/projects`;
 };
 
 wireLangToggle();

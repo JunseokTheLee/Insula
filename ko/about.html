@@ -1,21 +1,39 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<link rel="icon" href="../logo.ico" type="image/x-icon">
+<link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weavo — 소개</title>
+<title>Weavo 소개</title>
+<meta name="description" content="Weavo가 무엇인지, 왜 만들어졌는지, 제출된 작품이 모여 하나의 모자이크가 되는 과정을 소개합니다.">
+<link rel="canonical" href="https://weavo.art/ko/about">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/about">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/about">
+<link rel="alternate" hreflang="x-default" href="https://weavo.art/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Weavo">
+<meta property="og:title" content="Weavo 소개">
+<meta property="og:description" content="Weavo가 무엇인지, 왜 만들어졌는지, 제출된 작품이 모여 하나의 모자이크가 되는 과정을 소개합니다.">
+<meta property="og:url" content="https://weavo.art/ko/about">
+<meta property="og:image" content="https://weavo.art/logo.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Weavo 소개">
+<meta name="twitter:description" content="Weavo가 무엇인지, 왜 만들어졌는지, 제출된 작품이 모여 하나의 모자이크가 되는 과정을 소개합니다.">
+<meta name="twitter:image" content="https://weavo.art/logo.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/ko/","logo":"https://weavo.art/logo.png"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/ko/"},{"@type":"ListItem","position":2,"name":"소개","item":"https://weavo.art/ko/about"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="/css/base.css">
 </head>
 <body>
 
 <div class="app">
-  <div class="topnav">
-    <a class="logo" id="logoHome" href="index.html">Weavo</a>
-    <div class="nav-right">
-      <a href="network.html" class="nav-link">네트워크</a>
-      <a href="about.html" class="nav-link active">소개</a>
+  <header class="topnav">
+    <a class="logo" id="logoHome" href="/ko/">Weavo</a>
+    <nav class="nav-right">
+      <a href="/ko/network" class="nav-link">네트워크</a>
+      <a href="/ko/about" class="nav-link active">소개</a>
       <div id="identity">
         <div class="lang-toggle" id="langToggle">
           <button type="button" class="lang-btn" data-lang="en">EN</button>
@@ -26,12 +44,12 @@
         <button id="loginBtn" class="id-btn">로그인</button>
         <button id="logoutBtn" class="id-btn" style="display:none">로그아웃</button>
       </div>
-    </div>
-  </div>
+    </nav>
+  </header>
 
-  <div class="main main-scroll">
+  <main class="main main-scroll">
     <div class="backnav">
-      <a class="back" href="index.html">&larr; 뒤로</a>
+      <a class="back" href="/ko/projects">&larr; 뒤로</a>
     </div>
     <div class="legal-page">
       <h1>소개</h1>
@@ -52,11 +70,11 @@
         <p>Weavo는 독립적으로 커뮤니티가 만들어가는 프로젝트입니다. 질문, 의견, 아이디어가 있다면 <a href="mailto:jadyenthelee@gmail.com">jadyenthelee@gmail.com</a>으로 연락해주세요.</p>
       </div>
     </div>
-  </div>
+  </main>
   <footer id="legal-footer">
-    <a href="privacy.html">개인정보처리방침</a>
+    <a href="/ko/privacy">개인정보처리방침</a>
     <span class="sep" aria-hidden="true">&middot;</span>
-    <a href="disclaimer.html">면책조항</a>
+    <a href="/ko/disclaimer">면책조항</a>
   </footer>
 </div>
 
@@ -142,9 +160,9 @@
 
 <div id="toast"></div>
 
-<script src="../js/supabase-client.js"></script>
-<script src="../js/i18n/ko.js"></script>
-<script src="../js/common.js"></script>
-<script src="../js/auth.js"></script>
+<script src="/js/supabase-client.js"></script>
+<script src="/js/i18n/ko.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/auth.js"></script>
 </body>
 </html>

@@ -30,9 +30,90 @@ function loadImageEl(src) {
 }
 
 // Every profile link (in the topnav, an artwork byline, a comment author, a
-// graph node) points here — a real page in this same language directory.
+// graph node) points here — a real, crawlable path (served by the
+// functions/[lang]/artists/[handle].js Pages Function) rendered with a
+// server-fetched username/id lookup. Root-relative (not relative to the
+// current document) so it resolves the same regardless of how deep the
+// current URL's path is (e.g. from /en/projects/abc, a bare "artists/x"
+// would resolve to /en/projects/artists/x — wrong).
 function profileUrl(userId) {
-  return `profile.html?user=${encodeURIComponent(userId)}`;
+  return `/${CURRENT_LANG}/artists/${encodeURIComponent(userId)}`;
+}
+// Real path to a project's detail page (functions/[lang]/projects/[id].js).
+function projectUrl(id) {
+  return `/${CURRENT_LANG}/projects/${encodeURIComponent(id)}`;
+}
+// Real path to a single artwork's own page (functions/[lang]/artworks/[id].js) —
+// the same piece a lightbox shows inline, but at a shareable, indexable URL.
+function artworkUrl(id) {
+  return `/${CURRENT_LANG}/artworks/${encodeURIComponent(id)}`;
+}
+
+// Reads an entity id/handle out of the current URL: the path segment right
+// after /{lang}/{prefix}/ when this page was reached through its clean,
+// Pages-Function-rendered route (e.g. /en/projects/abc -> "abc"), falling
+// back to the legacy ?id=/?user= query form for direct, unrewritten access
+// to the underlying template file (project.html, profile.html) — which is
+// also how the Pages Function itself fetches the static asset it rewrites.
+// Wires a real <a href> element so a plain left-click runs `onPlainClick`
+// (opening a lightbox in place, in every current use) instead of navigating,
+// while a modifier-click (ctrl/cmd/shift, middle-click, or anything else the
+// browser treats as "open in new tab/window") still gets native browser
+// behavior, since preventDefault() only ever runs for a plain click. The
+// href itself is what makes the element a real, crawlable, share/copy-link-
+// able, new-tab-openable link either way — this only intercepts the common case.
+function interceptClick(el, onPlainClick) {
+  el.addEventListener('click', e => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    onPlainClick(e);
+  });
+}
+
+// Client-side fallback that keeps the tab title/social-preview tags correct
+// for entity detail pages (project/artwork/artist), in case this page is
+// ever reached without going through the Pages Function that pre-renders
+// these same tags server-side (see functions/[lang]/.../[id].js) — e.g.
+// local testing straight against project.html. `image`, when given, is an
+// absolute URL; canonical/title/description are required.
+function updatePageMeta({ title, description, canonical, image }) {
+  document.title = title;
+  const set = (selector, attr, value) => { const el = document.querySelector(selector); if (el) el.setAttribute(attr, value); };
+  set('meta[name="description"]', 'content', description);
+  set('link[rel="canonical"]', 'href', canonical);
+  set('meta[property="og:title"]', 'content', title);
+  set('meta[property="og:description"]', 'content', description);
+  set('meta[property="og:url"]', 'content', canonical);
+  set('meta[name="twitter:title"]', 'content', title);
+  set('meta[name="twitter:description"]', 'content', description);
+  if (image) { set('meta[property="og:image"]', 'content', image); set('meta[name="twitter:image"]', 'content', image); }
+}
+// Appends one JSON-LD <script> block per object, first removing whatever
+// this function itself previously injected (marked with data-dynamic-jsonld)
+// — detail pages like project.html re-render the same entity repeatedly
+// (reshape, re-opening an archived iteration, etc.), and without this a
+// stale/duplicate <script> would pile up in <head> on every call instead of
+// being replaced. Static pages' hand-written JSON-LD (home, about) has no
+// such attribute and is left alone. JSON.stringify already escapes quotes/
+// control characters; user-generated text (titles, bios, descriptions)
+// could still contain a literal "</" that would otherwise prematurely close
+// the script tag, so that sequence is escaped separately.
+function injectJsonLd(objects) {
+  document.querySelectorAll('script[data-dynamic-jsonld]').forEach(el => el.remove());
+  for (const obj of objects) {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.dataset.dynamicJsonld = '1';
+    script.textContent = JSON.stringify(obj).replace(/<\//g, '<\\/');
+    document.head.appendChild(script);
+  }
+}
+
+function routeParam(prefix, legacyQueryKey) {
+  const parts = location.pathname.split('/').filter(Boolean);
+  const idx = parts.indexOf(prefix);
+  if (idx !== -1 && parts.length > idx + 1) return decodeURIComponent(parts[idx + 1]);
+  return legacyQueryKey ? new URLSearchParams(location.search).get(legacyQueryKey) : null;
 }
 
 async function uploadImage(file) {
@@ -165,18 +246,18 @@ function setupPicker(containerId) {
 // user's profile page. `sizeClass` adds a modifier (e.g. 'lb-artist-avatar')
 // for larger variants.
 function miniAvatarEl(name, avatarUrl, userId, sizeClass) {
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = sizeClass ? `mini-avatar ${sizeClass}` : 'mini-avatar';
-  btn.title = name || '';
-  btn.onclick = () => { location.href = profileUrl(userId); };
+  const link = document.createElement('a');
+  link.href = profileUrl(userId);
+  link.className = sizeClass ? `mini-avatar ${sizeClass}` : 'mini-avatar';
+  link.title = name || '';
   if (avatarUrl) {
-    const img = document.createElement('img'); img.src = avatarUrl; img.alt = '';
-    btn.appendChild(img);
+    const img = document.createElement('img'); img.src = avatarUrl;
+    img.alt = name ? tr('artistAvatarAlt', { name }) : '';
+    link.appendChild(img);
   } else {
-    btn.textContent = (name || '?').trim().charAt(0).toUpperCase() || '?';
+    link.textContent = (name || '?').trim().charAt(0).toUpperCase() || '?';
   }
-  return btn;
+  return link;
 }
 
 // Keys must match what the profile editor already writes into
@@ -198,6 +279,11 @@ function wireLangToggle() {
     if (!isActive) {
       btn.onclick = () => {
         localStorage.setItem('weavoLang', btn.dataset.lang);
+        // Also mirrored into a cookie (not just localStorage, which the
+        // server can't read) so functions/index.js's "/" language redirect
+        // honors an explicit past choice instead of falling back to
+        // Accept-Language on every fresh visit to the bare domain root.
+        document.cookie = `weavoLang=${btn.dataset.lang}; path=/; max-age=31536000; samesite=lax`;
         location.href = location.pathname.replace(`/${CURRENT_LANG}/`, `/${btn.dataset.lang}/`) + location.search;
       };
     }

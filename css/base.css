@@ -115,6 +115,13 @@ body.no-scroll-lock{overflow:hidden;}
 .main{flex:1;min-height:0;animation:fadeIn .25s ease-out;}
 .main-scroll{flex:1;min-height:0;overflow-y:auto;}
 
+/* Visually hidden but present for screen readers/crawlers — used for a
+   page's semantic <h1> where the visual design doesn't call for a separate
+   heading on top of an already-descriptive section label. */
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
 .empty-note{text-align:center;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:48px 16px;}
 .section-label{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:4px 32px 14px;}
 
@@ -123,6 +130,7 @@ body.no-scroll-lock{overflow:hidden;}
   position:relative;cursor:pointer;border-radius:0;overflow:hidden;background:var(--paper);border:none;
   box-shadow:0 0 0 0.5px var(--hairline-strong);
   transition:background .12s linear;
+  display:block;color:inherit;text-decoration:none;
 }
 .pv-card:hover{background:#fff;}
 .pv-card-thumb{aspect-ratio:1;background:var(--paper);}
@@ -243,7 +251,7 @@ body.no-scroll-lock{overflow:hidden;}
   width:20px;height:20px;border-radius:0;overflow:hidden;flex-shrink:0;
   display:inline-flex;align-items:center;justify-content:center;
   background:var(--forest);color:var(--paper);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
-  border:none;padding:0;cursor:pointer;
+  border:none;padding:0;cursor:pointer;text-decoration:none;
 }
 .mini-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
 .mini-avatar.lb-artist-avatar{width:52px;height:52px;font-size:20px;}
@@ -297,7 +305,7 @@ body.no-scroll-lock{overflow:hidden;}
 .lb-artist-info{min-width:0;flex:1;text-align:left;}
 .lb-artist-name{
   display:block;background:none;border:none;padding:0;font:inherit;color:var(--paper);
-  font-weight:700;font-size:14px;cursor:pointer;text-align:left;
+  font-weight:700;font-size:14px;cursor:pointer;text-align:left;text-decoration:none;
 }
 .lb-artist-name:hover{text-decoration:underline;}
 .lb-artist-name:empty{display:none;}
@@ -358,7 +366,7 @@ body.no-scroll-lock{overflow:hidden;}
 .lb-comment-reply{margin-left:26px;margin-top:8px;}
 .lbc-head{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
 .lbc-author{
-  color:var(--paper);font-weight:600;font-size:12.5px;background:none;border:none;padding:0;font-family:inherit;cursor:pointer;
+  color:var(--paper);font-weight:600;font-size:12.5px;background:none;border:none;padding:0;font-family:inherit;cursor:pointer;text-decoration:none;
 }
 .lbc-author:hover{text-decoration:underline;}
 .lbc-time{color:rgba(247,247,245,.5);font-size:11px;}

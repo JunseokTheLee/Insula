@@ -3,27 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weavo — Community Art Mosaic</title>
+<title>Weavo | Collaborative Art Mosaic Community</title>
+<meta name="description" content="Weavo is a collaborative art mosaic community — submit your artwork and become part of a shared canvas built one piece at a time. Available in English and Korean.">
+<link rel="canonical" href="https://weavo.art/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Weavo">
+<meta property="og:title" content="Weavo | Collaborative Art Mosaic Community">
+<meta property="og:description" content="Weavo is a collaborative art mosaic community — submit your artwork and become part of a shared canvas built one piece at a time.">
+<meta property="og:url" content="https://weavo.art/">
+<meta property="og:image" content="https://weavo.art/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Weavo | Collaborative Art Mosaic Community">
+<meta name="twitter:description" content="Weavo is a collaborative art mosaic community — submit your artwork and become part of a shared canvas built one piece at a time.">
+<meta name="twitter:image" content="https://weavo.art/logo.png">
 <link rel="icon" href="logo.ico" type="image/x-icon">
 <script>
   // Weavo is now split into per-language, per-feature pages under /en/ and
   // /ko/ (see the site's git history for the previous single-file SPA).
   // This root page only picks which language directory to send a visitor
   // into, the same way the old in-app language toggle used to decide it.
-  // landing.html (the marketing hero) is the default entry point; the
-  // projects app itself lives at index.html within that language directory.
+  // /en/ and /ko/ (each dir's index.html, the marketing landing page) are
+  // the default entry points; the projects app lives at projects.html
+  // within that language directory.
   // Preserves location.hash as well as location.search — if this root page
   // is ever hit as a Supabase OAuth redirect fallback (e.g. the Redirect
   // URLs allowlist doesn't cover the destination page yet), the session
   // tokens Supabase appends can arrive as a #hash fragment, and dropping
   // that here would silently sign the user right back out downstream.
   var lang = localStorage.getItem('weavoLang') === 'ko' ? 'ko' : (navigator.language || '').toLowerCase().startsWith('ko') ? 'ko' : 'en';
-  location.replace(lang + '/landing.html' + location.search + location.hash);
+  location.replace(lang + '/' + location.search + location.hash);
 </script>
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/">
+<link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 </head>
 <body>
   <noscript>
-    <p>Weavo requires JavaScript. Continue to <a href="en/landing.html">English</a> or <a href="ko/landing.html">한국어</a>.</p>
+    <p>Weavo requires JavaScript. Continue to <a href="/en/">English</a> or <a href="/ko/">한국어</a>.</p>
   </noscript>
 </body>
 </html>

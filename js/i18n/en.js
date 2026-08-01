@@ -58,6 +58,12 @@ const T = {
   rearrangingToast: 'Rearranging the weavo for the best fit…',
   artworkSubmittedToast: 'Your artwork is part of the weavo!',
   projectCreated: 'Project created!',
+  artistAvatarAlt: '{name}’s profile picture',
+  artworkThumbAlt: '“{title}” by {name}',
+  artworkImgAltFallback: 'Artwork by {name}',
+  artworkNotFound: 'Artwork not found',
+  projectPreviewAlt: 'Reference image for the “{title}” project',
+  projectsCrumb: 'Projects',
 };
 
 function tr(key, vars) {

@@ -1,1 +1,17 @@
 /weavo.html / 301
+
+# landing.html was renamed to index.html (served at the language directory
+# root); the old project-list index.html was renamed to projects.html.
+/ko/landing.html   /ko/          301
+/en/landing.html   /en/          301
+/ko/index.html     /ko/projects  301
+/en/index.html     /en/projects  301
+
+# Deliberately no /en/projects, /en/about, /en/network, /en/privacy,
+# /en/disclaimer rewrite/redirect rules (and no /ko equivalents) beyond the
+# renames above: Cloudflare Pages already serves each *.html file's content
+# at its extension-less path natively (200), and already 308-redirects the
+# literal *.html address to that same clean URL — adding an explicit 200
+# rewrite rule on top of that double-processes the request and comes back
+# as a stray 308 instead of the intended content. Confirmed against
+# `wrangler pages dev` before settling on leaving this to the platform default.

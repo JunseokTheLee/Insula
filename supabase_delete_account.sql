@@ -15,10 +15,12 @@
 -- mosaic_pixels.claimed_by uses "on delete set null" instead, so an
 -- in-progress pixel claim is released rather than deleted.
 --
--- Note: this does NOT remove files already uploaded to Storage (avatar /
--- artwork images) — the DB rows referencing them are gone, but the objects
--- themselves are left orphaned in the `artwork` bucket. Out of scope here;
--- revisit with a Storage cleanup pass if that becomes a problem.
+-- Note: this function only cleans up database rows — Storage objects (avatar
+-- / artwork images, both full-res and thumbnails) live outside Postgres
+-- proper and aren't reachable from plain SQL, so they're removed client-side
+-- instead, right before this RPC is called (see js/auth.js's ep-delete-account
+-- handler). That client-side removal needs the RLS policies added in
+-- supabase_delete_account_storage.sql (run that file too, if you haven't).
 
 create or replace function public.delete_own_account()
 returns void

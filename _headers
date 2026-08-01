@@ -1,0 +1,57 @@
+# Cache policy — see SEO_DEPLOYMENT_CHECKLIST.md for the full rationale.
+# HTML is never cached without revalidation, so a deploy is visible
+# immediately instead of Safari/search-engine caches holding an old page.
+# Cloudflare Pages already defaults static HTML responses to
+# `public, max-age=0, must-revalidate` (functionally equivalent — always
+# revalidates); these make that policy explicit for every real, extension-
+# less page URL on the site rather than relying on the platform default.
+# (Each pattern needs its own repeated header lines below it — Cloudflare's
+# _headers format doesn't let multiple patterns share one block.)
+/
+  Cache-Control: no-cache
+/en/
+  Cache-Control: no-cache
+/ko/
+  Cache-Control: no-cache
+/en/about
+  Cache-Control: no-cache
+/en/network
+  Cache-Control: no-cache
+/en/privacy
+  Cache-Control: no-cache
+/en/disclaimer
+  Cache-Control: no-cache
+/en/projects
+  Cache-Control: no-cache
+/ko/about
+  Cache-Control: no-cache
+/ko/network
+  Cache-Control: no-cache
+/ko/privacy
+  Cache-Control: no-cache
+/ko/disclaimer
+  Cache-Control: no-cache
+/ko/projects
+  Cache-Control: no-cache
+
+# CSS/JS filenames aren't content-hashed (no build step in this project —
+# see the checklist for the tradeoff), so these intentionally stop short of
+# `immutable`/a year-long max-age: a moderate, revalidated cache means a
+# deploy is picked up within the hour instead of indefinitely serving a
+# stale script/stylesheet paired with newer HTML.
+/css/*
+  Cache-Control: public, max-age=3600, must-revalidate
+/js/*
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/logo.png
+  Cache-Control: public, max-age=86400
+/logo.ico
+  Cache-Control: public, max-age=86400
+
+/robots.txt
+  Cache-Control: public, max-age=3600
+/sitemap.xml
+  Cache-Control: public, max-age=3600
+/sitemap-static.xml
+  Cache-Control: public, max-age=3600

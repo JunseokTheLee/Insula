@@ -10,7 +10,7 @@
 #uploadArtBtn svg{width:14px;height:14px;flex-shrink:0;}
 
 .project-head{padding:28px 32px 20px;animation:fadeIn .3s ease-out;}
-.project-head h2{margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--forest);letter-spacing:-.01em;}
+.project-head h1{margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--forest);letter-spacing:-.01em;}
 .project-head p{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;margin:0 0 12px;max-width:560px;}
 .project-progress{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;}
 
@@ -55,8 +55,8 @@
 .weavo-stage{position:relative;transition:transform .15s ease-out;}
 .weavo-stage.no-transition{transition:none;}
 .weavo-grid{width:100%;height:100%;display:grid;gap:1px;background:var(--forest-dark);}
-.weavo-cell{background-size:cover;background-position:center;background-color:#3a3a38;transition:transform .12s ease-out,outline-color .12s ease-out;}
-.weavo-cell.filled{cursor:zoom-in;}
+.weavo-cell{background-size:cover;background-position:center;background-color:#3a3a38;transition:transform .12s ease-out,outline-color .12s ease-out;display:block;}
+.weavo-cell.filled{cursor:zoom-in;color:inherit;text-decoration:none;}
 .weavo-cell.filled:hover{outline:2px solid var(--mint);outline-offset:-2px;position:relative;z-index:2;transform:scale(1.08);box-shadow:none;}
 
 /* ---------- project detail: list view (all artworks in the project) ---------- */
@@ -99,4 +99,26 @@
   .color-swatches{gap:9px;}
   .color-swatch .swatch-dot{width:28px;height:28px;}
   #uploadArtBtn{padding:10px 16px;font-size:10px;}
+}
+
+/* ============ STANDALONE ARTWORK PAGE (/artworks/{id}) ============
+   Reuses the exact same #lightbox-* markup/ids the in-context modal on
+   project.html/profile.html populates via populateLightboxContent(), just
+   laid out inline in the page instead of as a fixed-position overlay. */
+.artwork-breadcrumb{padding:0 32px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin:20px 0 14px;}
+.artwork-breadcrumb a{color:var(--muted);text-decoration:none;}
+.artwork-breadcrumb a:hover{color:var(--forest);text-decoration:underline;}
+.artwork-stage{
+  position:relative;background:rgba(15,20,17,.94);border-radius:0;
+  display:flex;align-items:stretch;gap:1px;overflow:hidden;
+  min-height:60vh;margin:0 32px 40px;
+}
+.artwork-stage .lightbox-stage{padding:24px;opacity:1;transform:none;}
+.artwork-stage #lightbox-caption{position:static;}
+@media (max-width:760px){
+  .artwork-stage{flex-direction:column;min-height:0;}
+}
+@media (max-width:640px){
+  .artwork-breadcrumb{padding-left:16px;padding-right:16px;}
+  .artwork-stage{margin-left:16px;margin-right:16px;}
 }

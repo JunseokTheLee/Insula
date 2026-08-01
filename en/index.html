@@ -1,22 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="../logo.ico" type="image/x-icon">
+<link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weavo — Community Photomosaic</title>
+<title>Weavo | Collaborative Art Mosaic Community</title>
+<meta name="description" content="Submit your artwork and become part of a collaborative mosaic where every artist and every piece remains visible.">
+<link rel="canonical" href="https://weavo.art/en/">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/">
+<link rel="alternate" hreflang="x-default" href="https://weavo.art/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Weavo">
+<meta property="og:title" content="Weavo | Collaborative Art Mosaic Community">
+<meta property="og:description" content="Submit your artwork and become part of a collaborative mosaic where every artist and every piece remains visible.">
+<meta property="og:url" content="https://weavo.art/en/">
+<meta property="og:image" content="https://weavo.art/logo.png">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Weavo | Collaborative Art Mosaic Community">
+<meta name="twitter:description" content="Submit your artwork and become part of a collaborative mosaic where every artist and every piece remains visible.">
+<meta name="twitter:image" content="https://weavo.art/logo.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Weavo","url":"https://weavo.art/en/","inLanguage":"en"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/en/","logo":"https://weavo.art/logo.png"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="../css/base.css">
-<link rel="stylesheet" href="../css/home.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/home.css">
 </head>
 <body>
 
 <div class="app">
-  <div class="topnav">
-    <a class="logo" id="logoHome" href="landing.html">Weavo</a>
-    <div class="nav-right">
-      <a href="network.html" class="nav-link">Network</a>
-      <a href="about.html" class="nav-link">About</a>
+  <header class="topnav">
+    <a class="logo" id="logoHome" href="/en/">Weavo</a>
+    <nav class="nav-right">
+      <a href="/en/network" class="nav-link">Network</a>
+      <a href="/en/about" class="nav-link">About</a>
       <div id="identity">
         <div class="lang-toggle" id="langToggle">
           <button type="button" class="lang-btn" data-lang="en">EN</button>
@@ -27,83 +45,43 @@
         <button id="loginBtn" class="id-btn">Sign in</button>
         <button id="logoutBtn" class="id-btn" style="display:none">Sign out</button>
       </div>
-    </div>
-  </div>
+    </nav>
+  </header>
 
-  <div class="main-scroll home-scroll">
-    <section class="snap-panel" id="currentProjectsPanel">
-      <div class="carousel-section" id="carouselSection">
-        <div class="carousel-header">
-          <div class="section-label">Current Projects</div>
-          <div class="carousel-nav">
-            <button class="car-arrow" id="carPrev" aria-label="Previous project">&#8249;</button>
-            <button class="car-arrow" id="carNext" aria-label="Next project">&#8250;</button>
+  <main class="main-scroll home-scroll">
+    <section class="snap-panel" id="heroPanel">
+      <div class="hero">
+        <div class="hero-inner">
+          <div class="hero-left">
+            <h1>Your colors come<br>together into one story.</h1>
+            <p>A collaborative canvas built by neurodivergent and neurotypical artists alike. Submit your art and it's placed into a shared weavo based on its dominant color — where your piece lands is revealed once the placement is complete.</p>
+            <div class="hero-cta-row">
+              <a class="cta" href="/en/projects">Explore Projects <span aria-hidden="true">&rarr;</span></a>
+              <button class="cta-outline" id="heroProfileBtn">Sign In</button>
+            </div>
+          </div>
+          <div class="hero-right">
+            <div class="hero-preview" id="heroPreview">
+              <canvas id="heroPreviewCanvas"></canvas>
+              <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">No projects yet — be the first to start one.</div>
+            </div>
           </div>
         </div>
-        <div class="carousel-track-wrap">
-          <div class="carousel-track" id="carouselTrack"></div>
-        </div>
-        <div class="carousel-dots" id="carouselDots"></div>
       </div>
 
-      <button type="button" class="scroll-hint" id="scrollHint" aria-label="Scroll to all projects">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-      </button>
-    </section>
-
-    <section class="snap-panel" id="projectsPanel">
-      <div class="carousel-header" style="margin-top:32px;">
-        <div class="section-label">All Projects</div>
-        <button class="cta-text" id="newProjectBtn" style="display:none;margin-top:0;">+ New Project</button>
+      <div class="stats-bar" id="statsBar">
+        <div class="stat-tile"><div class="stat-icon">👥</div><div class="stat-value" id="statArtists">0</div><div class="stat-label">Artists</div></div>
+        <div class="stat-tile"><div class="stat-icon">🎨</div><div class="stat-value" id="statArtworks">0</div><div class="stat-label">Artworks Submitted</div></div>
+        <div class="stat-tile"><div class="stat-icon">🖼️</div><div class="stat-value" id="statProjects">0</div><div class="stat-label">Active Projects</div></div>
+        <div class="stat-tile"><div class="stat-icon">✅</div><div class="stat-value" id="statFill">0%</div><div class="stat-label">Cells Filled</div></div>
       </div>
-      <div class="projects-grid" id="projectsGrid"></div>
-      <div class="empty-note" id="projectsEmpty" style="display:none;">No projects yet.</div>
     </section>
-  </div>
+  </main>
   <footer id="legal-footer">
-    <a href="privacy.html">Privacy Policy</a>
+    <a href="/en/privacy">Privacy Policy</a>
     <span class="sep" aria-hidden="true">&middot;</span>
-    <a href="disclaimer.html">Disclaimer</a>
+    <a href="/en/disclaimer">Disclaimer</a>
   </footer>
-</div>
-
-<!-- New project modal (admin only) -->
-<div id="new-project-modal" class="modal-overlay">
-  <div id="new-project-dialog" class="modal-panel">
-    <h3>New Weavo Project</h3>
-    <div class="field">
-      <label for="np-title">Title</label>
-      <input type="text" id="np-title" placeholder="Project title" maxlength="60">
-    </div>
-    <div class="field">
-      <label for="np-desc">Description <span class="field-hint">(optional)</span></label>
-      <textarea id="np-desc" placeholder="What's this weavo about?" maxlength="300"></textarea>
-    </div>
-    <div style="display:flex;gap:10px;">
-      <div class="field" style="flex:1;">
-        <label for="np-width">Width (cells)</label>
-        <input type="text" inputmode="numeric" id="np-width" placeholder="e.g. 40">
-      </div>
-      <div class="field" style="flex:1;">
-        <label for="np-height">Height (cells)</label>
-        <input type="text" inputmode="numeric" id="np-height" placeholder="e.g. 30">
-      </div>
-    </div>
-    <div class="field">
-      <label>Reference Image</label>
-      <div class="img-upload-area" id="ref-picker">
-        <div class="img-placeholder"><span class="up-icon">🖼</span><span>Click or drag an image here</span></div>
-        <img class="img-preview" alt="">
-        <button type="button" class="img-remove" aria-label="Remove image">✕</button>
-        <input type="file" class="img-input" accept="image/*">
-      </div>
-    </div>
-    <div class="field-error" id="np-error"></div>
-    <div class="modal-actions">
-      <button id="np-cancel" class="btn-cancel">Cancel</button>
-      <button id="np-submit" class="btn-primary">Create</button>
-    </div>
-  </div>
 </div>
 
 <!-- Edit profile modal -->
@@ -188,12 +166,12 @@
 
 <div id="toast"></div>
 
-<script src="../js/supabase-client.js"></script>
-<script src="../js/i18n/en.js"></script>
-<script src="../js/common.js"></script>
-<script src="../js/color-engine.js"></script>
-<script src="../js/auth.js"></script>
-<script src="../js/project-preview.js"></script>
-<script src="../js/home.js"></script>
+<script src="/js/supabase-client.js"></script>
+<script src="/js/i18n/en.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/color-engine.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/project-preview.js"></script>
+<script src="/js/landing.js"></script>
 </body>
 </html>

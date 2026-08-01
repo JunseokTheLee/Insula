@@ -58,6 +58,12 @@ const T = {
   rearrangingToast: '가장 잘 맞도록 Weavo를 재배치하는 중…',
   artworkSubmittedToast: '작품이 Weavo의 일부가 되었습니다!',
   projectCreated: '프로젝트가 생성되었습니다!',
+  artistAvatarAlt: '{name}님의 프로필 사진',
+  artworkThumbAlt: '{name}의 작품 ‘{title}’',
+  artworkImgAltFallback: '{name}님의 작품',
+  artworkNotFound: '작품을 찾을 수 없습니다',
+  projectPreviewAlt: '‘{title}’ 프로젝트의 참조 이미지',
+  projectsCrumb: '프로젝트',
 };
 
 function tr(key, vars) {

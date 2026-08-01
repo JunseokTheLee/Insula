@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Bare template files, fetched internally by the Pages Functions that render
+# /{lang}/projects/{id}, /{lang}/artworks/{id} and /{lang}/artists/{handle}
+# (see functions/) — never a canonical, linkable URL on their own, so they
+# stay out of the index rather than competing with the real detail pages.
+Disallow: /en/project.html
+Disallow: /ko/project.html
+Disallow: /en/profile.html
+Disallow: /ko/profile.html
+Disallow: /en/artwork.html
+Disallow: /ko/artwork.html
+
+Sitemap: https://weavo.art/sitemap.xml

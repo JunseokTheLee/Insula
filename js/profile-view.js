@@ -4,9 +4,38 @@
 // given). Needs common.js, auth.js, lightbox.js and js/graph-common.js.
 "use strict";
 
-function openProject(id) { location.href = `project.html?id=${encodeURIComponent(id)}`; }
+function openProject(id) { location.href = projectUrl(id); }
 
 let profileUserId = null;
+
+// Client-side fallback for the tab title/social-preview tags, in case this
+// page is reached without going through the Pages Function that pre-renders
+// them server-side (see functions/[lang]/artists/[handle].js).
+function updateProfileMeta(profile, displayName) {
+  const title = `${displayName} | Weavo`;
+  const description = profile.bio
+    ? profile.bio.slice(0, 300)
+    : (CURRENT_LANG === 'ko' ? `Weavo의 작가 ${displayName}님의 프로필입니다.` : `${displayName}'s artist profile on Weavo.`);
+  updatePageMeta({ title, description, canonical: `${location.origin}${profileUrl(profile.username || profile.id)}`, image: profile.avatar_url });
+}
+function renderProfileJsonLd(profile, displayName) {
+  const url = `${location.origin}${profileUrl(profile.username || profile.id)}`;
+  const data = { '@context': 'https://schema.org', '@type': 'Person', name: displayName, url };
+  if (profile.avatar_url) data.image = profile.avatar_url;
+  if (profile.bio) data.description = profile.bio;
+  // No standalone "/artists" listing page exists in this app (artists are
+  // discovered through project/artwork pages, not a directory) — a
+  // two-level Home > {name} breadcrumb reflects the real navigable
+  // hierarchy, rather than inventing an intermediate crumb that goes nowhere.
+  const breadcrumb = {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Weavo', item: `${location.origin}/${CURRENT_LANG}/` },
+      { '@type': 'ListItem', position: 2, name: displayName, item: url },
+    ],
+  };
+  injectJsonLd([data, breadcrumb]);
+}
 
 document.getElementById('profileBackBtn').addEventListener('click', e => {
   e.preventDefault();
@@ -15,7 +44,7 @@ document.getElementById('profileBackBtn').addEventListener('click', e => {
     try { return new URL(document.referrer).origin === location.origin; } catch { return false; }
   })();
   if (sameOriginReferrer) history.back();
-  else location.href = 'index.html';
+  else location.href = `/${CURRENT_LANG}/projects`;
 });
 
 async function fetchSubmittedWeavoArt(userId) {
@@ -77,13 +106,14 @@ async function fetchParticipatedProjects(submitted, userId) {
   return result;
 }
 function profileProjectCardEl(project) {
-  const card = document.createElement('div');
+  const card = document.createElement('a');
   card.className = 'pv-card';
-  card.onclick = () => openProject(project.id);
+  card.href = projectUrl(project.id);
   const thumb = document.createElement('div');
   thumb.className = 'pv-card-thumb';
   const img = document.createElement('img');
-  img.src = project.reference_image_url; img.alt = '';
+  img.src = project.reference_image_url;
+  img.alt = project.title ? tr('projectPreviewAlt', { title: project.title }) : '';
   thumb.appendChild(img);
   card.appendChild(thumb);
   const info = document.createElement('div');
@@ -113,12 +143,15 @@ async function fetchSavedWeavoArt(userId) {
   return (data || []).map(row => row.mosaic_submissions).filter(Boolean);
 }
 function profileArtThumbEl(sub) {
-  const el = document.createElement('div');
+  const el = document.createElement('a');
   el.className = 'profile-art-thumb';
+  el.href = artworkUrl(sub.id);
   el.title = sub.art_title || '';
-  const img = document.createElement('img'); img.src = sub.thumb_url || sub.image_url; img.alt = '';
+  const img = document.createElement('img');
+  img.src = sub.thumb_url || sub.image_url;
+  img.alt = sub.art_title ? tr('artworkThumbAlt', { title: sub.art_title, name: sub.author_name || tr('anonymous') }) : '';
   el.appendChild(img);
-  el.onclick = () => openLightbox(sub);
+  interceptClick(el, () => openLightbox(sub));
   return el;
 }
 
@@ -206,7 +239,7 @@ async function renderProfileGraphFor(centerId, isRoot) {
   crumb.style.display = isRoot ? 'none' : 'flex';
   if (!isRoot) {
     crumbLabel.textContent = tr('viewingNetwork', { name: centerLabel });
-    crumbVisit.onclick = (e) => { e.preventDefault(); location.href = profileUrl(centerId); };
+    crumbVisit.href = profileUrl(centerId);
   }
   document.getElementById('profileGraphBack').onclick = () => renderProfileGraphFor(graphRootId, true);
 
@@ -347,13 +380,21 @@ async function loadProfileView(userId) {
     fetchSavedWeavoArt(userId)
   ]);
   if (!profile) { document.getElementById('profileName').textContent = tr('userNotFound'); return; }
+  // Canonicalize the address bar to /artists/{username} once a username is
+  // known — inbound links built from a raw author_id (miniAvatarEl, comment
+  // bylines, etc.) still work via the id fallback in resolveProfileHandle(),
+  // but the shareable URL this page settles on should be the vanity one.
+  if (profile.username) history.replaceState(null, '', profileUrl(profile.username));
   const participatedProjects = await fetchParticipatedProjects(submitted, userId);
 
   const displayName = profile.username || profile.name || tr('anonymous');
   document.getElementById('profileName').textContent = displayName;
+  updateProfileMeta(profile, displayName);
+  renderProfileJsonLd(profile, displayName);
   const avatarWrap = document.getElementById('profileAvatarWrap');
   if (profile.avatar_url) {
-    const img = document.createElement('img'); img.className = 'profile-avatar-lg'; img.src = profile.avatar_url; img.alt = '';
+    const img = document.createElement('img'); img.className = 'profile-avatar-lg'; img.src = profile.avatar_url;
+    img.alt = tr('artistAvatarAlt', { name: displayName });
     avatarWrap.appendChild(img);
   } else {
     const fb = document.createElement('div'); fb.className = 'profile-avatar-fallback-lg';
@@ -371,7 +412,7 @@ async function loadProfileView(userId) {
     const href = url ? safeHref(url) : null;
     if (!href) continue;
     const a = document.createElement('a');
-    a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.href = href; a.target = '_blank'; a.rel = 'ugc nofollow noopener noreferrer';
     a.className = 'profile-link-chip'; a.textContent = label;
     linksEl.appendChild(a);
   }
@@ -400,9 +441,20 @@ async function loadProfileView(userId) {
 window.onSubmissionDeleted = () => { if (profileUserId) loadProfileView(profileUserId); };
 window.onProfileSaved = () => { if (profileUserId) loadProfileView(profileUserId); };
 
+// The /artists/{handle} route accepts either a real user id (links built
+// from a submission/comment's author_id) or a username slug (the profile's
+// own canonical URL) — try it as a username first (case-insensitive, matches
+// the profiles_username_key unique index), then fall back to treating it as
+// a raw id so pre-username links keep resolving.
+async function resolveProfileHandle(handle) {
+  const { data } = await sb.from('profiles').select('id').ilike('username', handle).maybeSingle();
+  return (data && data.id) || handle;
+}
+
 authReady.then(async () => {
-  const requested = new URLSearchParams(location.search).get('user');
-  const userId = requested || me.id;
-  if (!userId) { document.getElementById('profileName').textContent = tr('userNotFound'); return; }
+  const requested = routeParam('artists', 'user');
+  const handle = requested || me.id;
+  if (!handle) { document.getElementById('profileName').textContent = tr('userNotFound'); return; }
+  const userId = await resolveProfileHandle(handle);
   await loadProfileView(userId);
 });

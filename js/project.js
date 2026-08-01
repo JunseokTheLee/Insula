@@ -4,12 +4,40 @@
 
 let currentProject = null;
 
+// Client-side fallback for the tab title/social-preview tags, in case this
+// page is reached without going through the Pages Function that pre-renders
+// them server-side (see functions/[lang]/projects/[id].js).
+function updateProjectMeta(project) {
+  const title = `${project.title} | Weavo`;
+  const description = project.description
+    ? project.description.slice(0, 300)
+    : (CURRENT_LANG === 'ko' ? `Weavo의 공동 모자이크 프로젝트 '${project.title}'.` : `A collaborative mosaic project on Weavo: ${project.title}.`);
+  updatePageMeta({ title, description, canonical: `${location.origin}${projectUrl(project.id)}`, image: project.reference_image_url });
+}
+function renderProjectJsonLd(project) {
+  const url = `${location.origin}${projectUrl(project.id)}`;
+  const data = {
+    '@context': 'https://schema.org', '@type': 'CreativeWork',
+    name: project.title, url, image: project.reference_image_url,
+  };
+  if (project.description) data.description = project.description;
+  const breadcrumb = {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Weavo', item: `${location.origin}/${CURRENT_LANG}/` },
+      { '@type': 'ListItem', position: 2, name: tr('projectsCrumb'), item: `${location.origin}/${CURRENT_LANG}/projects` },
+      { '@type': 'ListItem', position: 3, name: project.title, item: url },
+    ],
+  };
+  injectJsonLd([data, breadcrumb]);
+}
+
 // ---------- project detail ----------
 async function openProject(id) {
   const { data: project, error } = await sb.from('mosaic_projects').select('*').eq('id', id).maybeSingle();
   if (error || !project) { console.error('load project error:', error); toast(tr('projectNotFound')); return; }
   currentProject = project;
-  history.replaceState(null, '', `project.html?id=${encodeURIComponent(project.id)}`);
+  history.replaceState(null, '', projectUrl(project.id));
   document.getElementById('reshapeProjectBtn').style.display = (me.isAdmin && !project.is_archived) ? '' : 'none';
   document.getElementById('uploadArtBtn').style.display = project.is_archived ? 'none' : '';
   const banner = document.getElementById('archivedBanner');
@@ -21,6 +49,8 @@ async function openProject(id) {
     banner.style.display = 'none';
   }
   document.getElementById('projectTitle').textContent = project.title;
+  updateProjectMeta(project);
+  renderProjectJsonLd(project);
   const descEl = document.getElementById('projectDesc');
   descEl.textContent = project.description || '';
   descEl.style.display = project.description ? '' : 'none';
@@ -149,7 +179,11 @@ async function renderWeavoGrid(project) {
   let filledCount = 0;
   const filledSubs = [];
   for (const px of pixels || []) {
-    const cell = document.createElement('div');
+    const isFilled = !!(px.filled && px.submission_id && px.mosaic_submissions);
+    // Filled cells are real links to the artwork's own page (crawlable,
+    // shareable, ctrl/cmd-clickable into a new tab); still-open cells have
+    // nothing to link to yet, so those stay plain divs.
+    const cell = document.createElement(isFilled ? 'a' : 'div');
     cell.className = 'weavo-cell';
     cell.dataset.pixelId = px.id;
     // Explicit placement, not DOM order — cells excluded from the grid
@@ -158,11 +192,12 @@ async function renderWeavoGrid(project) {
     cell.style.gridColumn = String(px.x + 1);
     cell.style.gridRow = String(px.y + 1);
     applyCellVisual(cell, px);
-    if (px.filled && px.submission_id && px.mosaic_submissions) {
+    if (isFilled) {
       filledCount++;
       cell.classList.add('filled');
       const sub = { ...px.mosaic_submissions, pixel_id: px.id };
-      cell.onclick = () => { if (weavoSuppressClick) return; openLightbox(sub); };
+      cell.href = artworkUrl(sub.id);
+      interceptClick(cell, () => { if (!weavoSuppressClick) openLightbox(sub); });
       filledSubs.push(sub);
     }
     grid.appendChild(cell);
@@ -181,13 +216,17 @@ function renderProjectList(subs) {
   for (const sub of sorted) grid.appendChild(projectListCardEl(sub));
 }
 function projectListCardEl(sub) {
-  const card = document.createElement('div');
+  const card = document.createElement('a');
   card.className = 'pv-card';
-  card.onclick = () => openLightbox(sub);
+  card.href = artworkUrl(sub.id);
+  interceptClick(card, () => openLightbox(sub));
   const thumb = document.createElement('div');
   thumb.className = 'pv-card-thumb';
   const img = document.createElement('img');
-  img.src = sub.thumb_url || sub.image_url; img.alt = '';
+  img.src = sub.thumb_url || sub.image_url;
+  img.alt = sub.art_title
+    ? tr('artworkThumbAlt', { title: sub.art_title, name: sub.author_name || tr('anonymous') })
+    : tr('artworkImgAltFallback', { name: sub.author_name || tr('anonymous') });
   thumb.appendChild(img);
   card.appendChild(thumb);
   const info = document.createElement('div');
@@ -551,7 +590,7 @@ window.onSubmissionDeleted = () => {
 };
 
 authReady.then(async () => {
-  const id = new URLSearchParams(location.search).get('id');
+  const id = routeParam('projects', 'id');
   if (!id) { toast(tr('projectNotFound')); return; }
   await openProject(id);
 });

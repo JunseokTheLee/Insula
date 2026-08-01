@@ -1,22 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="../logo.ico" type="image/x-icon">
+<link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weavo — Community Photomosaic</title>
+<title>Artwork | Weavo</title>
+<meta name="description" content="An artwork submitted to a Weavo community mosaic.">
+<link rel="canonical" href="https://weavo.art/en/projects">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/projects">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/projects">
+<link rel="alternate" hreflang="x-default" href="https://weavo.art/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Weavo">
+<meta property="og:title" content="Artwork | Weavo">
+<meta property="og:description" content="An artwork submitted to a Weavo community mosaic.">
+<meta property="og:image" content="https://weavo.art/logo.png">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Artwork | Weavo">
+<meta name="twitter:description" content="An artwork submitted to a Weavo community mosaic.">
+<meta name="twitter:image" content="https://weavo.art/logo.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="../css/base.css">
-<link rel="stylesheet" href="../css/home.css">
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/project.css">
 </head>
 <body>
 
 <div class="app">
-  <div class="topnav">
-    <a class="logo" id="logoHome" href="landing.html">Weavo</a>
-    <div class="nav-right">
-      <a href="network.html" class="nav-link">Network</a>
-      <a href="about.html" class="nav-link">About</a>
+  <header class="topnav">
+    <a class="logo" id="logoHome" href="/en/">Weavo</a>
+    <nav class="nav-right">
+      <a href="/en/network" class="nav-link">Network</a>
+      <a href="/en/about" class="nav-link">About</a>
       <div id="identity">
         <div class="lang-toggle" id="langToggle">
           <button type="button" class="lang-btn" data-lang="en">EN</button>
@@ -27,42 +44,71 @@
         <button id="loginBtn" class="id-btn">Sign in</button>
         <button id="logoutBtn" class="id-btn" style="display:none">Sign out</button>
       </div>
-    </div>
-  </div>
+    </nav>
+  </header>
 
-  <div class="main-scroll home-scroll">
-    <section class="snap-panel" id="heroPanel">
-      <div class="hero">
-        <div class="hero-inner">
-          <div class="hero-left">
-            <h1>Your colors come<br>together into one story.</h1>
-            <p>A collaborative canvas built by neurodivergent and neurotypical artists alike. Submit your art and it's placed into a shared weavo based on its dominant color — where your piece lands is revealed once the placement is complete.</p>
-            <div class="hero-cta-row">
-              <a class="cta" href="index.html">Explore Projects <span aria-hidden="true">&rarr;</span></a>
-              <button class="cta-outline" id="heroProfileBtn">Sign In</button>
-            </div>
-          </div>
-          <div class="hero-right">
-            <div class="hero-preview" id="heroPreview">
-              <canvas id="heroPreviewCanvas"></canvas>
-              <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">No projects yet — be the first to start one.</div>
-            </div>
+  <main class="main main-scroll">
+    <div class="backnav">
+      <a class="back" id="artworkBackBtn" href="/en/projects">&larr; Back</a>
+    </div>
+    <nav class="artwork-breadcrumb" aria-label="Breadcrumb" id="artworkBreadcrumb">
+      <a href="/en/projects">Projects</a> <span aria-hidden="true">/</span> <a id="artworkProjectLink" href="/en/projects"></a>
+    </nav>
+    <article class="artwork-stage" id="artworkStage">
+      <div class="zoom-toolbar">
+        <button type="button" class="zoom-btn" id="lightbox-zoom-out" aria-label="Zoom out">&minus;</button>
+        <span class="zoom-level" id="lightbox-zoom-level">100%</span>
+        <button type="button" class="zoom-btn" id="lightbox-zoom-in" aria-label="Zoom in">+</button>
+      </div>
+      <div class="lightbox-stage" id="lightboxStage">
+        <img id="lightbox-img" src="" alt="" width="1200" height="900">
+      </div>
+      <aside id="lightbox-caption">
+        <h1 id="lightbox-cap-title"></h1>
+        <div id="lightbox-artist-card">
+          <div id="lightbox-artist-avatar-wrap"></div>
+          <div class="lb-artist-info">
+            <a id="lightbox-artist-name" class="lb-artist-name"></a>
           </div>
         </div>
-      </div>
-
-      <div class="stats-bar" id="statsBar">
-        <div class="stat-tile"><div class="stat-icon">👥</div><div class="stat-value" id="statArtists">0</div><div class="stat-label">Artists</div></div>
-        <div class="stat-tile"><div class="stat-icon">🎨</div><div class="stat-value" id="statArtworks">0</div><div class="stat-label">Artworks Submitted</div></div>
-        <div class="stat-tile"><div class="stat-icon">🖼️</div><div class="stat-value" id="statProjects">0</div><div class="stat-label">Active Projects</div></div>
-        <div class="stat-tile"><div class="stat-icon">✅</div><div class="stat-value" id="statFill">0%</div><div class="stat-label">Cells Filled</div></div>
-      </div>
-    </section>
-  </div>
+        <div id="lightbox-artist-about">
+          <div class="lb-artist-about-label">About the artist</div>
+          <div id="lightbox-artist-bio" class="lb-artist-bio"></div>
+        </div>
+        <div id="lightbox-cap-desc"></div>
+        <a id="lightbox-cap-link" target="_blank" rel="ugc nofollow noopener noreferrer"></a>
+        <div class="lightbox-actions">
+          <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="Like this artwork">
+            <span class="icon"></span><span id="lb-like-count">0</span>
+          </button>
+          <button type="button" id="lb-save-btn" class="lb-action-btn" aria-label="Save this artwork">
+            <span class="icon"></span><span>Save</span>
+          </button>
+          <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="View comments" aria-expanded="true">
+            <span class="icon"></span><span id="lb-comments-count">0</span>
+          </button>
+          <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="Delete this artwork" style="display:none;">
+            <span class="icon"></span><span>Delete</span>
+          </button>
+        </div>
+        <div id="lightbox-comments" class="lightbox-comments open">
+          <div id="lightbox-comments-list"></div>
+          <div id="lightbox-comment-form">
+            <textarea id="lightbox-comment-input" placeholder="Add a comment…" maxlength="1000"></textarea>
+            <button type="button" id="lightbox-comment-post">Post</button>
+          </div>
+        </div>
+        <div id="lightbox-country-map">
+          <div class="lb-country-map-label" id="lb-country-map-label"></div>
+          <svg id="lb-country-map-svg" viewBox="0 0 280 150" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+      </aside>
+    </article>
+  </main>
   <footer id="legal-footer">
-    <a href="privacy.html">Privacy Policy</a>
+    <a href="/en/privacy">Privacy Policy</a>
     <span class="sep" aria-hidden="true">&middot;</span>
-    <a href="disclaimer.html">Disclaimer</a>
+    <a href="/en/disclaimer">Disclaimer</a>
   </footer>
 </div>
 
@@ -148,12 +194,11 @@
 
 <div id="toast"></div>
 
-<script src="../js/supabase-client.js"></script>
-<script src="../js/i18n/en.js"></script>
-<script src="../js/common.js"></script>
-<script src="../js/color-engine.js"></script>
-<script src="../js/auth.js"></script>
-<script src="../js/project-preview.js"></script>
-<script src="../js/landing.js"></script>
+<script src="/js/supabase-client.js"></script>
+<script src="/js/i18n/en.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/lightbox.js"></script>
+<script src="/js/artwork.js"></script>
 </body>
 </html>

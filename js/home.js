@@ -1,7 +1,7 @@
-// Home page: hero, stats, carousel, projects grid, admin "new project" modal.
+// Projects list page: carousel, projects grid, admin "new project" modal.
 "use strict";
 
-function openProject(id) { location.href = `project.html?id=${encodeURIComponent(id)}`; }
+function openProject(id) { location.href = projectUrl(id); }
 
 // ---------- projects list ----------
 async function renderProjectsGrid() {
@@ -15,7 +15,7 @@ async function renderProjectsGrid() {
   if (error) { console.error('load projects error:', error); toast(tr('couldNotLoadProjects')); return; }
   empty.style.display = (projects && projects.length) ? 'none' : 'block';
   (projects || []).forEach((p, i) => {
-    const card = document.createElement('div'); card.className = 'project-card';
+    const card = document.createElement('a'); card.className = 'project-card'; card.href = projectUrl(p.id);
     card.style.animationDelay = `${Math.min(i, 10) * 0.05}s`;
     card.innerHTML = `
       <div class="project-card-inner">
@@ -26,7 +26,6 @@ async function renderProjectsGrid() {
           <div class="progress-bar"><div class="progress-fill"></div></div>
         </div>
       </div>`;
-    card.onclick = () => openProject(p.id);
     grid.appendChild(card);
     paintProjectPreview(card, p);
   });
@@ -43,7 +42,7 @@ function renderCarousel(projects) {
   section.classList.toggle('empty', !projects.length);
   if (!projects.length) return;
   projects.forEach((p, i) => {
-    const card = document.createElement('div'); card.className = 'carousel-card';
+    const card = document.createElement('a'); card.className = 'carousel-card'; card.href = projectUrl(p.id);
     card.style.animationDelay = `${Math.min(i, 10) * 0.06}s`;
     card.innerHTML = `
       <div class="carousel-card-inner">
@@ -55,7 +54,6 @@ function renderCarousel(projects) {
           <div class="progress-bar"><div class="progress-fill"></div></div>
         </div>
       </div>`;
-    card.onclick = () => openProject(p.id);
     track.appendChild(card);
     paintProjectPreview(card, p);
   });
