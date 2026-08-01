@@ -39,7 +39,6 @@ async function openProject(id) {
   currentProject = project;
   history.replaceState(null, '', projectUrl(project.id));
   document.getElementById('reshapeProjectBtn').style.display = (me.isAdmin && !project.is_archived) ? '' : 'none';
-  document.getElementById('uploadArtBtn').style.display = project.is_archived ? 'none' : '';
   const banner = document.getElementById('archivedBanner');
   if (project.is_archived) {
     document.getElementById('archivedBannerText').textContent = tr('archivedIterationLabel', { version: project.version_number });
@@ -411,17 +410,21 @@ document.getElementById('rs-submit').onclick = async () => {
     if (!cells.length) { errorEl.textContent = tr('imageFullyTransparent'); return; }
 
     const { data: subData, error: subErr } = await sb.from('mosaic_submissions')
-      .select('id,avg_r,avg_g,avg_b').eq('project_id', project.id);
+      .select('id,avg_r,avg_g,avg_b').eq('project_id', project.id).order('created_at', { ascending: true });
     if (subErr) { console.error('load submissions for reshape error:', subErr); toast(tr('couldNotReshapeProjectRetry')); return; }
     const submissions = subData || [];
 
-    if (cells.length < submissions.length) {
-      errorEl.textContent = tr('reshapeTooSmallMsg', { needed: submissions.length, have: submissions.length });
-      return;
-    }
+    // A grid can now shrink below the current submission count: the oldest
+    // submissions keep a spot in priority order, and anything left over is
+    // returned to its artist's profile pool (by reshape_mosaic_project)
+    // instead of blocking the reshape entirely.
+    const droppedCount = Math.max(0, submissions.length - cells.length);
+    const fitting = submissions.slice(0, cells.length);
 
     const proceed = await confirmDialog(
-      tr('reshapeConfirmMessage', { count: submissions.length, plural: submissions.length === 1 ? '' : 's' }),
+      droppedCount > 0
+        ? tr('reshapeConfirmMessageWithDrop', { count: submissions.length, dropped: droppedCount })
+        : tr('reshapeConfirmMessage', { count: submissions.length, plural: submissions.length === 1 ? '' : 's' }),
       { title: tr('reshapeConfirmTitle'), okLabel: tr('reshapeConfirmOk') }
     );
     if (!proceed) return;
@@ -431,9 +434,9 @@ document.getElementById('rs-submit').onclick = async () => {
     if (!referenceUrl) return;
 
     // Each surviving submission claims the closest-matching cell in the
-    // new grid; the rest of the new grid is left open for future uploads.
+    // new grid; the rest of the new grid is left open for pool matching.
     const matched = assignToClosestCells(
-      submissions.map(s => ({ id: s.id, r: s.avg_r, g: s.avg_g, b: s.avg_b })),
+      fitting.map(s => ({ id: s.id, r: s.avg_r, g: s.avg_g, b: s.avg_b })),
       cells
     );
     const assignments = matched.map(({ item, cell }) => ({ submission_id: item.id, x: cell.x, y: cell.y }));
@@ -454,7 +457,10 @@ document.getElementById('rs-submit').onclick = async () => {
     }
 
     document.getElementById('reshape-project-modal').classList.remove('open');
-    toast(tr('projectReshaped'));
+    toast(droppedCount > 0 ? tr('projectReshapedWithDrop', { dropped: droppedCount }) : tr('projectReshaped'));
+    // The new grid opened fresh cells — try to backfill them from the pool
+    // (including any pieces this same reshape just returned to it).
+    runPoolMatching().catch(err => console.error('pool matching after reshape error:', err));
     openProject(project.id);
   } catch (err) {
     console.error('reshape project error:', err);
@@ -464,126 +470,10 @@ document.getElementById('rs-submit').onclick = async () => {
   }
 };
 
-// ---------- upload artwork ----------
-const artPicker = setupPicker('art-picker');
-document.getElementById('uploadArtBtn').onclick = () => {
-  if (!me.id) { openAuthModal(); return; }
-  artPicker.reset();
-  document.getElementById('ua-title').value = '';
-  document.getElementById('ua-desc').value = '';
-  document.getElementById('ua-link').value = '';
-  document.getElementById('ua-error').textContent = '';
-  document.getElementById('upload-art-modal').classList.add('open');
-};
-function closeUploadArtModal() { document.getElementById('upload-art-modal').classList.remove('open'); }
-document.getElementById('ua-cancel').onclick = closeUploadArtModal;
-document.getElementById('upload-art-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeUploadArtModal(); });
-document.getElementById('ua-submit').onclick = () => {
-  const file = artPicker.getFile();
-  const errorEl = document.getElementById('ua-error');
-  if (!file) { errorEl.textContent = tr('addImageFirst'); return; }
-  if (!currentProject) return;
-  const link = document.getElementById('ua-link').value.trim();
-  if (link && !safeHref(link)) { errorEl.textContent = tr('linkMustBeValidUrl'); return; }
-  errorEl.textContent = '';
-  const meta = {
-    title: document.getElementById('ua-title').value.trim(),
-    description: document.getElementById('ua-desc').value.trim(),
-    link
-  };
-  submitAndRearrange(currentProject, file, meta);
-};
-
-// Every new upload recomputes the best-fit placement for the ENTIRE
-// project (existing pieces + the new one) rather than just slotting the
-// new piece into whatever open cell is closest — so as more art comes in,
-// earlier pieces can get bumped to a still-better-matching cell too. The
-// actual rearrangement write happens atomically server-side (see
-// submit_mosaic_artwork_rearranged in supabase_mosaic_rearrange.sql); this
-// just computes the candidate assignment and retries if another upload
-// landed first and made that computation stale.
-const REARRANGE_MAX_RETRIES = 3;
-async function submitAndRearrange(project, file, meta) {
-  const btn = document.getElementById('ua-submit');
-  btn.disabled = true;
-  toast(tr('findingBestSpot'));
-  try {
-    const previewImg = await loadImageEl(artPicker.getPreviewEl().src);
-    const avg = imageAverageColor(previewImg);
-
-    const { data: cellRows, error: cellErr } = await sb.from('mosaic_pixels')
-      .select('id,target_r,target_g,target_b')
-      .eq('project_id', project.id);
-    if (cellErr) { console.error('fetch weavo cells error:', cellErr); toast(tr('couldNotSubmitRetry')); return; }
-    const cells = cellRows || [];
-    if (!cells.length) { toast(tr('weavoComplete')); return; }
-
-    let imageUrl = null, thumbUrl = null;
-    for (let attempt = 0; attempt < REARRANGE_MAX_RETRIES; attempt++) {
-      const { data: subRows, error: subErr } = await sb.from('mosaic_submissions')
-        .select('id,avg_r,avg_g,avg_b')
-        .eq('project_id', project.id);
-      if (subErr) { console.error('fetch weavo submissions error:', subErr); toast(tr('couldNotSubmitRetry')); return; }
-      const submissions = subRows || [];
-      if (cells.length < submissions.length + 1) { toast(tr('weavoComplete')); return; }
-
-      const items = submissions.map(s => ({ id: s.id, r: s.avg_r, g: s.avg_g, b: s.avg_b }));
-      items.push({ id: null, r: avg.r, g: avg.g, b: avg.b });
-      const matched = improveAssignmentWithSwaps(assignToClosestCells(items, cells));
-      const newMatch = matched.find(m => m.item.id === null);
-
-      if (attempt === 0) {
-        const bestDistance = Math.sqrt(colorDistanceSq(avg, {
-          r: newMatch.cell.target_r, g: newMatch.cell.target_g, b: newMatch.cell.target_b
-        }));
-        if (bestDistance > POOR_MATCH_DISTANCE) {
-          const proceed = await confirmDialog(
-            tr('noCloseMatchMessage'),
-            { title: tr('noCloseMatchTitle'), okLabel: tr('submitAnyway') }
-          );
-          if (!proceed) return;
-        }
-      }
-
-      if (imageUrl === null) {
-        toast(tr('uploadingToast'));
-        const uploaded = await uploadArtworkImage(file);
-        imageUrl = uploaded.url;
-        thumbUrl = uploaded.thumbUrl;
-        if (!imageUrl) return;
-      }
-
-      toast(tr('rearrangingToast'));
-      const assignments = matched
-        .filter(m => m.item.id !== null)
-        .map(m => ({ submission_id: m.item.id, pixel_id: m.cell.id }));
-
-      const { error: rpcErr } = await sb.rpc('submit_mosaic_artwork_rearranged', {
-        p_project_id: project.id,
-        p_image_url: imageUrl,
-        p_thumb_url: thumbUrl,
-        p_avg_r: avg.r, p_avg_g: avg.g, p_avg_b: avg.b,
-        p_art_title: meta.title || null, p_art_description: meta.description || null, p_art_link: meta.link || null,
-        p_author_name: me.username || me.name, p_author_avatar_url: me.avatar || null,
-        p_new_pixel_id: newMatch.cell.id,
-        p_assignments: assignments
-      });
-      if (!rpcErr) {
-        closeUploadArtModal();
-        toast(tr('artworkSubmittedToast'));
-        renderWeavoGrid(project);
-        renderColorsNeeded(project);
-        return;
-      }
-      console.error('submit_mosaic_artwork_rearranged error (attempt ' + attempt + '):', rpcErr);
-      // Falls through to retry — another upload likely landed between the
-      // fetch above and this call, so the assignment is recomputed fresh.
-    }
-    toast(tr('couldNotSubmitRetry'));
-  } finally {
-    btn.disabled = false;
-  }
-}
+// Artwork no longer uploads directly into a project — it's uploaded to the
+// artist's profile (see profile-view.js) and placed here automatically by
+// runPoolMatching() (js/matching.js), triggered after upload, project
+// creation, reshape, and removal-from-project.
 
 window.onSubmissionDeleted = () => {
   if (currentProject) { renderWeavoGrid(currentProject); renderColorsNeeded(currentProject); }

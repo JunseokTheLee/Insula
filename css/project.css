@@ -1,14 +1,4 @@
 /* ============ PROJECT DETAIL ============ */
-#uploadArtBtn{
-  display:flex;align-items:center;gap:8px;border:none;cursor:pointer;
-  padding:11px 20px;border-radius:2px;font-size:11px;font-family:'JetBrains Mono',monospace;
-  text-transform:uppercase;letter-spacing:.08em;background:var(--forest);color:var(--paper);
-  transition:background .12s linear;
-}
-#uploadArtBtn:hover{background:var(--forest-dark);}
-#uploadArtBtn:active{opacity:.85;}
-#uploadArtBtn svg{width:14px;height:14px;flex-shrink:0;}
-
 .project-head{padding:28px 32px 20px;animation:fadeIn .3s ease-out;}
 .project-head h1{margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--forest);letter-spacing:-.01em;}
 .project-head p{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;margin:0 0 12px;max-width:560px;}
@@ -87,8 +77,8 @@
 }
 .reference-preview.enlarged{width:min(50vw,340px);cursor:zoom-out;}
 
-#upload-art-dialog,#reshape-project-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
-#upload-art-dialog h3,#reshape-project-dialog h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin:0 0 10px;color:var(--forest);}
+#reshape-project-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
+#reshape-project-dialog h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin:0 0 10px;color:var(--forest);}
 
 @media (max-width:640px){
   .reference-preview{width:72px;left:10px;bottom:10px;}
@@ -98,7 +88,6 @@
   .project-list-view{margin-left:16px;margin-right:16px;margin-bottom:56px;}
   .color-swatches{gap:9px;}
   .color-swatch .swatch-dot{width:28px;height:28px;}
-  #uploadArtBtn{padding:10px 16px;font-size:10px;}
 }
 
 /* ============ STANDALONE ARTWORK PAGE (/artworks/{id}) ============

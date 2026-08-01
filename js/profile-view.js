@@ -51,8 +51,21 @@ async function fetchSubmittedWeavoArt(userId) {
   const { data, error } = await sb.from('mosaic_submissions')
     .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_description,art_link,author_id,author_name,author_avatar_url,created_at')
     .eq('author_id', userId)
+    .not('project_id', 'is', null)
     .order('created_at', { ascending: false });
   if (error) { console.error('load submitted weavo art error:', error); return []; }
+  return data || [];
+}
+// Uploaded but not yet placed into any project — only ever shown to the
+// profile's own owner (see loadProfileView), since these aren't part of
+// anything public yet.
+async function fetchPoolWeavoArt(userId) {
+  const { data, error } = await sb.from('mosaic_submissions')
+    .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_description,art_link,author_id,author_name,author_avatar_url,created_at')
+    .eq('author_id', userId)
+    .is('project_id', null)
+    .order('created_at', { ascending: false });
+  if (error) { console.error('load pool weavo art error:', error); return []; }
   return data || [];
 }
 // Distinct projects this profile's owner has contributed artwork to, with
@@ -142,7 +155,7 @@ async function fetchSavedWeavoArt(userId) {
   if (error) { console.error('load saved weavo art error:', error); return []; }
   return (data || []).map(row => row.mosaic_submissions).filter(Boolean);
 }
-function profileArtThumbEl(sub) {
+function profileArtThumbEl(sub, pending) {
   const el = document.createElement('a');
   el.className = 'profile-art-thumb';
   el.href = artworkUrl(sub.id);
@@ -151,6 +164,12 @@ function profileArtThumbEl(sub) {
   img.src = sub.thumb_url || sub.image_url;
   img.alt = sub.art_title ? tr('artworkThumbAlt', { title: sub.art_title, name: sub.author_name || tr('anonymous') }) : '';
   el.appendChild(img);
+  if (pending) {
+    const badge = document.createElement('span');
+    badge.className = 'pool-badge';
+    badge.textContent = tr('waitingForMatchBadge');
+    el.appendChild(badge);
+  }
   interceptClick(el, () => openLightbox(sub));
   return el;
 }
@@ -368,16 +387,20 @@ async function loadProfileView(userId) {
   document.getElementById('profileBio').style.display = 'none';
   document.getElementById('profileProjectsSection').style.display = 'none';
   document.getElementById('profileProjectsGrid').innerHTML = '';
+  document.getElementById('profilePoolSection').style.display = 'none';
+  document.getElementById('profilePoolGrid').innerHTML = '';
   document.getElementById('profileSubmittedGrid').innerHTML = '';
   document.getElementById('profileSavedGrid').innerHTML = '';
   document.getElementById('profileSubmittedEmpty').style.display = 'none';
   document.getElementById('profileSavedEmpty').style.display = 'none';
   resetProfileGraph(userId);
 
-  const [{ data: profile }, submitted, saved] = await Promise.all([
+  const isOwner = me.id && me.id === userId;
+  const [{ data: profile }, submitted, saved, pool] = await Promise.all([
     sb.from('profiles').select('id,name,username,avatar_url,bio,links,country_id,created_at').eq('id', userId).maybeSingle(),
     fetchSubmittedWeavoArt(userId),
-    fetchSavedWeavoArt(userId)
+    fetchSavedWeavoArt(userId),
+    isOwner ? fetchPoolWeavoArt(userId) : Promise.resolve([])
   ]);
   if (!profile) { document.getElementById('profileName').textContent = tr('userNotFound'); return; }
   // Canonicalize the address bar to /artists/{username} once a username is
@@ -423,6 +446,12 @@ async function loadProfileView(userId) {
     document.getElementById('profileProjectsSection').style.display = '';
   }
 
+  if (isOwner) {
+    const poolGrid = document.getElementById('profilePoolGrid');
+    for (const sub of pool) poolGrid.appendChild(profileArtThumbEl(sub, true));
+    document.getElementById('profilePoolSection').style.display = pool.length ? '' : 'none';
+  }
+
   const submittedGrid = document.getElementById('profileSubmittedGrid');
   if (!submitted.length) document.getElementById('profileSubmittedEmpty').style.display = '';
   else for (const sub of submitted) submittedGrid.appendChild(profileArtThumbEl(sub));
@@ -432,11 +461,72 @@ async function loadProfileView(userId) {
   else for (const sub of saved) savedGrid.appendChild(profileArtThumbEl(sub));
 
   const editBtn = document.getElementById('profileEditBtn');
-  editBtn.style.display = (me.id && me.id === userId) ? '' : 'none';
+  editBtn.style.display = isOwner ? '' : 'none';
   editBtn.onclick = () => openEditProfileModal(profile);
+
+  const uploadBtn = document.getElementById('profileUploadBtn');
+  uploadBtn.style.display = isOwner ? '' : 'none';
 
   renderProfileGraphFor(userId, true);
 }
+
+// ---------- upload artwork (to the profile pool — not directly into a project) ----------
+// Placement happens separately: runPoolMatching() (js/matching.js) is
+// called right after the insert below and greedily matches every unmatched
+// pool piece (this one included) against open cells across every active
+// project, same as it's triggered after project creation/reshape/removal.
+const artPicker = setupPicker('art-picker');
+document.getElementById('profileUploadBtn').onclick = () => {
+  if (!me.id) { openAuthModal(); return; }
+  artPicker.reset();
+  document.getElementById('ua-title').value = '';
+  document.getElementById('ua-desc').value = '';
+  document.getElementById('ua-link').value = '';
+  document.getElementById('ua-error').textContent = '';
+  document.getElementById('upload-art-modal').classList.add('open');
+};
+function closeUploadArtModal() { document.getElementById('upload-art-modal').classList.remove('open'); }
+document.getElementById('ua-cancel').onclick = closeUploadArtModal;
+document.getElementById('upload-art-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeUploadArtModal(); });
+document.getElementById('ua-submit').onclick = async () => {
+  const file = artPicker.getFile();
+  const errorEl = document.getElementById('ua-error');
+  if (!file) { errorEl.textContent = tr('addImageFirst'); return; }
+  const link = document.getElementById('ua-link').value.trim();
+  if (link && !safeHref(link)) { errorEl.textContent = tr('linkMustBeValidUrl'); return; }
+  errorEl.textContent = '';
+  const meta = {
+    title: document.getElementById('ua-title').value.trim(),
+    description: document.getElementById('ua-desc').value.trim(),
+    link
+  };
+  const btn = document.getElementById('ua-submit');
+  btn.disabled = true;
+  toast(tr('uploadingToast'));
+  try {
+    const previewImg = await loadImageEl(artPicker.getPreviewEl().src);
+    const avg = imageAverageColor(previewImg);
+    const uploaded = await uploadArtworkImage(file);
+    if (!uploaded.url) return;
+
+    const { data: inserted, error: insErr } = await sb.from('mosaic_submissions').insert({
+      author_id: me.id, author_name: me.username || me.name || null, author_avatar_url: me.avatar || null,
+      image_url: uploaded.url, thumb_url: uploaded.thumbUrl,
+      avg_r: avg.r, avg_g: avg.g, avg_b: avg.b,
+      art_title: meta.title || null, art_description: meta.description || null, art_link: meta.link || null
+    }).select('id').single();
+    if (insErr || !inserted) { console.error('profile artwork insert error:', insErr); toast(tr('couldNotSubmitRetry')); return; }
+
+    closeUploadArtModal();
+    toast(tr('findingBestSpot'));
+    const assignments = await runPoolMatching();
+    const matched = assignments.some(a => a.submission_id === inserted.id);
+    toast(matched ? tr('artworkMatchedToast') : tr('artworkPooledToast'));
+  } finally {
+    btn.disabled = false;
+    if (profileUserId) loadProfileView(profileUserId);
+  }
+};
 
 window.onSubmissionDeleted = () => { if (profileUserId) loadProfileView(profileUserId); };
 window.onProfileSaved = () => { if (profileUserId) loadProfileView(profileUserId); };

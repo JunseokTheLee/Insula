@@ -55,10 +55,6 @@
         <button class="btn-cancel" id="reshapeProjectBtn" style="display:none;padding:11px 16px;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;">
           그리드 재구성
         </button>
-        <button class="btn-primary" id="uploadArtBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
-          작품 업로드
-        </button>
       </div>
     </div>
     <div class="project-head">
@@ -70,7 +66,7 @@
       </div>
       <div class="project-progress" id="projectProgress"></div>
       <div class="colors-needed" id="colorsNeeded" style="display:none;">
-        <div class="colors-needed-label"><span>아직 필요한 색상</span> <span class="field-hint">— 이 색조의 작품을 업로드하면 빈 칸을 찾을 수 있어요</span></div>
+        <div class="colors-needed-label"><span>아직 필요한 색상</span> <span class="field-hint">— 프로필에 이 색조의 작품을 업로드하면 자동으로 매칭돼요</span></div>
         <div class="color-swatches" id="colorSwatches"></div>
       </div>
       <div class="project-view-tabs" id="projectViewTabs">
@@ -137,39 +133,6 @@
   </div>
 </div>
 
-<!-- Upload artwork modal -->
-<div id="upload-art-modal" class="modal-overlay">
-  <div id="upload-art-dialog" class="modal-panel">
-    <h3>작품 추가</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">작품의 평균 색상과 가장 잘 맞는 칸에 자동으로 배치됩니다.</p>
-    <div class="field">
-      <div class="img-upload-area" id="art-picker">
-        <div class="img-placeholder"><span class="up-icon">🖼</span><span>클릭하거나 작품을 끌어다 놓으세요</span></div>
-        <img class="img-preview" alt="">
-        <button type="button" class="img-remove" aria-label="이미지 제거">✕</button>
-        <input type="file" class="img-input" accept="image/*">
-      </div>
-    </div>
-    <div class="field">
-      <label for="ua-title">제목 <span class="field-hint">(선택)</span></label>
-      <input type="text" id="ua-title" placeholder="제목 없음" maxlength="80">
-    </div>
-    <div class="field">
-      <label for="ua-desc">작가 노트 <span class="field-hint">(선택)</span></label>
-      <textarea id="ua-desc" placeholder="이 작품에 담긴 이야기는 무엇인가요?" maxlength="500"></textarea>
-    </div>
-    <div class="field">
-      <label for="ua-link">포트폴리오 링크 <span class="field-hint">(선택)</span></label>
-      <input type="text" id="ua-link" placeholder="https://your-portfolio.com" maxlength="300">
-    </div>
-    <div class="field-error" id="ua-error"></div>
-    <div class="modal-actions">
-      <button id="ua-cancel" class="btn-cancel">취소</button>
-      <button id="ua-submit" class="btn-primary">제출</button>
-    </div>
-  </div>
-</div>
-
 <!-- Lightbox -->
 <div id="lightbox-modal" class="modal-overlay lightbox-overlay">
   <div class="lightbox-stage" id="lightboxStage">
@@ -207,6 +170,9 @@
       </button>
       <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="이 작품 삭제" style="display:none;">
         <span class="icon"></span><span>삭제</span>
+      </button>
+      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="프로젝트에서 제외" style="display:none;">
+        <span class="icon"></span><span>프로젝트에서 제외</span>
       </button>
     </div>
     <div id="lightbox-comments" class="lightbox-comments open">
@@ -309,6 +275,7 @@
 <script src="/js/i18n/ko.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/color-engine.js"></script>
+<script src="/js/matching.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/lightbox.js"></script>
 <script src="/js/project.js"></script>

@@ -60,13 +60,21 @@
           <div class="profile-meta" id="profileMeta"></div>
           <div class="profile-links" id="profileLinksList"></div>
         </div>
-        <button type="button" id="profileEditBtn" style="display:none;">Edit Profile</button>
+        <div class="profile-head-actions">
+          <button type="button" id="profileUploadBtn" style="display:none;">Upload Artwork</button>
+          <button type="button" id="profileEditBtn" style="display:none;">Edit Profile</button>
+        </div>
       </div>
       <p id="profileBio" style="display:none;"></p>
     </div>
     <div class="profile-section" id="profileProjectsSection" style="display:none;">
       <h2 class="section-label">Projects Contributed To</h2>
       <div class="profile-projects-grid" id="profileProjectsGrid"></div>
+    </div>
+    <div class="profile-section" id="profilePoolSection" style="display:none;">
+      <h2 class="section-label">Your Artwork</h2>
+      <p class="section-hint">Waiting for the best-matching project — placed automatically as soon as one opens up.</p>
+      <div class="profile-art-grid" id="profilePoolGrid"></div>
     </div>
     <div class="profile-section">
       <h2 class="section-label">Submitted Artwork</h2>
@@ -97,6 +105,39 @@
     <span class="sep" aria-hidden="true">&middot;</span>
     <a href="/en/disclaimer">Disclaimer</a>
   </footer>
+</div>
+
+<!-- Upload artwork modal -->
+<div id="upload-art-modal" class="modal-overlay">
+  <div id="upload-art-dialog" class="modal-panel">
+    <h3>Add Your Artwork</h3>
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">Your piece will automatically be placed into whichever open project cell its average color matches best — it can only ever be part of one project at a time.</p>
+    <div class="field">
+      <div class="img-upload-area" id="art-picker">
+        <div class="img-placeholder"><span class="up-icon">🖼</span><span>Click or drag your artwork here</span></div>
+        <img class="img-preview" alt="">
+        <button type="button" class="img-remove" aria-label="Remove image">✕</button>
+        <input type="file" class="img-input" accept="image/*">
+      </div>
+    </div>
+    <div class="field">
+      <label for="ua-title">Title <span class="field-hint">(optional)</span></label>
+      <input type="text" id="ua-title" placeholder="Untitled" maxlength="80">
+    </div>
+    <div class="field">
+      <label for="ua-desc">Artist statement <span class="field-hint">(optional)</span></label>
+      <textarea id="ua-desc" placeholder="What's the story behind this piece?" maxlength="500"></textarea>
+    </div>
+    <div class="field">
+      <label for="ua-link">Link to more of your work <span class="field-hint">(optional)</span></label>
+      <input type="text" id="ua-link" placeholder="https://your-portfolio.com" maxlength="300">
+    </div>
+    <div class="field-error" id="ua-error"></div>
+    <div class="modal-actions">
+      <button id="ua-cancel" class="btn-cancel">Cancel</button>
+      <button id="ua-submit" class="btn-primary">Submit</button>
+    </div>
+  </div>
 </div>
 
 <!-- Lightbox -->
@@ -136,6 +177,9 @@
       </button>
       <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="Delete this artwork" style="display:none;">
         <span class="icon"></span><span>Delete</span>
+      </button>
+      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="Remove from project" style="display:none;">
+        <span class="icon"></span><span>Remove from project</span>
       </button>
     </div>
     <div id="lightbox-comments" class="lightbox-comments open">
@@ -237,6 +281,8 @@
 <script src="/js/supabase-client.js"></script>
 <script src="/js/i18n/en.js"></script>
 <script src="/js/common.js"></script>
+<script src="/js/color-engine.js"></script>
+<script src="/js/matching.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/lightbox.js"></script>
 <script src="/js/graph-common.js"></script>

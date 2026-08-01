@@ -55,10 +55,6 @@
         <button class="btn-cancel" id="reshapeProjectBtn" style="display:none;padding:11px 16px;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;">
           Reshape Grid
         </button>
-        <button class="btn-primary" id="uploadArtBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
-          Upload Your Art
-        </button>
       </div>
     </div>
     <div class="project-head">
@@ -70,7 +66,7 @@
       </div>
       <div class="project-progress" id="projectProgress"></div>
       <div class="colors-needed" id="colorsNeeded" style="display:none;">
-        <div class="colors-needed-label"><span>Colors still needed</span> <span class="field-hint">— upload artwork with these tones to find an open spot</span></div>
+        <div class="colors-needed-label"><span>Colors still needed</span> <span class="field-hint">— artwork with these tones uploaded to a profile will automatically be matched in</span></div>
         <div class="color-swatches" id="colorSwatches"></div>
       </div>
       <div class="project-view-tabs" id="projectViewTabs">
@@ -137,39 +133,6 @@
   </div>
 </div>
 
-<!-- Upload artwork modal -->
-<div id="upload-art-modal" class="modal-overlay">
-  <div id="upload-art-dialog" class="modal-panel">
-    <h3>Add Your Artwork</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">Your piece will automatically be placed in whichever cell its average color matches best.</p>
-    <div class="field">
-      <div class="img-upload-area" id="art-picker">
-        <div class="img-placeholder"><span class="up-icon">🖼</span><span>Click or drag your artwork here</span></div>
-        <img class="img-preview" alt="">
-        <button type="button" class="img-remove" aria-label="Remove image">✕</button>
-        <input type="file" class="img-input" accept="image/*">
-      </div>
-    </div>
-    <div class="field">
-      <label for="ua-title">Title <span class="field-hint">(optional)</span></label>
-      <input type="text" id="ua-title" placeholder="Untitled" maxlength="80">
-    </div>
-    <div class="field">
-      <label for="ua-desc">Artist statement <span class="field-hint">(optional)</span></label>
-      <textarea id="ua-desc" placeholder="What's the story behind this piece?" maxlength="500"></textarea>
-    </div>
-    <div class="field">
-      <label for="ua-link">Link to more of your work <span class="field-hint">(optional)</span></label>
-      <input type="text" id="ua-link" placeholder="https://your-portfolio.com" maxlength="300">
-    </div>
-    <div class="field-error" id="ua-error"></div>
-    <div class="modal-actions">
-      <button id="ua-cancel" class="btn-cancel">Cancel</button>
-      <button id="ua-submit" class="btn-primary">Submit</button>
-    </div>
-  </div>
-</div>
-
 <!-- Lightbox -->
 <div id="lightbox-modal" class="modal-overlay lightbox-overlay">
   <div class="lightbox-stage" id="lightboxStage">
@@ -207,6 +170,9 @@
       </button>
       <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="Delete this artwork" style="display:none;">
         <span class="icon"></span><span>Delete</span>
+      </button>
+      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="Remove from project" style="display:none;">
+        <span class="icon"></span><span>Remove from project</span>
       </button>
     </div>
     <div id="lightbox-comments" class="lightbox-comments open">
@@ -309,6 +275,7 @@
 <script src="/js/i18n/en.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/color-engine.js"></script>
+<script src="/js/matching.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/lightbox.js"></script>
 <script src="/js/project.js"></script>

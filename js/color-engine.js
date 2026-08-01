@@ -115,30 +115,3 @@ function assignToClosestCells(items, cells) {
   }
   return assignments;
 }
-// Nudges a greedy assignment closer to globally optimal without the
-// O(n^2) cost of checking every pair: each iteration tries one random
-// pair of already-assigned items and keeps the swap only if it lowers
-// total color error. Bounded to a fixed multiple of n so it stays cheap
-// even at thousands of pieces, and in practice gets close to what a true
-// (but much slower) optimal-assignment solver would produce.
-const SWAP_PASS_MAX_ITERATIONS = 200000;
-function improveAssignmentWithSwaps(assignments) {
-  const n = assignments.length;
-  if (n < 2) return assignments;
-  const dist = (item, cell) => colorDistanceSq(item, { r: cell.target_r, g: cell.target_g, b: cell.target_b });
-  const err = assignments.map(a => dist(a.item, a.cell));
-  const iterations = Math.min(SWAP_PASS_MAX_ITERATIONS, n * 25);
-  for (let iter = 0; iter < iterations; iter++) {
-    const i = (Math.random() * n) | 0;
-    const j = (Math.random() * n) | 0;
-    if (i === j) continue;
-    const ai = assignments[i], aj = assignments[j];
-    const newI = dist(ai.item, aj.cell);
-    const newJ = dist(aj.item, ai.cell);
-    if (newI + newJ < err[i] + err[j]) {
-      const tmp = ai.cell; ai.cell = aj.cell; aj.cell = tmp;
-      err[i] = newI; err[j] = newJ;
-    }
-  }
-  return assignments;
-}

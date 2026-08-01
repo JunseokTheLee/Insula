@@ -122,8 +122,11 @@ function populateLightboxContent(sub) {
   document.getElementById('lightbox-caption').classList.remove('hidden');
   setupLightboxEngagement(sub);
   const deleteBtn = document.getElementById('lb-delete-btn');
-  deleteBtn.style.display = (me.isAdmin || me.id === sub.author_id) ? '' : 'none';
+  deleteBtn.style.display = me.id === sub.author_id ? '' : 'none';
   deleteBtn.onclick = () => deleteWeavoSubmission(sub);
+  const removeBtn = document.getElementById('lb-remove-btn');
+  removeBtn.style.display = (me.isAdmin && me.id !== sub.author_id && sub.project_id) ? '' : 'none';
+  removeBtn.onclick = () => removeSubmissionFromProject(sub);
   const commentsBtn = document.getElementById('lb-comments-btn');
   commentsBtn.classList.add('active');
   commentsBtn.setAttribute('aria-expanded', 'true');
@@ -249,7 +252,7 @@ async function toggleSubmissionSave(submissionId, btn) {
   toast(wasSaved ? tr('removedFromSaved') : tr('savedToast'));
 }
 
-// ---------- delete artwork (own submission, or any submission if admin) ----------
+// ---------- delete artwork (author only — permanent, unlike "remove from project" below) ----------
 async function deleteWeavoSubmission(sub) {
   const proceed = await confirmDialog(
     tr('deleteArtworkMessage'),
@@ -258,18 +261,37 @@ async function deleteWeavoSubmission(sub) {
   if (!proceed) return;
   const { error: delErr } = await sb.from('mosaic_submissions').delete().eq('id', sub.id);
   if (delErr) { console.error('delete weavo submission error:', delErr); toast(tr('couldNotDeleteArtwork')); return; }
-  // The FK on mosaic_pixels.submission_id already nulled itself out via
-  // "on delete set null" — reset the rest of the claim here too, rather
-  // than leaving the cell stuck until the 10-minute stale-claim sweep.
-  // Permitted by the existing "claim and fill" pixels policy for the
-  // author's own pixel, and by the admin-management pixels policy otherwise.
-  const { error: pxErr } = await sb.from('mosaic_pixels')
-    .update({ filled: false, submission_id: null, claimed_by: null, claimed_at: null })
-    .eq('id', sub.pixel_id);
-  if (pxErr) console.error('reset pixel after delete error:', pxErr);
+  if (sub.pixel_id) {
+    // The FK on mosaic_pixels.submission_id already nulled itself out via
+    // "on delete set null" — reset the rest of the claim here too, rather
+    // than leaving the cell stuck until the 10-minute stale-claim sweep.
+    // Permitted by the existing "claim and fill" pixels policy since only
+    // the author (who's also the claimant) can reach this path now.
+    const { error: pxErr } = await sb.from('mosaic_pixels')
+      .update({ filled: false, submission_id: null, claimed_by: null, claimed_at: null })
+      .eq('id', sub.pixel_id);
+    if (pxErr) console.error('reset pixel after delete error:', pxErr);
+  }
   closeLightbox();
   toast(tr('artworkDeleted'));
   if (typeof window.onSubmissionDeleted === 'function') window.onSubmissionDeleted(sub);
+  // A cell may have just opened up — see if anything else in the pool fits it.
+  if (sub.pixel_id) runPoolMatching().catch(err => console.error('pool matching after delete error:', err));
+}
+
+// ---------- admin: remove from project (returns the piece to its artist's pool instead of deleting it) ----------
+async function removeSubmissionFromProject(sub) {
+  const proceed = await confirmDialog(
+    tr('removeFromProjectMessage'),
+    { title: tr('removeFromProjectTitle'), okLabel: tr('removeFromProjectLabel') }
+  );
+  if (!proceed) return;
+  const { error } = await sb.rpc('unmatch_submission', { p_submission_id: sub.id });
+  if (error) { console.error('unmatch_submission error:', error); toast(tr('couldNotRemoveArtwork')); return; }
+  closeLightbox();
+  toast(tr('artworkRemovedFromProject'));
+  if (typeof window.onSubmissionDeleted === 'function') window.onSubmissionDeleted(sub);
+  runPoolMatching().catch(err => console.error('pool matching after unmatch error:', err));
 }
 
 // ---------- lightbox comments ----------

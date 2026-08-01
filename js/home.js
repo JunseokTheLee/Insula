@@ -168,6 +168,9 @@ document.getElementById('np-submit').onclick = async () => {
     document.getElementById('new-project-modal').classList.remove('open');
     const skipped = width * height - cells.length;
     toast(projectCreatedToast(skipped));
+    // The new grid just opened a batch of fresh cells — see if anything
+    // already waiting in the profile pool is a good match for them.
+    runPoolMatching().catch(err => console.error('pool matching after project creation error:', err));
     openProject(project.id);
   } catch (err) {
     console.error('weavo pixel insert error:', err);
