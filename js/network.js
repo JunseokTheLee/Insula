@@ -254,6 +254,39 @@ async function loadGlobalNetwork() {
     orbitsInitialized = true;
     initOrbits();
   });
+  // Different nodes orbit at different radii and speeds (that's the whole
+  // point — see above), so two of them are bound to cross paths and
+  // visually collide sometimes. The collide force that kept nodes apart
+  // during the initial settle isn't running any more (the simulation is
+  // stopped), so each orbit frame gets its own cheap pairwise separation
+  // pass: any pair closer than their combined radii gets nudged apart
+  // along the line between them. Recomputed fresh every frame from each
+  // node's ideal orbit position (never accumulated), so it reads as a
+  // gentle, stable "make room" nudge rather than jitter — and it's O(n^2)
+  // over a few dozen nodes, cheap at 60fps.
+  const NODE_MIN_GAP = 6;
+  function resolveOrbitOverlaps() {
+    for (let pass = 0; pass < 2; pass++) {
+      for (let i = 0; i < nodes.length; i++) {
+        const a = nodes[i];
+        for (let j = i + 1; j < nodes.length; j++) {
+          const b = nodes[j];
+          const dx = b.dispX - a.dispX, dy = b.dispY - a.dispY;
+          const dist = Math.hypot(dx, dy);
+          const minDist = globalNodeRadius(a) + globalNodeRadius(b) + NODE_MIN_GAP;
+          if (dist >= minDist) continue;
+          // Exactly-coincident nodes have no direction to separate along —
+          // fall back to a stable, index-derived direction instead of
+          // Math.random() so it doesn't jitter frame to frame.
+          const nx = dist > 0.01 ? dx / dist : Math.cos(i - j);
+          const ny = dist > 0.01 ? dy / dist : Math.sin(i - j);
+          const push = (minDist - dist) / 2;
+          a.dispX -= nx * push; a.dispY -= ny * push;
+          b.dispX += nx * push; b.dispY += ny * push;
+        }
+      }
+    }
+  }
   globalRotationTimer = d3.timer(elapsed => {
     const dt = elapsed - orbitLastElapsed;
     orbitLastElapsed = elapsed;
@@ -264,6 +297,7 @@ async function loadGlobalNetwork() {
       n.dispX = cx + n.orbitRadius * Math.cos(n.orbitAngle);
       n.dispY = cy + n.orbitRadius * Math.sin(n.orbitAngle);
     }
+    resolveOrbitOverlaps();
     render();
   });
 
