@@ -4,12 +4,10 @@
 <link rel="icon" href="../logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weavo — Network</title>
+<title>Weavo — Community Photomosaic</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <link rel="stylesheet" href="../css/base.css">
-<link rel="stylesheet" href="../css/profile.css">
-<link rel="stylesheet" href="../css/network.css">
+<link rel="stylesheet" href="../css/home.css">
 </head>
 <body>
 
@@ -17,7 +15,7 @@
   <div class="topnav">
     <a class="logo" id="logoHome" href="index.html">Weavo</a>
     <div class="nav-right">
-      <a href="network.html" class="nav-link active">Network</a>
+      <a href="network.html" class="nav-link">Network</a>
       <a href="about.html" class="nav-link">About</a>
       <div id="identity">
         <div class="lang-toggle" id="langToggle">
@@ -32,24 +30,34 @@
     </div>
   </div>
 
-  <div class="main main-scroll">
-    <div class="backnav">
-      <a class="back" href="index.html">&larr; Back</a>
-    </div>
-    <div class="network-page">
-      <h2 class="network-page-title">Network</h2>
-      <div class="profile-graph-desc">The whole Weavo community, mapped by saves — every arrow points from someone who saved a piece to the artist who made it. Bigger circles have more connections. Drag to rearrange, scroll to zoom, click someone to highlight their local network, then click again (them or anyone in that network) to visit a profile.</div>
-      <div class="profile-graph-panel network-graph-panel" id="globalGraphPanel">
-        <svg id="globalGraphSvg"></svg>
-        <div class="profile-graph-empty" id="globalGraphEmpty" style="display:none;">No saves yet — nothing to map.</div>
-        <div class="zoom-toolbar" id="globalGraphZoomToolbar" style="display:none;">
-          <button type="button" class="zoom-btn" id="globalGraph-zoom-out" aria-label="Zoom out">&minus;</button>
-          <span class="zoom-level" id="globalGraph-zoom-level">100%</span>
-          <button type="button" class="zoom-btn" id="globalGraph-zoom-in" aria-label="Zoom in">+</button>
-          <button type="button" class="zoom-btn" id="globalGraph-zoom-reset" aria-label="Reset view">&#8634;</button>
+  <div class="main-scroll home-scroll">
+    <section class="snap-panel" id="heroPanel">
+      <div class="hero">
+        <div class="hero-inner">
+          <div class="hero-left">
+            <h1>Your colors come<br>together into one story.</h1>
+            <p>A collaborative canvas built by neurodivergent and neurotypical artists alike. Submit your art and it's placed into a shared weavo based on its dominant color — where your piece lands is revealed once the placement is complete.</p>
+            <div class="hero-cta-row">
+              <a class="cta" href="index.html">Explore Projects <span aria-hidden="true">&rarr;</span></a>
+              <button class="cta-outline" id="heroProfileBtn">Sign In</button>
+            </div>
+          </div>
+          <div class="hero-right">
+            <div class="hero-preview" id="heroPreview">
+              <canvas id="heroPreviewCanvas"></canvas>
+              <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">No projects yet — be the first to start one.</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      <div class="stats-bar" id="statsBar">
+        <div class="stat-tile"><div class="stat-icon">👥</div><div class="stat-value" id="statArtists">0</div><div class="stat-label">Artists</div></div>
+        <div class="stat-tile"><div class="stat-icon">🎨</div><div class="stat-value" id="statArtworks">0</div><div class="stat-label">Artworks Submitted</div></div>
+        <div class="stat-tile"><div class="stat-icon">🖼️</div><div class="stat-value" id="statProjects">0</div><div class="stat-label">Active Projects</div></div>
+        <div class="stat-tile"><div class="stat-icon">✅</div><div class="stat-value" id="statFill">0%</div><div class="stat-label">Cells Filled</div></div>
+      </div>
+    </section>
   </div>
   <footer id="legal-footer">
     <a href="privacy.html">Privacy Policy</a>
@@ -143,8 +151,9 @@
 <script src="../js/supabase-client.js"></script>
 <script src="../js/i18n/en.js"></script>
 <script src="../js/common.js"></script>
+<script src="../js/color-engine.js"></script>
 <script src="../js/auth.js"></script>
-<script src="../js/graph-common.js"></script>
-<script src="../js/network.js"></script>
+<script src="../js/project-preview.js"></script>
+<script src="../js/landing.js"></script>
 </body>
 </html>

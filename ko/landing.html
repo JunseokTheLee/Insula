@@ -31,33 +31,32 @@
   </div>
 
   <div class="main-scroll home-scroll">
-    <section class="snap-panel" id="currentProjectsPanel">
-      <div class="carousel-section" id="carouselSection">
-        <div class="carousel-header">
-          <div class="section-label">진행 중인 프로젝트</div>
-          <div class="carousel-nav">
-            <button class="car-arrow" id="carPrev" aria-label="이전 프로젝트">&#8249;</button>
-            <button class="car-arrow" id="carNext" aria-label="다음 프로젝트">&#8250;</button>
+    <section class="snap-panel" id="heroPanel">
+      <div class="hero">
+        <div class="hero-inner">
+          <div class="hero-left">
+            <h1>당신의 색이 모여<br>하나의 이야기가 됩니다.</h1>
+            <p>신경다양인과 신경전형인 아티스트가 함께 만들어가는 협업 캔버스입니다. 작품을 제출하면 대표 색상에 따라 공동 Weavo의 한 칸에 배치되며, 배치가 완료되면 내 작품이 어디에 놓였는지 확인할 수 있어요.</p>
+            <div class="hero-cta-row">
+              <a class="cta" href="index.html">프로젝트 둘러보기 <span aria-hidden="true">&rarr;</span></a>
+              <button class="cta-outline" id="heroProfileBtn">로그인</button>
+            </div>
+          </div>
+          <div class="hero-right">
+            <div class="hero-preview" id="heroPreview">
+              <canvas id="heroPreviewCanvas"></canvas>
+              <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">아직 프로젝트가 없습니다 — 첫 번째로 시작해보세요.</div>
+            </div>
           </div>
         </div>
-        <div class="carousel-track-wrap">
-          <div class="carousel-track" id="carouselTrack"></div>
-        </div>
-        <div class="carousel-dots" id="carouselDots"></div>
       </div>
 
-      <button type="button" class="scroll-hint" id="scrollHint" aria-label="전체 프로젝트로 스크롤">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-      </button>
-    </section>
-
-    <section class="snap-panel" id="projectsPanel">
-      <div class="carousel-header" style="margin-top:32px;">
-        <div class="section-label">전체 프로젝트</div>
-        <button class="cta-text" id="newProjectBtn" style="display:none;margin-top:0;">+ 새 프로젝트</button>
+      <div class="stats-bar" id="statsBar">
+        <div class="stat-tile"><div class="stat-icon">👥</div><div class="stat-value" id="statArtists">0</div><div class="stat-label">아티스트</div></div>
+        <div class="stat-tile"><div class="stat-icon">🎨</div><div class="stat-value" id="statArtworks">0</div><div class="stat-label">제출된 작품</div></div>
+        <div class="stat-tile"><div class="stat-icon">🖼️</div><div class="stat-value" id="statProjects">0</div><div class="stat-label">진행 중인 프로젝트</div></div>
+        <div class="stat-tile"><div class="stat-icon">✅</div><div class="stat-value" id="statFill">0%</div><div class="stat-label">채워진 칸</div></div>
       </div>
-      <div class="projects-grid" id="projectsGrid"></div>
-      <div class="empty-note" id="projectsEmpty" style="display:none;">아직 프로젝트가 없습니다.</div>
     </section>
   </div>
   <footer id="legal-footer">
@@ -65,45 +64,6 @@
     <span class="sep" aria-hidden="true">&middot;</span>
     <a href="disclaimer.html">면책조항</a>
   </footer>
-</div>
-
-<!-- New project modal (admin only) -->
-<div id="new-project-modal" class="modal-overlay">
-  <div id="new-project-dialog" class="modal-panel">
-    <h3>새 Weavo 프로젝트</h3>
-    <div class="field">
-      <label for="np-title">제목</label>
-      <input type="text" id="np-title" placeholder="프로젝트 제목" maxlength="60">
-    </div>
-    <div class="field">
-      <label for="np-desc">설명 <span class="field-hint">(선택)</span></label>
-      <textarea id="np-desc" placeholder="이 Weavo는 무엇에 관한 건가요?" maxlength="300"></textarea>
-    </div>
-    <div style="display:flex;gap:10px;">
-      <div class="field" style="flex:1;">
-        <label for="np-width">너비 (칸 수)</label>
-        <input type="text" inputmode="numeric" id="np-width" placeholder="예: 40">
-      </div>
-      <div class="field" style="flex:1;">
-        <label for="np-height">높이 (칸 수)</label>
-        <input type="text" inputmode="numeric" id="np-height" placeholder="예: 30">
-      </div>
-    </div>
-    <div class="field">
-      <label>참조 이미지</label>
-      <div class="img-upload-area" id="ref-picker">
-        <div class="img-placeholder"><span class="up-icon">🖼</span><span>클릭하거나 이미지를 끌어다 놓으세요</span></div>
-        <img class="img-preview" alt="">
-        <button type="button" class="img-remove" aria-label="이미지 제거">✕</button>
-        <input type="file" class="img-input" accept="image/*">
-      </div>
-    </div>
-    <div class="field-error" id="np-error"></div>
-    <div class="modal-actions">
-      <button id="np-cancel" class="btn-cancel">취소</button>
-      <button id="np-submit" class="btn-primary">만들기</button>
-    </div>
-  </div>
 </div>
 
 <!-- Edit profile modal -->
@@ -194,6 +154,6 @@
 <script src="../js/color-engine.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/project-preview.js"></script>
-<script src="../js/home.js"></script>
+<script src="../js/landing.js"></script>
 </body>
 </html>

@@ -1,13 +1,20 @@
 // Sitewide network page: every user, mapped by save relationships.
-// Needs js/graph-common.js for driftForce/truncateLabel.
+// Needs js/graph-common.js for truncateLabel.
 "use strict";
 
 let globalGraphSim = null;
 let globalGraphToken = 0; // guards against a stale fetch finishing after a newer one started
 let globalZoomBehavior = null; // set whenever the graph has nodes, so the toolbar buttons have something to drive
+let globalRotationTimer = null;
 function stopGlobalGraph() {
   if (globalGraphSim) { globalGraphSim.stop(); globalGraphSim = null; }
+  if (globalRotationTimer) { globalRotationTimer.stop(); globalRotationTimer = null; }
 }
+// Stashed right before navigating to a profile from a node click below, and
+// consumed on the next load of this page (see loadGlobalNetwork) — lets the
+// profile page's "Back" button return here with that same person's local
+// network still selected/zoomed instead of the fully-zoomed-out default.
+const NETWORK_SELECTION_KEY = 'weavoNetworkSelectedId';
 const GLOBAL_GRAPH_ZOOM_STEP = 1.4;
 document.getElementById('globalGraph-zoom-in').onclick = () => {
   if (!globalZoomBehavior) return;
@@ -65,6 +72,36 @@ async function fetchGlobalGraphData() {
   }));
   return { nodes, links };
 }
+// ---------- TEMPORARY: synthetic test nodes, remove once real data is
+// enough to eyeball the graph by (rotation, layout, zoom) — delete this
+// function and its call in loadGlobalNetwork below when done with it. ----------
+const TEMP_TEST_NODE_COUNT = 30;
+function addTempTestNodes(nodes, links) {
+  const testNodes = Array.from({ length: TEMP_TEST_NODE_COUNT }, (_, i) => ({
+    id: `test-${i}`, label: `Test ${i}`, avatar_url: '', degree: 0,
+  }));
+  // Each node (after the first) links back to 1-3 earlier test nodes, so
+  // the set forms one connected, organically-shaped web instead of either
+  // a fully-meshed blob or disconnected pairs.
+  const testLinks = [];
+  testNodes.forEach((n, i) => {
+    if (i === 0) return;
+    const linkCount = 1 + Math.floor(Math.random() * Math.min(3, i));
+    const targets = new Set();
+    while (targets.size < linkCount) targets.add(Math.floor(Math.random() * i));
+    for (const t of targets) {
+      testLinks.push({ source: n.id, target: testNodes[t].id, kind: Math.random() < 0.3 ? 'mutual' : 'out' });
+    }
+  });
+  const degree = new Map();
+  for (const l of testLinks) {
+    degree.set(l.source, (degree.get(l.source) || 0) + 1);
+    degree.set(l.target, (degree.get(l.target) || 0) + 1);
+  }
+  for (const n of testNodes) n.degree = degree.get(n.id) || 1;
+  nodes.push(...testNodes);
+  links.push(...testLinks);
+}
 async function loadGlobalNetwork() {
   const token = ++globalGraphToken;
   const panel = document.getElementById('globalGraphPanel');
@@ -81,9 +118,27 @@ async function loadGlobalNetwork() {
 
   const { nodes, links } = await fetchGlobalGraphData();
   if (token !== globalGraphToken) return; // a newer load superseded this one
+  addTempTestNodes(nodes, links); // TEMPORARY — see definition above
 
   empty.style.display = nodes.length ? 'none' : 'flex';
   if (!nodes.length) return;
+
+  // Built while link.source/link.target are still plain ids (before
+  // d3.forceLink below mutates them in place into node object references),
+  // so a click handler can cheaply ask "is this node the selected one, or
+  // one hop from it" without walking the live simulation links.
+  const neighborsOf = new Map();
+  for (const l of links) {
+    if (!neighborsOf.has(l.source)) neighborsOf.set(l.source, new Set());
+    if (!neighborsOf.has(l.target)) neighborsOf.set(l.target, new Set());
+    neighborsOf.get(l.source).add(l.target);
+    neighborsOf.get(l.target).add(l.source);
+  }
+  // No one is selected on load, so no connection lines are shown at all —
+  // the first click on a node selects it (revealing its local network and
+  // zooming to fit); a second click, on that node or any node in its now-
+  // visible local network, navigates to that person's profile.
+  let selectedId = null;
 
   const width  = panel.clientWidth  || 900;
   const height = panel.clientHeight || 500;
@@ -134,31 +189,90 @@ async function loadGlobalNetwork() {
     .attr('class', 'pg-label').text(d => truncateLabel(d.label))
     .attr('dy', d => globalNodeRadius(d) + 12);
 
-  function ticked() {
-    link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
-    node.attr('transform', d => `translate(${d.x},${d.y})`);
-    label.attr('x', d => d.x).attr('y', d => d.y);
+  // Draws every node/link/label at its current display position — d.dispX/
+  // dispY when the ambient orbit below has taken over that node, else
+  // d.x/d.y straight from the simulation (before orbiting starts, and for
+  // whichever node is actively being dragged). Only ever *translates* each
+  // node/label — never rotates one — so avatar photos and label text stay
+  // upright no matter where the node has orbited to.
+  function render() {
+    link.attr('x1', d => d.source.dispX ?? d.source.x).attr('y1', d => d.source.dispY ?? d.source.y)
+        .attr('x2', d => d.target.dispX ?? d.target.x).attr('y2', d => d.target.dispY ?? d.target.y);
+    node.attr('transform', d => `translate(${d.dispX ?? d.x},${d.dispY ?? d.y})`);
+    label.attr('x', d => d.dispX ?? d.x).attr('y', d => d.dispY ?? d.y);
   }
+  // No ambient drift here (unlike the profile page's own local graph) — it
+  // never lets the simulation fully settle, so by the time a click's
+  // zoom-to-fit transition finishes the nodes have already jittered away
+  // from the box it was framed for, and keep drifting further off after.
+  // Letting the simulation cool down and stop keeps node positions (and
+  // therefore the zoom) stable once settled.
   const sim = d3.forceSimulation(nodes)
     .force('link', d3.forceLink(links).id(d => d.id).distance(90).strength(0.5))
     .force('charge', d3.forceManyBody().strength(-220))
     .force('collide', d3.forceCollide(d => globalNodeRadius(d) + 12))
     .force('x', d3.forceX(width / 2).strength(0.03))
     .force('y', d3.forceY(height / 2).strength(0.03))
-    .force('drift', driftForce(nodes))
-    .alphaTarget(GRAPH_DRIFT_ALPHA_TARGET)
-    .on('tick', ticked);
+    .on('tick', render);
   // See the matching comment in profile-view.js's renderProfileGraphFor:
   // paints real coordinates before the first paint so arrowheads aren't
   // stuck orientation-less on that initial zero-length-line frame.
-  ticked();
+  render();
   globalGraphSim = sim;
+
+  // ---------- slow ambient orbit ----------
+  // Each node drifts in a slow circle around the panel's center at its own
+  // settled distance from it, so the layout's overall shape (well-
+  // connected nodes clustered near the middle, others further out) is
+  // preserved rather than spinning as one rigid disc — and each node keeps
+  // its own randomized pace (roughly 0.5x-1.5x of the base rate, picked
+  // once and kept for its lifetime), so the motion reads as individually
+  // drifting nodes rather than a single mechanism. This only ever moves a
+  // node's *position* (d.dispX/dispY, read by render() above) — never its
+  // own local orientation — so avatar photos and label text stay upright
+  // throughout. Positions are captured once the simulation actually
+  // settles (see the sim.on('end', ...) below and the restore path further
+  // down); computing them off the transient spawn-cluster positions would
+  // orbit around the wrong center entirely.
+  const ORBIT_BASE_RAD_PER_MS = (2 * Math.PI) / (5 * 60 * 1000); // ~one full turn every 5 min at 1x speed
+  let orbitsInitialized = false;
+  let orbitLastElapsed = 0;
+  let draggingNodeId = null;
+  function initOrbitForNode(n, cx, cy) {
+    const dx = n.x - cx, dy = n.y - cy;
+    n.orbitRadius = Math.hypot(dx, dy);
+    n.orbitAngle = Math.atan2(dy, dx);
+    if (n.orbitSpeedMul === undefined) n.orbitSpeedMul = 0.5 + Math.random();
+  }
+  function initOrbits() {
+    const cx = width / 2, cy = height / 2;
+    for (const n of nodes) initOrbitForNode(n, cx, cy);
+  }
+  sim.on('end', () => {
+    if (orbitsInitialized) return; // only the initial settle — see initOrbitForNode for the drag-end re-baseline
+    orbitsInitialized = true;
+    initOrbits();
+  });
+  globalRotationTimer = d3.timer(elapsed => {
+    const dt = elapsed - orbitLastElapsed;
+    orbitLastElapsed = elapsed;
+    if (!orbitsInitialized || selectedId != null) return; // paused while zoomed in on a selection, so the fitted frame stays put
+    const cx = width / 2, cy = height / 2;
+    for (const n of nodes) {
+      if (n.id === draggingNodeId) continue;
+      n.orbitAngle += dt * ORBIT_BASE_RAD_PER_MS * n.orbitSpeedMul;
+      n.dispX = cx + n.orbitRadius * Math.cos(n.orbitAngle);
+      n.dispY = cy + n.orbitRadius * Math.sin(n.orbitAngle);
+    }
+    render();
+  });
 
   let dragMoved = false;
   node.call(d3.drag()
     .on('start', (ev, d) => {
       dragMoved = false;
+      draggingNodeId = d.id;
+      d.dispX = undefined; d.dispY = undefined; // follow the raw simulation position while dragging
       if (!ev.active) sim.alphaTarget(0.3).restart();
       d.fx = d.x; d.fy = d.y;
     })
@@ -167,15 +281,97 @@ async function loadGlobalNetwork() {
       d.fx = ev.x; d.fy = ev.y;
     })
     .on('end', (ev, d) => {
-      if (!ev.active) sim.alphaTarget(GRAPH_DRIFT_ALPHA_TARGET);
+      draggingNodeId = null;
+      if (!ev.active) sim.alphaTarget(0);
       d.fx = null; d.fy = null;
+      // Resume orbiting from wherever it was dropped, at its same personal
+      // pace, rather than snapping back to its pre-drag orbit path.
+      if (orbitsInitialized) initOrbitForNode(d, width / 2, height / 2);
     }));
+
+  // Highlights the selected node + its direct neighbors, dims everyone
+  // else, and reveals only the connection lines touching the selected
+  // node — links stay invisible (see .pg-link in network.css) until
+  // something is selected.
+  function applySelection() {
+    const neighbors = selectedId ? (neighborsOf.get(selectedId) || new Set()) : new Set();
+    const isLocal = id => id === selectedId || neighbors.has(id);
+    node.classed('pg-selected', d => d.id === selectedId);
+    node.classed('pg-dimmed', d => selectedId != null && !isLocal(d.id));
+    label.classed('pg-dimmed', d => selectedId != null && !isLocal(d.id));
+    link.classed('pg-link-visible', l => selectedId != null && (l.source.id === selectedId || l.target.id === selectedId));
+    if (selectedId) zoomToLocalNetwork(isLocal);
+  }
+  // Pans/scales the view to fit the selected node + its direct neighbors —
+  // a one-time fit against their current simulation positions rather than
+  // something that keeps following the (gently, perpetually drifting)
+  // layout afterward.
+  function zoomToLocalNetwork(isLocal) {
+    const pts = nodes.filter(n => isLocal(n.id)).map(n => ({ x: n.dispX ?? n.x, y: n.dispY ?? n.y }));
+    if (!pts.length) return;
+    const pad = 90;
+    const minX = Math.min(...pts.map(p => p.x)) - pad, maxX = Math.max(...pts.map(p => p.x)) + pad;
+    const minY = Math.min(...pts.map(p => p.y)) - pad, maxY = Math.max(...pts.map(p => p.y)) + pad;
+    const scale = Math.max(0.25, Math.min(3, Math.min(width / (maxX - minX), height / (maxY - minY))));
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    const transform = d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy);
+    svg.transition().duration(400).call(zoomBehavior.transform, transform);
+  }
 
   node.on('click', (ev, d) => {
     if (dragMoved) return;
     ev.stopPropagation();
-    location.href = profileUrl(d.id);
+    const neighbors = neighborsOf.get(selectedId);
+    if (selectedId != null && (d.id === selectedId || (neighbors && neighbors.has(d.id)))) {
+      sessionStorage.setItem(NETWORK_SELECTION_KEY, d.id);
+      location.href = profileUrl(d.id);
+      return;
+    }
+    selectedId = d.id;
+    applySelection();
   });
+  // Clicking empty canvas clears the selection, hiding the connection
+  // lines again — node clicks above stop propagation, so this only fires
+  // on an actual background click.
+  svg.on('click', () => {
+    if (selectedId == null) return;
+    selectedId = null;
+    applySelection();
+  });
+
+  // Restore the local network we navigated away from, if this load is the
+  // profile page's "Back" button (or browser back) returning here — a
+  // fresh visit (nav-bar link, reload with nothing stashed) never has this
+  // set, so it only ever fires right after that specific hand-off.
+  const restoreId = sessionStorage.getItem(NETWORK_SELECTION_KEY);
+  if (restoreId) {
+    sessionStorage.removeItem(NETWORK_SELECTION_KEY);
+    if (nodes.some(n => n.id === restoreId)) {
+      // Right now the nodes are still sitting at their transient spawn
+      // positions (a small spiral near the origin) — the simulation's
+      // internal timer hasn't run a single frame yet, since that's
+      // scheduled async and this is still the same synchronous pass that
+      // just created it. Zooming to fit against those would frame the
+      // spawn cluster, not the actual laid-out graph, landing far off
+      // target. Fast-forward through the settle synchronously (same
+      // ~300-tick run the default alphaDecay converges in on its own) so
+      // the zoom below is computed against final positions instead —
+      // this also means returning here shows the already-settled,
+      // already-zoomed local network immediately, with no visible
+      // whole-graph spring-into-place first.
+      sim.stop();
+      for (let i = 0; i < 300 && sim.alpha() > sim.alphaMin(); i++) sim.tick();
+      render();
+      // Bypassing the normal async settle above means the sim.on('end', ...)
+      // listener never fires here — do its job explicitly so orbiting is
+      // ready (and paused, since selectedId is about to be set) same as it
+      // would be after an organic settle.
+      orbitsInitialized = true;
+      initOrbits();
+      selectedId = restoreId;
+      applySelection();
+    }
+  }
 }
 
 authReady.then(() => loadGlobalNetwork());

@@ -31,34 +31,7 @@
   </div>
 
   <div class="main-scroll home-scroll">
-    <section class="snap-panel" id="heroPanel">
-      <div class="hero">
-        <div class="hero-inner">
-          <div class="hero-left">
-            <h1>Your colors come<br>together into one story.</h1>
-            <p>A collaborative canvas built by neurodivergent and neurotypical artists alike. Submit your art and it's placed into a shared weavo based on its dominant color — where your piece lands is revealed once the placement is complete.</p>
-            <div class="hero-cta-row">
-              <button class="cta" id="exploreBtn">Explore Projects <span aria-hidden="true">&rarr;</span></button>
-              <button class="cta-outline" id="heroProfileBtn">Sign In</button>
-            </div>
-            <button class="cta-text" id="newProjectBtn" style="display:none">+ New Project</button>
-          </div>
-          <div class="hero-right">
-            <div class="hero-preview" id="heroPreview">
-              <canvas id="heroPreviewCanvas"></canvas>
-              <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">No projects yet — be the first to start one.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="stats-bar" id="statsBar">
-        <div class="stat-tile"><div class="stat-icon">👥</div><div class="stat-value" id="statArtists">0</div><div class="stat-label">Artists</div></div>
-        <div class="stat-tile"><div class="stat-icon">🎨</div><div class="stat-value" id="statArtworks">0</div><div class="stat-label">Artworks Submitted</div></div>
-        <div class="stat-tile"><div class="stat-icon">🖼️</div><div class="stat-value" id="statProjects">0</div><div class="stat-label">Active Projects</div></div>
-        <div class="stat-tile"><div class="stat-icon">✅</div><div class="stat-value" id="statFill">0%</div><div class="stat-label">Cells Filled</div></div>
-      </div>
-
+    <section class="snap-panel" id="currentProjectsPanel">
       <div class="carousel-section" id="carouselSection">
         <div class="carousel-header">
           <div class="section-label">Current Projects</div>
@@ -79,7 +52,10 @@
     </section>
 
     <section class="snap-panel" id="projectsPanel">
-      <div class="section-label" style="margin-top:32px;">All Projects</div>
+      <div class="carousel-header" style="margin-top:32px;">
+        <div class="section-label">All Projects</div>
+        <button class="cta-text" id="newProjectBtn" style="display:none;margin-top:0;">+ New Project</button>
+      </div>
       <div class="projects-grid" id="projectsGrid"></div>
       <div class="empty-note" id="projectsEmpty" style="display:none;">No projects yet.</div>
     </section>
@@ -217,6 +193,7 @@
 <script src="../js/common.js"></script>
 <script src="../js/color-engine.js"></script>
 <script src="../js/auth.js"></script>
+<script src="../js/project-preview.js"></script>
 <script src="../js/home.js"></script>
 </body>
 </html>

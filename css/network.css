@@ -5,8 +5,17 @@
 .network-graph-panel .profile-graph-empty{color:rgba(247,247,245,.55);}
 .network-graph-panel .pg-node .pg-ring{stroke:rgba(247,247,245,.35);}
 .network-graph-panel .pg-node:hover .pg-ring{stroke:var(--mint);}
+.network-graph-panel .pg-node.pg-selected .pg-ring{stroke:var(--mint);stroke-width:3px;}
 .network-graph-panel .pg-node .pg-fallback{fill:var(--paper);}
 .network-graph-panel .pg-node .pg-fallback-label{fill:var(--forest-dark);}
 .network-graph-panel .pg-label{fill:var(--paper);}
-.network-graph-panel .pg-link{stroke:rgba(247,247,245,.3);}
+/* No one is selected on load (or once the selection is cleared), so no
+   connection lines are shown at all — only the selected node's own links
+   become visible (see .pg-link-visible, toggled from network.js). */
+.network-graph-panel .pg-link{stroke:rgba(247,247,245,.3);opacity:0;transition:opacity .15s linear;}
+.network-graph-panel .pg-link.pg-link-visible{opacity:1;}
 .network-graph-panel .pg-link.pg-mutual{stroke:var(--mint);}
+.network-graph-panel .pg-node,
+.network-graph-panel .pg-label{transition:opacity .15s linear;}
+.network-graph-panel .pg-node.pg-dimmed,
+.network-graph-panel .pg-label.pg-dimmed{opacity:.3;}
