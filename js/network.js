@@ -5,6 +5,7 @@
 let globalGraphSim = null;
 let globalGraphToken = 0; // guards against a stale fetch finishing after a newer one started
 let globalZoomBehavior = null; // set whenever the graph has nodes, so the toolbar buttons have something to drive
+let globalFitAllView = null; // set alongside globalZoomBehavior — what the reset button calls
 let globalRotationTimer = null;
 function stopGlobalGraph() {
   if (globalGraphSim) { globalGraphSim.stop(); globalGraphSim = null; }
@@ -25,8 +26,8 @@ document.getElementById('globalGraph-zoom-out').onclick = () => {
   d3.select('#globalGraphSvg').transition().duration(150).call(globalZoomBehavior.scaleBy, 1 / GLOBAL_GRAPH_ZOOM_STEP);
 };
 document.getElementById('globalGraph-zoom-reset').onclick = () => {
-  if (!globalZoomBehavior) return;
-  d3.select('#globalGraphSvg').transition().duration(200).call(globalZoomBehavior.transform, d3.zoomIdentity);
+  if (!globalFitAllView) return;
+  globalFitAllView();
 };
 function globalNodeRadius(d) { return Math.max(9, Math.min(24, 9 + Math.sqrt(d.degree || 1) * 3.2)); }
 // Every save across the whole app, collapsed into an undirected pair per
@@ -115,6 +116,7 @@ async function loadGlobalNetwork() {
   zoomToolbar.style.display = 'none';
   zoomLevelEl.textContent = '100%';
   globalZoomBehavior = null;
+  globalFitAllView = null;
 
   const { nodes, links } = await fetchGlobalGraphData();
   if (token !== globalGraphToken) return; // a newer load superseded this one
@@ -237,7 +239,6 @@ async function loadGlobalNetwork() {
   const ORBIT_BASE_RAD_PER_MS = (2 * Math.PI) / (5 * 60 * 1000); // ~one full turn every 5 min at 1x speed
   let orbitsInitialized = false;
   let orbitLastElapsed = 0;
-  let draggingNodeId = null;
   function initOrbitForNode(n, cx, cy) {
     const dx = n.x - cx, dy = n.y - cy;
     n.orbitRadius = Math.hypot(dx, dy);
@@ -249,7 +250,7 @@ async function loadGlobalNetwork() {
     for (const n of nodes) initOrbitForNode(n, cx, cy);
   }
   sim.on('end', () => {
-    if (orbitsInitialized) return; // only the initial settle — see initOrbitForNode for the drag-end re-baseline
+    if (orbitsInitialized) return; // only ever the initial settle now that dragging (and its re-baseline) is gone
     orbitsInitialized = true;
     initOrbits();
   });
@@ -259,35 +260,12 @@ async function loadGlobalNetwork() {
     if (!orbitsInitialized || selectedId != null) return; // paused while zoomed in on a selection, so the fitted frame stays put
     const cx = width / 2, cy = height / 2;
     for (const n of nodes) {
-      if (n.id === draggingNodeId) continue;
       n.orbitAngle += dt * ORBIT_BASE_RAD_PER_MS * n.orbitSpeedMul;
       n.dispX = cx + n.orbitRadius * Math.cos(n.orbitAngle);
       n.dispY = cy + n.orbitRadius * Math.sin(n.orbitAngle);
     }
     render();
   });
-
-  let dragMoved = false;
-  node.call(d3.drag()
-    .on('start', (ev, d) => {
-      dragMoved = false;
-      draggingNodeId = d.id;
-      d.dispX = undefined; d.dispY = undefined; // follow the raw simulation position while dragging
-      if (!ev.active) sim.alphaTarget(0.3).restart();
-      d.fx = d.x; d.fy = d.y;
-    })
-    .on('drag', (ev, d) => {
-      dragMoved = true;
-      d.fx = ev.x; d.fy = ev.y;
-    })
-    .on('end', (ev, d) => {
-      draggingNodeId = null;
-      if (!ev.active) sim.alphaTarget(0);
-      d.fx = null; d.fy = null;
-      // Resume orbiting from wherever it was dropped, at its same personal
-      // pace, rather than snapping back to its pre-drag orbit path.
-      if (orbitsInitialized) initOrbitForNode(d, width / 2, height / 2);
-    }));
 
   // Highlights the selected node + its direct neighbors, dims everyone
   // else, and reveals only the connection lines touching the selected
@@ -302,24 +280,40 @@ async function loadGlobalNetwork() {
     link.classed('pg-link-visible', l => selectedId != null && (l.source.id === selectedId || l.target.id === selectedId));
     if (selectedId) zoomToLocalNetwork(isLocal);
   }
-  // Pans/scales the view to fit the selected node + its direct neighbors —
-  // a one-time fit against their current simulation positions rather than
-  // something that keeps following the (gently, perpetually drifting)
-  // layout afterward.
-  function zoomToLocalNetwork(isLocal) {
-    const pts = nodes.filter(n => isLocal(n.id)).map(n => ({ x: n.dispX ?? n.x, y: n.dispY ?? n.y }));
-    if (!pts.length) return;
-    const pad = 90;
-    const minX = Math.min(...pts.map(p => p.x)) - pad, maxX = Math.max(...pts.map(p => p.x)) + pad;
-    const minY = Math.min(...pts.map(p => p.y)) - pad, maxY = Math.max(...pts.map(p => p.y)) + pad;
+  // Shared "pan/scale to fit this set of points" math — pts are current
+  // on-screen display positions (dispX/dispY ?? x/y), not raw simulation
+  // coordinates, so the fit always matches what's actually rendered right
+  // now (e.g. mid-orbit), not where the simulation originally laid a node.
+  const FIT_PADDING = 90;
+  function fitTransformFor(pts) {
+    const minX = Math.min(...pts.map(p => p.x)) - FIT_PADDING, maxX = Math.max(...pts.map(p => p.x)) + FIT_PADDING;
+    const minY = Math.min(...pts.map(p => p.y)) - FIT_PADDING, maxY = Math.max(...pts.map(p => p.y)) + FIT_PADDING;
     const scale = Math.max(0.25, Math.min(3, Math.min(width / (maxX - minX), height / (maxY - minY))));
     const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
-    const transform = d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy);
-    svg.transition().duration(400).call(zoomBehavior.transform, transform);
+    return d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy);
   }
+  function currentPoint(n) { return { x: n.dispX ?? n.x, y: n.dispY ?? n.y }; }
+  // Pans/scales the view to fit the selected node + its direct neighbors —
+  // a one-time fit against their current display positions rather than
+  // something that keeps following the (gently, perpetually orbiting)
+  // layout afterward.
+  function zoomToLocalNetwork(isLocal) {
+    const pts = nodes.filter(n => isLocal(n.id)).map(currentPoint);
+    if (!pts.length) return;
+    svg.transition().duration(400).call(zoomBehavior.transform, fitTransformFor(pts));
+  }
+  // What the toolbar's reset/100% button drives — fits every node in the
+  // graph into view, rather than just snapping back to a literal 1:1 zoom
+  // at the origin (which, on a graph this size, usually only showed a
+  // corner of it).
+  function zoomToFitAll() {
+    const pts = nodes.map(currentPoint);
+    if (!pts.length) return;
+    svg.transition().duration(400).call(zoomBehavior.transform, fitTransformFor(pts));
+  }
+  globalFitAllView = zoomToFitAll;
 
   node.on('click', (ev, d) => {
-    if (dragMoved) return;
     ev.stopPropagation();
     const neighbors = neighborsOf.get(selectedId);
     if (selectedId != null && (d.id === selectedId || (neighbors && neighbors.has(d.id)))) {
