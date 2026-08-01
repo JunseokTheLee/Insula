@@ -84,7 +84,7 @@ async function paintProjectPreview(card, project) {
   const canvas = card.querySelector('canvas');
   canvas.classList.add('loading');
   const { data: pixels } = await sb.from('mosaic_pixels')
-    .select('x,y,target_r,target_g,target_b,filled,mosaic_submissions!mosaic_pixels_submission_id_fkey(image_url,avg_r,avg_g,avg_b)')
+    .select('x,y,target_r,target_g,target_b,filled,mosaic_submissions!mosaic_pixels_submission_id_fkey(image_url,thumb_url,avg_r,avg_g,avg_b)')
     .eq('project_id', project.id);
   canvas.width = project.width * PREVIEW_CELL_PX;
   canvas.height = project.height * PREVIEW_CELL_PX;
@@ -100,7 +100,7 @@ async function paintProjectPreview(card, project) {
       // right away, then swap in the real artwork once it's loaded.
       ctx.fillStyle = `rgb(${sub.avg_r},${sub.avg_g},${sub.avg_b})`;
       ctx.fillRect(dx, dy, PREVIEW_CELL_PX, PREVIEW_CELL_PX);
-      getCachedPreviewImage(sub.image_url).then(img => {
+      getCachedPreviewImage(sub.thumb_url || sub.image_url).then(img => {
         if (img) drawImageCover(ctx, img, dx, dy, PREVIEW_CELL_PX, PREVIEW_CELL_PX);
       });
     } else {

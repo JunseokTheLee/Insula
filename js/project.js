@@ -141,7 +141,7 @@ async function renderWeavoGrid(project) {
   fitWeavoStage(project);
   resetMsZoom();
   const { data: pixels, error } = await sb.from('mosaic_pixels')
-    .select('id,x,y,target_r,target_g,target_b,filled,submission_id,mosaic_submissions!mosaic_pixels_submission_id_fkey(id,image_url,author_id,author_name,author_avatar_url,art_title,art_description,art_link,created_at)')
+    .select('id,x,y,target_r,target_g,target_b,filled,submission_id,mosaic_submissions!mosaic_pixels_submission_id_fkey(id,image_url,thumb_url,author_id,author_name,author_avatar_url,art_title,art_description,art_link,created_at)')
     .eq('project_id', project.id)
     .order('y', { ascending: true })
     .order('x', { ascending: true });
@@ -187,7 +187,7 @@ function projectListCardEl(sub) {
   const thumb = document.createElement('div');
   thumb.className = 'pv-card-thumb';
   const img = document.createElement('img');
-  img.src = sub.image_url; img.alt = '';
+  img.src = sub.thumb_url || sub.image_url; img.alt = '';
   thumb.appendChild(img);
   card.appendChild(thumb);
   const info = document.createElement('div');
@@ -202,7 +202,7 @@ function projectListCardEl(sub) {
 }
 function applyCellVisual(cell, px) {
   if (px.filled && px.submission_id && px.mosaic_submissions) {
-    cell.style.backgroundImage = `url("${px.mosaic_submissions.image_url}")`;
+    cell.style.backgroundImage = `url("${px.mosaic_submissions.thumb_url || px.mosaic_submissions.image_url}")`;
   } else {
     const l = Math.round(luminance(px.target_r, px.target_g, px.target_b));
     cell.style.backgroundImage = '';
@@ -479,7 +479,7 @@ async function submitAndRearrange(project, file, meta) {
     const cells = cellRows || [];
     if (!cells.length) { toast(tr('weavoComplete')); return; }
 
-    let imageUrl = null;
+    let imageUrl = null, thumbUrl = null;
     for (let attempt = 0; attempt < REARRANGE_MAX_RETRIES; attempt++) {
       const { data: subRows, error: subErr } = await sb.from('mosaic_submissions')
         .select('id,avg_r,avg_g,avg_b')
@@ -508,7 +508,9 @@ async function submitAndRearrange(project, file, meta) {
 
       if (imageUrl === null) {
         toast(tr('uploadingToast'));
-        imageUrl = await uploadImage(file);
+        const uploaded = await uploadArtworkImage(file);
+        imageUrl = uploaded.url;
+        thumbUrl = uploaded.thumbUrl;
         if (!imageUrl) return;
       }
 
@@ -520,6 +522,7 @@ async function submitAndRearrange(project, file, meta) {
       const { error: rpcErr } = await sb.rpc('submit_mosaic_artwork_rearranged', {
         p_project_id: project.id,
         p_image_url: imageUrl,
+        p_thumb_url: thumbUrl,
         p_avg_r: avg.r, p_avg_g: avg.g, p_avg_b: avg.b,
         p_art_title: meta.title || null, p_art_description: meta.description || null, p_art_link: meta.link || null,
         p_author_name: me.username || me.name, p_author_avatar_url: me.avatar || null,

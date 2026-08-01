@@ -43,6 +43,40 @@ async function uploadImage(file) {
   return sb.storage.from('artwork').getPublicUrl(path).data.publicUrl;
 }
 
+// Downscaled copy of an uploaded artwork file, for every place it's shown
+// small (weavo grid cells, list/profile thumbnails, project preview
+// canvases) so those views don't each pull the full-resolution original
+// just to shrink it back down. Resolves null (not rejects) on any failure —
+// callers treat a missing thumbnail as "fall back to the full image".
+const THUMB_MAX_DIM = 480;
+function makeThumbnailBlob(file) {
+  const objectUrl = URL.createObjectURL(file);
+  return loadImageEl(objectUrl).then(img => {
+    const scale = Math.min(1, THUMB_MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+  }).catch(() => null).finally(() => URL.revokeObjectURL(objectUrl));
+}
+
+// Uploads both the full-resolution artwork file (image_url) and a
+// downscaled thumbnail (thumb_url) alongside it in the same `artwork`
+// bucket, under a `thumb/` prefix. A thumbnail upload failure still returns
+// the full-res url — the artwork itself shouldn't be blocked by it.
+async function uploadArtworkImage(file) {
+  const url = await uploadImage(file);
+  if (!url) return { url: null, thumbUrl: null };
+  const thumbBlob = await makeThumbnailBlob(file);
+  if (!thumbBlob) return { url, thumbUrl: null };
+  const path = `thumb/${me.id}/${Date.now()}.jpg`;
+  const { error } = await sb.storage.from('artwork').upload(path, thumbBlob, { cacheControl: '3600', contentType: 'image/jpeg' });
+  if (error) { console.error('uploadArtworkImage thumb error:', error); return { url, thumbUrl: null }; }
+  return { url, thumbUrl: sb.storage.from('artwork').getPublicUrl(path).data.publicUrl };
+}
+
 // ---------- confirm dialog ----------
 // `confirmText`, when given, gates the OK button behind an input field
 // that must match it exactly — used for the highest-stakes destructive

@@ -20,7 +20,7 @@ document.getElementById('profileBackBtn').addEventListener('click', e => {
 
 async function fetchSubmittedWeavoArt(userId) {
   const { data, error } = await sb.from('mosaic_submissions')
-    .select('id,pixel_id,project_id,image_url,art_title,art_description,art_link,author_id,author_name,author_avatar_url,created_at')
+    .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_description,art_link,author_id,author_name,author_avatar_url,created_at')
     .eq('author_id', userId)
     .order('created_at', { ascending: false });
   if (error) { console.error('load submitted weavo art error:', error); return []; }
@@ -106,7 +106,7 @@ function profileProjectCardEl(project) {
 }
 async function fetchSavedWeavoArt(userId) {
   const { data, error } = await sb.from('mosaic_submission_saves')
-    .select('created_at,mosaic_submissions(id,pixel_id,project_id,image_url,art_title,art_description,art_link,author_id,author_name,author_avatar_url)')
+    .select('created_at,mosaic_submissions(id,pixel_id,project_id,image_url,thumb_url,art_title,art_description,art_link,author_id,author_name,author_avatar_url)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) { console.error('load saved weavo art error:', error); return []; }
@@ -116,7 +116,7 @@ function profileArtThumbEl(sub) {
   const el = document.createElement('div');
   el.className = 'profile-art-thumb';
   el.title = sub.art_title || '';
-  const img = document.createElement('img'); img.src = sub.image_url; img.alt = '';
+  const img = document.createElement('img'); img.src = sub.thumb_url || sub.image_url; img.alt = '';
   el.appendChild(img);
   el.onclick = () => openLightbox(sub);
   return el;
