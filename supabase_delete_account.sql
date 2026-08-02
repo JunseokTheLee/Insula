@@ -9,9 +9,10 @@
 --
 -- Every table that references auth.users(id) here does so with
 -- "on delete cascade" (profiles, mosaic_submissions, mosaic_submission_comments,
--- mosaic_submission_likes/saves, profile_comments — see supabase_profiles.sql,
--- supabase_mosaic.sql, supabase_mosaic_comments.sql, supabase_mosaic_likes.sql),
--- so deleting the auth.users row alone cleans up everything the user created.
+-- mosaic_submission_likes/saves, profile_comments, user_saves — see
+-- supabase_profiles.sql, supabase_mosaic.sql, supabase_mosaic_comments.sql,
+-- supabase_mosaic_likes.sql, supabase_user_saves.sql), so deleting the
+-- auth.users row alone cleans up everything the user created.
 -- mosaic_pixels.claimed_by uses "on delete set null" instead, so an
 -- in-progress pixel claim is released rather than deleted.
 --

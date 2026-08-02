@@ -1,7 +1,7 @@
 /* ============ PROJECT DETAIL ============ */
 .project-head{padding:28px 32px 20px;animation:fadeIn .3s ease-out;}
 .project-head h1{margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--forest);letter-spacing:-.01em;}
-.project-head p{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;margin:0 0 12px;max-width:560px;}
+.project-head p{color:var(--muted);font-family:'General Sans',sans-serif;font-size:15px;line-height:1.6;margin:0 0 12px;max-width:560px;}
 .project-progress{color:var(--muted);font-family:'General Sans',sans-serif;font-size:12px;font-weight:600;}
 
 .archived-banner{

@@ -59,9 +59,14 @@
         <div class="profile-head-info">
           <h1 id="profileName">불러오는 중…</h1>
           <div class="profile-meta" id="profileMeta"></div>
+          <div class="profile-save-counts" id="profileSaveCounts" style="display:none;">
+            <button type="button" class="profile-save-count-btn" id="profileSavesCount"><strong id="profileSavesN">0</strong> 저장</button>
+            <button type="button" class="profile-save-count-btn" id="profileSavedByCount"><strong id="profileSavedByN">0</strong> 저장됨</button>
+          </div>
           <div class="profile-links" id="profileLinksList"></div>
         </div>
         <div class="profile-head-actions">
+          <button type="button" id="profileSaveBtn" style="display:none;">저장</button>
           <button type="button" id="profileUploadBtn" style="display:none;">작품 업로드</button>
           <button type="button" id="profileEditBtn" style="display:none;">프로필 수정</button>
         </div>
@@ -83,13 +88,13 @@
       <div class="empty-note" id="profileSubmittedEmpty" style="display:none;">아직 제출된 작품이 없습니다.</div>
     </div>
     <div class="profile-section">
-      <h2 class="section-label">저장한 작품</h2>
+      <h2 class="section-label">컬렉션</h2>
       <div class="profile-art-grid" id="profileSavedGrid"></div>
-      <div class="empty-note" id="profileSavedEmpty" style="display:none;">아직 저장한 작품이 없습니다.</div>
+      <div class="empty-note" id="profileSavedEmpty" style="display:none;">아직 컬렉션이 비어 있습니다.</div>
     </div>
     <div class="profile-section">
       <h2 class="section-label">네트워크</h2>
-      <div class="profile-graph-desc">저장은 사람과 그들이 저장한 작품의 작가를 연결합니다 — 화살표는 저장한 사람에서 작가 쪽을 가리키며, 양쪽 화살표는 서로 저장한 경우입니다. 드래그로 배치를 바꾸고, 스크롤로 확대/축소하고, 노드를 클릭해 둘러보세요.</div>
+      <div class="profile-graph-desc">저장은 사람과 사람을 직접 연결합니다 — 화살표는 저장한 사람에서 저장된 사람 쪽을 가리키며, 양쪽 화살표는 서로 저장한 경우입니다. 드래그로 배치를 바꾸고, 스크롤로 확대/축소하고, 노드를 클릭해 둘러보세요.</div>
       <div class="profile-graph-panel" id="profileGraphPanel">
         <div class="profile-graph-crumb" id="profileGraphCrumb">
           <button type="button" id="profileGraphBack">&larr; 뒤로</button>
@@ -97,7 +102,7 @@
           <a href="#" id="profileGraphCrumbVisit">프로필 보기 &rarr;</a>
         </div>
         <svg id="profileGraphSvg"></svg>
-        <div class="profile-graph-empty" id="profileGraphEmpty">아직 저장한 작품이 없어 표시할 네트워크가 없습니다.</div>
+        <div class="profile-graph-empty" id="profileGraphEmpty">아직 저장한 사람이 없어 표시할 네트워크가 없습니다.</div>
       </div>
     </div>
   </main>
@@ -170,8 +175,8 @@
       <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="이 작품 좋아요">
         <span class="icon"></span><span id="lb-like-count">0</span>
       </button>
-      <button type="button" id="lb-save-btn" class="lb-action-btn" aria-label="이 작품 저장">
-        <span class="icon"></span><span>저장</span>
+      <button type="button" id="lb-save-btn" class="lb-action-btn" aria-label="이 작품 담기">
+        <span class="icon"></span><span>담기</span>
       </button>
       <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="댓글 보기" aria-expanded="true">
         <span class="icon"></span><span id="lb-comments-count">0</span>
@@ -274,6 +279,15 @@
       <button id="confirm-cancel" class="btn-cancel">취소</button>
       <button id="confirm-ok" class="btn-primary">계속</button>
     </div>
+  </div>
+</div>
+
+<!-- 저장 / 저장됨 목록 -->
+<div id="saves-list-modal" class="modal-overlay">
+  <div id="saves-list-dialog" class="modal-panel">
+    <h3 id="saves-list-title">저장</h3>
+    <div id="saves-list-content"></div>
+    <div class="empty-note" id="saves-list-empty" style="display:none;">아직 아무도 없습니다.</div>
   </div>
 </div>
 

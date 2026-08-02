@@ -174,6 +174,92 @@ function profileArtThumbEl(sub, pending) {
   return el;
 }
 
+// ---------- user-to-user saves (follow) ----------
+// Direct saves are asymmetric (like a follow) — "Saves" is how many people
+// this profile saves, "Saved by" is how many save this profile back.
+async function fetchSaveCounts(userId) {
+  const [{ count: saves, error: savesErr }, { count: savedBy, error: savedByErr }] = await Promise.all([
+    sb.from('user_saves').select('*', { count: 'exact', head: true }).eq('saver_id', userId),
+    sb.from('user_saves').select('*', { count: 'exact', head: true }).eq('saved_id', userId),
+  ]);
+  if (savesErr) console.error('load save counts (saves) error:', savesErr);
+  if (savedByErr) console.error('load save counts (saved by) error:', savedByErr);
+  return { saves: saves || 0, savedBy: savedBy || 0 };
+}
+async function fetchIsSaving(viewerId, targetId) {
+  const { data, error } = await sb.from('user_saves').select('saver_id')
+    .eq('saver_id', viewerId).eq('saved_id', targetId).maybeSingle();
+  if (error) console.error('load is-saving error:', error);
+  return !!data;
+}
+async function toggleUserSave(targetId, btn) {
+  if (!me.id) { openAuthModal(); return; }
+  const wasSaving = btn.classList.contains('saving');
+  btn.disabled = true;
+  const { error } = wasSaving
+    ? await sb.from('user_saves').delete().eq('saver_id', me.id).eq('saved_id', targetId)
+    : await sb.from('user_saves').insert({ saver_id: me.id, saved_id: targetId });
+  btn.disabled = false;
+  if (error) { console.error('toggle save error:', error); toast(tr('couldNotUpdateSaveUser')); return; }
+  btn.classList.toggle('saving', !wasSaving);
+  btn.textContent = !wasSaving ? tr('savingLabel') : tr('saveLabel');
+  const savedByEl = document.getElementById('profileSavedByN');
+  if (savedByEl) savedByEl.textContent = Number(savedByEl.textContent || 0) + (wasSaving ? -1 : 1);
+}
+// direction: 'saves' = people userId saves (their outgoing list), 'savedBy' = people who save userId (their followers)
+async function fetchUserSaveList(userId, direction) {
+  const col = direction === 'saves' ? 'saver_id' : 'saved_id';
+  const otherCol = direction === 'saves' ? 'saved_id' : 'saver_id';
+  const { data: rows, error } = await sb.from('user_saves').select(otherCol).eq(col, userId);
+  if (error) { console.error('load save list error:', error); return []; }
+  const ids = [...new Set((rows || []).map(r => r[otherCol]))];
+  if (!ids.length) return [];
+  const { data: profiles, error: profErr } = await sb.from('profiles')
+    .select('id,name,username,avatar_url').in('id', ids);
+  if (profErr) { console.error('load save list profiles error:', profErr); return []; }
+  return profiles || [];
+}
+function saveListRowEl(p) {
+  const row = document.createElement('a');
+  row.className = 'saves-list-row';
+  row.href = profileUrl(p.username || p.id);
+  const name = p.username || p.name || tr('anonymous');
+  if (p.avatar_url) {
+    const img = document.createElement('img');
+    img.className = 'saves-list-avatar'; img.src = p.avatar_url;
+    img.alt = tr('artistAvatarAlt', { name });
+    row.appendChild(img);
+  } else {
+    const fb = document.createElement('div');
+    fb.className = 'saves-list-avatar-fallback';
+    fb.textContent = name.charAt(0).toUpperCase();
+    row.appendChild(fb);
+  }
+  const nameEl = document.createElement('span');
+  nameEl.className = 'saves-list-name'; nameEl.textContent = name;
+  row.appendChild(nameEl);
+  return row;
+}
+let savesListToken = 0;
+async function openSavesListModal(userId, direction) {
+  const token = ++savesListToken;
+  const modal = document.getElementById('saves-list-modal');
+  const title = document.getElementById('saves-list-title');
+  const content = document.getElementById('saves-list-content');
+  const empty = document.getElementById('saves-list-empty');
+  title.textContent = tr(direction === 'saves' ? 'savesListTitle' : 'savedByListTitle');
+  content.innerHTML = '';
+  empty.style.display = 'none';
+  modal.classList.add('open');
+  const list = await fetchUserSaveList(userId, direction);
+  if (token !== savesListToken) return; // a newer open superseded this one
+  if (!list.length) { empty.style.display = ''; return; }
+  for (const p of list) content.appendChild(saveListRowEl(p));
+}
+document.getElementById('saves-list-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
 // ---------- this profile's own network graph (Obsidian-style local graph of save relationships) ----------
 let graphSim    = null;  // running d3-force simulation, so it can be stopped on navigation
 let graphRootId = null;  // the profile this section was opened on, for the "Back" breadcrumb
@@ -189,36 +275,27 @@ function resetProfileGraph(userId) {
   document.getElementById('profileGraphCrumb').style.display = 'none';
   document.getElementById('profileGraphEmpty').style.display = 'none';
 }
-// Direct (1-hop) save relationships around `userId`: artists whose work
-// they've saved (outgoing) and people who've saved their work (incoming).
-// mosaic_submission_saves rows are public, so this works for any profile,
-// not just the signed-in user's own.
+// Direct (1-hop) save relationships around `userId`: people they save
+// (outgoing) and people who save them (incoming). user_saves rows are
+// public, so this works for any profile, not just the signed-in user's own.
 async function fetchGraphNeighbors(userId) {
   const [{ data: outRows, error: outErr }, { data: inRows, error: inErr }] = await Promise.all([
-    sb.from('mosaic_submission_saves')
-      .select('mosaic_submissions!inner(author_id)')
-      .eq('user_id', userId),
-    sb.from('mosaic_submission_saves')
-      .select('user_id,mosaic_submissions!inner(author_id)')
-      .eq('mosaic_submissions.author_id', userId),
+    sb.from('user_saves').select('saved_id').eq('saver_id', userId),
+    sb.from('user_saves').select('saver_id').eq('saved_id', userId),
   ]);
   if (outErr) console.error('load graph (outgoing) error:', outErr);
   if (inErr)  console.error('load graph (incoming) error:', inErr);
 
-  const outCount = new Map(); // authorId -> # of that author's pieces userId has saved
+  const outIds = new Set(); // people userId saves
   for (const row of (outRows || [])) {
-    const authorId = row.mosaic_submissions && row.mosaic_submissions.author_id;
-    if (!authorId || authorId === userId) continue;
-    outCount.set(authorId, (outCount.get(authorId) || 0) + 1);
+    if (row.saved_id && row.saved_id !== userId) outIds.add(row.saved_id);
   }
-  const inCount = new Map(); // saverId -> # of userId's pieces that saver has saved
+  const inIds = new Set(); // people who save userId
   for (const row of (inRows || [])) {
-    const saverId = row.user_id;
-    if (!saverId || saverId === userId) continue;
-    inCount.set(saverId, (inCount.get(saverId) || 0) + 1);
+    if (row.saver_id && row.saver_id !== userId) inIds.add(row.saver_id);
   }
 
-  const ids = new Set([...outCount.keys(), ...inCount.keys()]);
+  const ids = new Set([...outIds, ...inIds]);
   if (!ids.size) return [];
 
   const { data: profiles, error: profErr } = await sb.from('profiles')
@@ -228,8 +305,7 @@ async function fetchGraphNeighbors(userId) {
 
   return [...ids].map(id => {
     const p = profileById.get(id) || {};
-    const out = outCount.get(id) || 0;
-    const inn = inCount.get(id) || 0;
+    const out = outIds.has(id), inn = inIds.has(id);
     return {
       id,
       label: p.username || p.name || tr('anonymous'),
@@ -393,14 +469,18 @@ async function loadProfileView(userId) {
   document.getElementById('profileSavedGrid').innerHTML = '';
   document.getElementById('profileSubmittedEmpty').style.display = 'none';
   document.getElementById('profileSavedEmpty').style.display = 'none';
+  document.getElementById('profileSaveCounts').style.display = 'none';
+  document.getElementById('profileSaveBtn').style.display = 'none';
   resetProfileGraph(userId);
 
   const isOwner = me.id && me.id === userId;
-  const [{ data: profile }, submitted, saved, pool] = await Promise.all([
+  const [{ data: profile }, submitted, saved, pool, saveCounts, isSaving] = await Promise.all([
     sb.from('profiles').select('id,name,username,avatar_url,bio,links,country_id,created_at').eq('id', userId).maybeSingle(),
     fetchSubmittedWeavoArt(userId),
     fetchSavedWeavoArt(userId),
-    isOwner ? fetchPoolWeavoArt(userId) : Promise.resolve([])
+    isOwner ? fetchPoolWeavoArt(userId) : Promise.resolve([]),
+    fetchSaveCounts(userId),
+    (me.id && !isOwner) ? fetchIsSaving(me.id, userId) : Promise.resolve(false),
   ]);
   if (!profile) { document.getElementById('profileName').textContent = tr('userNotFound'); return; }
   // Canonicalize the address bar to /artists/{username} once a username is
@@ -466,6 +546,19 @@ async function loadProfileView(userId) {
 
   const uploadBtn = document.getElementById('profileUploadBtn');
   uploadBtn.style.display = isOwner ? '' : 'none';
+
+  const saveBtn = document.getElementById('profileSaveBtn');
+  saveBtn.style.display = isOwner ? 'none' : '';
+  if (!isOwner) {
+    saveBtn.classList.toggle('saving', isSaving);
+    saveBtn.textContent = isSaving ? tr('savingLabel') : tr('saveLabel');
+    saveBtn.onclick = () => toggleUserSave(userId, saveBtn);
+  }
+  document.getElementById('profileSavesN').textContent = saveCounts.saves;
+  document.getElementById('profileSavedByN').textContent = saveCounts.savedBy;
+  document.getElementById('profileSaveCounts').style.display = '';
+  document.getElementById('profileSavesCount').onclick = () => openSavesListModal(userId, 'saves');
+  document.getElementById('profileSavedByCount').onclick = () => openSavesListModal(userId, 'savedBy');
 
   renderProfileGraphFor(userId, true);
 }

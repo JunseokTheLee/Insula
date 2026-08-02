@@ -59,9 +59,14 @@
         <div class="profile-head-info">
           <h1 id="profileName">Loading…</h1>
           <div class="profile-meta" id="profileMeta"></div>
+          <div class="profile-save-counts" id="profileSaveCounts" style="display:none;">
+            <button type="button" class="profile-save-count-btn" id="profileSavesCount"><strong id="profileSavesN">0</strong> Saves</button>
+            <button type="button" class="profile-save-count-btn" id="profileSavedByCount"><strong id="profileSavedByN">0</strong> Saved by</button>
+          </div>
           <div class="profile-links" id="profileLinksList"></div>
         </div>
         <div class="profile-head-actions">
+          <button type="button" id="profileSaveBtn" style="display:none;">Save</button>
           <button type="button" id="profileUploadBtn" style="display:none;">Upload Artwork</button>
           <button type="button" id="profileEditBtn" style="display:none;">Edit Profile</button>
         </div>
@@ -83,13 +88,13 @@
       <div class="empty-note" id="profileSubmittedEmpty" style="display:none;">No artwork submitted yet.</div>
     </div>
     <div class="profile-section">
-      <h2 class="section-label">Saved Artwork</h2>
+      <h2 class="section-label">Collections</h2>
       <div class="profile-art-grid" id="profileSavedGrid"></div>
-      <div class="empty-note" id="profileSavedEmpty" style="display:none;">No saved artwork yet.</div>
+      <div class="empty-note" id="profileSavedEmpty" style="display:none;">Nothing in the collection yet.</div>
     </div>
     <div class="profile-section">
       <h2 class="section-label">Network</h2>
-      <div class="profile-graph-desc">Saves connect people to the artists whose work they've bookmarked — an arrow points from saver to artist, and a double-headed link means the save goes both ways. Drag to rearrange, scroll to zoom, click a node to explore.</div>
+      <div class="profile-graph-desc">Saves connect people directly — an arrow points from someone who saves another artist to the person they save, and a double-headed link means they save each other. Drag to rearrange, scroll to zoom, click a node to explore.</div>
       <div class="profile-graph-panel" id="profileGraphPanel">
         <div class="profile-graph-crumb" id="profileGraphCrumb">
           <button type="button" id="profileGraphBack">&larr; Back</button>
@@ -170,8 +175,8 @@
       <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="Like this artwork">
         <span class="icon"></span><span id="lb-like-count">0</span>
       </button>
-      <button type="button" id="lb-save-btn" class="lb-action-btn" aria-label="Save this artwork">
-        <span class="icon"></span><span>Save</span>
+      <button type="button" id="lb-save-btn" class="lb-action-btn" aria-label="Collect this artwork">
+        <span class="icon"></span><span>Collect</span>
       </button>
       <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="View comments" aria-expanded="true">
         <span class="icon"></span><span id="lb-comments-count">0</span>
@@ -274,6 +279,15 @@
       <button id="confirm-cancel" class="btn-cancel">Cancel</button>
       <button id="confirm-ok" class="btn-primary">Continue</button>
     </div>
+  </div>
+</div>
+
+<!-- Saves / Saved by list -->
+<div id="saves-list-modal" class="modal-overlay">
+  <div id="saves-list-dialog" class="modal-panel">
+    <h3 id="saves-list-title">Saves</h3>
+    <div id="saves-list-content"></div>
+    <div class="empty-note" id="saves-list-empty" style="display:none;">No one yet.</div>
   </div>
 </div>
 

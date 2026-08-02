@@ -247,9 +247,9 @@ async function toggleSubmissionSave(submissionId, btn) {
     ? await sb.from('mosaic_submission_saves').delete().eq('submission_id', submissionId).eq('user_id', me.id)
     : await sb.from('mosaic_submission_saves').insert({ submission_id: submissionId, user_id: me.id });
   btn.disabled = false;
-  if (error) { toast(tr('couldNotUpdateSave')); return; }
+  if (error) { toast(tr('couldNotUpdateCollection')); return; }
   btn.classList.toggle('active', !wasSaved);
-  toast(wasSaved ? tr('removedFromSaved') : tr('savedToast'));
+  toast(wasSaved ? tr('removedFromCollection') : tr('collectedToast'));
 }
 
 // ---------- delete artwork (author only — permanent, unlike "remove from project" below) ----------

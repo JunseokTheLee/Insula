@@ -35,16 +35,14 @@ function globalNodeRadius(d) { return Math.max(9, Math.min(24, 9 + Math.sqrt(d.d
 // (independent facts, same as the per-profile graph) render as one mutual
 // link instead of two overlapping ones.
 async function fetchGlobalGraphData() {
-  const { data: rows, error } = await sb.from('mosaic_submission_saves')
-    .select('user_id,mosaic_submissions!inner(author_id)');
+  const { data: rows, error } = await sb.from('user_saves').select('saver_id,saved_id');
   if (error) { console.error('load global network error:', error); return { nodes: [], links: [] }; }
 
   const pairs = new Map(); // "smallerId|largerId" -> {a,b,aToB,bToA}
   for (const row of (rows || [])) {
-    const saverId = row.user_id;
-    const authorId = row.mosaic_submissions && row.mosaic_submissions.author_id;
-    if (!saverId || !authorId || saverId === authorId) continue;
-    const [a, b] = saverId < authorId ? [saverId, authorId] : [authorId, saverId];
+    const saverId = row.saver_id, savedId = row.saved_id;
+    if (!saverId || !savedId || saverId === savedId) continue;
+    const [a, b] = saverId < savedId ? [saverId, savedId] : [savedId, saverId];
     let p = pairs.get(`${a}|${b}`);
     if (!p) { p = { a, b, aToB: false, bToA: false }; pairs.set(`${a}|${b}`, p); }
     if (saverId === a) p.aToB = true; else p.bToA = true;
