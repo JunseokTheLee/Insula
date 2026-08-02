@@ -7,7 +7,16 @@
 
 let me = { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null };
 
-async function signIn(provider = 'google') { await sb.auth.signInWithOAuth({ provider, options: { redirectTo: location.origin + location.pathname } }); }
+async function signIn(provider = 'google') {
+  const options = { redirectTo: location.origin + location.pathname };
+  // Kakao's account_email scope needs a Kakao-verified "Biz channel" before
+  // it's grantable at all — requesting it anyway is the most common cause of
+  // Kakao's KOE004 ("admin's confirmation required") error. meFromUser()
+  // already tolerates a missing email, so there's nothing to lose by only
+  // asking for the two consent items every Kakao Login app gets by default.
+  if (provider === 'kakao') options.scopes = 'profile_nickname profile_image';
+  await sb.auth.signInWithOAuth({ provider, options });
+}
 async function signOut() { await sb.auth.signOut(); }
 function meFromUser(u) {
   // Google always sets full_name/email; Kakao's OAuth identity often omits
