@@ -47,25 +47,16 @@ document.getElementById('profileBackBtn').addEventListener('click', e => {
   else location.href = `/${CURRENT_LANG}/projects`;
 });
 
-async function fetchSubmittedWeavoArt(userId) {
+// Every piece this profile's owner has posted, whether or not it's made it
+// into a project yet — like a social feed, all of it lives on the profile;
+// profileArtThumbEl's `pending` flag (driven by a null project_id) is what
+// marks the ones still waiting for a match.
+async function fetchUserArtwork(userId) {
   const { data, error } = await sb.from('mosaic_submissions')
     .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_description,art_link,author_id,author_name,author_avatar_url,created_at')
     .eq('author_id', userId)
-    .not('project_id', 'is', null)
     .order('created_at', { ascending: false });
-  if (error) { console.error('load submitted weavo art error:', error); return []; }
-  return data || [];
-}
-// Uploaded but not yet placed into any project — only ever shown to the
-// profile's own owner (see loadProfileView), since these aren't part of
-// anything public yet.
-async function fetchPoolWeavoArt(userId) {
-  const { data, error } = await sb.from('mosaic_submissions')
-    .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_description,art_link,author_id,author_name,author_avatar_url,created_at')
-    .eq('author_id', userId)
-    .is('project_id', null)
-    .order('created_at', { ascending: false });
-  if (error) { console.error('load pool weavo art error:', error); return []; }
+  if (error) { console.error('load user artwork error:', error); return []; }
   return data || [];
 }
 // Distinct projects this profile's owner has contributed artwork to, with
@@ -73,24 +64,24 @@ async function fetchPoolWeavoArt(userId) {
 //
 // A project can be reshaped (admin swaps its grid + reference image),
 // which freezes the pre-reshape grid as its own archived project row
-// (supabase_mosaic_reshape.sql) instead of deleting it. `submitted`
-// always carries each submission's *live* project_id (reshape repoints
-// pixel_id, never project_id), so that alone only ever surfaces the
-// current project. This additionally looks up, via mosaic_pixels, every
-// archived project whose frozen grid still shows one of this user's
-// pieces — one card per iteration they were actually part of.
-async function fetchParticipatedProjects(submitted, userId) {
+// (supabase_mosaic_reshape.sql) instead of deleting it. `artwork` always
+// carries each submission's *live* project_id (reshape repoints pixel_id,
+// never project_id), so that alone only ever surfaces the current project.
+// This additionally looks up, via mosaic_pixels, every archived project
+// whose frozen grid still shows one of this user's pieces — one card per
+// iteration they were actually part of.
+async function fetchParticipatedProjects(artwork, userId) {
   const result = [];
-  if (submitted.length) {
-    const ids = [...new Set(submitted.map(s => s.project_id))];
+  const placedIds = [...new Set(artwork.map(s => s.project_id).filter(id => id != null))];
+  if (placedIds.length) {
     const { data, error } = await sb.from('mosaic_projects')
       .select('id,title,reference_image_url')
-      .in('id', ids);
+      .in('id', placedIds);
     if (error) console.error('load participated (live) projects error:', error);
     if (data) {
       const projectById = new Map(data.map(p => [p.id, p]));
       const byProject = new Map();
-      for (const sub of submitted) {
+      for (const sub of artwork) {
         const p = projectById.get(sub.project_id);
         if (!p) continue;
         if (!byProject.has(p.id)) byProject.set(p.id, { ...p, count: 0, archived: false });
@@ -174,38 +165,11 @@ function profileArtThumbEl(sub, pending) {
   return el;
 }
 
-// ---------- user-to-user saves (follow) ----------
-// Direct saves are asymmetric (like a follow) — "Saves" is how many people
-// this profile saves, "Saved by" is how many save this profile back.
-async function fetchSaveCounts(userId) {
-  const [{ count: saves, error: savesErr }, { count: savedBy, error: savedByErr }] = await Promise.all([
-    sb.from('user_saves').select('*', { count: 'exact', head: true }).eq('saver_id', userId),
-    sb.from('user_saves').select('*', { count: 'exact', head: true }).eq('saved_id', userId),
-  ]);
-  if (savesErr) console.error('load save counts (saves) error:', savesErr);
-  if (savedByErr) console.error('load save counts (saved by) error:', savedByErr);
-  return { saves: saves || 0, savedBy: savedBy || 0 };
-}
-async function fetchIsSaving(viewerId, targetId) {
-  const { data, error } = await sb.from('user_saves').select('saver_id')
-    .eq('saver_id', viewerId).eq('saved_id', targetId).maybeSingle();
-  if (error) console.error('load is-saving error:', error);
-  return !!data;
-}
-async function toggleUserSave(targetId, btn) {
-  if (!me.id) { openAuthModal(); return; }
-  const wasSaving = btn.classList.contains('saving');
-  btn.disabled = true;
-  const { error } = wasSaving
-    ? await sb.from('user_saves').delete().eq('saver_id', me.id).eq('saved_id', targetId)
-    : await sb.from('user_saves').insert({ saver_id: me.id, saved_id: targetId });
-  btn.disabled = false;
-  if (error) { console.error('toggle save error:', error); toast(tr('couldNotUpdateSaveUser')); return; }
-  btn.classList.toggle('saving', !wasSaving);
-  btn.textContent = !wasSaving ? tr('savingLabel') : tr('saveLabel');
-  const savedByEl = document.getElementById('profileSavedByN');
-  if (savedByEl) savedByEl.textContent = Number(savedByEl.textContent || 0) + (wasSaving ? -1 : 1);
-}
+// ---------- this profile's saves list modal ----------
+// fetchSaveCounts/fetchIsSaving/toggleUserSave live in common.js (shared
+// with the lightbox's own artist save button — see setupLightboxArtistSave
+// in lightbox.js) — only the list-modal bits, specific to this page's UI,
+// stay here.
 // direction: 'saves' = people userId saves (their outgoing list), 'savedBy' = people who save userId (their followers)
 async function fetchUserSaveList(userId, direction) {
   const col = direction === 'saves' ? 'saver_id' : 'saved_id';
@@ -463,8 +427,6 @@ async function loadProfileView(userId) {
   document.getElementById('profileBio').style.display = 'none';
   document.getElementById('profileProjectsSection').style.display = 'none';
   document.getElementById('profileProjectsGrid').innerHTML = '';
-  document.getElementById('profilePoolSection').style.display = 'none';
-  document.getElementById('profilePoolGrid').innerHTML = '';
   document.getElementById('profileSubmittedGrid').innerHTML = '';
   document.getElementById('profileSavedGrid').innerHTML = '';
   document.getElementById('profileSubmittedEmpty').style.display = 'none';
@@ -474,11 +436,10 @@ async function loadProfileView(userId) {
   resetProfileGraph(userId);
 
   const isOwner = me.id && me.id === userId;
-  const [{ data: profile }, submitted, saved, pool, saveCounts, isSaving] = await Promise.all([
+  const [{ data: profile }, artwork, saved, saveCounts, isSaving] = await Promise.all([
     sb.from('profiles').select('id,name,username,avatar_url,bio,links,country_id,created_at').eq('id', userId).maybeSingle(),
-    fetchSubmittedWeavoArt(userId),
+    fetchUserArtwork(userId),
     fetchSavedWeavoArt(userId),
-    isOwner ? fetchPoolWeavoArt(userId) : Promise.resolve([]),
     fetchSaveCounts(userId),
     (me.id && !isOwner) ? fetchIsSaving(me.id, userId) : Promise.resolve(false),
   ]);
@@ -488,7 +449,7 @@ async function loadProfileView(userId) {
   // bylines, etc.) still work via the id fallback in resolveProfileHandle(),
   // but the shareable URL this page settles on should be the vanity one.
   if (profile.username) history.replaceState(null, '', profileUrl(profile.username));
-  const participatedProjects = await fetchParticipatedProjects(submitted, userId);
+  const participatedProjects = await fetchParticipatedProjects(artwork, userId);
 
   const displayName = profile.username || profile.name || tr('anonymous');
   document.getElementById('profileName').textContent = displayName;
@@ -526,15 +487,9 @@ async function loadProfileView(userId) {
     document.getElementById('profileProjectsSection').style.display = '';
   }
 
-  if (isOwner) {
-    const poolGrid = document.getElementById('profilePoolGrid');
-    for (const sub of pool) poolGrid.appendChild(profileArtThumbEl(sub, true));
-    document.getElementById('profilePoolSection').style.display = pool.length ? '' : 'none';
-  }
-
   const submittedGrid = document.getElementById('profileSubmittedGrid');
-  if (!submitted.length) document.getElementById('profileSubmittedEmpty').style.display = '';
-  else for (const sub of submitted) submittedGrid.appendChild(profileArtThumbEl(sub));
+  if (!artwork.length) document.getElementById('profileSubmittedEmpty').style.display = '';
+  else for (const sub of artwork) submittedGrid.appendChild(profileArtThumbEl(sub, !sub.project_id));
 
   const savedGrid = document.getElementById('profileSavedGrid');
   if (!saved.length) document.getElementById('profileSavedEmpty').style.display = '';

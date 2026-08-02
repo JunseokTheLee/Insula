@@ -49,6 +49,26 @@ function renderLightboxArtistCard(sub) {
   nameBtn.textContent = sub.author_name || '';
   nameBtn.href = profileUrl(sub.author_id);
 }
+// Lets you save (follow) the artist straight from their artwork, without
+// navigating to their profile page first. Hidden for your own artwork and
+// when the card itself is hidden (no author_id — see renderLightboxArtistCard).
+let lbArtistSaveToken = 0;
+async function setupLightboxArtistSave(sub) {
+  const btn = document.getElementById('lightbox-artist-save-btn');
+  if (!btn) return; // not every page embedding the lightbox markup has this button
+  const myToken = ++lbArtistSaveToken;
+  if (!sub.author_id || sub.author_id === me.id) { btn.style.display = 'none'; return; }
+  btn.style.display = '';
+  btn.disabled = false;
+  btn.classList.remove('saving');
+  btn.textContent = tr('saveLabel');
+  btn.onclick = () => toggleUserSave(sub.author_id, btn);
+  if (!me.id) return;
+  const isSaving = await fetchIsSaving(me.id, sub.author_id);
+  if (myToken !== lbArtistSaveToken) return; // a newer lightbox item opened while this was in flight
+  btn.classList.toggle('saving', isSaving);
+  btn.textContent = isSaving ? tr('savingLabel') : tr('saveLabel');
+}
 let lbArtistDetailsToken = 0;
 async function loadLightboxArtistDetails(sub) {
   if (!sub.author_id) { renderLightboxCountryMap(null); return; }
@@ -114,6 +134,7 @@ function populateLightboxContent(sub) {
   document.getElementById('lightbox-cap-title').textContent = sub.art_title || '';
   renderLightboxArtistCard(sub);
   loadLightboxArtistDetails(sub);
+  setupLightboxArtistSave(sub);
   document.getElementById('lightbox-cap-desc').textContent = sub.art_description || '';
   const linkEl = document.getElementById('lightbox-cap-link');
   const href = sub.art_link ? safeHref(sub.art_link) : null;

@@ -320,6 +320,15 @@ body.no-scroll-lock{overflow:hidden;}
 }
 .lb-artist-name:hover{text-decoration:underline;}
 .lb-artist-name:empty{display:none;}
+.lb-artist-save-btn{
+  flex-shrink:0;appearance:none;cursor:pointer;border:none;
+  font-family:'General Sans',sans-serif;font-size:12px;font-weight:600;
+  padding:6px 14px;border-radius:16px;background:var(--mint);color:var(--forest-dark);
+  transition:background .12s linear,opacity .12s linear;
+}
+.lb-artist-save-btn:hover{opacity:.85;}
+.lb-artist-save-btn.saving{background:transparent;color:var(--paper);border:1px solid rgba(247,247,245,.3);}
+.lb-artist-save-btn.saving:hover{background:rgba(247,247,245,.1);opacity:1;}
 #lightbox-artist-about{
   margin:4px 0 10px;padding-top:10px;border-top:1px solid rgba(247,247,245,.15);
   display:none;text-align:left;
