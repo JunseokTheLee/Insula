@@ -217,13 +217,16 @@ body.no-scroll-lock{overflow:hidden;}
 #auth-dialog .auth-icon{font-size:32px;line-height:1;}
 #auth-dialog h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--forest);}
 #auth-dialog p{font-family:'General Sans',sans-serif;font-size:13px;color:var(--muted);line-height:1.6;max-width:260px;}
-#google-signin-btn{
+.oauth-signin-btn{
   display:flex;align-items:center;gap:10px;justify-content:center;width:100%;padding:11px 16px;
-  border-radius:20px;border:1px solid var(--hairline-strong);background:#fff;color:var(--ink);font-family:'General Sans',sans-serif;font-size:13px;
-  font-weight:600;cursor:pointer;transition:background .12s linear,border-color .12s linear;
+  border-radius:20px;border:1px solid var(--hairline-strong);font-family:'General Sans',sans-serif;font-size:13px;
+  font-weight:600;cursor:pointer;transition:background .12s linear,border-color .12s linear,opacity .12s linear;
 }
+.oauth-signin-btn:active{opacity:.85;}
+#google-signin-btn{background:#fff;color:var(--ink);}
 #google-signin-btn:hover{background:var(--forest-08);border-color:var(--forest);}
-#google-signin-btn:active{opacity:.85;}
+#kakao-signin-btn{background:#FEE500;color:#191919;border-color:#FEE500;}
+#kakao-signin-btn:hover{background:#FDD800;border-color:#FDD800;}
 #auth-close{background:none;border:none;cursor:pointer;color:var(--muted);font-family:'General Sans',sans-serif;font-size:12px;padding:2px 8px;}
 #auth-close:hover{color:var(--forest);}
 
