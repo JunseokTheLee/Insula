@@ -46,55 +46,60 @@ body.no-scroll-lock{overflow:hidden;}
   animation:appIn .3s ease-out;
 }
 .topnav{
-  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
-  padding:14px 32px;border-bottom:1px solid var(--hairline);gap:16px;flex-wrap:wrap;
+  display:flex;align-items:center;flex-shrink:0;
+  padding:20px 32px;border-bottom:1px solid var(--hairline);gap:28px;flex-wrap:wrap;
   background:var(--paper);
 }
 .logo{
-  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;letter-spacing:-.01em;
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.01em;
   color:var(--forest);cursor:pointer;flex-shrink:0;transition:opacity .12s ease-out;
-  display:flex;align-items:center;gap:10px;background:none;border:none;padding:0;text-decoration:none;
+  display:flex;align-items:center;gap:8px;background:none;border:none;padding:0;text-decoration:none;
 }
 .logo::before{
-  content:'';display:block;width:22px;height:22px;flex-shrink:0;border-radius:5px;
+  content:'';display:block;width:24px;height:24px;flex-shrink:0;border-radius:50%;
   background-image:url('../logo.png');background-size:cover;background-position:center;
 }
 .logo:hover{opacity:.75;}
 
-.nav-right{display:flex;align-items:center;gap:22px;min-width:0;flex-wrap:wrap;justify-content:flex-end;}
+/* lifts nav-link/#identity out of .nav-right's box so they sit in .topnav's
+   own flex row (links clustered by the logo, identity pinned to the far
+   right via margin-left:auto) without changing markup on every page. */
+.nav-right{display:contents;}
 .nav-link{
-  appearance:none;cursor:pointer;text-decoration:none;
-  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.08em;color:var(--forest);
-  background:transparent;border:1px solid var(--hairline-strong);padding:6px 14px;
-  transition:background .12s linear,border-color .12s linear;
+  appearance:none;cursor:pointer;text-decoration:none;position:relative;
+  font-family:'General Sans',sans-serif;font-size:15px;font-weight:500;
+  color:var(--ink);background:none;border:none;padding:0;
+  transition:color .12s linear;
 }
-.nav-link:hover{background:var(--forest-08);border-color:var(--forest);}
-.nav-link.active{background:var(--forest);color:var(--paper);border-color:var(--forest);}
+.nav-link:hover{color:var(--forest);}
+.nav-link.active{color:var(--forest);font-weight:600;}
+.nav-link+.nav-link::before{
+  content:'';position:absolute;left:-14px;top:50%;transform:translateY(-50%);
+  width:1px;height:14px;background:var(--hairline-strong);
+}
 
 #identity{
-  display:inline-flex;align-items:center;gap:9px;font-size:12px;flex-shrink:0;
-  border:1px solid var(--forest-20);padding:5px 12px 5px 10px;
+  display:inline-flex;align-items:center;gap:14px;font-size:14px;flex-shrink:0;
+  margin-left:auto;border:none;padding:0;
 }
-#identity::before{content:'';width:7px;height:7px;background:var(--forest);flex-shrink:0;}
-#myAvatar{width:22px;height:22px;border-radius:0;object-fit:cover;display:none;cursor:pointer;}
-#myName{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;color:var(--forest);}
+#myAvatar{width:30px;height:30px;border-radius:50%;object-fit:cover;display:none;cursor:pointer;border:1px solid var(--hairline-strong);}
+#myName{font-family:'General Sans',sans-serif;font-weight:600;font-size:14px;cursor:pointer;color:var(--ink);}
 #myName:not(.guest):hover{text-decoration:underline;}
 #myName.guest{color:var(--muted);font-weight:500;}
 .id-btn{
-  appearance:none;border:none;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;
-  text-transform:uppercase;letter-spacing:.08em;padding:7px 14px;border-radius:2px;font-weight:600;line-height:1;
+  appearance:none;border:none;cursor:pointer;font-family:'General Sans',sans-serif;font-size:13px;
+  padding:9px 18px;border-radius:20px;font-weight:600;line-height:1;
   transition:background .12s linear,opacity .12s linear;
 }
 .id-btn:active{opacity:.8;}
-#loginBtn{background:var(--forest);color:var(--paper);font-size:11px;padding:9px 18px;}
+#loginBtn{background:var(--forest);color:var(--paper);}
 #loginBtn:hover{background:var(--forest-dark);}
-#logoutBtn{background:transparent;color:var(--forest);border:1px solid var(--forest-20);}
-#logoutBtn:hover{background:var(--forest-08);}
-.lang-toggle{display:inline-flex;border:1px solid var(--forest-20);border-radius:2px;overflow:hidden;flex-shrink:0;}
+#logoutBtn{background:var(--paper);color:var(--ink);border:1px solid var(--hairline-strong);}
+#logoutBtn:hover{background:rgba(0,0,0,.04);}
+.lang-toggle{display:inline-flex;border:1px solid var(--hairline-strong);border-radius:20px;overflow:hidden;flex-shrink:0;background:var(--forest-08);}
 .lang-btn{
   appearance:none;border:none;background:transparent;cursor:pointer;
-  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;padding:6px 10px;color:var(--muted);
+  font-family:'General Sans',sans-serif;font-size:12px;font-weight:600;padding:7px 14px;color:var(--ink);
   transition:background .12s linear,color .12s linear;
 }
 .lang-btn.active{background:var(--forest);color:var(--paper);}
@@ -455,9 +460,9 @@ html[lang="ko"] * {
 
 @media (max-width:640px){
   .topnav,.backnav{padding-left:16px;padding-right:16px;}
-  .nav-right{gap:10px;row-gap:12px;}
-  .nav-link{padding:6px 10px;}
-  #identity{gap:7px;padding:5px 10px 5px 8px;}
+  .topnav{gap:14px 16px;}
+  .nav-link+.nav-link::before{left:-8px;}
+  #identity{gap:10px;}
   #loginBtn,#logoutBtn{padding:7px 12px;}
   .section-label{margin-left:16px;margin-right:16px;}
 }
