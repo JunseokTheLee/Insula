@@ -4,23 +4,23 @@
 .profile-head-actions{display:flex;gap:10px;flex-shrink:0;margin-left:auto;}
 #profileEditBtn{
   appearance:none;border:1px solid var(--forest-20);cursor:pointer;
-  font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;
-  padding:9px 16px;border-radius:2px;background:transparent;color:var(--forest);
+  font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;
+  padding:9px 18px;border-radius:20px;background:transparent;color:var(--forest);
   transition:background .12s linear;flex-shrink:0;
 }
 #profileEditBtn:hover{background:var(--forest-08);}
 #profileUploadBtn{
   appearance:none;border:none;cursor:pointer;
-  font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;
-  padding:9px 16px;border-radius:2px;background:var(--forest);color:var(--paper);
+  font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;
+  padding:9px 18px;border-radius:20px;background:var(--forest);color:var(--paper);
   transition:background .12s linear;flex-shrink:0;
 }
 #profileUploadBtn:hover{background:var(--forest-dark);}
 #upload-art-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
 #upload-art-dialog h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin:0 0 10px;color:var(--forest);}
-.profile-avatar-lg{width:72px;height:72px;border-radius:0;object-fit:cover;background:var(--hairline);flex-shrink:0;display:block;border:1px solid var(--hairline-strong);}
+.profile-avatar-lg{width:72px;height:72px;border-radius:50%;object-fit:cover;background:var(--hairline);flex-shrink:0;display:block;border:1px solid var(--hairline-strong);}
 .profile-avatar-fallback-lg{
-  width:72px;height:72px;border-radius:0;background:var(--forest);color:var(--paper);flex-shrink:0;
+  width:72px;height:72px;border-radius:50%;background:var(--forest);color:var(--paper);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;
 }
 .profile-head-info{min-width:0;}
@@ -28,8 +28,8 @@
 .profile-meta{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
 .profile-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
 .profile-link-chip{
-  display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:2px;border:1px solid var(--forest-20);
-  background:transparent;color:var(--forest);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;text-decoration:none;
+  display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;border:1px solid var(--forest-20);
+  background:transparent;color:var(--forest);font-family:'General Sans',sans-serif;font-size:12px;font-weight:600;text-decoration:none;
   transition:background .12s linear;
 }
 .profile-link-chip:hover{background:var(--forest-08);}
@@ -51,7 +51,7 @@
 .pool-badge{
   position:absolute;left:0;right:0;bottom:0;padding:4px 6px;text-align:center;
   background:rgba(26,60,43,.78);color:var(--paper);
-  font-family:'JetBrains Mono',monospace;font-size:8.5px;text-transform:uppercase;letter-spacing:.05em;
+  font-family:'General Sans',sans-serif;font-size:10px;font-weight:600;
   pointer-events:none;
 }
 .profile-graph-desc{color:var(--muted);font-size:12px;line-height:1.6;margin:-6px 0 14px;max-width:640px;}
@@ -60,8 +60,8 @@
 .profile-graph-panel svg:active{cursor:grabbing;}
 .profile-graph-crumb{
   position:absolute;top:10px;left:10px;z-index:2;display:none;align-items:center;gap:8px;
-  background:rgba(247,247,245,.94);border:1px solid var(--hairline-strong);border-radius:2px;
-  padding:4px 10px 4px 6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;max-width:calc(100% - 20px);
+  background:rgba(247,247,245,.94);border:1px solid var(--hairline-strong);border-radius:16px;
+  padding:4px 12px 4px 8px;font-family:'General Sans',sans-serif;font-size:12px;max-width:calc(100% - 20px);
 }
 #profileGraphBack{appearance:none;border:none;background:none;cursor:pointer;font:inherit;font-weight:600;color:var(--forest);padding:2px 4px;flex-shrink:0;}
 #profileGraphCrumbLabel{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}

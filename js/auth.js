@@ -166,7 +166,7 @@ function openEditProfileModal(profile, forced) {
   requiredNote.textContent = profile.username
     ? tr('requiredNoteCountryOnly')
     : tr('requiredNoteFull');
-  document.getElementById('ep-username-hint').style.display = forced ? 'none' : '';
+  document.getElementById('ep-username-hint').style.display = 'none';
   document.getElementById('ep-cancel').style.display = forced ? 'none' : '';
   document.getElementById('ep-danger-zone').style.display = forced ? 'none' : '';
   document.getElementById('edit-profile-modal').classList.add('open');
@@ -183,7 +183,7 @@ document.getElementById('ep-submit').onclick = async () => {
   const username = document.getElementById('ep-username').value.trim();
   const bio = document.getElementById('ep-bio').value.trim();
   const countryId = document.getElementById('ep-country').value ? parseInt(document.getElementById('ep-country').value, 10) : null;
-  if (profileEditRequired && !username) { errorEl.textContent = tr('usernameRequired'); return; }
+  if (!username) { errorEl.textContent = tr('usernameRequired'); return; }
   if (!countryId) { errorEl.textContent = tr('pleaseSelectCountry'); return; }
   const links = {};
   for (const { key, label } of LINK_PLATFORMS) {
@@ -202,7 +202,7 @@ document.getElementById('ep-submit').onclick = async () => {
   } else if (epAvatarPicker.wasRemoved()) {
     avatarUrl = null;
   }
-  const payload = { id: me.id, username: username || null, bio: bio || null, links, country_id: countryId };
+  const payload = { id: me.id, username, bio: bio || null, links, country_id: countryId };
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl;
   const { error } = await sb.from('profiles').upsert(payload);
   btn.disabled = false;

@@ -12,23 +12,23 @@
 .hero-cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
 .cta{
   display:inline-flex;align-items:center;gap:8px;
-  background:var(--forest);color:var(--paper);border:none;padding:13px 24px;
-  border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;cursor:pointer;
+  background:var(--forest);color:var(--paper);border:none;padding:13px 26px;
+  border-radius:24px;font-family:'General Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;
   transition:background .12s linear;
 }
 .cta:hover{background:var(--forest-dark);}
 .cta:active{opacity:.85;}
 .cta-outline{
   display:inline-flex;align-items:center;gap:8px;
-  background:transparent;color:var(--forest);border:1px solid var(--forest);padding:12px 23px;
-  border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;cursor:pointer;
+  background:transparent;color:var(--forest);border:1px solid var(--forest);padding:12px 25px;
+  border-radius:24px;font-family:'General Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;
   transition:background .12s linear;
 }
 .cta-outline:hover{background:var(--forest-08);}
 .cta-outline:active{opacity:.85;}
 .cta-text{
   display:block;margin-top:18px;background:none;border:none;padding:0;
-  color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;text-decoration:underline;cursor:pointer;
+  color:var(--muted);font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;text-decoration:underline;cursor:pointer;
 }
 .cta-text:hover{color:var(--forest);}
 .hero-preview{
@@ -90,10 +90,10 @@
 .carousel-section{flex-shrink:0;padding:20px 0 0;}
 .carousel-section.empty{display:none;}
 .carousel-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;max-width:1600px;margin:0 auto 22px;padding:0 32px;}
-.carousel-header .section-label{margin:0;font-size:13px;letter-spacing:.12em;}
+.carousel-header .section-label{margin:0;}
 .carousel-nav{display:flex;gap:10px;}
 .car-arrow{
-  width:46px;height:46px;border-radius:2px;border:1px solid var(--hairline-strong);background:var(--paper);color:var(--ink);
+  width:46px;height:46px;border-radius:50%;border:1px solid var(--hairline-strong);background:var(--paper);color:var(--ink);
   font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;
   transition:background .12s linear,border-color .12s linear,color .12s linear;
 }
@@ -130,12 +130,12 @@
   font-family:'JetBrains Mono',monospace;font-size:13.5px;color:var(--muted);line-height:1.7;margin:0 0 26px;max-width:720px;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
 }
-.carousel-card .p-progress{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;color:var(--muted);margin-bottom:10px;}
+.carousel-card .p-progress{font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px;}
 .carousel-card .progress-bar{max-width:420px;}
 
 .carousel-dots{display:flex;gap:10px;justify-content:center;margin-top:26px;}
 .car-dot{
-  width:10px;height:10px;border-radius:0;background:transparent;
+  width:10px;height:10px;border-radius:50%;background:transparent;
   border:1.5px solid var(--hairline-strong);cursor:pointer;padding:0;
   transition:background .12s linear,border-color .12s linear,transform .12s linear;
 }
@@ -179,7 +179,7 @@
 .project-card canvas{width:100%;display:block;background:var(--paper);border-bottom:1px solid var(--hairline);}
 .project-card .info{padding:14px 16px;}
 .project-card .p-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;margin-bottom:6px;color:var(--forest);}
-.project-card .p-progress{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+.project-card .p-progress{font-family:'General Sans',sans-serif;font-size:11px;font-weight:600;color:var(--muted);}
 .project-card canvas.loading, .carousel-card canvas.loading{
   background:linear-gradient(90deg,var(--paper) 25%,#ececea 37%,var(--paper) 63%);
   background-size:400% 100%;animation:shimmer 1.4s ease infinite;
