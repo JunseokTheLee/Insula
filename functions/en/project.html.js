@@ -7,6 +7,6 @@
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const id = url.searchParams.get('id');
-  if (id) return Response.redirect(`https://weavo.art/en/projects/${encodeURIComponent(id)}`, 301);
+  if (id) return Response.redirect(`${url.origin}/en/projects/${encodeURIComponent(id)}`, 301);
   return env.ASSETS.fetch(request);
 }

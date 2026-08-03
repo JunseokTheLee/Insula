@@ -12,8 +12,11 @@ export async function onRequestGet({ params, request, env }) {
 
   if (!profile) return notFoundResponse(assetResponse, '작가를 찾을 수 없습니다 | Weavo');
 
+  // Built off the request's own origin (not the hardcoded SITE constant) so
+  // this still redirects within localhost/preview during dev instead of
+  // bouncing out to production.
   if (profile.username && handle !== profile.username) {
-    return Response.redirect(`${SITE}/ko/artists/${encodeURIComponent(profile.username)}`, 301);
+    return Response.redirect(`${new URL(request.url).origin}/ko/artists/${encodeURIComponent(profile.username)}`, 301);
   }
 
   const displayName = profile.username || profile.name || '익명';

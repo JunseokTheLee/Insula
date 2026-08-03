@@ -18,8 +18,11 @@ export async function onRequestGet({ params, request, env }) {
   // Canonicalize a raw-id request to the username URL once one exists, same
   // as the client-side history.replaceState() in profile-view.js — a real
   // 301 here means search engines consolidate straight onto the vanity URL.
+  // Built off the request's own origin (not the hardcoded SITE constant)
+  // so this still redirects within localhost/preview during dev instead of
+  // bouncing out to production.
   if (profile.username && handle !== profile.username) {
-    return Response.redirect(`${SITE}/en/artists/${encodeURIComponent(profile.username)}`, 301);
+    return Response.redirect(`${new URL(request.url).origin}/en/artists/${encodeURIComponent(profile.username)}`, 301);
   }
 
   const displayName = profile.username || profile.name || 'Anonymous';

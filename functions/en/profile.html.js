@@ -5,6 +5,6 @@
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const user = url.searchParams.get('user');
-  if (user) return Response.redirect(`https://weavo.art/en/artists/${encodeURIComponent(user)}`, 301);
+  if (user) return Response.redirect(`${url.origin}/en/artists/${encodeURIComponent(user)}`, 301);
   return env.ASSETS.fetch(request);
 }
