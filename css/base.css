@@ -225,14 +225,6 @@ body.no-scroll-lock{overflow:hidden;}
 .oauth-signin-btn:active{opacity:.85;}
 #google-signin-btn{background:#fff;color:var(--ink);}
 #google-signin-btn:hover{background:var(--forest-08);border-color:var(--forest);}
-#kakao-signin-btn{background:#FEE500;color:#191919;border-color:#FEE500;}
-#kakao-signin-btn:hover{background:#FDD800;border-color:#FDD800;}
-#kakao-signin-btn:disabled{
-  background:var(--hairline-strong);color:var(--muted);border-color:var(--hairline-strong);
-  cursor:not-allowed;opacity:.6;
-}
-#kakao-signin-btn:disabled svg path{fill:var(--muted);}
-#kakao-signin-btn:disabled:hover{background:var(--hairline-strong);border-color:var(--hairline-strong);}
 #auth-close{background:none;border:none;cursor:pointer;color:var(--muted);font-family:'General Sans',sans-serif;font-size:12px;padding:2px 8px;}
 #auth-close:hover{color:var(--forest);}
 

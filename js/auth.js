@@ -9,21 +9,10 @@ let me = { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', 
 
 async function signIn(provider = 'google') {
   const options = { redirectTo: location.origin + location.pathname };
-  // Kakao's account_email scope needs a Kakao-verified "Biz channel" before
-  // it's grantable at all — requesting it anyway is the most common cause of
-  // Kakao's KOE004 ("admin's confirmation required") error. meFromUser()
-  // already tolerates a missing email, so there's nothing to lose by only
-  // asking for the two consent items every Kakao Login app gets by default.
-  if (provider === 'kakao') options.scopes = 'profile_nickname profile_image';
   await sb.auth.signInWithOAuth({ provider, options });
 }
 async function signOut() { await sb.auth.signOut(); }
 function meFromUser(u) {
-  // Google always sets full_name/email; Kakao's OAuth identity often omits
-  // both (full_name isn't populated, and email needs an extra Kakao consent
-  // scope most accounts never grant) — fall back through user_metadata.name
-  // before finally falling back to a generic label instead of crashing on
-  // `u.email.split(...)` against a null email.
   const name = u.user_metadata.full_name || u.user_metadata.name || (u.email ? u.email.split('@')[0] : tr('anonymous'));
   return {
     id: u.id, name, avatar: u.user_metadata.avatar_url || '',
@@ -75,7 +64,6 @@ document.getElementById('logoutBtn').onclick = signOut;
 function openAuthModal() { document.getElementById('auth-modal').classList.add('open'); }
 function closeAuthModal() { document.getElementById('auth-modal').classList.remove('open'); }
 document.getElementById('google-signin-btn').onclick = () => signIn('google');
-document.getElementById('kakao-signin-btn').onclick = () => signIn('kakao');
 document.getElementById('auth-close').onclick = closeAuthModal;
 document.getElementById('auth-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAuthModal(); });
 
