@@ -50,7 +50,7 @@ function updateIdentityUI() {
   nameEl.textContent = me.id ? me.name : tr('guest');
   nameEl.classList.toggle('guest', !me.id);
   const av = document.getElementById('myAvatar');
-  if (me.avatar) { av.src = me.avatar; av.alt = tr('artistAvatarAlt', { name: me.name }); av.style.display = 'inline-block'; } else { av.style.display = 'none'; }
+  if (me.avatar) { av.src = cdnUrl(me.avatar); av.alt = tr('artistAvatarAlt', { name: me.name }); av.style.display = 'inline-block'; } else { av.style.display = 'none'; }
   document.getElementById('loginBtn').style.display = me.id ? 'none' : '';
   document.getElementById('logoutBtn').style.display = me.id ? '' : 'none';
   const newProjectBtn = document.getElementById('newProjectBtn');
@@ -144,7 +144,7 @@ function openEditProfileModal(profile, forced) {
   if (document.getElementById('edit-profile-modal').classList.contains('open')) return;
   profileEditRequired = !!forced;
   document.getElementById('ep-country').value = profile.country_id ? String(profile.country_id) : '';
-  epAvatarPicker.setExisting(profile.avatar_url || me.avatar || '');
+  epAvatarPicker.setExisting(cdnUrl(profile.avatar_url || me.avatar || ''));
   document.getElementById('ep-username').value = profile.username || '';
   document.getElementById('ep-bio').value = profile.bio || '';
   for (const { key } of LINK_PLATFORMS) {

@@ -127,11 +127,15 @@ async function renderLightboxCountryMap(countryId) {
 // backs both surfaces.
 function populateLightboxContent(sub) {
   lbCurrentSub = sub;
-  lbImg.src = sub.image_url;
+  lbImg.src = cdnUrl(sub.image_url);
   lbImg.alt = sub.art_title
     ? tr('artworkThumbAlt', { title: sub.art_title, name: sub.author_name || tr('anonymous') })
     : tr('artworkImgAltFallback', { name: sub.author_name || tr('anonymous') });
   document.getElementById('lightbox-cap-title').textContent = sub.art_title || '';
+  document.getElementById('lightbox-cap-meta').textContent = [
+    sub.art_material || null,
+    sub.art_completed_date ? fmtCompletedDate(sub.art_completed_date) : null,
+  ].filter(Boolean).join(' · ');
   renderLightboxArtistCard(sub);
   loadLightboxArtistDetails(sub);
   setupLightboxArtistSave(sub);

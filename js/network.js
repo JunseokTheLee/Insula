@@ -35,8 +35,13 @@ function globalNodeRadius(d) { return Math.max(9, Math.min(24, 9 + Math.sqrt(d.d
 // (independent facts, same as the per-profile graph) render as one mutual
 // link instead of two overlapping ones.
 async function fetchGlobalGraphData() {
-  const { data: rows, error } = await sb.from('user_saves').select('saver_id,saved_id');
+  const [{ data: rows, error }, { data: profiles, error: profErr }] = await Promise.all([
+    sb.from('user_saves').select('saver_id,saved_id'),
+    sb.from('profiles').select('id,name,username,avatar_url'),
+  ]);
   if (error) { console.error('load global network error:', error); return { nodes: [], links: [] }; }
+  if (profErr) { console.error('load global network profiles error:', profErr); return { nodes: [], links: [] }; }
+  if (!profiles || !profiles.length) return { nodes: [], links: [] };
 
   const pairs = new Map(); // "smallerId|largerId" -> {a,b,aToB,bToA}
   for (const row of (rows || [])) {
@@ -47,7 +52,6 @@ async function fetchGlobalGraphData() {
     if (!p) { p = { a, b, aToB: false, bToA: false }; pairs.set(`${a}|${b}`, p); }
     if (saverId === a) p.aToB = true; else p.bToA = true;
   }
-  if (!pairs.size) return { nodes: [], links: [] };
 
   const degree = new Map();
   for (const p of pairs.values()) {
@@ -55,51 +59,18 @@ async function fetchGlobalGraphData() {
     degree.set(p.b, (degree.get(p.b) || 0) + 1);
   }
 
-  const { data: profiles, error: profErr } = await sb.from('profiles')
-    .select('id,name,username,avatar_url').in('id', [...degree.keys()]);
-  if (profErr) console.error('load global network profiles error:', profErr);
-  const profileById = new Map((profiles || []).map(p => [p.id, p]));
-
-  const nodes = [...degree.keys()].map(id => {
-    const p = profileById.get(id) || {};
-    return { id, label: p.username || p.name || tr('anonymous'), avatar_url: p.avatar_url || '', degree: degree.get(id) };
-  });
+  // Every profile becomes a node — including ones with no saves yet, which
+  // just render as isolated, unconnected nodes — since this is the sitewide
+  // "every user" view, not just the users who happen to be connected.
+  const nodes = profiles.map(p => ({
+    id: p.id, label: p.username || p.name || tr('anonymous'), avatar_url: p.avatar_url || '', degree: degree.get(p.id) || 0,
+  }));
   const links = [...pairs.values()].map(p => ({
     source: p.aToB ? p.a : p.b,
     target: p.aToB ? p.b : p.a,
     kind: (p.aToB && p.bToA) ? 'mutual' : 'out',
   }));
   return { nodes, links };
-}
-// ---------- TEMPORARY: synthetic test nodes, remove once real data is
-// enough to eyeball the graph by (rotation, layout, zoom) — delete this
-// function and its call in loadGlobalNetwork below when done with it. ----------
-const TEMP_TEST_NODE_COUNT = 30;
-function addTempTestNodes(nodes, links) {
-  const testNodes = Array.from({ length: TEMP_TEST_NODE_COUNT }, (_, i) => ({
-    id: `test-${i}`, label: `Test ${i}`, avatar_url: '', degree: 0,
-  }));
-  // Each node (after the first) links back to 1-3 earlier test nodes, so
-  // the set forms one connected, organically-shaped web instead of either
-  // a fully-meshed blob or disconnected pairs.
-  const testLinks = [];
-  testNodes.forEach((n, i) => {
-    if (i === 0) return;
-    const linkCount = 1 + Math.floor(Math.random() * Math.min(3, i));
-    const targets = new Set();
-    while (targets.size < linkCount) targets.add(Math.floor(Math.random() * i));
-    for (const t of targets) {
-      testLinks.push({ source: n.id, target: testNodes[t].id, kind: Math.random() < 0.3 ? 'mutual' : 'out' });
-    }
-  });
-  const degree = new Map();
-  for (const l of testLinks) {
-    degree.set(l.source, (degree.get(l.source) || 0) + 1);
-    degree.set(l.target, (degree.get(l.target) || 0) + 1);
-  }
-  for (const n of testNodes) n.degree = degree.get(n.id) || 1;
-  nodes.push(...testNodes);
-  links.push(...testLinks);
 }
 async function loadGlobalNetwork() {
   const token = ++globalGraphToken;
@@ -118,7 +89,6 @@ async function loadGlobalNetwork() {
 
   const { nodes, links } = await fetchGlobalGraphData();
   if (token !== globalGraphToken) return; // a newer load superseded this one
-  addTempTestNodes(nodes, links); // TEMPORARY — see definition above
 
   empty.style.display = nodes.length ? 'none' : 'flex';
   if (!nodes.length) return;
@@ -174,7 +144,7 @@ async function loadGlobalNetwork() {
     if (d.avatar_url) {
       const clipId = 'gg-clip-' + d.id;
       defs.append('clipPath').attr('id', clipId).append('circle').attr('r', r);
-      g.append('image').attr('href', d.avatar_url)
+      g.append('image').attr('href', cdnUrl(d.avatar_url))
         .attr('x', -r).attr('y', -r).attr('width', r * 2).attr('height', r * 2)
         .attr('clip-path', `url(#${clipId})`).attr('preserveAspectRatio', 'xMidYMid slice');
       g.append('circle').attr('class', 'pg-ring').attr('r', r);

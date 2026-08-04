@@ -50,6 +50,18 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
   </url>
   <url>
+    <loc>https://weavo.art/en/artists</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/artists"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/artists"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
+  </url>
+  <url>
+    <loc>https://weavo.art/ko/artists</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/artists"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/artists"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
+  </url>
+  <url>
     <loc>https://weavo.art/en/privacy</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/privacy"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/privacy"/>

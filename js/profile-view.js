@@ -53,7 +53,7 @@ document.getElementById('profileBackBtn').addEventListener('click', e => {
 // marks the ones still waiting for a match.
 async function fetchUserArtwork(userId) {
   const { data, error } = await sb.from('mosaic_submissions')
-    .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_description,art_link,author_id,author_name,author_avatar_url,created_at')
+    .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at')
     .eq('author_id', userId)
     .order('created_at', { ascending: false });
   if (error) { console.error('load user artwork error:', error); return []; }
@@ -116,7 +116,7 @@ function profileProjectCardEl(project) {
   const thumb = document.createElement('div');
   thumb.className = 'pv-card-thumb';
   const img = document.createElement('img');
-  img.src = project.reference_image_url;
+  img.src = cdnUrl(project.reference_image_url);
   img.alt = project.title ? tr('projectPreviewAlt', { title: project.title }) : '';
   thumb.appendChild(img);
   card.appendChild(thumb);
@@ -140,7 +140,7 @@ function profileProjectCardEl(project) {
 }
 async function fetchSavedWeavoArt(userId) {
   const { data, error } = await sb.from('mosaic_submission_saves')
-    .select('created_at,mosaic_submissions(id,pixel_id,project_id,image_url,thumb_url,art_title,art_description,art_link,author_id,author_name,author_avatar_url)')
+    .select('created_at,mosaic_submissions(id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) { console.error('load saved weavo art error:', error); return []; }
@@ -152,7 +152,7 @@ function profileArtThumbEl(sub, pending) {
   el.href = artworkUrl(sub.id);
   el.title = sub.art_title || '';
   const img = document.createElement('img');
-  img.src = sub.thumb_url || sub.image_url;
+  img.src = cdnUrl(sub.thumb_url || sub.image_url);
   img.alt = sub.art_title ? tr('artworkThumbAlt', { title: sub.art_title, name: sub.author_name || tr('anonymous') }) : '';
   el.appendChild(img);
   if (pending) {
@@ -190,7 +190,7 @@ function saveListRowEl(p) {
   const name = p.username || p.name || tr('anonymous');
   if (p.avatar_url) {
     const img = document.createElement('img');
-    img.className = 'saves-list-avatar'; img.src = p.avatar_url;
+    img.className = 'saves-list-avatar'; img.src = cdnUrl(p.avatar_url);
     img.alt = tr('artistAvatarAlt', { name });
     row.appendChild(img);
   } else {
@@ -354,7 +354,7 @@ async function renderProfileGraphFor(centerId, isRoot) {
     if (d.avatar_url) {
       const clipId = 'pg-clip-' + d.id;
       defs.append('clipPath').attr('id', clipId).append('circle').attr('r', r);
-      g.append('image').attr('href', d.avatar_url)
+      g.append('image').attr('href', cdnUrl(d.avatar_url))
         .attr('x', -r).attr('y', -r).attr('width', r * 2).attr('height', r * 2)
         .attr('clip-path', `url(#${clipId})`).attr('preserveAspectRatio', 'xMidYMid slice');
       g.append('circle').attr('class', 'pg-ring').attr('r', r);
@@ -457,7 +457,7 @@ async function loadProfileView(userId) {
   renderProfileJsonLd(profile, displayName);
   const avatarWrap = document.getElementById('profileAvatarWrap');
   if (profile.avatar_url) {
-    const img = document.createElement('img'); img.className = 'profile-avatar-lg'; img.src = profile.avatar_url;
+    const img = document.createElement('img'); img.className = 'profile-avatar-lg'; img.src = cdnUrl(profile.avatar_url);
     img.alt = tr('artistAvatarAlt', { name: displayName });
     avatarWrap.appendChild(img);
   } else {
@@ -528,6 +528,11 @@ document.getElementById('profileUploadBtn').onclick = () => {
   if (!me.id) { openAuthModal(); return; }
   artPicker.reset();
   document.getElementById('ua-title').value = '';
+  document.getElementById('ua-material').value = '';
+  // Can't complete a piece in the future — same bound as the DB's
+  // mosaic_submissions_art_completed_date_range check constraint.
+  document.getElementById('ua-completed').max = new Date().toISOString().slice(0, 10);
+  document.getElementById('ua-completed').value = '';
   document.getElementById('ua-desc').value = '';
   document.getElementById('ua-link').value = '';
   document.getElementById('ua-error').textContent = '';
@@ -545,6 +550,8 @@ document.getElementById('ua-submit').onclick = async () => {
   errorEl.textContent = '';
   const meta = {
     title: document.getElementById('ua-title').value.trim(),
+    material: document.getElementById('ua-material').value.trim(),
+    completedDate: document.getElementById('ua-completed').value || null,
     description: document.getElementById('ua-desc').value.trim(),
     link
   };
@@ -561,7 +568,8 @@ document.getElementById('ua-submit').onclick = async () => {
       author_id: me.id, author_name: me.username || me.name || null, author_avatar_url: me.avatar || null,
       image_url: uploaded.url, thumb_url: uploaded.thumbUrl,
       avg_r: avg.r, avg_g: avg.g, avg_b: avg.b,
-      art_title: meta.title || null, art_description: meta.description || null, art_link: meta.link || null
+      art_title: meta.title || null, art_material: meta.material || null, art_completed_date: meta.completedDate,
+      art_description: meta.description || null, art_link: meta.link || null
     }).select('id').single();
     if (insErr || !inserted) { console.error('profile artwork insert error:', insErr); toast(tr('couldNotSubmitRetry')); return; }
 

@@ -34,6 +34,9 @@ const T = {
   deleteAccountMessage: '계정, 프로필, 작품, 댓글, 컬렉션, 저장 정보가 모두 영구적으로 삭제됩니다. 되돌릴 수 없습니다. 확인하려면 아래에 사용자 이름 {username}을(를) 입력하세요.',
   couldNotDeleteAccount: '계정을 삭제할 수 없습니다. 다시 시도해주세요.', accountDeleted: '계정이 삭제되었습니다.',
   couldNotLoadProjects: '프로젝트를 불러올 수 없습니다',
+  couldNotLoadArtists: '작가 목록을 불러올 수 없습니다',
+  couldNotLoadArtworks: '작품을 불러올 수 없습니다',
+  untitledArtwork: '제목 없는 작품',
   goToProject: '{n}번째 프로젝트로 이동',
   projectNotFound: '프로젝트를 찾을 수 없습니다',
   archivedIterationLabel: '이전 버전(v{version})입니다 — 재구성 전 모습 그대로 보존되었습니다.',
@@ -85,6 +88,14 @@ function fmtJoined(dateStr) {
 function fmtShortDate(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+}
+// art_completed_date is a plain date (YYYY-MM-DD, no time/zone) — built from
+// its y/m/d parts directly rather than `new Date(dateStr)`, which parses a
+// bare date string as UTC midnight and can print a day early in any
+// negative-UTC-offset timezone.
+function fmtCompletedDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 function pieceContributedText(n) {
   return `${n}점 참여`;

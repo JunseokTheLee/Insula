@@ -20,6 +20,17 @@ function safeHref(url) {
   } catch { return null; }
 }
 
+// Rewrites a Supabase Storage public URL to route through the same-origin
+// /img/ proxy (functions/img/[[path]].js), which caches objects at
+// Cloudflare's edge — repeat views then no longer count against Supabase's
+// billed egress. Anything that isn't a Supabase storage URL (e.g. a Google
+// OAuth avatar photo) passes through unchanged.
+const SUPABASE_STORAGE_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/`;
+function cdnUrl(url) {
+  if (!url || !url.startsWith(SUPABASE_STORAGE_PREFIX)) return url;
+  return `/img/${url.slice(SUPABASE_STORAGE_PREFIX.length)}`;
+}
+
 function loadImageEl(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -119,7 +130,10 @@ function routeParam(prefix, legacyQueryKey) {
 async function uploadImage(file) {
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
   const path = `${me.id}/${Date.now()}.${ext}`;
-  const { error } = await sb.storage.from('artwork').upload(path, file, { cacheControl: '3600' });
+  // Upload paths are timestamped and never reused for different content, so
+  // this can be cached as effectively permanent — the 1hr default forced
+  // every image to be re-fetched from Supabase every hour for every visitor.
+  const { error } = await sb.storage.from('artwork').upload(path, file, { cacheControl: '31536000' });
   if (error) { console.error('uploadImage error:', error); toast(tr('imageUploadFailed', { msg: error.message })); return null; }
   return sb.storage.from('artwork').getPublicUrl(path).data.publicUrl;
 }
@@ -153,7 +167,7 @@ async function uploadArtworkImage(file) {
   const thumbBlob = await makeThumbnailBlob(file);
   if (!thumbBlob) return { url, thumbUrl: null };
   const path = `thumb/${me.id}/${Date.now()}.jpg`;
-  const { error } = await sb.storage.from('artwork').upload(path, thumbBlob, { cacheControl: '3600', contentType: 'image/jpeg' });
+  const { error } = await sb.storage.from('artwork').upload(path, thumbBlob, { cacheControl: '31536000', contentType: 'image/jpeg' });
   if (error) { console.error('uploadArtworkImage thumb error:', error); return { url, thumbUrl: null }; }
   return { url, thumbUrl: sb.storage.from('artwork').getPublicUrl(path).data.publicUrl };
 }
@@ -251,7 +265,7 @@ function miniAvatarEl(name, avatarUrl, userId, sizeClass) {
   link.className = sizeClass ? `mini-avatar ${sizeClass}` : 'mini-avatar';
   link.title = name || '';
   if (avatarUrl) {
-    const img = document.createElement('img'); img.src = avatarUrl;
+    const img = document.createElement('img'); img.src = cdnUrl(avatarUrl);
     img.alt = name ? tr('artistAvatarAlt', { name }) : '';
     link.appendChild(img);
   } else {

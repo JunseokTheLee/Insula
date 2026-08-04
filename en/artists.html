@@ -4,27 +4,27 @@
 <link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Artwork | Weavo</title>
-<meta name="description" content="An artwork submitted to a Weavo community mosaic.">
-<link rel="canonical" href="https://weavo.art/en/projects">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/projects">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/projects">
+<title>All Artists | Weavo</title>
+<meta name="description" content="Browse every artist in the Weavo community and search by name.">
+<link rel="canonical" href="https://weavo.art/en/artists">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/artists">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/artists">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Artwork | Weavo">
-<meta property="og:description" content="An artwork submitted to a Weavo community mosaic.">
+<meta property="og:title" content="All Artists | Weavo">
+<meta property="og:description" content="Browse every artist in the Weavo community and search by name.">
+<meta property="og:url" content="https://weavo.art/en/artists">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Artwork | Weavo">
-<meta name="twitter:description" content="An artwork submitted to a Weavo community mosaic.">
+<meta name="twitter:title" content="All Artists | Weavo">
+<meta name="twitter:description" content="Browse every artist in the Weavo community and search by name.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Artists","item":"https://weavo.art/en/artists"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <link rel="stylesheet" href="/css/base.css">
-<link rel="stylesheet" href="/css/project.css">
+<link rel="stylesheet" href="/css/artists.css">
 </head>
 <body>
 
@@ -34,7 +34,7 @@
     <nav class="nav-links">
       <a href="/en/projects" class="nav-link">Projects</a>
       <a href="/en/network" class="nav-link">Network</a>
-      <a href="/en/artists" class="nav-link">Artists</a>
+      <a href="/en/artists" class="nav-link active">Artists</a>
       <a href="/en/about" class="nav-link">About</a>
     </nav>
     <div id="identity">
@@ -51,66 +51,17 @@
 
   <main class="main main-scroll">
     <div class="backnav">
-      <a class="back" id="artworkBackBtn" href="/en/projects">&larr; Back</a>
+      <a class="back" href="/en/projects">&larr; Back</a>
     </div>
-    <nav class="artwork-breadcrumb" aria-label="Breadcrumb" id="artworkBreadcrumb">
-      <a href="/en/projects">Projects</a> <span aria-hidden="true">/</span> <a id="artworkProjectLink" href="/en/projects"></a>
-    </nav>
-    <article class="artwork-stage" id="artworkStage">
-      <div class="zoom-toolbar">
-        <button type="button" class="zoom-btn" id="lightbox-zoom-out" aria-label="Zoom out">&minus;</button>
-        <span class="zoom-level" id="lightbox-zoom-level">100%</span>
-        <button type="button" class="zoom-btn" id="lightbox-zoom-in" aria-label="Zoom in">+</button>
+    <div class="artists-page">
+      <h1 class="artists-page-title">All Artists</h1>
+      <div class="artists-page-desc">Every artist in the Weavo community, in one place.</div>
+      <div class="artists-search-row">
+        <input type="text" id="artistSearchInput" class="artists-search" placeholder="Search artists…" autocomplete="off" spellcheck="false">
       </div>
-      <div class="lightbox-stage" id="lightboxStage">
-        <img id="lightbox-img" src="" alt="" width="1200" height="900">
-      </div>
-      <aside id="lightbox-caption">
-        <h1 id="lightbox-cap-title"></h1>
-        <div id="lightbox-cap-meta"></div>
-        <div id="lightbox-artist-card">
-          <div id="lightbox-artist-avatar-wrap"></div>
-          <div class="lb-artist-info">
-            <a id="lightbox-artist-name" class="lb-artist-name"></a>
-          </div>
-        <button type="button" id="lightbox-artist-save-btn" class="lb-artist-save-btn" style="display:none;">Save</button>
-        </div>
-        <div id="lightbox-artist-about">
-          <div class="lb-artist-about-label">About the artist</div>
-          <div id="lightbox-artist-bio" class="lb-artist-bio"></div>
-        </div>
-        <div id="lightbox-cap-desc"></div>
-        <a id="lightbox-cap-link" target="_blank" rel="ugc nofollow noopener noreferrer"></a>
-        <div class="lightbox-actions">
-          <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="Like this artwork">
-            <span class="icon"></span><span id="lb-like-count">0</span>
-          </button>
-          <button type="button" id="lb-save-btn" class="lb-action-btn" aria-label="Collect this artwork">
-            <span class="icon"></span><span>Collect</span>
-          </button>
-          <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="View comments" aria-expanded="true">
-            <span class="icon"></span><span id="lb-comments-count">0</span>
-          </button>
-          <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="Delete this artwork" style="display:none;">
-            <span class="icon"></span><span>Delete</span>
-          </button>
-          <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="Remove from project" style="display:none;">
-            <span class="icon"></span><span>Remove from project</span>
-          </button>
-        </div>
-        <div id="lightbox-comments" class="lightbox-comments open">
-          <div id="lightbox-comments-list"></div>
-          <div id="lightbox-comment-form">
-            <textarea id="lightbox-comment-input" placeholder="Add a comment…" maxlength="1000"></textarea>
-            <button type="button" id="lightbox-comment-post">Post</button>
-          </div>
-        </div>
-        <div id="lightbox-country-map">
-          <div class="lb-country-map-label" id="lb-country-map-label"></div>
-          <svg id="lb-country-map-svg" viewBox="0 0 280 150" preserveAspectRatio="xMidYMid meet"></svg>
-        </div>
-      </aside>
-    </article>
+      <div class="artists-grid" id="artistsGrid"></div>
+      <div class="empty-note" id="artistsEmpty" style="display:none;">No artists found.</div>
+    </div>
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>
@@ -204,10 +155,7 @@
 <script src="/js/supabase-client.js"></script>
 <script src="/js/i18n/en.js"></script>
 <script src="/js/common.js"></script>
-<script src="/js/color-engine.js"></script>
-<script src="/js/matching.js"></script>
 <script src="/js/auth.js"></script>
-<script src="/js/lightbox.js"></script>
-<script src="/js/artwork.js"></script>
+<script src="/js/artists.js"></script>
 </body>
 </html>

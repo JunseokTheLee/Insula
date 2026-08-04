@@ -24,6 +24,8 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Weavo","url":"https://weavo.art/ko/","inLanguage":"ko"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/ko/","logo":"https://weavo.art/logo.png"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/home.css">
 </head>
@@ -32,11 +34,13 @@
 <div class="app">
   <header class="topnav">
     <a class="logo" id="logoHome" href="/ko/">Weavo</a>
-    <nav class="nav-right">
+    <nav class="nav-links">
       <a href="/ko/projects" class="nav-link">프로젝트</a>
       <a href="/ko/network" class="nav-link">네트워크</a>
+      <a href="/ko/artists" class="nav-link">작가</a>
       <a href="/ko/about" class="nav-link">소개</a>
-      <div id="identity">
+    </nav>
+    <div id="identity">
         <div class="lang-toggle" id="langToggle">
           <button type="button" class="lang-btn" data-lang="en">EN</button>
           <button type="button" class="lang-btn" data-lang="ko">한</button>
@@ -46,7 +50,6 @@
         <button id="loginBtn" class="id-btn">로그인</button>
         <button id="logoutBtn" class="id-btn" style="display:none">로그아웃</button>
       </div>
-    </nav>
   </header>
 
   <main class="main-scroll home-scroll">
@@ -78,6 +81,19 @@
           <div class="stat-tile"><div class="stat-icon">✅</div><div class="stat-value" id="statFill">0%</div><div class="stat-label">채워진 칸</div></div>
         </div>
       </div>
+
+      <button type="button" class="scroll-hint" id="scrollHint" aria-label="최신 작품으로 스크롤">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </section>
+
+    <section class="snap-panel" id="recentArtworksPanel">
+      <div class="carousel-header" style="margin-top:32px;">
+        <h2 class="section-label">최신 작품</h2>
+        <a href="/ko/projects" class="cta-text" style="margin-top:0;">모든 프로젝트 보기</a>
+      </div>
+      <div class="artworks-grid" id="recentArtworksGrid"></div>
+      <div class="empty-note" id="recentArtworksEmpty" style="display:none;">아직 작품이 없습니다 — 첫 번째로 제출해보세요.</div>
     </section>
   </main>
   <footer id="legal-footer">
@@ -85,6 +101,64 @@
     <span class="sep" aria-hidden="true">&middot;</span>
     <a href="/ko/disclaimer">면책조항</a>
   </footer>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox-modal" class="modal-overlay lightbox-overlay">
+  <div class="lightbox-stage" id="lightboxStage">
+    <div class="zoom-toolbar">
+      <button type="button" class="zoom-btn" id="lightbox-zoom-out" aria-label="축소">&minus;</button>
+      <span class="zoom-level" id="lightbox-zoom-level">100%</span>
+      <button type="button" class="zoom-btn" id="lightbox-zoom-in" aria-label="확대">+</button>
+      <button type="button" class="zoom-btn" id="lightbox-close" aria-label="닫기">&#10005;</button>
+    </div>
+    <img id="lightbox-img" src="" alt="">
+  </div>
+  <div id="lightbox-caption">
+    <div id="lightbox-cap-title"></div>
+    <div id="lightbox-cap-meta"></div>
+    <div id="lightbox-artist-card">
+      <div id="lightbox-artist-avatar-wrap"></div>
+      <div class="lb-artist-info">
+        <a id="lightbox-artist-name" class="lb-artist-name"></a>
+      </div>
+    <button type="button" id="lightbox-artist-save-btn" class="lb-artist-save-btn" style="display:none;">저장</button>
+    </div>
+    <div id="lightbox-artist-about">
+      <div class="lb-artist-about-label">작가 소개</div>
+      <div id="lightbox-artist-bio" class="lb-artist-bio"></div>
+    </div>
+    <div id="lightbox-cap-desc"></div>
+    <a id="lightbox-cap-link" target="_blank" rel="ugc nofollow noopener noreferrer"></a>
+    <div class="lightbox-actions">
+      <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="이 작품 좋아요">
+        <span class="icon"></span><span id="lb-like-count">0</span>
+      </button>
+      <button type="button" id="lb-save-btn" class="lb-action-btn" aria-label="이 작품 담기">
+        <span class="icon"></span><span>담기</span>
+      </button>
+      <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="댓글 보기" aria-expanded="true">
+        <span class="icon"></span><span id="lb-comments-count">0</span>
+      </button>
+      <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="이 작품 삭제" style="display:none;">
+        <span class="icon"></span><span>삭제</span>
+      </button>
+      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="프로젝트에서 제외" style="display:none;">
+        <span class="icon"></span><span>프로젝트에서 제외</span>
+      </button>
+    </div>
+    <div id="lightbox-comments" class="lightbox-comments open">
+      <div id="lightbox-comments-list"></div>
+      <div id="lightbox-comment-form">
+        <textarea id="lightbox-comment-input" placeholder="댓글을 입력하세요…" maxlength="1000"></textarea>
+        <button type="button" id="lightbox-comment-post">게시</button>
+      </div>
+    </div>
+    <div id="lightbox-country-map">
+      <div class="lb-country-map-label" id="lb-country-map-label"></div>
+      <svg id="lb-country-map-svg" viewBox="0 0 280 150" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+  </div>
 </div>
 
 <!-- Edit profile modal -->
@@ -173,8 +247,10 @@
 <script src="/js/i18n/ko.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/color-engine.js"></script>
+<script src="/js/matching.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/project-preview.js"></script>
+<script src="/js/lightbox.js"></script>
 <script src="/js/landing.js"></script>
 </body>
 </html>

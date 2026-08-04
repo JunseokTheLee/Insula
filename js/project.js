@@ -170,7 +170,7 @@ async function renderWeavoGrid(project) {
   fitWeavoStage(project);
   resetMsZoom();
   const { data: pixels, error } = await sb.from('mosaic_pixels')
-    .select('id,x,y,target_r,target_g,target_b,filled,submission_id,mosaic_submissions!mosaic_pixels_submission_id_fkey(id,image_url,thumb_url,author_id,author_name,author_avatar_url,art_title,art_description,art_link,created_at)')
+    .select('id,x,y,target_r,target_g,target_b,filled,submission_id,mosaic_submissions!mosaic_pixels_submission_id_fkey(id,image_url,thumb_url,author_id,author_name,author_avatar_url,art_title,art_material,art_completed_date,art_description,art_link,created_at)')
     .eq('project_id', project.id)
     .order('y', { ascending: true })
     .order('x', { ascending: true });
@@ -222,7 +222,7 @@ function projectListCardEl(sub) {
   const thumb = document.createElement('div');
   thumb.className = 'pv-card-thumb';
   const img = document.createElement('img');
-  img.src = sub.thumb_url || sub.image_url;
+  img.src = cdnUrl(sub.thumb_url || sub.image_url);
   img.alt = sub.art_title
     ? tr('artworkThumbAlt', { title: sub.art_title, name: sub.author_name || tr('anonymous') })
     : tr('artworkImgAltFallback', { name: sub.author_name || tr('anonymous') });
@@ -240,7 +240,7 @@ function projectListCardEl(sub) {
 }
 function applyCellVisual(cell, px) {
   if (px.filled && px.submission_id && px.mosaic_submissions) {
-    cell.style.backgroundImage = `url("${px.mosaic_submissions.thumb_url || px.mosaic_submissions.image_url}")`;
+    cell.style.backgroundImage = `url("${cdnUrl(px.mosaic_submissions.thumb_url || px.mosaic_submissions.image_url)}")`;
   } else {
     const l = Math.round(luminance(px.target_r, px.target_g, px.target_b));
     cell.style.backgroundImage = '';

@@ -9,7 +9,7 @@
 
 async function fetchArtwork(id) {
   const { data, error } = await sb.from('mosaic_submissions')
-    .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_description,art_link,author_id,author_name,author_avatar_url,created_at,mosaic_projects(id,title)')
+    .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at,mosaic_projects(id,title)')
     .eq('id', id).maybeSingle();
   if (error) { console.error('load artwork error:', error); return null; }
   return data;
@@ -36,6 +36,8 @@ function renderArtworkJsonLd(sub) {
     creator: { '@type': 'Person', name, url: `${location.origin}${profileUrl(sub.author_id)}` },
   };
   if (sub.art_description) data.description = sub.art_description;
+  if (sub.art_material) data.artMedium = sub.art_material;
+  if (sub.art_completed_date) data.dateCreated = sub.art_completed_date;
   if (project) data.isPartOf = { '@type': 'CreativeWork', name: project.title, url: `${location.origin}${projectUrl(project.id)}` };
   injectJsonLd([data]);
 }

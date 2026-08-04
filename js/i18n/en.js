@@ -34,6 +34,9 @@ const T = {
   deleteAccountMessage: "This permanently deletes your account, profile, artwork, comments, collections, and saves. This can't be undone. Type your username, {username}, below to confirm.",
   couldNotDeleteAccount: 'Could not delete account. Try again.', accountDeleted: 'Your account has been deleted.',
   couldNotLoadProjects: 'Could not load projects',
+  couldNotLoadArtists: 'Could not load artists',
+  couldNotLoadArtworks: 'Could not load artworks',
+  untitledArtwork: 'Untitled artwork',
   goToProject: 'Go to project {n}',
   projectNotFound: 'Project not found',
   archivedIterationLabel: 'This is an archived iteration (v{version}) — frozen the way it looked before a reshape.',
@@ -85,6 +88,14 @@ function fmtJoined(dateStr) {
 function fmtShortDate(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+// art_completed_date is a plain date (YYYY-MM-DD, no time/zone) — built from
+// its y/m/d parts directly rather than `new Date(dateStr)`, which parses a
+// bare date string as UTC midnight and can print a day early in any
+// negative-UTC-offset timezone.
+function fmtCompletedDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 function pieceContributedText(n) {
   return `${n} piece${n !== 1 ? 's' : ''} contributed`;
