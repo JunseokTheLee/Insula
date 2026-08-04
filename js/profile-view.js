@@ -146,7 +146,152 @@ async function fetchSavedWeavoArt(userId) {
   if (error) { console.error('load saved weavo art error:', error); return []; }
   return (data || []).map(row => row.mosaic_submissions).filter(Boolean);
 }
-function profileArtThumbEl(sub, pending) {
+
+// ---------- collections (named boards built from the Saved pool) ----------
+// Items are embedded per collection (rather than fetched separately) so a
+// collection's cover thumb and item count are both derivable client-side
+// without an extra round trip, and so the add-to-collection picker already
+// knows which boards a given piece is already on.
+let profileCollections = [];
+async function fetchUserCollections(userId) {
+  const { data, error } = await sb.from('mosaic_collections')
+    .select('id,title,description,is_public,created_at,mosaic_collection_items(submission_id,added_at,mosaic_submissions(thumb_url,image_url))')
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) { console.error('load collections error:', error); toast(tr('couldNotLoadCollections')); return []; }
+  return data || [];
+}
+function collectionCoverUrl(collection) {
+  const items = collection.mosaic_collection_items || [];
+  if (!items.length) return null;
+  const latest = items.reduce((a, b) => (new Date(a.added_at) > new Date(b.added_at) ? a : b));
+  const sub = latest.mosaic_submissions;
+  return sub ? cdnUrl(sub.thumb_url || sub.image_url) : null;
+}
+function collectionCardEl(collection, isOwner) {
+  const card = document.createElement('a');
+  card.className = 'pv-card';
+  card.href = collectionUrl(collection.id);
+  const thumb = document.createElement('div');
+  thumb.className = 'pv-card-thumb';
+  const coverUrl = collectionCoverUrl(collection);
+  if (coverUrl) {
+    const img = document.createElement('img');
+    img.src = coverUrl;
+    img.alt = tr('collectionCoverAlt', { title: collection.title });
+    thumb.appendChild(img);
+  }
+  card.appendChild(thumb);
+  const info = document.createElement('div');
+  info.className = 'pv-card-info';
+  const title = document.createElement('div');
+  title.className = 'pv-card-title'; title.textContent = collection.title;
+  if (isOwner && !collection.is_public) {
+    const badge = document.createElement('span');
+    badge.className = 'pv-card-archived-badge';
+    badge.textContent = tr('privateBadge');
+    title.appendChild(document.createTextNode(' '));
+    title.appendChild(badge);
+  }
+  const count = document.createElement('div');
+  count.className = 'pv-card-author';
+  count.textContent = collectionItemCountText((collection.mosaic_collection_items || []).length);
+  info.append(title, count);
+  card.appendChild(info);
+  return card;
+}
+function renderCollectionsSection(collections, isOwner) {
+  profileCollections = collections;
+  const section = document.getElementById('profileCollectionsSection');
+  const grid = document.getElementById('profileCollectionsGrid');
+  grid.innerHTML = '';
+  document.getElementById('newCollectionBtn').style.display = isOwner ? '' : 'none';
+  section.style.display = (isOwner || collections.length) ? '' : 'none';
+  document.getElementById('profileCollectionsEmpty').style.display = collections.length ? 'none' : '';
+  for (const c of collections) grid.appendChild(collectionCardEl(c, isOwner));
+}
+async function refreshCollectionsSection() {
+  if (!profileUserId) return;
+  renderCollectionsSection(await fetchUserCollections(profileUserId), me.id === profileUserId);
+}
+
+// ---------- new collection modal ----------
+function openNewCollectionModal() {
+  document.getElementById('nc-title').value = '';
+  document.getElementById('nc-desc').value = '';
+  document.getElementById('nc-public').checked = true;
+  document.getElementById('nc-error').textContent = '';
+  document.getElementById('new-collection-modal').classList.add('open');
+}
+document.getElementById('newCollectionBtn').onclick = () => { if (!me.id) { openAuthModal(); return; } openNewCollectionModal(); };
+document.getElementById('nc-cancel').onclick = () => document.getElementById('new-collection-modal').classList.remove('open');
+document.getElementById('new-collection-modal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
+document.getElementById('nc-submit').onclick = async () => {
+  const title = document.getElementById('nc-title').value.trim();
+  const errorEl = document.getElementById('nc-error');
+  if (!title) { errorEl.textContent = tr('titleRequired'); return; }
+  errorEl.textContent = '';
+  const btn = document.getElementById('nc-submit');
+  btn.disabled = true;
+  const { error } = await sb.from('mosaic_collections').insert({
+    owner_id: me.id, title,
+    description: document.getElementById('nc-desc').value.trim() || null,
+    is_public: document.getElementById('nc-public').checked,
+  });
+  btn.disabled = false;
+  if (error) { console.error('create collection error:', error); errorEl.textContent = tr('couldNotCreateCollectionMsg', { msg: error.message }); return; }
+  document.getElementById('new-collection-modal').classList.remove('open');
+  toast(tr('collectionCreatedToast'));
+  refreshCollectionsSection();
+};
+
+// ---------- add-to-collection picker ----------
+let atcSubmission = null;
+function atcRowEl(collection) {
+  const row = document.createElement('label');
+  row.className = 'saves-list-row';
+  row.style.cursor = 'pointer';
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox'; checkbox.style.width = 'auto';
+  const items = collection.mosaic_collection_items || [];
+  checkbox.checked = items.some(i => i.submission_id === atcSubmission.id);
+  checkbox.onchange = async () => {
+    checkbox.disabled = true;
+    const { error } = checkbox.checked
+      ? await sb.from('mosaic_collection_items').insert({ collection_id: collection.id, submission_id: atcSubmission.id })
+      : await sb.from('mosaic_collection_items').delete().eq('collection_id', collection.id).eq('submission_id', atcSubmission.id);
+    checkbox.disabled = false;
+    if (error) { console.error('update collection item error:', error); toast(tr('couldNotUpdateCollection')); checkbox.checked = !checkbox.checked; return; }
+    if (checkbox.checked) items.push({ submission_id: atcSubmission.id, added_at: new Date().toISOString(), mosaic_submissions: atcSubmission });
+    else { const idx = items.findIndex(i => i.submission_id === atcSubmission.id); if (idx !== -1) items.splice(idx, 1); }
+  };
+  const name = document.createElement('span'); name.className = 'saves-list-name'; name.textContent = collection.title;
+  row.append(checkbox, name);
+  return row;
+}
+function openAddToCollectionModal(sub) {
+  atcSubmission = sub;
+  const list = document.getElementById('atc-list');
+  list.innerHTML = '';
+  document.getElementById('atc-empty').style.display = profileCollections.length ? 'none' : '';
+  for (const c of profileCollections) list.appendChild(atcRowEl(c));
+  document.getElementById('add-to-collection-modal').classList.add('open');
+}
+document.getElementById('atc-new').onclick = () => {
+  document.getElementById('add-to-collection-modal').classList.remove('open');
+  openNewCollectionModal();
+};
+function closeAddToCollectionModal() {
+  document.getElementById('add-to-collection-modal').classList.remove('open');
+  refreshCollectionsSection();
+}
+document.getElementById('atc-done').onclick = closeAddToCollectionModal;
+document.getElementById('add-to-collection-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAddToCollectionModal(); });
+
+// `showBoardBtn` only applies to the owner's own Saved grid — an overlay
+// button that opens the add-to-collection picker for that piece, without
+// triggering the thumb's own click-to-lightbox behavior.
+function profileArtThumbEl(sub, pending, showBoardBtn) {
   const el = document.createElement('a');
   el.className = 'profile-art-thumb';
   el.href = artworkUrl(sub.id);
@@ -160,6 +305,13 @@ function profileArtThumbEl(sub, pending) {
     badge.className = 'pool-badge';
     badge.textContent = tr('waitingForMatchBadge');
     el.appendChild(badge);
+  }
+  if (showBoardBtn) {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'board-add-btn'; btn.textContent = '+';
+    btn.setAttribute('aria-label', tr('addToCollectionLabel'));
+    btn.onclick = e => { e.preventDefault(); e.stopPropagation(); openAddToCollectionModal(sub); };
+    el.appendChild(btn);
   }
   interceptClick(el, () => openLightbox(sub));
   return el;
@@ -429,6 +581,8 @@ async function loadProfileView(userId) {
   document.getElementById('profileProjectsGrid').innerHTML = '';
   document.getElementById('profileSubmittedGrid').innerHTML = '';
   document.getElementById('profileSavedGrid').innerHTML = '';
+  document.getElementById('profileCollectionsGrid').innerHTML = '';
+  document.getElementById('profileCollectionsSection').style.display = 'none';
   document.getElementById('profileSubmittedEmpty').style.display = 'none';
   document.getElementById('profileSavedEmpty').style.display = 'none';
   document.getElementById('profileSaveCounts').style.display = 'none';
@@ -436,10 +590,11 @@ async function loadProfileView(userId) {
   resetProfileGraph(userId);
 
   const isOwner = me.id && me.id === userId;
-  const [{ data: profile }, artwork, saved, saveCounts, isSaving] = await Promise.all([
+  const [{ data: profile }, artwork, saved, collections, saveCounts, isSaving] = await Promise.all([
     sb.from('profiles').select('id,name,username,avatar_url,bio,links,country_id,created_at').eq('id', userId).maybeSingle(),
     fetchUserArtwork(userId),
     fetchSavedWeavoArt(userId),
+    fetchUserCollections(userId),
     fetchSaveCounts(userId),
     (me.id && !isOwner) ? fetchIsSaving(me.id, userId) : Promise.resolve(false),
   ]);
@@ -493,7 +648,9 @@ async function loadProfileView(userId) {
 
   const savedGrid = document.getElementById('profileSavedGrid');
   if (!saved.length) document.getElementById('profileSavedEmpty').style.display = '';
-  else for (const sub of saved) savedGrid.appendChild(profileArtThumbEl(sub));
+  else for (const sub of saved) savedGrid.appendChild(profileArtThumbEl(sub, false, isOwner));
+
+  renderCollectionsSection(collections, isOwner);
 
   const editBtn = document.getElementById('profileEditBtn');
   editBtn.style.display = isOwner ? '' : 'none';

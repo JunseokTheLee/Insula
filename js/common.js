@@ -59,6 +59,10 @@ function projectUrl(id) {
 function artworkUrl(id) {
   return `/${CURRENT_LANG}/artworks/${encodeURIComponent(id)}`;
 }
+// Real path to a collection's own page (functions/[lang]/collections/[id].js).
+function collectionUrl(id) {
+  return `/${CURRENT_LANG}/collections/${encodeURIComponent(id)}`;
+}
 
 // Reads an entity id/handle out of the current URL: the path segment right
 // after /{lang}/{prefix}/ when this page was reached through its clean,

@@ -4,13 +4,15 @@
   itself (one per content type) doesn't change; the per-type sitemaps below
   are what grow as projects/artworks/artists are added.
   sitemap-static.xml is hand-maintained (fixed marketing/legal pages).
-  sitemap-projects.xml, sitemap-artworks.xml and sitemap-artists.xml are
-  generated on request by Pages Functions (see functions/sitemap-*.xml.js)
-  straight from Supabase, so newly created content is picked up automatically.
+  sitemap-projects.xml, sitemap-artworks.xml, sitemap-artists.xml and
+  sitemap-collections.xml are generated on request by Pages Functions (see
+  functions/sitemap-*.xml.js) straight from Supabase, so newly created
+  content is picked up automatically.
 -->
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>https://weavo.art/sitemap-static.xml</loc></sitemap>
   <sitemap><loc>https://weavo.art/sitemap-projects.xml</loc></sitemap>
   <sitemap><loc>https://weavo.art/sitemap-artworks.xml</loc></sitemap>
   <sitemap><loc>https://weavo.art/sitemap-artists.xml</loc></sitemap>
+  <sitemap><loc>https://weavo.art/sitemap-collections.xml</loc></sitemap>
 </sitemapindex>

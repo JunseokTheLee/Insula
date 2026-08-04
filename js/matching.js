@@ -20,7 +20,7 @@
 // potentially reshuffling) every open project's existing placements too,
 // which conflicts with pieces only ever moving via an explicit
 // reshape/removal — greedy keeps each match final and cheap to compute.
-async function runPoolMatching() {
+async function runPoolMatchingOnce() {
   const { data: pool, error: poolErr } = await sb.from('mosaic_submissions')
     .select('id,avg_r,avg_g,avg_b')
     .is('project_id', null)
@@ -56,4 +56,30 @@ async function runPoolMatching() {
   const { error: rpcErr } = await sb.rpc('commit_pool_matches', { p_assignments: assignments });
   if (rpcErr) { console.error('commit_pool_matches error:', rpcErr); return []; }
   return assignments;
+}
+
+// Four call sites (profile-view.js, home.js, project.js, lightbox.js) can
+// all trigger this within moments of each other — e.g. an admin reshaping
+// right after someone uploads. Without coalescing, each call independently
+// re-fetches the entire pool and every open cell across every active
+// project, so overlapping triggers multiply that read cost instead of
+// sharing it. `currentRun` collapses concurrent calls onto whichever pass
+// is already in flight; `queuedRun`, if a call arrives mid-pass, chains
+// exactly one follow-up pass after it (so a change made *during* the
+// in-flight fetch still gets picked up) rather than starting a fresh pass
+// per caller.
+let currentRun = null;
+let queuedRun = null;
+function runPoolMatching() {
+  if (currentRun) {
+    if (!queuedRun) {
+      queuedRun = currentRun
+        .catch(() => {})
+        .then(() => runPoolMatching())
+        .finally(() => { queuedRun = null; });
+    }
+    return queuedRun;
+  }
+  currentRun = runPoolMatchingOnce().finally(() => { currentRun = null; });
+  return currentRun;
 }

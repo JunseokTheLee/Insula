@@ -74,6 +74,24 @@ const T = {
   artworkNotFound: '작품을 찾을 수 없습니다',
   projectPreviewAlt: '‘{title}’ 프로젝트의 참조 이미지',
   projectsCrumb: '프로젝트',
+  collectionsCrumb: '컬렉션',
+  newCollectionLabel: '새 컬렉션',
+  couldNotCreateCollectionMsg: '컬렉션을 만들 수 없습니다: {msg}',
+  couldNotCreateCollectionRetry: '컬렉션을 만들 수 없습니다 — 다시 시도해주세요',
+  collectionCreatedToast: '컬렉션이 생성되었습니다!',
+  couldNotLoadCollections: '컬렉션을 불러올 수 없습니다',
+  collectionNotFound: '컬렉션을 찾을 수 없습니다',
+  noCollectionsYet: '아직 컬렉션이 없습니다.',
+  addToCollectionLabel: '컬렉션에 추가',
+  removeFromCollection: '컬렉션에서 제거',
+  privateBadge: '비공개',
+  deleteCollectionTitle: '이 컬렉션을 삭제할까요?',
+  deleteCollectionMessage: '보드 자체만 삭제되며, 안에 있던 작품은 삭제되지 않고 계속 저장된 상태로 남습니다. 되돌릴 수 없습니다.',
+  couldNotDeleteCollection: '컬렉션을 삭제할 수 없습니다 — 다시 시도해주세요',
+  collectionDeletedToast: '컬렉션이 삭제되었습니다',
+  collectionCoverAlt: '‘{title}’ 컬렉션의 커버 이미지',
+  collectionMetaDescFallback: '{name}님이 Weavo에서 큐레이션한 컬렉션입니다.',
+  doneLabel: '완료',
 };
 
 function tr(key, vars) {
@@ -112,6 +130,9 @@ function moreCellsTooltip(remainder) {
 function projectCreatedToast(skipped) {
   if (!skipped) return tr('projectCreated');
   return `프로젝트가 생성되었습니다! (투명한 칸 ${skipped}개 제외됨)`;
+}
+function collectionItemCountText(n) {
+  return `${n}점`;
 }
 
 // ISO 3166-1 numeric → country name, same ids main.html's world map uses

@@ -4,34 +4,35 @@
 <link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weavo — Profile</title>
-<meta name="description" content="An artist profile on Weavo.">
-<link rel="canonical" href="https://weavo.art/en/artists">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/artists">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/artists">
+<title>Weavo — Collection</title>
+<meta name="description" content="A curated collection of artwork on Weavo.">
+<link rel="canonical" href="https://weavo.art/en/projects">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/projects">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/projects">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Weavo — Profile">
-<meta property="og:description" content="An artist profile on Weavo.">
-<meta property="og:url" content="https://weavo.art/en/artists">
+<meta property="og:title" content="Weavo — Collection">
+<meta property="og:description" content="A curated collection of artwork on Weavo.">
+<meta property="og:url" content="https://weavo.art/en/projects">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Weavo — Profile">
-<meta name="twitter:description" content="An artist profile on Weavo.">
+<meta name="twitter:title" content="Weavo — Collection">
+<meta name="twitter:description" content="A curated collection of artwork on Weavo.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/project.css">
 <link rel="stylesheet" href="/css/profile.css">
 </head>
 <body>
 
 <div class="app">
   <header class="topnav">
-    <a class="logo" id="logoHome" href="/en/">Weavo</a>
+   <a class="logo" id="logoHome" href="/en/">Weavo</a>
     <nav class="nav-links">
       <a href="/en/projects" class="nav-link">Projects</a>
       <a href="/en/network" class="nav-link">Network</a>
@@ -52,63 +53,24 @@
 
   <main class="main main-scroll">
     <div class="backnav">
-      <a class="back" id="profileBackBtn" href="/en/projects">&larr; Back</a>
-    </div>
-    <div class="profile-head">
-      <div class="profile-head-top">
-        <div id="profileAvatarWrap"></div>
-        <div class="profile-head-info">
-          <h1 id="profileName">Loading…</h1>
-          <div class="profile-meta" id="profileMeta"></div>
-          <div class="profile-save-counts" id="profileSaveCounts" style="display:none;">
-            <button type="button" class="profile-save-count-btn" id="profileSavesCount"><strong id="profileSavesN">0</strong> Saves</button>
-            <button type="button" class="profile-save-count-btn" id="profileSavedByCount"><strong id="profileSavedByN">0</strong> Saved by</button>
-          </div>
-          <div class="profile-links" id="profileLinksList"></div>
-        </div>
-        <div class="profile-head-actions">
-          <button type="button" id="profileSaveBtn" style="display:none;">Save</button>
-          <button type="button" id="profileUploadBtn" style="display:none;">Upload Artwork</button>
-          <button type="button" id="profileEditBtn" style="display:none;">Edit Profile</button>
-        </div>
-      </div>
-      <p id="profileBio" style="display:none;"></p>
-    </div>
-    <div class="profile-section" id="profileProjectsSection" style="display:none;">
-      <h2 class="section-label">Projects Contributed To</h2>
-      <div class="profile-projects-grid" id="profileProjectsGrid"></div>
-    </div>
-    <div class="profile-section">
-      <h2 class="section-label">Artwork</h2>
-      <div class="profile-art-grid" id="profileSubmittedGrid"></div>
-      <div class="empty-note" id="profileSubmittedEmpty" style="display:none;">No artwork posted yet.</div>
-    </div>
-    <div class="profile-section">
-      <h2 class="section-label">Saved</h2>
-      <div class="profile-art-grid" id="profileSavedGrid"></div>
-      <div class="empty-note" id="profileSavedEmpty" style="display:none;">Nothing saved yet.</div>
-    </div>
-    <div class="profile-section" id="profileCollectionsSection" style="display:none;">
-      <div class="profile-section-head">
-        <h2 class="section-label">Collections</h2>
-        <button type="button" class="section-new-btn" id="newCollectionBtn" style="display:none;">+ New</button>
-      </div>
-      <div class="profile-collections-grid" id="profileCollectionsGrid"></div>
-      <div class="empty-note" id="profileCollectionsEmpty" style="display:none;">No collections yet — gather saved pieces into a board.</div>
-    </div>
-    <div class="profile-section">
-      <h2 class="section-label">Network</h2>
-      <div class="profile-graph-desc">Saves connect people directly — an arrow points from someone who saves another artist to the person they save, and a double-headed link means they save each other. Drag to rearrange, scroll to zoom, click a node to explore.</div>
-      <div class="profile-graph-panel" id="profileGraphPanel">
-        <div class="profile-graph-crumb" id="profileGraphCrumb">
-          <button type="button" id="profileGraphBack">&larr; Back</button>
-          <span id="profileGraphCrumbLabel"></span>
-          <a href="#" id="profileGraphCrumbVisit">View profile &rarr;</a>
-        </div>
-        <svg id="profileGraphSvg"></svg>
-        <div class="profile-graph-empty" id="profileGraphEmpty">No saves yet — nothing to map.</div>
+      <a class="back" id="collectionBackBtn" href="/en/projects">&larr; Back</a>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn-cancel" id="editCollectionBtn" style="display:none;padding:11px 18px;border-radius:20px;font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+          Edit
+        </button>
+        <button class="btn-cancel" id="deleteCollectionBtn" style="display:none;padding:11px 18px;border-radius:20px;font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--coral);">
+          Delete
+        </button>
       </div>
     </div>
+    <div class="project-head">
+      <h1 id="collectionTitle">Loading…</h1>
+      <div class="profile-meta" id="collectionMeta"></div>
+      <p id="collectionDesc" style="display:none;"></p>
+      <div id="collectionOwnerByline"></div>
+    </div>
+    <div class="profile-art-grid" id="collectionItemsGrid" style="padding:0 32px;"></div>
+    <div class="empty-note" id="collectionItemsEmpty" style="display:none;">Nothing added to this collection yet.</div>
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>
@@ -117,85 +79,28 @@
   </footer>
 </div>
 
-<!-- New collection modal -->
-<div id="new-collection-modal" class="modal-overlay">
-  <div id="new-collection-dialog" class="modal-panel">
-    <h3>New Collection</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">A named board built from artwork you've already saved — like a mini exhibition.</p>
+<!-- Edit collection modal -->
+<div id="edit-collection-modal" class="modal-overlay">
+  <div id="edit-collection-dialog" class="modal-panel">
+    <h3>Edit Collection</h3>
     <div class="field">
-      <label for="nc-title">Title</label>
-      <input type="text" id="nc-title" placeholder="e.g. Autumn Palettes" maxlength="80">
+      <label for="ec-title">Title</label>
+      <input type="text" id="ec-title" maxlength="80">
     </div>
     <div class="field">
-      <label for="nc-desc">Description <span class="field-hint">(optional)</span></label>
-      <textarea id="nc-desc" placeholder="What ties this collection together?" maxlength="500"></textarea>
+      <label for="ec-desc">Description <span class="field-hint">(optional)</span></label>
+      <textarea id="ec-desc" maxlength="500"></textarea>
     </div>
     <div class="field">
-      <label for="nc-public" style="display:flex;align-items:center;gap:8px;font-weight:400;">
-        <input type="checkbox" id="nc-public" checked style="width:auto;">
+      <label for="ec-public" style="display:flex;align-items:center;gap:8px;font-weight:400;">
+        <input type="checkbox" id="ec-public" style="width:auto;">
         Anyone can view this collection
       </label>
     </div>
-    <div class="field-error" id="nc-error"></div>
+    <div class="field-error" id="ec-error"></div>
     <div class="modal-actions">
-      <button id="nc-cancel" class="btn-cancel">Cancel</button>
-      <button id="nc-submit" class="btn-primary">Create</button>
-    </div>
-  </div>
-</div>
-
-<!-- Add to collection picker -->
-<div id="add-to-collection-modal" class="modal-overlay">
-  <div id="add-to-collection-dialog" class="modal-panel">
-    <h3>Add to Collection</h3>
-    <div id="atc-list"></div>
-    <div class="empty-note" id="atc-empty" style="display:none;padding:16px;">You don't have any collections yet.</div>
-    <button type="button" id="atc-new" class="section-new-btn" style="margin-top:4px;">+ New collection</button>
-    <div class="modal-actions">
-      <button id="atc-done" class="btn-primary">Done</button>
-    </div>
-  </div>
-</div>
-
-<!-- Upload artwork modal -->
-<div id="upload-art-modal" class="modal-overlay">
-  <div id="upload-art-dialog" class="modal-panel">
-    <h3>Add Your Artwork</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">Your piece will automatically be placed into whichever open project cell its average color matches best — it can only ever be part of one project at a time.</p>
-    <div class="field">
-      <div class="img-upload-area" id="art-picker">
-        <div class="img-placeholder"><span class="up-icon">🖼</span><span>Click or drag your artwork here</span></div>
-        <img class="img-preview" alt="">
-        <button type="button" class="img-remove" aria-label="Remove image">✕</button>
-        <input type="file" class="img-input" accept="image/*">
-      </div>
-    </div>
-    <div class="field">
-      <label for="ua-title">Title <span class="field-hint">(optional)</span></label>
-      <input type="text" id="ua-title" placeholder="Untitled" maxlength="80">
-    </div>
-    <div style="display:flex;gap:10px;">
-      <div class="field" style="flex:1;">
-        <label for="ua-material">Material <span class="field-hint">(optional)</span></label>
-        <input type="text" id="ua-material" placeholder="e.g. Oil on canvas" maxlength="100">
-      </div>
-      <div class="field" style="flex:1;">
-        <label for="ua-completed">Date completed <span class="field-hint">(optional)</span></label>
-        <input type="date" id="ua-completed" max="">
-      </div>
-    </div>
-    <div class="field">
-      <label for="ua-desc">Artist statement <span class="field-hint">(optional)</span></label>
-      <textarea id="ua-desc" placeholder="What's the story behind this piece?" maxlength="500"></textarea>
-    </div>
-    <div class="field">
-      <label for="ua-link">Link to more of your work <span class="field-hint">(optional)</span></label>
-      <input type="text" id="ua-link" placeholder="https://your-portfolio.com" maxlength="300">
-    </div>
-    <div class="field-error" id="ua-error"></div>
-    <div class="modal-actions">
-      <button id="ua-cancel" class="btn-cancel">Cancel</button>
-      <button id="ua-submit" class="btn-primary">Submit</button>
+      <button id="ec-cancel" class="btn-cancel">Cancel</button>
+      <button id="ec-submit" class="btn-primary">Save</button>
     </div>
   </div>
 </div>
@@ -338,15 +243,6 @@
   </div>
 </div>
 
-<!-- Saves / Saved by list -->
-<div id="saves-list-modal" class="modal-overlay">
-  <div id="saves-list-dialog" class="modal-panel">
-    <h3 id="saves-list-title">Saves</h3>
-    <div id="saves-list-content"></div>
-    <div class="empty-note" id="saves-list-empty" style="display:none;">No one yet.</div>
-  </div>
-</div>
-
 <div id="toast"></div>
 
 <script src="/js/supabase-client.js"></script>
@@ -356,7 +252,6 @@
 <script src="/js/matching.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/lightbox.js"></script>
-<script src="/js/graph-common.js"></script>
-<script src="/js/profile-view.js"></script>
+<script src="/js/collection.js"></script>
 </body>
 </html>

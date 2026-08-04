@@ -74,6 +74,24 @@ const T = {
   artworkNotFound: 'Artwork not found',
   projectPreviewAlt: 'Reference image for the “{title}” project',
   projectsCrumb: 'Projects',
+  collectionsCrumb: 'Collections',
+  newCollectionLabel: 'New Collection',
+  couldNotCreateCollectionMsg: 'Could not create collection: {msg}',
+  couldNotCreateCollectionRetry: 'Could not create collection — try again',
+  collectionCreatedToast: 'Collection created!',
+  couldNotLoadCollections: 'Could not load collections',
+  collectionNotFound: 'Collection not found',
+  noCollectionsYet: 'No collections yet.',
+  addToCollectionLabel: 'Add to collection',
+  removeFromCollection: 'Remove from collection',
+  privateBadge: 'Private',
+  deleteCollectionTitle: 'Delete this collection?',
+  deleteCollectionMessage: "This deletes the board itself, not the artwork in it — pieces stay collected and simply lose this grouping. Can't be undone.",
+  couldNotDeleteCollection: 'Could not delete collection — try again',
+  collectionDeletedToast: 'Collection deleted',
+  collectionCoverAlt: 'Cover image for the “{title}” collection',
+  collectionMetaDescFallback: 'A collection curated by {name} on Weavo.',
+  doneLabel: 'Done',
 };
 
 function tr(key, vars) {
@@ -112,6 +130,9 @@ function moreCellsTooltip(remainder) {
 function projectCreatedToast(skipped) {
   if (!skipped) return tr('projectCreated');
   return `Project created! (${skipped} transparent cell${skipped !== 1 ? 's' : ''} excluded)`;
+}
+function collectionItemCountText(n) {
+  return `${n} piece${n !== 1 ? 's' : ''}`;
 }
 
 // ISO 3166-1 numeric → country name, same ids main.html's world map uses
