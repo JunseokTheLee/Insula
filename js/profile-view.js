@@ -138,15 +138,6 @@ function profileProjectCardEl(project) {
   card.appendChild(info);
   return card;
 }
-async function fetchSavedWeavoArt(userId) {
-  const { data, error } = await sb.from('mosaic_submission_saves')
-    .select('created_at,mosaic_submissions(id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url)')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-  if (error) { console.error('load saved weavo art error:', error); return []; }
-  return (data || []).map(row => row.mosaic_submissions).filter(Boolean);
-}
-
 // ---------- collections (named boards built from the Saved pool) ----------
 // Items are embedded per collection (rather than fetched separately) so a
 // collection's cover thumb and item count are both derivable client-side

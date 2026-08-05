@@ -1,7 +1,7 @@
 // Collection detail page (/{lang}/collections/{id}) — a named board an
 // artist curates from artwork they've already collected (mosaic_submission_
 // saves, js/lightbox.js's Collect button). Reads the collection id from the
-// URL. Needs sb, me, tr, common.js, lightbox.js already loaded.
+// URL. Needs sb, me, tr, common.js (fetchSavedWeavoArt), lightbox.js already loaded.
 "use strict";
 
 let currentCollection = null;
@@ -43,10 +43,10 @@ function collectionItemThumbEl(sub, isOwner) {
       const { error } = await sb.from('mosaic_collection_items').delete()
         .eq('collection_id', currentCollection.id).eq('submission_id', sub.id);
       if (error) { console.error('remove collection item error:', error); toast(tr('couldNotUpdateCollection')); btn.disabled = false; return; }
-      el.remove();
-      if (!document.getElementById('collectionItemsGrid').children.length) {
-        document.getElementById('collectionItemsEmpty').style.display = '';
-      }
+      const items = currentCollection.mosaic_collection_items || [];
+      const idx = items.findIndex(i => i.submission_id === sub.id);
+      if (idx !== -1) items.splice(idx, 1);
+      renderCollectionItemsGrid();
     };
     el.appendChild(btn);
   }
@@ -62,6 +62,32 @@ async function fetchCollection(id) {
   return data;
 }
 
+function isCollectionOwner() {
+  return !!(currentCollection && me.id && me.id === currentCollection.owner_id);
+}
+
+// Re-renders the grid + item count straight from `currentCollection`'s own
+// in-memory item list — used both after the initial fetch and after the
+// add-artwork picker or a thumb's remove button mutate that list in place,
+// so toggling an item doesn't need a full re-fetch of the collection.
+function renderCollectionItemsGrid() {
+  const isOwner = isCollectionOwner();
+  const items = (currentCollection.mosaic_collection_items || [])
+    .slice()
+    .sort((a, b) => new Date(b.added_at) - new Date(a.added_at))
+    .map(i => i.mosaic_submissions)
+    .filter(Boolean);
+
+  const metaParts = [collectionItemCountText(items.length)];
+  if (isOwner && !currentCollection.is_public) metaParts.push(tr('privateBadge'));
+  document.getElementById('collectionMeta').textContent = metaParts.join(' · ');
+
+  const grid = document.getElementById('collectionItemsGrid');
+  grid.innerHTML = '';
+  document.getElementById('collectionItemsEmpty').style.display = items.length ? 'none' : '';
+  for (const sub of items) grid.appendChild(collectionItemThumbEl(sub, isOwner));
+}
+
 async function openCollection(id) {
   const collection = await fetchCollection(id);
   if (!collection) {
@@ -69,7 +95,7 @@ async function openCollection(id) {
     return;
   }
   currentCollection = collection;
-  const isOwner = me.id && me.id === collection.owner_id;
+  const isOwner = isCollectionOwner();
 
   const { data: owner } = await sb.from('profiles').select('id,name,username,avatar_url').eq('id', collection.owner_id).maybeSingle();
   const ownerName = (owner && (owner.username || owner.name)) || tr('anonymous');
@@ -78,15 +104,7 @@ async function openCollection(id) {
   updateCollectionMeta(collection, ownerName);
   renderCollectionJsonLd(collection, ownerName);
 
-  const items = (collection.mosaic_collection_items || [])
-    .slice()
-    .sort((a, b) => new Date(b.added_at) - new Date(a.added_at))
-    .map(i => i.mosaic_submissions)
-    .filter(Boolean);
-
-  const metaParts = [collectionItemCountText(items.length)];
-  if (isOwner && !collection.is_public) metaParts.push(tr('privateBadge'));
-  document.getElementById('collectionMeta').textContent = metaParts.join(' · ');
+  renderCollectionItemsGrid();
 
   const descEl = document.getElementById('collectionDesc');
   descEl.textContent = collection.description || '';
@@ -96,18 +114,65 @@ async function openCollection(id) {
   bylineEl.innerHTML = '';
   bylineEl.appendChild(miniAvatarEl(ownerName, owner && owner.avatar_url, collection.owner_id));
 
-  const grid = document.getElementById('collectionItemsGrid');
-  grid.innerHTML = '';
-  document.getElementById('collectionItemsEmpty').style.display = items.length ? 'none' : '';
-  for (const sub of items) grid.appendChild(collectionItemThumbEl(sub, isOwner));
-
+  const addBtn = document.getElementById('addArtworkBtn');
   const editBtn = document.getElementById('editCollectionBtn');
   const deleteBtn = document.getElementById('deleteCollectionBtn');
+  addBtn.style.display = isOwner ? '' : 'none';
   editBtn.style.display = isOwner ? '' : 'none';
   deleteBtn.style.display = isOwner ? '' : 'none';
+  addBtn.onclick = openAddArtworkModal;
   editBtn.onclick = () => openEditCollectionModal(collection);
   deleteBtn.onclick = () => deleteCollection(collection);
 }
+
+// ---------- add artwork picker (owner adding from their own Saved pool) ----------
+// Same underlying pool and the same insert/delete into mosaic_collection_items
+// as profile-view.js's atcRowEl (that one picks collections for a given
+// piece; this one picks pieces for a given collection) — re-fetched fresh
+// each time the modal opens rather than cached, since what's in the pool
+// can change from other tabs/pages between opens.
+function aaRowEl(sub) {
+  const row = document.createElement('label');
+  row.className = 'saves-list-row';
+  row.style.cursor = 'pointer';
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox'; checkbox.style.width = 'auto';
+  const items = currentCollection.mosaic_collection_items || [];
+  checkbox.checked = items.some(i => i.submission_id === sub.id);
+  checkbox.onchange = async () => {
+    checkbox.disabled = true;
+    const { error } = checkbox.checked
+      ? await sb.from('mosaic_collection_items').insert({ collection_id: currentCollection.id, submission_id: sub.id })
+      : await sb.from('mosaic_collection_items').delete().eq('collection_id', currentCollection.id).eq('submission_id', sub.id);
+    checkbox.disabled = false;
+    if (error) { console.error('update collection item error:', error); toast(tr('couldNotUpdateCollection')); checkbox.checked = !checkbox.checked; return; }
+    if (checkbox.checked) items.push({ submission_id: sub.id, added_at: new Date().toISOString(), mosaic_submissions: sub });
+    else { const idx = items.findIndex(i => i.submission_id === sub.id); if (idx !== -1) items.splice(idx, 1); }
+    renderCollectionItemsGrid();
+  };
+  const thumb = document.createElement('img');
+  thumb.className = 'saves-list-thumb'; thumb.src = cdnUrl(sub.thumb_url || sub.image_url);
+  thumb.alt = '';
+  const name = document.createElement('span');
+  name.className = 'saves-list-name'; name.textContent = sub.art_title || tr('untitledArtwork');
+  row.append(checkbox, thumb, name);
+  return row;
+}
+async function openAddArtworkModal() {
+  const list = document.getElementById('aa-list');
+  const empty = document.getElementById('aa-empty');
+  list.innerHTML = '';
+  empty.style.display = 'none';
+  document.getElementById('add-artwork-modal').classList.add('open');
+  const pool = await fetchSavedWeavoArt(me.id);
+  empty.style.display = pool.length ? 'none' : '';
+  for (const sub of pool) list.appendChild(aaRowEl(sub));
+}
+function closeAddArtworkModal() {
+  document.getElementById('add-artwork-modal').classList.remove('open');
+}
+document.getElementById('aa-done').onclick = closeAddArtworkModal;
+document.getElementById('add-artwork-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAddArtworkModal(); });
 
 // ---------- edit ----------
 function openEditCollectionModal(collection) {

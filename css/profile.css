@@ -35,14 +35,15 @@
 #saves-list-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;max-height:70vh;display:flex;flex-direction:column;}
 #saves-list-content{overflow-y:auto;margin:4px -6px 0;}
 #new-collection-dialog,#edit-collection-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
-#add-to-collection-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;max-height:70vh;display:flex;flex-direction:column;}
-#atc-list{overflow-y:auto;margin:4px -6px 0;display:flex;flex-direction:column;gap:2px;}
+#add-to-collection-dialog,#add-artwork-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;max-height:70vh;display:flex;flex-direction:column;}
+#atc-list,#aa-list{overflow-y:auto;margin:4px -6px 0;display:flex;flex-direction:column;gap:2px;}
 .saves-list-row{
   display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:8px;
   text-decoration:none;color:inherit;transition:background .12s linear;
 }
 .saves-list-row:hover{background:var(--forest-08);}
 .saves-list-avatar,.saves-list-avatar-fallback{width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;}
+.saves-list-thumb{width:36px;height:36px;border-radius:6px;flex-shrink:0;object-fit:cover;background:var(--hairline);}
 .saves-list-avatar-fallback{
   background:var(--forest);color:var(--paper);display:flex;align-items:center;justify-content:center;
   font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;

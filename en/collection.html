@@ -55,6 +55,9 @@
     <div class="backnav">
       <a class="back" id="collectionBackBtn" href="/en/projects">&larr; Back</a>
       <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn-cancel" id="addArtworkBtn" style="display:none;padding:11px 18px;border-radius:20px;font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+          + Add artwork
+        </button>
         <button class="btn-cancel" id="editCollectionBtn" style="display:none;padding:11px 18px;border-radius:20px;font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
           Edit
         </button>
@@ -101,6 +104,18 @@
     <div class="modal-actions">
       <button id="ec-cancel" class="btn-cancel">Cancel</button>
       <button id="ec-submit" class="btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add artwork picker -->
+<div id="add-artwork-modal" class="modal-overlay">
+  <div id="add-artwork-dialog" class="modal-panel">
+    <h3>Add Artwork</h3>
+    <div id="aa-list"></div>
+    <div class="empty-note" id="aa-empty" style="display:none;padding:16px;">Nothing in your saved pool yet — collect some artwork first.</div>
+    <div class="modal-actions">
+      <button id="aa-done" class="btn-primary">Done</button>
     </div>
   </div>
 </div>

@@ -176,6 +176,20 @@ async function uploadArtworkImage(file) {
   return { url, thumbUrl: sb.storage.from('artwork').getPublicUrl(path).data.publicUrl };
 }
 
+// ---------- saved artwork pool (mosaic_submission_saves) ----------
+// A user's flat "Collect"-ed pool — shared by the profile page's own Saved
+// grid (js/profile-view.js) and the collection detail page's add-artwork
+// picker (js/collection.js), since both list the same underlying pool, just
+// for different purposes (browsing vs. picking items for a board).
+async function fetchSavedWeavoArt(userId) {
+  const { data, error } = await sb.from('mosaic_submission_saves')
+    .select('created_at,mosaic_submissions(id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url)')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) { console.error('load saved weavo art error:', error); return []; }
+  return (data || []).map(row => row.mosaic_submissions).filter(Boolean);
+}
+
 // ---------- confirm dialog ----------
 // `confirmText`, when given, gates the OK button behind an input field
 // that must match it exactly — used for the highest-stakes destructive
