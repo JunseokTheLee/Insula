@@ -728,7 +728,11 @@ document.getElementById('ua-submit').onclick = async () => {
       art_title: meta.title || null, art_material: meta.material || null, art_completed_date: meta.completedDate,
       art_description: meta.description || null, art_link: meta.link || null
     }).select('id').single();
-    if (insErr || !inserted) { console.error('profile artwork insert error:', insErr); toast(tr('couldNotSubmitRetry')); return; }
+    if (insErr || !inserted) {
+      console.error('profile artwork insert error:', insErr);
+      toast(insErr && insErr.code === 'RATE1' ? tr('uploadRateLimited') : tr('couldNotSubmitRetry'));
+      return;
+    }
 
     closeUploadArtModal();
     toast(tr('findingBestSpot'));

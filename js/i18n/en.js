@@ -58,6 +58,7 @@ const T = {
   projectReshapedWithDrop: 'Grid reshaped — {dropped} piece(s) returned to their artists\' profiles.',
   addImageFirst: 'Add an image first.', linkMustBeValidUrl: 'That link needs to be a valid http(s) URL.',
   findingBestSpot: 'Finding the best spot…', couldNotSubmitRetry: 'Could not submit — try again',
+  uploadRateLimited: 'Too many uploads in a short time — please wait a few minutes and try again.',
   uploadingToast: 'Uploading…',
   artworkMatchedToast: 'Your artwork found a match and is part of a project!',
   artworkPooledToast: 'Added to your profile — waiting for a good match.',

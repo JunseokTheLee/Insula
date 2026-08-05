@@ -58,6 +58,7 @@ const T = {
   projectReshapedWithDrop: '그리드가 재구성되었습니다 — {dropped}개의 작품이 작가의 프로필로 돌아갔습니다.',
   addImageFirst: '먼저 이미지를 추가해주세요.', linkMustBeValidUrl: '링크는 올바른 http(s) URL이어야 합니다.',
   findingBestSpot: '가장 알맞은 자리를 찾는 중…', couldNotSubmitRetry: '제출할 수 없습니다 — 다시 시도해주세요',
+  uploadRateLimited: '짧은 시간 동안 너무 많이 업로드했습니다 — 잠시 후 다시 시도해주세요.',
   uploadingToast: '업로드 중…',
   artworkMatchedToast: '작품이 매칭되어 프로젝트에 포함되었습니다!',
   artworkPooledToast: '프로필에 추가되었습니다 — 잘 맞는 프로젝트를 기다리는 중이에요.',
