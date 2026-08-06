@@ -43,7 +43,7 @@
 }
 .saves-list-row:hover{background:var(--forest-08);}
 .saves-list-avatar,.saves-list-avatar-fallback{width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;}
-.saves-list-thumb{width:36px;height:36px;border-radius:6px;flex-shrink:0;object-fit:cover;background:var(--hairline);}
+.saves-list-thumb{width:36px;height:36px;border-radius:6px;flex-shrink:0;object-fit:cover;background:var(--hairline);color:transparent;overflow:hidden;}
 .saves-list-avatar-fallback{
   background:var(--forest);color:var(--paper);display:flex;align-items:center;justify-content:center;
   font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;
@@ -96,7 +96,7 @@
   display:block;color:inherit;text-decoration:none;
 }
 .profile-art-thumb:hover{background:#fff;}
-.profile-art-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.profile-art-thumb img{width:100%;height:100%;object-fit:cover;display:block;color:transparent;}
 .pool-badge{
   position:absolute;left:0;right:0;bottom:0;padding:4px 6px;text-align:center;
   background:rgba(26,60,43,.78);color:var(--paper);

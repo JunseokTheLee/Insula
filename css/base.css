@@ -149,8 +149,12 @@ body.no-scroll-lock{overflow:hidden;}
   display:block;color:inherit;text-decoration:none;
 }
 .pv-card:hover{background:#fff;}
-.pv-card-thumb{aspect-ratio:1;background:var(--paper);}
-.pv-card-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.pv-card-thumb{aspect-ratio:1;background:var(--paper);position:relative;}
+.pv-card-thumb img{width:100%;height:100%;object-fit:cover;display:block;color:transparent;}
+.pv-card-thumb:empty::after{
+  content:'🖼';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:22px;opacity:.2;
+}
 .pv-card-info{padding:10px 12px;}
 .pv-card-title{font-family:'General Sans',sans-serif;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .pv-card-title:empty{display:none;}
