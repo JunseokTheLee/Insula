@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Weavo 소개</title>
-<meta name="description" content="Weavo가 무엇인지, 왜 만들어졌는지, 제출된 작품이 모여 하나의 모자이크가 되는 과정을 소개합니다.">
+<meta name="description" content="Weavo가 무엇인지, 왜 만들어졌는지, 그리고 각자의 작품이 모여 하나의 공동 모자이크를 완성해 가는 과정을 소개합니다.">
 <link rel="canonical" href="https://weavo.art/ko/about">
 <link rel="alternate" hreflang="en" href="https://weavo.art/en/about">
 <link rel="alternate" hreflang="ko" href="https://weavo.art/ko/about">
@@ -13,66 +13,143 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
 <meta property="og:title" content="Weavo 소개">
-<meta property="og:description" content="Weavo가 무엇인지, 왜 만들어졌는지, 제출된 작품이 모여 하나의 모자이크가 되는 과정을 소개합니다.">
+<meta property="og:description" content="Weavo가 무엇인지, 왜 만들어졌는지, 그리고 각자의 작품이 모여 하나의 공동 모자이크를 완성해 가는 과정을 소개합니다.">
 <meta property="og:url" content="https://weavo.art/ko/about">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Weavo 소개">
-<meta name="twitter:description" content="Weavo가 무엇인지, 왜 만들어졌는지, 제출된 작품이 모여 하나의 모자이크가 되는 과정을 소개합니다.">
+<meta name="twitter:description" content="Weavo가 무엇인지, 왜 만들어졌는지, 그리고 각자의 작품이 모여 하나의 공동 모자이크를 완성해 가는 과정을 소개합니다.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/ko/","logo":"https://weavo.art/logo.png"}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/ko/"},{"@type":"ListItem","position":2,"name":"소개","item":"https://weavo.art/ko/about"}]}</script>
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"Organization",
+  "name":"Weavo",
+  "url":"https://weavo.art/ko/",
+  "logo":"https://weavo.art/logo.png"
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BreadcrumbList",
+  "itemListElement":[
+    {
+      "@type":"ListItem",
+      "position":1,
+      "name":"Weavo",
+      "item":"https://weavo.art/ko/"
+    },
+    {
+      "@type":"ListItem",
+      "position":2,
+      "name":"소개",
+      "item":"https://weavo.art/ko/about"
+    }
+  ]
+}
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="/css/base.css">
 </head>
+
 <body>
 
 <div class="app">
   <header class="topnav">
     <a class="logo" id="logoHome" href="/ko/">Weavo</a>
+
     <nav class="nav-links">
       <a href="/ko/projects" class="nav-link">프로젝트</a>
       <a href="/ko/network" class="nav-link">네트워크</a>
-      <a href="/ko/artists" class="nav-link">작가</a>
+      <a href="/ko/artists" class="nav-link">아티스트</a>
       <a href="/ko/about" class="nav-link active">소개</a>
     </nav>
+
     <div id="identity">
-        <div class="lang-toggle" id="langToggle">
-          <button type="button" class="lang-btn" data-lang="en">EN</button>
-          <button type="button" class="lang-btn" data-lang="ko">한</button>
-        </div>
-        <img id="myAvatar" alt="">
-        <span id="myName" class="guest">게스트</span>
-        <button id="loginBtn" class="id-btn">로그인</button>
-        <button id="logoutBtn" class="id-btn" style="display:none">로그아웃</button>
+      <div class="lang-toggle" id="langToggle">
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+        <button type="button" class="lang-btn" data-lang="ko">한</button>
       </div>
+
+      <img id="myAvatar" alt="">
+      <span id="myName" class="guest">게스트</span>
+      <button id="loginBtn" class="id-btn">로그인</button>
+      <button id="logoutBtn" class="id-btn" style="display:none">로그아웃</button>
+    </div>
   </header>
 
   <main class="main main-scroll">
     <div class="backnav">
-      <a class="back" href="/ko/projects">&larr; 뒤로</a>
+      <a class="back" href="/ko/projects">&larr; 돌아가기</a>
     </div>
+
     <div class="legal-page">
       <h1>소개</h1>
+
       <div class="legal-body">
-        <h2>Weavo란</h2>
-        <p>Weavo는 협업 예술 프로젝트입니다. 누구나 작품을 제출하고 그것이 더 큰 무언가의 일부가 되는 과정을 지켜볼 수 있습니다 — 모든 제출작은 대표 색상에 따라 공동 Weavo에 배치되며, 모두가 한 조각씩 기여했기에 완성되는 그림입니다.</p>
-        <h2>이 프로젝트를 만든 이유</h2>
-        <p>이 프로젝트는 신경다양인과 신경전형인 아티스트가 나란히 함께하는 것을 중심에 둡니다. 누가, 어떻게 만들었는지와 상관없이 모든 작품은 전체에 동등하게 기여합니다.</p>
-        <h2>작동 방식</h2>
+
+        <h2>Weavo란?</h2>
+        <p>
+          Weavo는 함께 만들어가는 협업 예술 프로젝트입니다.
+          누구나 자신의 작품을 제출하고, 그 작품이 더 큰 하나의 작품을 이루는 일부가 되는 과정을 볼 수 있습니다.
+          제출된 모든 작품은 작품의 대표 색상을 기준으로 공동 Weavo 안에 배치됩니다.
+          그렇게 한 사람 한 사람의 작품이 모여, 모두가 하나씩 기여했기에 비로소 완성될 수 있는 하나의 이미지를 만들어 갑니다.
+        </p>
+
+        <h2>왜 만들었나요?</h2>
+        <p>
+          이 프로젝트는 신경다양성 아티스트와 신경전형적 아티스트가 서로 구분되지 않은 채 나란히 작품으로 연결되는 공간을 지향합니다.
+          누가 만들었는지, 또는 어떤 방식으로 만들었는지와 관계없이 모든 작품은 전체를 완성하는 데 동등한 하나의 조각으로 참여합니다.
+        </p>
+
+        <h2>어떻게 작동하나요?</h2>
         <ol class="about-steps">
-          <li><strong>프로젝트를 선택</strong>하고 작품을 업로드하세요.</li>
-          <li><strong>Weavo가 대표 색상을 자동으로 읽습니다</strong> — 별도의 태그 작업은 필요 없어요.</li>
-          <li><strong>가장 잘 맞는 빈 칸에 자동으로 배치</strong>됩니다. 누군가 손으로 칸을 옮기지 않아요.</li>
-          <li><strong>그림은 스스로 완성되어갑니다</strong>. 한 점씩 제출이 쌓이며, 충분한 조각이 모여야 비로소 전체 그림이 드러납니다.</li>
+          <li>
+            <strong>프로젝트를 선택하고</strong> 작품을 업로드합니다.
+          </li>
+
+          <li>
+            <strong>Weavo가 작품의 대표 색상을 자동으로 분석합니다.</strong>
+            별도의 태그를 입력할 필요가 없습니다.
+          </li>
+
+          <li>
+            <strong>작품은 공동 그리드의 빈 칸 가운데 색상이 가장 잘 어울리는 위치에 자동으로 배치됩니다.</strong>
+            사람이 직접 작품의 위치를 정하지 않습니다.
+          </li>
+
+          <li>
+            <strong>작품이 하나씩 추가될 때마다 전체 이미지가 스스로 만들어집니다.</strong>
+            충분한 작품이 모인 뒤에야 비로소 하나의 완전한 모습이 드러납니다.
+          </li>
         </ol>
-        <p>이는 전통 모자이크를 거꾸로 뒤집은 방식입니다. 모자이크 작가는 완성될 그림을 미리 그린 뒤 조각을 잘라 맞춰 넣지만, Weavo는 색상 논리만 가진 채 시작합니다 — 작품이 먼저이고, 서로의 그림을 본 적 없는 사람들이 제출하며, 그림은 나중에야 드러납니다. 멀리서 보면 여느 모자이크처럼 보이지만, 가까이 다가가면 조각 하나하나가 누군가의 온전한 작품임을 알게 됩니다.</p>
-        <h2>만든 사람</h2>
-        <p>Weavo는 독립적으로 커뮤니티가 만들어가는 프로젝트입니다. 질문, 의견, 아이디어가 있다면 <a href="mailto:jadyenthelee@gmail.com">jadyenthelee@gmail.com</a>으로 연락해주세요.</p>
+
+        <p>
+          이것은 어떻게 보면 거꾸로 만들어지는 모자이크입니다.
+          일반적인 모자이크는 먼저 완성할 이미지를 정한 뒤 그 이미지에 맞도록 각각의 조각을 만들어 배치합니다.
+          하지만 Weavo는 색상의 규칙 외에는 아무것도 정하지 않은 채 시작합니다.
+          서로의 작품을 한 번도 본 적 없는 사람들이 먼저 각자의 작품을 만들고,
+          그 작품들이 모인 뒤에야 비로소 전체 이미지가 모습을 드러냅니다.
+          멀리서 바라보면 하나의 모자이크처럼 보이지만,
+          가까이 다가가면 각각의 '타일'이 사실 누군가가 완성한 하나의 독립된 작품이라는 것을 발견할 수 있습니다.
+        </p>
+
+        <h2>누가 만들고 있나요?</h2>
+        <p>
+          Weavo는 커뮤니티와 함께 만들어가는 독립 프로젝트입니다.
+          질문이나 의견, 새로운 아이디어가 있다면
+          <a href="mailto:jadyenthelee@gmail.com">jadyenthelee@gmail.com</a>으로 연락해 주세요.
+        </p>
+
       </div>
     </div>
   </main>
+
   <footer id="legal-footer">
     <a href="/ko/privacy">개인정보처리방침</a>
     <span class="sep" aria-hidden="true">&middot;</span>
@@ -80,85 +157,185 @@
   </footer>
 </div>
 
-<!-- Edit profile modal -->
+
+<!-- 프로필 수정 모달 -->
 <div id="edit-profile-modal" class="modal-overlay">
   <div id="edit-profile-dialog" class="modal-panel">
+
     <div style="display:flex;justify-content:flex-end;margin:0 0 8px;">
       <div class="lang-toggle">
         <button type="button" class="lang-btn" data-lang="en">EN</button>
         <button type="button" class="lang-btn" data-lang="ko">한</button>
       </div>
     </div>
+
     <h3 id="ep-dialog-title">프로필 수정</h3>
-    <p id="ep-required-note" style="display:none;font-size:12px;color:var(--muted);margin-top:-8px;">계정을 완성하려면 사용자 이름을 설정하세요.</p>
+
+    <p
+      id="ep-required-note"
+      style="display:none;font-size:12px;color:var(--muted);margin-top:-8px;"
+    >
+      계정 생성을 완료하려면 사용자 이름을 설정해 주세요.
+    </p>
+
     <div class="field" style="align-items:center;">
-      <label style="text-align:center;">프로필 사진 <span class="field-hint">(선택)</span></label>
+      <label style="text-align:center;">
+        프로필 사진 <span class="field-hint">(선택 사항)</span>
+      </label>
+
       <div class="img-upload-area avatar-picker" id="ep-avatar-picker">
-        <div class="img-placeholder"><span class="up-icon">🙂</span><span>업로드</span></div>
+        <div class="img-placeholder">
+          <span class="up-icon">🙂</span>
+          <span>업로드</span>
+        </div>
+
         <img class="img-preview" alt="">
-        <button type="button" class="img-remove" aria-label="프로필 사진 제거">✕</button>
+
+        <button
+          type="button"
+          class="img-remove"
+          aria-label="프로필 사진 삭제"
+        >
+          ✕
+        </button>
+
         <input type="file" class="img-input" accept="image/*">
       </div>
     </div>
+
     <div class="field">
-      <label for="ep-username">사용자 이름<span class="field-hint" id="ep-username-hint"></span></label>
-      <input type="text" id="ep-username" placeholder="사용자이름" maxlength="30">
+      <label for="ep-username">
+        사용자 이름
+        <span class="field-hint" id="ep-username-hint"></span>
+      </label>
+
+      <input
+        type="text"
+        id="ep-username"
+        placeholder="사용자이름"
+        maxlength="30"
+      >
     </div>
+
     <div class="field">
       <label for="ep-country">국가</label>
+
       <select id="ep-country">
         <option value="">국가를 선택하세요&hellip;</option>
       </select>
     </div>
+
     <div class="field">
-      <label for="ep-bio">소개 <span class="field-hint">(선택)</span></label>
-      <textarea id="ep-bio" placeholder="자신을 간단히 소개해보세요…" maxlength="300"></textarea>
+      <label for="ep-bio">
+        소개 <span class="field-hint">(선택 사항)</span>
+      </label>
+
+      <textarea
+        id="ep-bio"
+        placeholder="자신에 대해 간단히 소개해 주세요…"
+        maxlength="300"
+      ></textarea>
     </div>
+
     <div id="ep-links-fields"></div>
     <div class="field-error" id="ep-error"></div>
+
     <div class="modal-actions">
       <button id="ep-cancel" class="btn-cancel">취소</button>
       <button id="ep-submit" class="btn-primary">저장</button>
     </div>
+
     <div class="ep-danger-zone" id="ep-danger-zone">
-      <button type="button" id="ep-delete-account" class="link-danger">계정 삭제</button>
+      <button
+        type="button"
+        id="ep-delete-account"
+        class="link-danger"
+      >
+        계정 삭제
+      </button>
     </div>
+
   </div>
 </div>
 
-<!-- Auth modal -->
+
+<!-- 로그인 모달 -->
 <div id="auth-modal" class="modal-overlay">
   <div id="auth-dialog" class="modal-panel">
+
     <div class="auth-icon">🖼️</div>
-    <h3>Weavo에 참여하기</h3>
-    <p>커뮤니티 Weavo에 작품을 제출하려면 로그인하세요.</p>
+
+    <h3>Weavo에 참여하세요</h3>
+
+    <p>
+      로그인하고 여러분의 작품을 커뮤니티 Weavo에 더해 보세요.
+    </p>
+
     <button id="google-signin-btn" class="oauth-signin-btn">
-      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2z"/>
-        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
-        <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
-        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 18 18"
+        aria-hidden="true"
+      >
+        <path
+          fill="#4285F4"
+          d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2z"
+        />
+        <path
+          fill="#34A853"
+          d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"
+        />
+        <path
+          fill="#FBBC05"
+          d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+        />
+        <path
+          fill="#EA4335"
+          d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
+        />
       </svg>
+
       <span>Google로 계속하기</span>
     </button>
+
     <button id="auth-close">나중에 하기</button>
   </div>
 </div>
 
-<!-- Confirm dialog -->
+
+<!-- 확인 대화상자 -->
 <div id="confirm-modal" class="modal-overlay">
   <div id="confirm-dialog" class="modal-panel">
-    <h3 id="confirm-title">확실한가요?</h3>
-    <p id="confirm-message" style="font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 4px;"></p>
-    <div class="field" id="confirm-input-wrap" style="display:none;margin:2px 0 0;">
-      <input type="text" id="confirm-input" autocomplete="off" spellcheck="false">
+
+    <h3 id="confirm-title">계속하시겠습니까?</h3>
+
+    <p
+      id="confirm-message"
+      style="font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 4px;"
+    ></p>
+
+    <div
+      class="field"
+      id="confirm-input-wrap"
+      style="display:none;margin:2px 0 0;"
+    >
+      <input
+        type="text"
+        id="confirm-input"
+        autocomplete="off"
+        spellcheck="false"
+      >
     </div>
+
     <div class="modal-actions">
       <button id="confirm-cancel" class="btn-cancel">취소</button>
       <button id="confirm-ok" class="btn-primary">계속</button>
     </div>
+
   </div>
 </div>
+
 
 <div id="toast"></div>
 
@@ -166,5 +343,6 @@
 <script src="/js/i18n/ko.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/auth.js"></script>
+
 </body>
 </html>
