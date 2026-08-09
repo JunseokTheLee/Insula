@@ -89,7 +89,7 @@
 /* ---------- carousel ---------- */
 .carousel-section{flex-shrink:0;padding:20px 0 0;}
 .carousel-section.empty{display:none;}
-.carousel-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;max-width:1600px;margin:0 auto 22px;padding:0 32px;}
+.carousel-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1600px;margin:0 auto 22px;padding:0 32px;}
 .carousel-header .section-label{margin:0;}
 .carousel-nav{display:flex;gap:10px;}
 .car-arrow{
