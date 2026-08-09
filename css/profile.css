@@ -133,7 +133,11 @@
 .pg-link{stroke:var(--hairline-strong);stroke-width:1.4px;fill:none;}
 .pg-link.pg-mutual{stroke:var(--forest);stroke-width:1.6px;}
 
+/* ---------- standalone collection page item grid ---------- */
+#collectionItemsGrid{padding:0 32px;}
+
 @media (max-width:640px){
   .profile-head,.profile-section{padding-left:16px;padding-right:16px;}
   .profile-head-actions{margin-left:0;}
+  #collectionItemsGrid{padding-left:16px;padding-right:16px;}
 }

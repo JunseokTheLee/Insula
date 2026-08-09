@@ -19,3 +19,7 @@
 .network-graph-panel .pg-label{transition:opacity .15s linear;}
 .network-graph-panel .pg-node.pg-dimmed,
 .network-graph-panel .pg-label.pg-dimmed{opacity:.3;}
+
+@media (max-width:640px){
+  .network-page{padding-left:16px;padding-right:16px;}
+}
