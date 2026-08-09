@@ -103,6 +103,7 @@
   min-height:60vh;margin:0 32px 40px;
 }
 .artwork-stage .lightbox-stage{padding:24px;opacity:1;transform:none;}
+.artwork-stage #lightbox-img{max-width:100%;height:auto;display:block;}
 .artwork-stage #lightbox-caption{position:static;}
 @media (max-width:760px){
   .artwork-stage{flex-direction:column;min-height:0;}

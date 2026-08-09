@@ -68,6 +68,7 @@
 .stat-label{font-family:'General Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);margin-top:6px;}
 @media (max-width:900px){
   .hero-inner{flex-direction:column;gap:32px;}
+  .hero-left,.hero-right{flex:none;}
   .hero-right{width:100%;}
   .hero-preview{max-width:420px;}
 }
@@ -85,6 +86,35 @@
 .scroll-hint svg{width:20px;height:20px;animation:bounce 1.8s ease-in-out infinite;}
 .scroll-hint.hidden{display:none;}
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
+
+/* ---------- how it works ---------- */
+.hiw{flex-shrink:0;width:100%;max-width:1400px;margin:0 auto;padding:64px 32px 56px;}
+.hiw-header{max-width:640px;margin:0 0 40px;}
+.hiw-header .section-label{margin:4px 0 14px;}
+.hiw-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(28px,3.4vw,40px);letter-spacing:-.02em;line-height:1.05;margin:0 0 14px;color:var(--forest);}
+.hiw-intro{font-family:'General Sans',sans-serif;color:var(--muted);font-size:15px;line-height:1.6;margin:0;}
+.hiw-steps{list-style:none;margin:0;padding:0;border-top:1px solid var(--hairline);}
+.hiw-step{
+  display:flex;gap:32px;align-items:flex-start;padding:32px 0;
+  border-bottom:1px solid var(--hairline);border-left:3px solid var(--coral);padding-left:24px;
+}
+.hiw-step:nth-child(2){border-left-color:var(--mint);}
+.hiw-step:nth-child(3){border-left-color:var(--gold);}
+.hiw-step:nth-child(4){border-left-color:var(--forest);}
+.hiw-step:nth-child(5){border-left-color:var(--coral);}
+.hiw-num{
+  flex:0 0 auto;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:40px;
+  letter-spacing:-.02em;color:var(--hairline-strong);width:76px;line-height:1;
+}
+.hiw-step-text{flex:1 1 auto;min-width:0;max-width:720px;}
+.hiw-step-text h3{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.01em;margin:0 0 10px;color:var(--forest);}
+.hiw-step-text p{font-family:'General Sans',sans-serif;font-size:14.5px;line-height:1.65;color:var(--ink);margin:0;}
+@media (max-width:640px){
+  .hiw{padding:40px 16px 40px;}
+  .hiw-step{gap:16px;padding-left:14px;}
+  .hiw-num{width:auto;font-size:28px;}
+  .hiw-step-text h3{font-size:17px;}
+}
 
 /* ---------- carousel ---------- */
 .carousel-section{flex-shrink:0;padding:20px 0 0;}

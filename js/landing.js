@@ -96,7 +96,7 @@ async function loadRecentArtworks() {
 }
 
 document.getElementById('scrollHint').onclick = () => {
-  document.getElementById('recentArtworksPanel').scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('howItWorksPanel').scrollIntoView({ behavior: 'smooth' });
 };
 
 // The lightbox's delete/remove-from-project actions (js/lightbox.js) call
