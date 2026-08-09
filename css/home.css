@@ -91,6 +91,9 @@
 .carousel-section.empty{display:none;}
 .carousel-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1600px;margin:0 auto 22px;padding:0 32px;}
 .carousel-header .section-label{margin:0;}
+/* Latest Artworks section: match the hero/stats-bar content width (1400px)
+   above it so left/right edges line up instead of the wider 1600px carousel default. */
+#recentArtworksPanel .carousel-header{max-width:1464px;}
 .carousel-nav{display:flex;gap:10px;}
 .car-arrow{
   width:46px;height:46px;border-radius:50%;border:1px solid var(--hairline-strong);background:var(--paper);color:var(--ink);
@@ -188,7 +191,7 @@
 @media (max-width:640px){ .projects-grid{padding-left:16px;padding-right:16px;padding-bottom:56px;} }
 
 /* ---------- landing: latest artworks ---------- */
-.artworks-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;padding:0 32px 32px;}
+.artworks-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;padding:0 32px 32px;width:100%;max-width:1464px;margin:0 auto;}
 .artwork-card{
   position:relative;border:none;border-radius:0;cursor:pointer;
   background:var(--paper);box-shadow:0 0 0 0.5px var(--hairline-strong);
