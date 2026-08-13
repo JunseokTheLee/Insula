@@ -1,5 +1,9 @@
 -- Run this once in the Supabase SQL editor (Project → SQL Editor → New query).
--- Likes and saves on individual mosaic artwork submissions (weavo.html).
+-- Likes on individual mosaic artwork submissions (weavo.html) — also the
+-- pool a user's profile "Liked" grid and the Collections add-artwork picker
+-- draw from (there is no separate "save"/"collect" concept anymore; see
+-- supabase_migrate_saves_into_likes.sql for the one-time migration off the
+-- old mosaic_submission_saves table).
 -- Mirrors the pattern used by public.cell_likes (supabase_likes.sql) but
 -- keys off mosaic_submissions.id instead of a cell_key string, since mosaic
 -- artwork lives in its own table.
@@ -34,36 +38,6 @@ create policy "Users can remove their own mosaic like"
 grant select on public.mosaic_submission_likes to anon, authenticated;
 grant insert, delete on public.mosaic_submission_likes to authenticated;
 
--- ── saves (bookmarks) ────────────────────────────────────────────────────
-create table if not exists public.mosaic_submission_saves (
-  submission_id bigint not null references public.mosaic_submissions(id) on delete cascade,
-  user_id       uuid not null references auth.users(id) on delete cascade,
-  created_at    timestamptz not null default now(),
-  primary key (submission_id, user_id)
-);
-
-create index if not exists mosaic_submission_saves_user_id_idx
-  on public.mosaic_submission_saves (user_id);
-
-alter table public.mosaic_submission_saves enable row level security;
-
--- Saves are public — they're shown on the saving user's profile page
--- (main.html / profile.js), so anyone needs to be able to read them.
-drop policy if exists "Users can view their own mosaic saves" on public.mosaic_submission_saves;
-drop policy if exists "Mosaic saves are viewable by everyone" on public.mosaic_submission_saves;
-create policy "Mosaic saves are viewable by everyone"
-  on public.mosaic_submission_saves for select
-  using (true);
-
-drop policy if exists "Signed-in users can save mosaic artwork" on public.mosaic_submission_saves;
-create policy "Signed-in users can save mosaic artwork"
-  on public.mosaic_submission_saves for insert
-  with check (auth.uid() = user_id);
-
-drop policy if exists "Users can remove their own mosaic save" on public.mosaic_submission_saves;
-create policy "Users can remove their own mosaic save"
-  on public.mosaic_submission_saves for delete
-  using (auth.uid() = user_id);
-
-grant select on public.mosaic_submission_saves to anon, authenticated;
-grant insert, delete on public.mosaic_submission_saves to authenticated;
+-- Likes are also shown on the liking user's own profile page (profile.html/
+-- js/profile-view.js), the same role mosaic_submission_saves used to play,
+-- which is why the select policy above is public rather than owner-only.

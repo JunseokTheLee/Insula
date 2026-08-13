@@ -176,18 +176,37 @@ async function uploadArtworkImage(file) {
   return { url, thumbUrl: sb.storage.from('artwork').getPublicUrl(path).data.publicUrl };
 }
 
-// ---------- saved artwork pool (mosaic_submission_saves) ----------
-// A user's flat "Collect"-ed pool — shared by the profile page's own Saved
-// grid (js/profile-view.js) and the collection detail page's add-artwork
-// picker (js/collection.js), since both list the same underlying pool, just
-// for different purposes (browsing vs. picking items for a board).
-async function fetchSavedWeavoArt(userId) {
-  const { data, error } = await sb.from('mosaic_submission_saves')
+// ---------- liked artwork pool (mosaic_submission_likes) ----------
+// A user's flat liked pool — powers the profile page's own Liked grid
+// (js/profile-view.js). There used to be a separate "save"/"Collect" table
+// backing this; it was merged into likes so liking a piece is the only way
+// a piece a user doesn't own gets into this pool.
+async function fetchLikedWeavoArt(userId) {
+  const { data, error } = await sb.from('mosaic_submission_likes')
     .select('created_at,mosaic_submissions(id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
-  if (error) { console.error('load saved weavo art error:', error); return []; }
+  if (error) { console.error('load liked weavo art error:', error); return []; }
   return (data || []).map(row => row.mosaic_submissions).filter(Boolean);
+}
+
+// ---------- collectible artwork pool (liked ∪ own) ----------
+// Everything a user can add to one of their Collections: their liked pool
+// above, plus every piece they've authored themselves — a user's own
+// artwork should always be addable to their own collections, whether or
+// not they've separately liked it. Backs the collection detail page's
+// add-artwork picker (js/collection.js's openAddArtworkModal).
+async function fetchCollectibleWeavoArt(userId) {
+  const [liked, { data: own, error: ownErr }] = await Promise.all([
+    fetchLikedWeavoArt(userId),
+    sb.from('mosaic_submissions')
+      .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url')
+      .eq('author_id', userId),
+  ]);
+  if (ownErr) console.error('load own weavo art error:', ownErr);
+  const byId = new Map(liked.map(sub => [sub.id, sub]));
+  for (const sub of (own || [])) byId.set(sub.id, sub);
+  return [...byId.values()];
 }
 
 // ---------- confirm dialog ----------

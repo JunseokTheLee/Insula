@@ -1,12 +1,12 @@
 -- Run this once in the Supabase SQL editor (Project → SQL Editor → New query).
 --
 -- "Collections" — named boards a user curates from artwork they've already
--- collected (mosaic_submission_saves, supabase_mosaic_likes.sql). Separate
--- from that flat bookmark list: saving a piece just puts it in your pool,
--- a collection is a titled, shareable grouping you build from that pool
--- (a mini exhibition) — same relationship as a Pinterest save vs. a board.
--- Membership here is independent of mosaic_submission_saves once added: a
--- piece stays on a board even if you later un-save it, matching how boards
+-- liked (mosaic_submission_likes, supabase_mosaic_likes.sql). Separate from
+-- that flat liked pool: liking a piece just puts it in your pool, a
+-- collection is a titled, shareable grouping you build from that pool (a
+-- mini exhibition) — same relationship as a Pinterest save vs. a board.
+-- Membership here is independent of mosaic_submission_likes once added: a
+-- piece stays on a board even if you later un-like it, matching how boards
 -- behave everywhere else.
 
 create table if not exists public.mosaic_collections (

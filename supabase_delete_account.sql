@@ -9,7 +9,7 @@
 --
 -- Every table that references auth.users(id) here does so with
 -- "on delete cascade" (profiles, mosaic_submissions, mosaic_submission_comments,
--- mosaic_submission_likes/saves, profile_comments, user_saves — see
+-- mosaic_submission_likes, profile_comments, user_saves — see
 -- supabase_profiles.sql, supabase_mosaic.sql, supabase_mosaic_comments.sql,
 -- supabase_mosaic_likes.sql, supabase_user_saves.sql), so deleting the
 -- auth.users row alone cleans up everything the user created.

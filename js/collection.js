@@ -1,7 +1,7 @@
 // Collection detail page (/{lang}/collections/{id}) — a named board an
-// artist curates from artwork they've already collected (mosaic_submission_
-// saves, js/lightbox.js's Collect button). Reads the collection id from the
-// URL. Needs sb, me, tr, common.js (fetchSavedWeavoArt), lightbox.js already loaded.
+// artist curates from artwork they've already liked (mosaic_submission_
+// likes, js/lightbox.js's like button). Reads the collection id from the
+// URL. Needs sb, me, tr, common.js (fetchLikedWeavoArt), lightbox.js already loaded.
 "use strict";
 
 let currentCollection = null;
@@ -125,12 +125,12 @@ async function openCollection(id) {
   deleteBtn.onclick = () => deleteCollection(collection);
 }
 
-// ---------- add artwork picker (owner adding from their own Saved pool) ----------
-// Same underlying pool and the same insert/delete into mosaic_collection_items
-// as profile-view.js's atcRowEl (that one picks collections for a given
-// piece; this one picks pieces for a given collection) — re-fetched fresh
-// each time the modal opens rather than cached, since what's in the pool
-// can change from other tabs/pages between opens.
+// ---------- add artwork picker (owner adding from their liked+own pool) ----------
+// Same underlying insert/delete into mosaic_collection_items as
+// profile-view.js's atcRowEl (that one picks collections for a given piece;
+// this one picks pieces for a given collection) — re-fetched fresh each
+// time the modal opens rather than cached, since what's in the pool can
+// change from other tabs/pages between opens.
 function aaRowEl(sub) {
   const row = document.createElement('label');
   row.className = 'saves-list-row';
@@ -164,7 +164,7 @@ async function openAddArtworkModal() {
   list.innerHTML = '';
   empty.style.display = 'none';
   document.getElementById('add-artwork-modal').classList.add('open');
-  const pool = await fetchSavedWeavoArt(me.id);
+  const pool = await fetchCollectibleWeavoArt(me.id);
   empty.style.display = pool.length ? 'none' : '';
   for (const sub of pool) list.appendChild(aaRowEl(sub));
 }

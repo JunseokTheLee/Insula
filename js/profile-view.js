@@ -1,4 +1,4 @@
-// Profile page: header, contributed/submitted/saved artwork, and this
+// Profile page: header, contributed/submitted/liked artwork, and this
 // user's own save-relationship graph. Reads the profile's user id from
 // ?user= (falls back to the signed-in user once auth resolves, if none
 // given). Needs common.js, auth.js, lightbox.js and js/graph-common.js.
@@ -138,7 +138,7 @@ function profileProjectCardEl(project) {
   card.appendChild(info);
   return card;
 }
-// ---------- collections (named boards built from the Saved pool) ----------
+// ---------- collections (named boards built from the Liked pool) ----------
 // Items are embedded per collection (rather than fetched separately) so a
 // collection's cover thumb and item count are both derivable client-side
 // without an extra round trip, and so the add-to-collection picker already
@@ -279,9 +279,9 @@ function closeAddToCollectionModal() {
 document.getElementById('atc-done').onclick = closeAddToCollectionModal;
 document.getElementById('add-to-collection-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAddToCollectionModal(); });
 
-// `showBoardBtn` only applies to the owner's own Saved grid — an overlay
-// button that opens the add-to-collection picker for that piece, without
-// triggering the thumb's own click-to-lightbox behavior.
+// `showBoardBtn` is passed for the owner's own Submitted and Liked grids —
+// an overlay button that opens the add-to-collection picker for that piece,
+// without triggering the thumb's own click-to-lightbox behavior.
 function profileArtThumbEl(sub, pending, showBoardBtn) {
   const el = document.createElement('a');
   el.className = 'profile-art-thumb';
@@ -571,20 +571,20 @@ async function loadProfileView(userId) {
   document.getElementById('profileProjectsSection').style.display = 'none';
   document.getElementById('profileProjectsGrid').innerHTML = '';
   document.getElementById('profileSubmittedGrid').innerHTML = '';
-  document.getElementById('profileSavedGrid').innerHTML = '';
+  document.getElementById('profileLikedGrid').innerHTML = '';
   document.getElementById('profileCollectionsGrid').innerHTML = '';
   document.getElementById('profileCollectionsSection').style.display = 'none';
   document.getElementById('profileSubmittedEmpty').style.display = 'none';
-  document.getElementById('profileSavedEmpty').style.display = 'none';
+  document.getElementById('profileLikedEmpty').style.display = 'none';
   document.getElementById('profileSaveCounts').style.display = 'none';
   document.getElementById('profileSaveBtn').style.display = 'none';
   resetProfileGraph(userId);
 
   const isOwner = me.id && me.id === userId;
-  const [{ data: profile }, artwork, saved, collections, saveCounts, isSaving] = await Promise.all([
+  const [{ data: profile }, artwork, liked, collections, saveCounts, isSaving] = await Promise.all([
     sb.from('profiles').select('id,name,username,avatar_url,bio,links,country_id,created_at').eq('id', userId).maybeSingle(),
     fetchUserArtwork(userId),
-    fetchSavedWeavoArt(userId),
+    fetchLikedWeavoArt(userId),
     fetchUserCollections(userId),
     fetchSaveCounts(userId),
     (me.id && !isOwner) ? fetchIsSaving(me.id, userId) : Promise.resolve(false),
@@ -635,11 +635,13 @@ async function loadProfileView(userId) {
 
   const submittedGrid = document.getElementById('profileSubmittedGrid');
   if (!artwork.length) document.getElementById('profileSubmittedEmpty').style.display = '';
-  else for (const sub of artwork) submittedGrid.appendChild(profileArtThumbEl(sub, !sub.project_id));
+  // showBoardBtn here too (not just the Liked grid below) so an owner's own
+  // artwork is always addable to a collection, whether or not they've liked it.
+  else for (const sub of artwork) submittedGrid.appendChild(profileArtThumbEl(sub, !sub.project_id, isOwner));
 
-  const savedGrid = document.getElementById('profileSavedGrid');
-  if (!saved.length) document.getElementById('profileSavedEmpty').style.display = '';
-  else for (const sub of saved) savedGrid.appendChild(profileArtThumbEl(sub, false, isOwner));
+  const likedGrid = document.getElementById('profileLikedGrid');
+  if (!liked.length) document.getElementById('profileLikedEmpty').style.display = '';
+  else for (const sub of liked) likedGrid.appendChild(profileArtThumbEl(sub, false, isOwner));
 
   renderCollectionsSection(collections, isOwner);
 

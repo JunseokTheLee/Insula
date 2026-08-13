@@ -11,7 +11,6 @@ const T = {
   areYouSure: '확실한가요?', continueLabel: '계속',
   imageUploadFailed: '이미지 업로드에 실패했습니다: {msg}', imageTooLarge: '이미지가 너무 큽니다 — 최대 8MB',
   couldNotUpdateLike: '좋아요를 업데이트할 수 없습니다', couldNotUpdateCollection: '컬렉션을 업데이트할 수 없습니다',
-  removedFromCollection: '컬렉션에서 제거되었습니다', collectedToast: '컬렉션에 담았습니다!',
   couldNotUpdateSaveUser: '저장을 업데이트할 수 없습니다', saveLabel: '저장', savingLabel: '저장 중',
   savesCountLabel: '저장 {n}', savedByCountLabel: '저장됨 {n}',
   savesListTitle: '저장', savedByListTitle: '저장한 사람', noOneYet: '아직 아무도 없습니다.',

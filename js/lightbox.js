@@ -227,30 +227,26 @@ lbStage.addEventListener('touchmove', e => {
 }, { passive: false });
 lbStage.addEventListener('touchend', () => { lbDragging = false; lbPinchStartDist = 0; lbImg.classList.remove('dragging'); });
 
-// ---------- lightbox likes & saves ----------
+// ---------- lightbox likes ----------
+// A like is the only artwork-engagement concept now — it also puts the
+// piece in the liking user's profile "Liked" grid and the Collections
+// add-artwork picker (see fetchLikedWeavoArt in common.js). There used to
+// be a separate "save"/"Collect" button/table; the two were merged.
 let lbEngagementRequestId = 0;
 async function setupLightboxEngagement(sub) {
   const likeBtn = document.getElementById('lb-like-btn');
   const likeCountEl = document.getElementById('lb-like-count');
-  const saveBtn = document.getElementById('lb-save-btn');
   const myRequest = ++lbEngagementRequestId;
-  likeBtn.disabled = true; saveBtn.disabled = true;
-  likeBtn.classList.remove('active'); saveBtn.classList.remove('active');
+  likeBtn.disabled = true;
+  likeBtn.classList.remove('active');
   likeCountEl.textContent = '…';
-  const [{ data: likes, error: likeErr }, saveRes] = await Promise.all([
-    sb.from('mosaic_submission_likes').select('user_id').eq('submission_id', sub.id),
-    me.id
-      ? sb.from('mosaic_submission_saves').select('user_id').eq('submission_id', sub.id).eq('user_id', me.id).maybeSingle()
-      : Promise.resolve({ data: null })
-  ]);
+  const { data: likes, error: likeErr } = await sb.from('mosaic_submission_likes').select('user_id').eq('submission_id', sub.id);
   if (myRequest !== lbEngagementRequestId) return; // a different piece was opened meanwhile
   const likeList = likeErr || !likes ? [] : likes;
   likeCountEl.textContent = likeList.length;
   likeBtn.classList.toggle('active', me.id ? likeList.some(l => l.user_id === me.id) : false);
-  saveBtn.classList.toggle('active', !!(saveRes && saveRes.data));
-  likeBtn.disabled = false; saveBtn.disabled = false;
+  likeBtn.disabled = false;
   likeBtn.onclick = () => toggleSubmissionLike(sub.id, likeBtn, likeCountEl);
-  saveBtn.onclick = () => toggleSubmissionSave(sub.id, saveBtn);
 }
 async function toggleSubmissionLike(submissionId, btn, countEl) {
   if (!me.id) { openAuthModal(); return; }
@@ -263,18 +259,6 @@ async function toggleSubmissionLike(submissionId, btn, countEl) {
   if (error) { toast(tr('couldNotUpdateLike')); return; }
   btn.classList.toggle('active', !wasLiked);
   countEl.textContent = Number(countEl.textContent || 0) + (wasLiked ? -1 : 1);
-}
-async function toggleSubmissionSave(submissionId, btn) {
-  if (!me.id) { openAuthModal(); return; }
-  const wasSaved = btn.classList.contains('active');
-  btn.disabled = true;
-  const { error } = wasSaved
-    ? await sb.from('mosaic_submission_saves').delete().eq('submission_id', submissionId).eq('user_id', me.id)
-    : await sb.from('mosaic_submission_saves').insert({ submission_id: submissionId, user_id: me.id });
-  btn.disabled = false;
-  if (error) { toast(tr('couldNotUpdateCollection')); return; }
-  btn.classList.toggle('active', !wasSaved);
-  toast(wasSaved ? tr('removedFromCollection') : tr('collectedToast'));
 }
 
 // ---------- delete artwork (author only — permanent, unlike "remove from project" below) ----------

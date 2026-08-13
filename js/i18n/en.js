@@ -11,7 +11,6 @@ const T = {
   areYouSure: 'Are you sure?', continueLabel: 'Continue',
   imageUploadFailed: 'Image upload failed: {msg}', imageTooLarge: 'Image too large — max 8 MB',
   couldNotUpdateLike: 'Could not update like', couldNotUpdateCollection: 'Could not update collection',
-  removedFromCollection: 'Removed from collection', collectedToast: 'Collected!',
   couldNotUpdateSaveUser: 'Could not update save', saveLabel: 'Save', savingLabel: 'Saving',
   savesCountLabel: '{n} Saves', savedByCountLabel: '{n} Saved by',
   savesListTitle: 'Saves', savedByListTitle: 'Saved by', noOneYet: 'No one yet.',

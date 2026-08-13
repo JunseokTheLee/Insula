@@ -384,9 +384,6 @@ body.no-scroll-lock{overflow:hidden;}
 .lb-action-btn .icon::before{content:"♡";}
 #lb-like-btn.active{background:var(--coral);color:var(--forest-dark);border-color:var(--coral);}
 #lb-like-btn.active .icon::before{content:"♥";}
-#lb-save-btn .icon::before{content:"☆";}
-#lb-save-btn.active{background:var(--gold);color:var(--forest-dark);border-color:var(--gold);}
-#lb-save-btn.active .icon::before{content:"★";}
 #lb-comments-btn .icon::before{content:"💬";}
 #lb-comments-btn.active{background:rgba(247,247,245,.16);}
 #lb-delete-btn .icon::before{content:"🗑";}

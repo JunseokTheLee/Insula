@@ -1,14 +1,13 @@
 -- Run this once in the Supabase SQL editor (Project → SQL Editor → New query).
 --
 -- Direct user-to-user "saves" (an Instagram-style follow, renamed to match
--- the app's "Save"/"Saving" terminology) — separate from
--- mosaic_submission_saves (supabase_mosaic_likes.sql), which is the
--- artwork-bookmark feature now surfaced in the UI as "Collections". A row
--- here means saver_id saves saved_id; asymmetric, like a follow, not a
--- mutual friendship — two rows (A saves B, B saves A) is how a mutual
--- relationship is represented, same convention mosaic_submission_saves
--- already uses for the save-relationship graphs (js/network.js,
--- js/profile-view.js).
+-- the app's "Save"/"Saving" terminology) — an unrelated feature from
+-- mosaic_submission_likes (supabase_mosaic_likes.sql), the artwork-like
+-- table also surfaced in the UI as "Collections". A row here means
+-- saver_id saves saved_id; asymmetric, like a follow, not a mutual
+-- friendship — two rows (A saves B, B saves A) is how a mutual
+-- relationship is represented, used by the save-relationship graphs
+-- (js/network.js, js/profile-view.js).
 
 create table if not exists public.user_saves (
   saver_id   uuid not null references auth.users(id) on delete cascade,
