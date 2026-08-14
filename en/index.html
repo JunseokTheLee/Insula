@@ -127,6 +127,88 @@
       </div>
     </section>
 
+    <section class="snap-panel" id="featuresPanel">
+      <div class="features">
+        <div class="hiw-header">
+          <h2 class="section-label">Beyond the Canvas</h2>
+          <h3 class="hiw-title">Two more ways to explore the community.</h3>
+          <p class="hiw-intro">The shared weavo isn't the only thing being built here. Network maps who's paying attention to whom, and Collections let you keep the pieces that matter to you close at hand.</p>
+        </div>
+
+        <div class="feature-row">
+          <div class="feature-text">
+            <span class="feature-tag">Network</span>
+            <h3>A living map of the whole community.</h3>
+            <p>Every save draws a line — from the person doing the saving to the artist they saved. Bigger circles have more connections. Click anyone to light up their local network, drag nodes to rearrange the map, and click again to visit a profile.</p>
+            <a href="/en/network" class="cta-text" style="margin-top:0;">Explore the Network <span aria-hidden="true">&rarr;</span></a>
+          </div>
+          <div class="feature-diagram">
+            <div class="feature-diagram-panel feature-diagram-dark">
+              <svg viewBox="0 0 420 260" class="fd-network" role="img" aria-label="A network diagram of nodes representing artists, connected by directional links representing saves, with the artist's own connections highlighted in mint.">
+                <defs>
+                  <marker id="fdArrowMint" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M0,0 L8,4 L0,8 Z" fill="#9EFFBF"/>
+                  </marker>
+                  <marker id="fdArrowMuted" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M0,0 L8,4 L0,8 Z" fill="rgba(247,247,245,.4)"/>
+                  </marker>
+                </defs>
+                <line x1="325.64" y1="62.97" x2="333.80" y2="165.05" class="fd-link" marker-end="url(#fdArrowMuted)"/>
+                <line x1="67.18" y1="176.27" x2="92.09" y2="76.64" class="fd-link" marker-end="url(#fdArrowMuted)"/>
+                <line x1="211.62" y1="222.71" x2="320.82" y2="184.91" class="fd-link" marker-end="url(#fdArrowMuted)"/>
+                <line x1="194.33" y1="121.14" x2="105.45" y2="70.91" class="fd-link fd-link-mint" marker-end="url(#fdArrowMint)"/>
+                <line x1="321.07" y1="174.43" x2="226.71" y2="136.69" class="fd-link fd-link-mint" marker-end="url(#fdArrowMint)"/>
+                <circle cx="325" cy="55" r="8" class="fd-node"/>
+                <circle cx="65" cy="185" r="9" class="fd-node"/>
+                <circle cx="205" cy="225" r="7" class="fd-node"/>
+                <circle cx="95" cy="65" r="12" class="fd-node fd-node-mint"/>
+                <circle cx="335" cy="180" r="15" class="fd-node fd-node-mint"/>
+                <circle cx="210" cy="130" r="18" class="fd-node fd-node-center"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-row reverse">
+          <div class="feature-text">
+            <span class="feature-tag">Collections</span>
+            <h3>Curate the pieces that matter to you.</h3>
+            <p>Saving an artwork adds it to your pool — starting a Collection turns a handful of those pieces into something shaped on purpose. Give it a title and a short description of what ties it together, add or remove pieces any time, and choose whether it stays private or anyone can browse it.</p>
+            <a href="/en/profile" class="cta-text" style="margin-top:0;">Start a Collection <span aria-hidden="true">&rarr;</span></a>
+          </div>
+          <div class="feature-diagram">
+            <div class="feature-diagram-panel feature-diagram-light">
+              <svg viewBox="0 0 420 210" class="fd-collections" role="img" aria-label="Two collection boards, each holding a small grid of artwork swatches with a title and a public or private label, next to a dashed placeholder card for starting a new collection.">
+                <g class="fd-card">
+                  <rect x="24" y="16" width="118" height="170" rx="2" class="fd-card-body"/>
+                  <rect x="32" y="24" width="49" height="49" class="fd-swatch" fill="#FF8C69"/>
+                  <rect x="85" y="24" width="49" height="49" class="fd-swatch" fill="#F4D35E"/>
+                  <rect x="32" y="77" width="49" height="49" class="fd-swatch" fill="#1A3C2B"/>
+                  <rect x="85" y="77" width="49" height="49" class="fd-swatch" fill="#9EFFBF"/>
+                  <text x="32" y="146" class="fd-card-title">Quiet Blues</text>
+                  <text x="32" y="161" class="fd-card-meta">12 pieces &middot; Public</text>
+                </g>
+                <g class="fd-card">
+                  <rect x="162" y="16" width="118" height="170" rx="2" class="fd-card-body"/>
+                  <rect x="170" y="24" width="49" height="49" class="fd-swatch" fill="#9EFFBF"/>
+                  <rect x="223" y="24" width="49" height="49" class="fd-swatch" fill="#FF8C69"/>
+                  <rect x="170" y="77" width="49" height="49" class="fd-swatch-empty"/>
+                  <rect x="223" y="77" width="49" height="49" class="fd-swatch" fill="#F4D35E"/>
+                  <text x="170" y="146" class="fd-card-title">Studio Sketches</text>
+                  <text x="170" y="161" class="fd-card-meta">6 pieces &middot; Private</text>
+                </g>
+                <g class="fd-card">
+                  <rect x="300" y="16" width="118" height="170" rx="2" class="fd-card-new"/>
+                  <text x="359" y="98" class="fd-card-plus" text-anchor="middle">+</text>
+                  <text x="359" y="161" class="fd-card-meta" text-anchor="middle">New Collection</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="snap-panel" id="recentArtworksPanel">
       <div class="carousel-header" style="margin-top:32px;">
         <h2 class="section-label">Latest Artworks</h2>

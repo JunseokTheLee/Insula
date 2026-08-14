@@ -116,6 +116,44 @@
   .hiw-step-text h3{font-size:17px;}
 }
 
+/* ---------- features: network & collections ---------- */
+.features{flex-shrink:0;width:100%;max-width:1400px;margin:0 auto;padding:8px 32px 64px;}
+.feature-row{display:flex;gap:64px;align-items:center;padding:40px 0;border-top:1px solid var(--hairline);}
+.feature-row.reverse{flex-direction:row-reverse;}
+.feature-text{flex:1 1 420px;min-width:0;max-width:480px;border-left:3px solid var(--coral);padding-left:28px;}
+.feature-row.reverse .feature-text{border-left-color:var(--mint);}
+.feature-tag{display:block;font-family:'General Sans',sans-serif;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.feature-text h3{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;letter-spacing:-.01em;margin:0 0 12px;color:var(--forest);}
+.feature-text p{font-family:'General Sans',sans-serif;font-size:14.5px;line-height:1.65;color:var(--ink);margin:0;}
+.feature-diagram{flex:1 1 420px;min-width:0;display:flex;align-items:center;justify-content:center;}
+.feature-diagram-panel{width:100%;max-width:440px;border:1px solid var(--hairline-strong);border-radius:2px;overflow:hidden;}
+.feature-diagram-panel svg{width:100%;height:auto;display:block;}
+.feature-diagram-dark{background:var(--forest-dark);padding:18px;}
+.feature-diagram-light{background:#fff;padding:18px;}
+/* network diagram — mirrors the real Network page's dark graph panel */
+.fd-link{stroke:rgba(247,247,245,.3);stroke-width:1.4px;}
+.fd-link-mint{stroke:var(--mint);stroke-width:1.6px;}
+.fd-node{fill:var(--paper);stroke:rgba(247,247,245,.35);stroke-width:1.5px;}
+.fd-node-mint{stroke:var(--mint);stroke-width:2.5px;}
+.fd-node-center{stroke:var(--mint);stroke-width:3px;}
+/* collections diagram — mirrors the profile page's collection board cards */
+.fd-card-body{fill:var(--paper);stroke:var(--hairline-strong);stroke-width:1px;}
+.fd-swatch{opacity:.92;}
+.fd-swatch-empty{fill:none;stroke:var(--hairline-strong);stroke-width:1px;stroke-dasharray:3 3;}
+.fd-card-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;fill:var(--forest);}
+.fd-card-meta{font-family:'General Sans',sans-serif;font-size:9px;fill:var(--muted);}
+.fd-card-new{fill:none;stroke:var(--hairline-strong);stroke-width:1.5px;stroke-dasharray:5 4;}
+.fd-card-plus{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;fill:var(--hairline-strong);}
+@media (max-width:900px){
+  .feature-row,.feature-row.reverse{flex-direction:column;gap:28px;}
+  .feature-text,.feature-diagram{flex:1 1 auto;max-width:100%;}
+}
+@media (max-width:640px){
+  .features{padding:8px 16px 48px;}
+  .feature-row{padding:28px 0;}
+  .feature-text{padding-left:16px;}
+}
+
 /* ---------- carousel ---------- */
 .carousel-section{flex-shrink:0;padding:20px 0 0;}
 .carousel-section.empty{display:none;}

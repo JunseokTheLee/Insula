@@ -131,6 +131,88 @@
       </div>
     </section>
 
+    <section class="snap-panel" id="featuresPanel">
+      <div class="features">
+        <div class="hiw-header">
+          <h2 class="section-label">캔버스 너머</h2>
+          <h3 class="hiw-title">커뮤니티를 만나는 두 가지 방법.</h3>
+          <p class="hiw-intro">Weavo에는 함께 채워가는 캔버스만 있는 것이 아닙니다. Network는 누가 누구에게 주목하고 있는지를 지도로 보여주고, Collections는 마음에 남는 작품들을 한곳에 모아둘 수 있게 해줍니다.</p>
+        </div>
+
+        <div class="feature-row">
+          <div class="feature-text">
+            <span class="feature-tag">Network</span>
+            <h3>커뮤니티 전체를 잇는 살아있는 지도.</h3>
+            <p>누군가 다른 아티스트를 저장할 때마다 그 사이에 하나의 선이 그려집니다 — 저장한 사람에서, 저장된 아티스트를 향해서요. 연결이 많을수록 원은 커집니다. 누구든 클릭하면 그 사람의 네트워크가 밝게 강조되고, 노드를 드래그해 지도를 재배치할 수 있으며, 다시 클릭하면 프로필로 이동합니다.</p>
+            <a href="/ko/network" class="cta-text" style="margin-top:0;">Network 살펴보기 <span aria-hidden="true">&rarr;</span></a>
+          </div>
+          <div class="feature-diagram">
+            <div class="feature-diagram-panel feature-diagram-dark">
+              <svg viewBox="0 0 420 260" class="fd-network" role="img" aria-label="아티스트를 나타내는 원들이 저장 관계를 뜻하는 방향성 있는 선으로 연결되어 있고, 그중 자신과 연결된 노드는 민트색으로 강조된 네트워크 다이어그램.">
+                <defs>
+                  <marker id="fdArrowMintKo" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M0,0 L8,4 L0,8 Z" fill="#9EFFBF"/>
+                  </marker>
+                  <marker id="fdArrowMutedKo" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M0,0 L8,4 L0,8 Z" fill="rgba(247,247,245,.4)"/>
+                  </marker>
+                </defs>
+                <line x1="325.64" y1="62.97" x2="333.80" y2="165.05" class="fd-link" marker-end="url(#fdArrowMutedKo)"/>
+                <line x1="67.18" y1="176.27" x2="92.09" y2="76.64" class="fd-link" marker-end="url(#fdArrowMutedKo)"/>
+                <line x1="211.62" y1="222.71" x2="320.82" y2="184.91" class="fd-link" marker-end="url(#fdArrowMutedKo)"/>
+                <line x1="194.33" y1="121.14" x2="105.45" y2="70.91" class="fd-link fd-link-mint" marker-end="url(#fdArrowMintKo)"/>
+                <line x1="321.07" y1="174.43" x2="226.71" y2="136.69" class="fd-link fd-link-mint" marker-end="url(#fdArrowMintKo)"/>
+                <circle cx="325" cy="55" r="8" class="fd-node"/>
+                <circle cx="65" cy="185" r="9" class="fd-node"/>
+                <circle cx="205" cy="225" r="7" class="fd-node"/>
+                <circle cx="95" cy="65" r="12" class="fd-node fd-node-mint"/>
+                <circle cx="335" cy="180" r="15" class="fd-node fd-node-mint"/>
+                <circle cx="210" cy="130" r="18" class="fd-node fd-node-center"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-row reverse">
+          <div class="feature-text">
+            <span class="feature-tag">Collections</span>
+            <h3>마음에 남는 작품을 나만의 방식으로 모아보세요.</h3>
+            <p>작품을 저장하면 나의 보관함에 담깁니다 — Collection을 만들면 그중 몇 점을 의도를 가지고 하나로 묶을 수 있습니다. 제목과 함께 어떤 기준으로 모았는지 짧은 설명을 남기고, 언제든 작품을 추가하거나 뺄 수 있으며, 비공개로 둘지 누구나 볼 수 있게 할지도 직접 정할 수 있습니다.</p>
+            <a href="/ko/profile" class="cta-text" style="margin-top:0;">Collection 만들기 <span aria-hidden="true">&rarr;</span></a>
+          </div>
+          <div class="feature-diagram">
+            <div class="feature-diagram-panel feature-diagram-light">
+              <svg viewBox="0 0 420 210" class="fd-collections" role="img" aria-label="작품 색상 견본이 작게 격자로 담긴 두 개의 컬렉션 보드에 각각 제목과 공개 또는 비공개 표시가 있고, 그 옆에는 새 컬렉션을 만들 수 있는 점선 카드가 놓여 있는 다이어그램.">
+                <g class="fd-card">
+                  <rect x="24" y="16" width="118" height="170" rx="2" class="fd-card-body"/>
+                  <rect x="32" y="24" width="49" height="49" class="fd-swatch" fill="#FF8C69"/>
+                  <rect x="85" y="24" width="49" height="49" class="fd-swatch" fill="#F4D35E"/>
+                  <rect x="32" y="77" width="49" height="49" class="fd-swatch" fill="#1A3C2B"/>
+                  <rect x="85" y="77" width="49" height="49" class="fd-swatch" fill="#9EFFBF"/>
+                  <text x="32" y="146" class="fd-card-title">차분한 블루</text>
+                  <text x="32" y="161" class="fd-card-meta">작품 12개 &middot; 공개</text>
+                </g>
+                <g class="fd-card">
+                  <rect x="162" y="16" width="118" height="170" rx="2" class="fd-card-body"/>
+                  <rect x="170" y="24" width="49" height="49" class="fd-swatch" fill="#9EFFBF"/>
+                  <rect x="223" y="24" width="49" height="49" class="fd-swatch" fill="#FF8C69"/>
+                  <rect x="170" y="77" width="49" height="49" class="fd-swatch-empty"/>
+                  <rect x="223" y="77" width="49" height="49" class="fd-swatch" fill="#F4D35E"/>
+                  <text x="170" y="146" class="fd-card-title">스튜디오 스케치</text>
+                  <text x="170" y="161" class="fd-card-meta">작품 6개 &middot; 비공개</text>
+                </g>
+                <g class="fd-card">
+                  <rect x="300" y="16" width="118" height="170" rx="2" class="fd-card-new"/>
+                  <text x="359" y="98" class="fd-card-plus" text-anchor="middle">+</text>
+                  <text x="359" y="161" class="fd-card-meta" text-anchor="middle">새 컬렉션</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="snap-panel" id="recentArtworksPanel">
       <div class="carousel-header" style="margin-top:32px;">
         <h2 class="section-label">최근 작품</h2>
