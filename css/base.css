@@ -386,8 +386,42 @@ body.no-scroll-lock{overflow:hidden;}
 #lb-like-btn.active .icon::before{content:"♥";}
 #lb-comments-btn .icon::before{content:"💬";}
 #lb-comments-btn.active{background:rgba(247,247,245,.16);}
+#lb-exhibit-btn .icon::before{content:"🗂";}
 #lb-delete-btn .icon::before{content:"🗑";}
 #lb-delete-btn:hover{background:var(--coral);color:var(--forest-dark);border-color:var(--coral);}
+
+/* ---------- add-to-exhibition multi-select dropdown (lightbox sidebar) ---------- */
+.lb-exhibit-wrap{position:relative;display:inline-flex;}
+.lb-exhibit-caret{font-size:10px;opacity:.7;margin-left:1px;}
+.lb-exhibit-btn.open{background:rgba(247,247,245,.16);}
+.lb-exhibit-menu{
+  display:none;position:absolute;top:calc(100% + 8px);left:0;z-index:20;
+  width:max(240px,100%);max-width:260px;max-height:280px;overflow-y:auto;
+  background:var(--forest-dark);border:1px solid rgba(247,247,245,.2);border-radius:10px;
+  padding:8px;box-shadow:0 10px 28px rgba(0,0,0,.4);
+}
+.lb-exhibit-menu.open{display:block;}
+.lb-exhibit-row{
+  display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;
+  font-family:'General Sans',sans-serif;font-size:12.5px;color:var(--paper);
+}
+.lb-exhibit-row:hover{background:rgba(247,247,245,.08);}
+.lb-exhibit-row input{width:auto;flex-shrink:0;}
+.lb-exhibit-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-exhibit-empty{font-family:'General Sans',sans-serif;font-size:12px;color:rgba(247,247,245,.55);padding:6px 8px 10px;}
+.lb-exhibit-loading{font-family:'General Sans',sans-serif;font-size:12px;color:rgba(247,247,245,.55);padding:6px 8px;}
+.lb-exhibit-new{display:flex;gap:6px;margin-top:6px;padding-top:8px;border-top:1px solid rgba(247,247,245,.15);}
+.lb-exhibit-new input{
+  flex:1;min-width:0;padding:7px 9px;border-radius:6px;border:1px solid rgba(247,247,245,.25);
+  background:rgba(247,247,245,.06);color:var(--paper);font-family:'General Sans',sans-serif;font-size:12px;outline:none;
+}
+.lb-exhibit-new input::placeholder{color:rgba(247,247,245,.4);}
+.lb-exhibit-new input:focus{border-color:var(--mint);}
+.lb-exhibit-new button{
+  flex-shrink:0;padding:7px 12px;border-radius:6px;border:none;cursor:pointer;
+  background:var(--mint);color:var(--forest-dark);font-family:'General Sans',sans-serif;font-size:12px;font-weight:600;
+}
+.lb-exhibit-new button:disabled{opacity:.5;cursor:default;}
 
 .lightbox-comments{display:none;margin-top:10px;text-align:left;}
 .lightbox-comments.open{display:block;}
@@ -484,8 +518,13 @@ html[lang="ko"] * {
 @media (max-width:640px){
   .topnav,.backnav{padding-left:16px;padding-right:16px;}
   .topnav{gap:14px 16px;}
-  .nav-links{gap:16px;}
-  .nav-link+.nav-link::before{left:-8px;}
+  /* Five nav links no longer reliably fit one row at phone widths (this
+     used to be a flat nowrap row) — let them wrap onto a second line
+     instead of overflowing the viewport. The divider bars are positioned
+     off the previous sibling regardless of which row it lands on, so they'd
+     dangle at the start of a wrapped row; simplest to drop them here. */
+  .nav-links{gap:10px 16px;flex-wrap:wrap;justify-content:center;}
+  .nav-link+.nav-link::before{display:none;}
   #identity{gap:10px;}
   #loginBtn,#logoutBtn{padding:7px 12px;}
   .section-label{margin-left:16px;margin-right:16px;}

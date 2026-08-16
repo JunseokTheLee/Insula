@@ -36,6 +36,7 @@
       <a href="/ko/projects" class="nav-link">프로젝트</a>
       <a href="/ko/network" class="nav-link">네트워크</a>
       <a href="/ko/artists" class="nav-link">작가</a>
+      <a href="/ko/exhibitions" class="nav-link">전시</a>
       <a href="/ko/about" class="nav-link">소개</a>
     </nav>
     <div id="identity">
@@ -90,11 +91,11 @@
     </div>
     <div class="profile-section" id="profileCollectionsSection" style="display:none;">
       <div class="profile-section-head">
-        <h2 class="section-label">컬렉션</h2>
-        <button type="button" class="section-new-btn" id="newCollectionBtn" style="display:none;">+ 새 컬렉션</button>
+        <h2 class="section-label">전시</h2>
+        <button type="button" class="section-new-btn" id="newCollectionBtn" style="display:none;">+ 새 전시</button>
       </div>
       <div class="profile-collections-grid" id="profileCollectionsGrid"></div>
-      <div class="empty-note" id="profileCollectionsEmpty" style="display:none;">아직 컬렉션이 없습니다 — 저장한 작품을 모아 보드를 만들어보세요.</div>
+      <div class="empty-note" id="profileCollectionsEmpty" style="display:none;">아직 전시가 없습니다 — 저장한 작품을 모아 미니 전시를 만들어보세요.</div>
     </div>
     <div class="profile-section">
       <h2 class="section-label">네트워크</h2>
@@ -117,24 +118,28 @@
   </footer>
 </div>
 
-<!-- New collection modal -->
+<!-- New exhibition modal -->
 <div id="new-collection-modal" class="modal-overlay">
   <div id="new-collection-dialog" class="modal-panel">
-    <h3>새 컬렉션</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">이미 저장한 작품들로 만드는 나만의 보드예요 — 작은 전시회처럼요.</p>
+    <h3>새 전시</h3>
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">이미 저장한 작품들로 만드는 나만의 미니 전시예요. 처음에는 미게시 상태로 만들어지며, 준비되면 직접 게시할 수 있습니다.</p>
     <div class="field">
       <label for="nc-title">제목</label>
       <input type="text" id="nc-title" placeholder="예: 가을 팔레트" maxlength="80">
     </div>
     <div class="field">
       <label for="nc-desc">설명 <span class="field-hint">(선택)</span></label>
-      <textarea id="nc-desc" placeholder="이 컬렉션을 하나로 묶는 주제가 있나요?" maxlength="500"></textarea>
+      <textarea id="nc-desc" placeholder="이 전시를 하나로 묶는 주제가 있나요?" maxlength="500"></textarea>
     </div>
     <div class="field">
       <label for="nc-public" style="display:flex;align-items:center;gap:8px;font-weight:400;">
         <input type="checkbox" id="nc-public" checked style="width:auto;">
         모두에게 공개
       </label>
+    </div>
+    <div class="field">
+      <label for="nc-enddate">종료일 <span class="field-hint">(선택)</span></label>
+      <input type="date" id="nc-enddate">
     </div>
     <div class="field-error" id="nc-error"></div>
     <div class="modal-actions">
@@ -144,13 +149,13 @@
   </div>
 </div>
 
-<!-- Add to collection picker -->
+<!-- Add to exhibition picker -->
 <div id="add-to-collection-modal" class="modal-overlay">
   <div id="add-to-collection-dialog" class="modal-panel">
-    <h3>컬렉션에 추가</h3>
+    <h3>전시에 추가</h3>
     <div id="atc-list"></div>
-    <div class="empty-note" id="atc-empty" style="display:none;padding:16px;">아직 컬렉션이 없습니다.</div>
-    <button type="button" id="atc-new" class="section-new-btn" style="margin-top:4px;">+ 새 컬렉션</button>
+    <div class="empty-note" id="atc-empty" style="display:none;padding:16px;">아직 전시가 없습니다.</div>
+    <button type="button" id="atc-new" class="section-new-btn" style="margin-top:4px;">+ 새 전시</button>
     <div class="modal-actions">
       <button id="atc-done" class="btn-primary">완료</button>
     </div>

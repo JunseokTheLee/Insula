@@ -4,22 +4,22 @@
 <link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weavo — Collection</title>
-<meta name="description" content="A curated collection of artwork on Weavo.">
+<title>Weavo — Exhibition</title>
+<meta name="description" content="A curated mini-exhibition of artwork on Weavo.">
 <link rel="canonical" href="https://weavo.art/en/projects">
 <link rel="alternate" hreflang="en" href="https://weavo.art/en/projects">
 <link rel="alternate" hreflang="ko" href="https://weavo.art/ko/projects">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Weavo — Collection">
-<meta property="og:description" content="A curated collection of artwork on Weavo.">
+<meta property="og:title" content="Weavo — Exhibition">
+<meta property="og:description" content="A curated mini-exhibition of artwork on Weavo.">
 <meta property="og:url" content="https://weavo.art/en/projects">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Weavo — Collection">
-<meta name="twitter:description" content="A curated collection of artwork on Weavo.">
+<meta name="twitter:title" content="Weavo — Exhibition">
+<meta name="twitter:description" content="A curated mini-exhibition of artwork on Weavo.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
@@ -37,6 +37,7 @@
       <a href="/en/projects" class="nav-link">Projects</a>
       <a href="/en/network" class="nav-link">Network</a>
       <a href="/en/artists" class="nav-link">Artists</a>
+      <a href="/en/exhibitions" class="nav-link">Exhibitions</a>
       <a href="/en/about" class="nav-link">About</a>
     </nav>
     <div id="identity">
@@ -55,6 +56,9 @@
     <div class="backnav">
       <a class="back" id="collectionBackBtn" href="/en/projects">&larr; Back</a>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="btn-cancel" id="publishCollectionBtn" style="display:none;padding:11px 18px;border-radius:20px;font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+          Publish
+        </button>
         <button class="btn-cancel" id="addArtworkBtn" style="display:none;padding:11px 18px;border-radius:20px;font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
           + Add artwork
         </button>
@@ -69,11 +73,12 @@
     <div class="project-head">
       <h1 id="collectionTitle">Loading…</h1>
       <div class="profile-meta" id="collectionMeta"></div>
+      <div class="collection-status" id="collectionStatus" style="display:none;"></div>
       <p id="collectionDesc" style="display:none;"></p>
       <div id="collectionOwnerByline"></div>
     </div>
     <div class="profile-art-grid" id="collectionItemsGrid"></div>
-    <div class="empty-note" id="collectionItemsEmpty" style="display:none;">Nothing added to this collection yet.</div>
+    <div class="empty-note" id="collectionItemsEmpty" style="display:none;">Nothing added to this exhibition yet.</div>
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>
@@ -82,10 +87,10 @@
   </footer>
 </div>
 
-<!-- Edit collection modal -->
+<!-- Edit exhibition modal -->
 <div id="edit-collection-modal" class="modal-overlay">
   <div id="edit-collection-dialog" class="modal-panel">
-    <h3>Edit Collection</h3>
+    <h3>Edit Exhibition</h3>
     <div class="field">
       <label for="ec-title">Title</label>
       <input type="text" id="ec-title" maxlength="80">
@@ -97,8 +102,12 @@
     <div class="field">
       <label for="ec-public" style="display:flex;align-items:center;gap:8px;font-weight:400;">
         <input type="checkbox" id="ec-public" style="width:auto;">
-        Anyone can view this collection
+        Anyone can view this exhibition
       </label>
+    </div>
+    <div class="field">
+      <label for="ec-enddate">End date <span class="field-hint">(optional — the exhibition unpublishes itself once this date passes)</span></label>
+      <input type="date" id="ec-enddate">
     </div>
     <div class="field-error" id="ec-error"></div>
     <div class="modal-actions">

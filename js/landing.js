@@ -1,4 +1,5 @@
-// Landing page: hero preview canvas, stats bar, and latest-artworks grid.
+// Landing page: hero preview canvas, stats bar, and the latest-artworks/
+// -exhibitions lists (the first thing on the page, above the hero).
 // Needs js/project-preview.js (paintProjectPreview) loaded first.
 "use strict";
 
@@ -37,53 +38,26 @@ async function renderStats() {
   document.getElementById('statFill').textContent = `${data.fill_percent ?? 0}%`;
 }
 
-// ---------- latest artworks ----------
+// ---------- latest artworks (list) ----------
 // A real <a href> to the standalone artwork page (crawlable, ctrl/cmd-
 // clickable into a new tab), but a plain click opens it in the same
 // in-page lightbox modal used by project.html/profile.html instead — see
-// interceptClick in common.js and its identical use in project.js's
-// projectListCardEl. Author avatar is a plain image (not miniAvatarEl's
-// profile-linking <a>) since it sits inside this card's own <a> and
-// nested anchors aren't valid HTML.
-function artworkCardEl(sub, i) {
-  const name = sub.author_name || tr('anonymous');
-  const card = document.createElement('a');
-  card.className = 'artwork-card';
-  card.href = artworkUrl(sub.id);
-  card.style.animationDelay = `${Math.min(i, 10) * 0.05}s`;
-  interceptClick(card, () => openLightbox(sub));
-
-  const img = document.createElement('img');
-  img.className = 'artwork-card-img';
-  img.src = cdnUrl(sub.thumb_url || sub.image_url);
-  img.alt = '';
-  card.appendChild(img);
-
-  const info = document.createElement('div'); info.className = 'info';
-  const title = document.createElement('div');
-  title.className = 'art-title'; title.textContent = sub.art_title || tr('untitledArtwork');
-  const byline = document.createElement('div'); byline.className = 'art-byline';
-  if (sub.author_avatar_url) {
-    const avatar = document.createElement('img');
-    avatar.className = 'art-byline-avatar'; avatar.src = cdnUrl(sub.author_avatar_url); avatar.alt = '';
-    byline.appendChild(avatar);
-  } else {
-    const fallback = document.createElement('div');
-    fallback.className = 'art-byline-avatar art-byline-avatar-fallback';
-    fallback.textContent = name.charAt(0).toUpperCase();
-    byline.appendChild(fallback);
-  }
-  const nameSpan = document.createElement('span'); nameSpan.className = 'art-byline-name'; nameSpan.textContent = name;
-  byline.appendChild(nameSpan);
-  const date = document.createElement('div'); date.className = 'art-date'; date.textContent = fmtShortDate(sub.created_at);
-  info.append(title, byline, date);
-  card.appendChild(info);
-  return card;
+// recentListRowEl's onPlainClick param (common.js).
+function artworkListRowEl(sub) {
+  return recentListRowEl({
+    href: artworkUrl(sub.id),
+    thumbUrl: cdnUrl(sub.thumb_url || sub.image_url),
+    title: sub.art_title || tr('untitledArtwork'),
+    avatarUrl: sub.author_avatar_url ? cdnUrl(sub.author_avatar_url) : null,
+    name: sub.author_name || tr('anonymous'),
+    metaText: fmtShortDate(sub.created_at),
+    onPlainClick: () => openLightbox(sub),
+  });
 }
 function renderRecentArtworks(list) {
-  const grid = document.getElementById('recentArtworksGrid');
-  grid.innerHTML = '';
-  list.forEach((sub, i) => grid.appendChild(artworkCardEl(sub, i)));
+  const el = document.getElementById('recentArtworksList');
+  el.innerHTML = '';
+  list.forEach(sub => el.appendChild(artworkListRowEl(sub)));
   document.getElementById('recentArtworksEmpty').style.display = list.length ? 'none' : 'block';
 }
 async function loadRecentArtworks() {
@@ -95,6 +69,33 @@ async function loadRecentArtworks() {
   renderRecentArtworks(data || []);
 }
 
+// ---------- latest exhibitions (list) ----------
+// fetchPublishedExhibitions/fetchExhibitionOwners/collectionCoverUrl are
+// shared with the /exhibitions browse-all page — see js/common.js. Only
+// published, public, not-(yet-)expired exhibitions are queried, so a draft
+// or an expired one never leaks onto the landing page.
+function exhibitionListRowEl(collection, owner) {
+  const name = (owner && (owner.username || owner.name)) || tr('anonymous');
+  return recentListRowEl({
+    href: collectionUrl(collection.id),
+    thumbUrl: collectionCoverUrl(collection),
+    title: collection.title,
+    avatarUrl: owner && owner.avatar_url ? cdnUrl(owner.avatar_url) : null,
+    name,
+    metaText: collectionItemCountText((collection.mosaic_collection_items || []).length),
+  });
+}
+function renderRecentCollections(list, owners) {
+  const el = document.getElementById('recentCollectionsList');
+  el.innerHTML = '';
+  list.forEach(c => el.appendChild(exhibitionListRowEl(c, owners[c.owner_id])));
+  document.getElementById('recentCollectionsEmpty').style.display = list.length ? 'none' : 'block';
+}
+async function loadRecentCollections() {
+  const collections = await fetchPublishedExhibitions(5);
+  renderRecentCollections(collections, await fetchExhibitionOwners(collections));
+}
+
 document.getElementById('scrollHint').onclick = () => {
   document.getElementById('howItWorksPanel').scrollIntoView({ behavior: 'smooth' });
 };
@@ -104,4 +105,4 @@ document.getElementById('scrollHint').onclick = () => {
 // define — refreshes the grid so a deleted/removed piece doesn't linger.
 window.onSubmissionDeleted = () => loadRecentArtworks();
 
-authReady.then(() => { loadHeroPreview(); renderStats(); loadRecentArtworks(); });
+authReady.then(() => { loadHeroPreview(); renderStats(); loadRecentArtworks(); loadRecentCollections(); });

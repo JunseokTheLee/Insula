@@ -59,6 +59,12 @@
 .profile-head-info{min-width:0;}
 .profile-head-info h1{margin:0 0 6px;font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;letter-spacing:-.01em;color:var(--forest);}
 .profile-meta{color:var(--muted);font-family:'General Sans',sans-serif;font-size:13px;}
+.collection-status{
+  display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:3px 10px;border-radius:999px;
+  font-family:'General Sans',sans-serif;font-size:11px;font-weight:600;
+  background:var(--hairline);color:var(--muted);
+}
+.collection-status.live{background:var(--forest-08);color:var(--forest);}
 .profile-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
 .profile-link-chip{
   display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;border:1px solid var(--forest-20);

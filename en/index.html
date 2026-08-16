@@ -38,6 +38,7 @@
       <a href="/en/projects" class="nav-link">Projects</a>
       <a href="/en/network" class="nav-link">Network</a>
       <a href="/en/artists" class="nav-link">Artists</a>
+      <a href="/en/exhibitions" class="nav-link">Exhibitions</a>
       <a href="/en/about" class="nav-link">About</a>
     </nav>
     <div id="identity">
@@ -53,6 +54,27 @@
   </header>
 
   <main class="main-scroll home-scroll">
+    <section class="recent-activity" id="recentActivityPanel">
+      <div class="recent-activity-inner">
+        <div class="recent-list-col">
+          <div class="recent-list-header">
+            <h2 class="section-label">Latest Exhibitions</h2>
+            <a href="/en/exhibitions" class="cta-text">View All Exhibitions</a>
+          </div>
+          <div class="recent-list" id="recentCollectionsList"></div>
+          <div class="empty-note" id="recentCollectionsEmpty" style="display:none;">No published exhibitions yet — publish one from your profile.</div>
+        </div>
+        <div class="recent-list-col">
+          <div class="recent-list-header">
+            <h2 class="section-label">Latest Artworks</h2>
+            <a href="/en/projects" class="cta-text">View All Projects</a>
+          </div>
+          <div class="recent-list" id="recentArtworksList"></div>
+          <div class="empty-note" id="recentArtworksEmpty" style="display:none;">No artworks yet — be the first to submit one.</div>
+        </div>
+      </div>
+    </section>
+
     <section class="snap-panel" id="heroPanel">
       <div class="hero">
         <div class="hero-inner">
@@ -75,10 +97,10 @@
 
       <div class="stats-bar" id="statsBar">
         <div class="stats-bar-inner">
-          <div class="stat-tile"><div class="stat-icon">👥</div><div class="stat-value" id="statArtists">0</div><div class="stat-label">Artists</div></div>
-          <div class="stat-tile"><div class="stat-icon">🎨</div><div class="stat-value" id="statArtworks">0</div><div class="stat-label">Artworks Submitted</div></div>
-          <div class="stat-tile"><div class="stat-icon">🖼️</div><div class="stat-value" id="statProjects">0</div><div class="stat-label">Active Projects</div></div>
-          <div class="stat-tile"><div class="stat-icon">✅</div><div class="stat-value" id="statFill">0%</div><div class="stat-label">Cells Filled</div></div>
+          <div class="stat-tile"><div class="stat-value" id="statArtists">0</div><div class="stat-label">Artists</div></div>
+          <div class="stat-tile"><div class="stat-value" id="statArtworks">0</div><div class="stat-label">Artworks Submitted</div></div>
+          <div class="stat-tile"><div class="stat-value" id="statProjects">0</div><div class="stat-label">Active Projects</div></div>
+          <div class="stat-tile"><div class="stat-value" id="statFill">0%</div><div class="stat-label">Cells Filled</div></div>
         </div>
       </div>
 
@@ -132,7 +154,7 @@
         <div class="hiw-header">
           <h2 class="section-label">Beyond the Canvas</h2>
           <h3 class="hiw-title">Two more ways to explore the community.</h3>
-          <p class="hiw-intro">The shared weavo isn't the only thing being built here. Network maps who's paying attention to whom, and Collections let you keep the pieces that matter to you close at hand.</p>
+          <p class="hiw-intro">The shared weavo isn't the only thing being built here. Network maps who's paying attention to whom, and Exhibitions let you keep the pieces that matter to you close at hand.</p>
         </div>
 
         <div class="feature-row">
@@ -171,14 +193,14 @@
 
         <div class="feature-row reverse">
           <div class="feature-text">
-            <span class="feature-tag">Collections</span>
-            <h3>Curate the pieces that matter to you.</h3>
-            <p>Saving an artwork adds it to your pool — starting a Collection turns a handful of those pieces into something shaped on purpose. Give it a title and a short description of what ties it together, add or remove pieces any time, and choose whether it stays private or anyone can browse it.</p>
-            <a href="/en/profile" class="cta-text" style="margin-top:0;">Start a Collection <span aria-hidden="true">&rarr;</span></a>
+            <span class="feature-tag">Exhibitions</span>
+            <h3>Curate a mini-exhibition of the pieces that matter to you.</h3>
+            <p>Saving an artwork adds it to your pool — starting an Exhibition turns a handful of those pieces into something shaped on purpose. Give it a title and a short description of what ties it together, add or remove pieces any time, and choose whether it stays private or anyone can browse it.</p>
+            <a href="/en/profile" class="cta-text" style="margin-top:0;">Start an Exhibition <span aria-hidden="true">&rarr;</span></a>
           </div>
           <div class="feature-diagram">
             <div class="feature-diagram-panel feature-diagram-light">
-              <svg viewBox="0 0 420 210" class="fd-collections" role="img" aria-label="Two collection boards, each holding a small grid of artwork swatches with a title and a public or private label, next to a dashed placeholder card for starting a new collection.">
+              <svg viewBox="0 0 420 210" class="fd-collections" role="img" aria-label="Two exhibition boards, each holding a small grid of artwork swatches with a title and a public or private label, next to a dashed placeholder card for starting a new exhibition.">
                 <g class="fd-card">
                   <rect x="24" y="16" width="118" height="170" rx="2" class="fd-card-body"/>
                   <rect x="32" y="24" width="49" height="49" class="fd-swatch" fill="#FF8C69"/>
@@ -200,7 +222,7 @@
                 <g class="fd-card">
                   <rect x="300" y="16" width="118" height="170" rx="2" class="fd-card-new"/>
                   <text x="359" y="98" class="fd-card-plus" text-anchor="middle">+</text>
-                  <text x="359" y="161" class="fd-card-meta" text-anchor="middle">New Collection</text>
+                  <text x="359" y="161" class="fd-card-meta" text-anchor="middle">New Exhibition</text>
                 </g>
               </svg>
             </div>
@@ -209,14 +231,6 @@
       </div>
     </section>
 
-    <section class="snap-panel" id="recentArtworksPanel">
-      <div class="carousel-header" style="margin-top:32px;">
-        <h2 class="section-label">Latest Artworks</h2>
-        <a href="/en/projects" class="cta-text" style="margin-top:0;">View All Projects</a>
-      </div>
-      <div class="artworks-grid" id="recentArtworksGrid"></div>
-      <div class="empty-note" id="recentArtworksEmpty" style="display:none;">No artworks yet — be the first to submit one.</div>
-    </section>
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>

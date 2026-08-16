@@ -119,6 +119,115 @@ async function renderLightboxCountryMap(countryId) {
   wrap.style.display = 'block';
 }
 
+// ---------- add-to-exhibition multi-select dropdown ----------
+// Built once here — rather than repeated in every page's static HTML —
+// and inserted into .lightbox-actions, whose markup is identical across
+// every page that embeds the lightbox (see the file banner comment). Lets
+// you drop the piece you're looking at straight into any of your own
+// exhibitions without it needing to be liked first, unlike the liked-pool
+// pickers elsewhere (profile.html's add-to-collection modal, collection.html's
+// own add-artwork modal) — mosaic_collection_items has no such constraint,
+// those two just happen to only ever offer pieces from that pool.
+const lbExhibitWrap = document.createElement('div');
+lbExhibitWrap.className = 'lb-exhibit-wrap';
+lbExhibitWrap.innerHTML = `
+  <button type="button" id="lb-exhibit-btn" class="lb-action-btn lb-exhibit-btn" aria-haspopup="true" aria-expanded="false">
+    <span class="icon"></span><span class="lb-exhibit-label"></span><span class="lb-exhibit-caret" aria-hidden="true">&#9662;</span>
+  </button>
+  <div class="lb-exhibit-menu" id="lb-exhibit-menu"></div>`;
+(() => {
+  const actions = document.querySelector('.lightbox-actions');
+  if (actions) actions.insertBefore(lbExhibitWrap, document.getElementById('lb-delete-btn'));
+})();
+const lbExhibitBtn = document.getElementById('lb-exhibit-btn');
+const lbExhibitMenu = document.getElementById('lb-exhibit-menu');
+if (lbExhibitBtn) lbExhibitBtn.querySelector('.lb-exhibit-label').textContent = tr('addToExhibitionBtn');
+
+function lbExhibitRowEl(collection) {
+  const row = document.createElement('label');
+  row.className = 'lb-exhibit-row';
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  const items = collection.mosaic_collection_items || [];
+  checkbox.checked = items.some(i => i.submission_id === lbCurrentSub.id);
+  checkbox.onchange = async () => {
+    checkbox.disabled = true;
+    const { error } = checkbox.checked
+      ? await sb.from('mosaic_collection_items').insert({ collection_id: collection.id, submission_id: lbCurrentSub.id })
+      : await sb.from('mosaic_collection_items').delete().eq('collection_id', collection.id).eq('submission_id', lbCurrentSub.id);
+    checkbox.disabled = false;
+    if (error) { console.error('update exhibition item error:', error); toast(tr('couldNotUpdateCollection')); checkbox.checked = !checkbox.checked; return; }
+    if (checkbox.checked) items.push({ submission_id: lbCurrentSub.id });
+    else { const idx = items.findIndex(i => i.submission_id === lbCurrentSub.id); if (idx !== -1) items.splice(idx, 1); }
+  };
+  const name = document.createElement('span'); name.textContent = collection.title;
+  row.append(checkbox, name);
+  return row;
+}
+function lbExhibitNewRowEl() {
+  const wrap = document.createElement('div'); wrap.className = 'lb-exhibit-new';
+  const input = document.createElement('input');
+  input.type = 'text'; input.placeholder = tr('newExhibitionTitlePlaceholder'); input.maxLength = 80;
+  const createBtn = document.createElement('button');
+  createBtn.type = 'button'; createBtn.textContent = tr('createLabel');
+  createBtn.onclick = async () => {
+    const title = input.value.trim();
+    if (!title) return;
+    createBtn.disabled = true;
+    // New exhibitions start unpublished/draft by default (see
+    // supabase_mosaic_collections_publish.sql) — the owner publishes it
+    // themselves from its own page once it's ready.
+    const { data: created, error: createErr } = await sb.from('mosaic_collections')
+      .insert({ owner_id: me.id, title, is_public: true }).select('id,title').single();
+    if (createErr) { console.error('create exhibition error:', createErr); toast(tr('couldNotCreateCollectionRetry')); createBtn.disabled = false; return; }
+    const { error: addErr } = await sb.from('mosaic_collection_items').insert({ collection_id: created.id, submission_id: lbCurrentSub.id });
+    if (addErr) console.error('add to new exhibition error:', addErr);
+    createBtn.disabled = false;
+    input.value = '';
+    toast(tr('collectionCreatedToast'));
+    renderLbExhibitMenu();
+  };
+  input.onkeydown = e => { if (e.key === 'Enter') createBtn.click(); };
+  wrap.append(input, createBtn);
+  return wrap;
+}
+async function renderLbExhibitMenu() {
+  lbExhibitMenu.innerHTML = `<div class="lb-exhibit-loading">${tr('loading')}</div>`;
+  const { data, error } = await sb.from('mosaic_collections')
+    .select('id,title,mosaic_collection_items(submission_id)')
+    .eq('owner_id', me.id)
+    .order('created_at', { ascending: false });
+  if (error) { console.error('load my exhibitions error:', error); lbExhibitMenu.innerHTML = ''; toast(tr('couldNotLoadCollections')); return; }
+  lbExhibitMenu.innerHTML = '';
+  const collections = data || [];
+  if (!collections.length) {
+    const empty = document.createElement('div'); empty.className = 'lb-exhibit-empty'; empty.textContent = tr('noCollectionsYet');
+    lbExhibitMenu.appendChild(empty);
+  } else {
+    for (const c of collections) lbExhibitMenu.appendChild(lbExhibitRowEl(c));
+  }
+  lbExhibitMenu.appendChild(lbExhibitNewRowEl());
+}
+function closeLbExhibitMenu() {
+  if (!lbExhibitBtn) return;
+  lbExhibitMenu.classList.remove('open');
+  lbExhibitBtn.classList.remove('open');
+  lbExhibitBtn.setAttribute('aria-expanded', 'false');
+}
+lbExhibitBtn?.addEventListener('click', e => {
+  e.stopPropagation();
+  if (!me.id) { openAuthModal(); return; }
+  const willOpen = !lbExhibitMenu.classList.contains('open');
+  closeLbExhibitMenu();
+  if (!willOpen) return;
+  lbExhibitMenu.classList.add('open');
+  lbExhibitBtn.classList.add('open');
+  lbExhibitBtn.setAttribute('aria-expanded', 'true');
+  renderLbExhibitMenu();
+});
+document.addEventListener('click', e => { if (!lbExhibitWrap.contains(e.target)) closeLbExhibitMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLbExhibitMenu(); });
+
 // Fills in every piece of the shared lightbox/artwork markup from a
 // submission row. Used both by openLightbox() below (the in-context modal
 // on project.html/profile.html) and directly by artwork.js on the
@@ -127,6 +236,7 @@ async function renderLightboxCountryMap(countryId) {
 // backs both surfaces.
 function populateLightboxContent(sub) {
   lbCurrentSub = sub;
+  closeLbExhibitMenu();
   lbImg.src = cdnUrl(sub.image_url);
   lbImg.alt = sub.art_title
     ? tr('artworkThumbAlt', { title: sub.art_title, name: sub.author_name || tr('anonymous') })

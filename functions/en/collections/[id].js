@@ -15,7 +15,7 @@ export async function onRequestGet({ params, request, env }) {
 
   const assetResponse = await env.ASSETS.fetch(new Request(new URL('/en/collection', request.url), request));
 
-  if (!collection) return notFoundResponse(assetResponse, 'Collection not found | Weavo');
+  if (!collection) return notFoundResponse(assetResponse, 'Exhibition not found | Weavo');
 
   const owner = await pgFetchOne(`profiles?id=eq.${encodeURIComponent(collection.owner_id)}&select=name,username&limit=1`);
   const ownerName = (owner && (owner.username || owner.name)) || 'Anonymous';
@@ -24,7 +24,7 @@ export async function onRequestGet({ params, request, env }) {
   const title = `${collection.title} | Weavo`;
   const description = collection.description
     ? collection.description.slice(0, 300)
-    : `A collection curated by ${ownerName} on Weavo.`;
+    : `A mini-exhibition curated by ${ownerName} on Weavo.`;
 
   return renderEntityPage(assetResponse, {
     title, description, canonical,

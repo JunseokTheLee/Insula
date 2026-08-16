@@ -31,6 +31,159 @@ function cdnUrl(url) {
   return `/img/${url.slice(SUPABASE_STORAGE_PREFIX.length)}`;
 }
 
+// A collection's cover thumb is whichever item was added to it most
+// recently — shared by the profile grid and the landing page's collections
+// section. `collection.mosaic_collection_items` must be embedded with each
+// item's `added_at` and its `mosaic_submissions(thumb_url,image_url)`.
+function collectionCoverUrl(collection) {
+  const items = collection.mosaic_collection_items || [];
+  if (!items.length) return null;
+  const latest = items.reduce((a, b) => (new Date(a.added_at) > new Date(b.added_at) ? a : b));
+  const sub = latest.mosaic_submissions;
+  return sub ? cdnUrl(sub.thumb_url || sub.image_url) : null;
+}
+
+// Card for a public collection ("Exhibition") — same shell as an artwork
+// card (.artwork-card, css/home.css), but the byline is the exhibition's
+// owner rather than an artwork's author, and the date line is repurposed
+// for the piece count. Shared by the landing page's Latest Exhibitions
+// section (js/landing.js) and the /exhibitions browse-all page
+// (js/exhibitions.js). `owner` may be null (profile lookup still pending
+// or missing) and falls back to an "Anonymous" initial avatar.
+function exhibitionCardEl(collection, owner, i) {
+  const name = (owner && (owner.username || owner.name)) || tr('anonymous');
+  const card = document.createElement('a');
+  card.className = 'artwork-card';
+  card.href = collectionUrl(collection.id);
+  card.style.animationDelay = `${Math.min(i, 10) * 0.05}s`;
+
+  const coverUrl = collectionCoverUrl(collection);
+  if (coverUrl) {
+    const img = document.createElement('img');
+    img.className = 'artwork-card-img';
+    img.src = coverUrl;
+    img.alt = '';
+    card.appendChild(img);
+  } else {
+    const empty = document.createElement('div');
+    empty.className = 'artwork-card-img collection-card-img-empty';
+    card.appendChild(empty);
+  }
+
+  const info = document.createElement('div'); info.className = 'info';
+  const title = document.createElement('div');
+  title.className = 'art-title'; title.textContent = collection.title;
+  const byline = document.createElement('div'); byline.className = 'art-byline';
+  if (owner && owner.avatar_url) {
+    const avatar = document.createElement('img');
+    avatar.className = 'art-byline-avatar'; avatar.src = cdnUrl(owner.avatar_url); avatar.alt = '';
+    byline.appendChild(avatar);
+  } else {
+    const fallback = document.createElement('div');
+    fallback.className = 'art-byline-avatar art-byline-avatar-fallback';
+    fallback.textContent = name.charAt(0).toUpperCase();
+    byline.appendChild(fallback);
+  }
+  const nameSpan = document.createElement('span'); nameSpan.className = 'art-byline-name'; nameSpan.textContent = name;
+  byline.appendChild(nameSpan);
+  const count = document.createElement('div'); count.className = 'art-date';
+  count.textContent = collectionItemCountText((collection.mosaic_collection_items || []).length);
+  info.append(title, byline, count);
+  card.appendChild(info);
+  return card;
+}
+
+// Batch-fetches the owner profiles for a set of public collections (which
+// only carry owner_id — see collectionCoverUrl's comment for why this isn't
+// embedded) and returns an {ownerId: profile} map ready for exhibitionCardEl.
+async function fetchExhibitionOwners(collections) {
+  const ownerIds = [...new Set(collections.map(c => c.owner_id))];
+  const owners = {};
+  if (!ownerIds.length) return owners;
+  const { data: profiles, error } = await sb.from('profiles')
+    .select('id,name,username,avatar_url').in('id', ownerIds);
+  if (error) console.error('load exhibition owners error:', error);
+  else for (const p of profiles || []) owners[p.id] = p;
+  return owners;
+}
+
+// Local-timezone Y-M-D (not UTC) — matches how end_date, a plain `date`
+// column with no timezone of its own, reads to the person looking at it.
+function todayDateStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+// An exhibition only counts as "live" for discovery surfaces once it's both
+// published and, if it set a self-expiry, that date hasn't passed yet — see
+// supabase_mosaic_collections_publish.sql for why end_date is checked here
+// rather than a stored flag a scheduled job would need to flip.
+function isExhibitionLive(collection) {
+  if (!collection.is_published) return false;
+  if (!collection.end_date) return true;
+  return collection.end_date >= todayDateStr();
+}
+// Public, published, not-(yet-)expired exhibitions, most recently published
+// first — shared by the landing page's Latest Exhibitions list and the
+// /exhibitions browse-all page. `limit` is optional (browse-all wants
+// everything; the landing page passes 5).
+async function fetchPublishedExhibitions(limit) {
+  let query = sb.from('mosaic_collections')
+    .select('id,owner_id,title,published_at,mosaic_collection_items(added_at,mosaic_submissions(thumb_url,image_url))')
+    .eq('is_public', true)
+    .eq('is_published', true)
+    .or(`end_date.is.null,end_date.gte.${todayDateStr()}`)
+    .order('published_at', { ascending: false });
+  if (limit) query = query.limit(limit);
+  const { data, error } = await query;
+  if (error) { console.error('load exhibitions error:', error); toast(tr('couldNotLoadCollections')); return []; }
+  return data || [];
+}
+
+// A single row for the landing page's compact "recent activity" lists
+// (Latest Exhibitions / Latest Artworks) — thumbnail, title, byline, and a
+// trailing meta bit (piece count or date). `onPlainClick`, if given, is
+// wired through interceptClick — a plain click runs it in place (e.g. opens
+// the artwork lightbox) while the real href still supports modifier-click/
+// ctrl-click/share. `thumbUrl` may be null (no cover yet).
+function recentListRowEl({ href, thumbUrl, title, avatarUrl, name, metaText, onPlainClick }) {
+  const row = document.createElement('a');
+  row.className = 'recent-list-row';
+  row.href = href;
+  if (onPlainClick) interceptClick(row, onPlainClick);
+
+  const img = document.createElement('img');
+  img.className = thumbUrl ? 'recent-list-thumb' : 'recent-list-thumb recent-list-thumb-empty';
+  if (thumbUrl) img.src = thumbUrl;
+  img.alt = '';
+  row.appendChild(img);
+
+  const info = document.createElement('div'); info.className = 'recent-list-info';
+  const titleEl = document.createElement('div'); titleEl.className = 'recent-list-title'; titleEl.textContent = title;
+  const meta = document.createElement('div'); meta.className = 'recent-list-meta';
+  if (avatarUrl) {
+    const avatar = document.createElement('img');
+    avatar.className = 'recent-list-avatar'; avatar.src = avatarUrl; avatar.alt = '';
+    meta.appendChild(avatar);
+  } else {
+    const fallback = document.createElement('div');
+    fallback.className = 'recent-list-avatar recent-list-avatar-fallback';
+    fallback.textContent = (name || '?').charAt(0).toUpperCase();
+    meta.appendChild(fallback);
+  }
+  const nameSpan = document.createElement('span'); nameSpan.className = 'recent-list-meta-name'; nameSpan.textContent = name;
+  meta.appendChild(nameSpan);
+  if (metaText) {
+    const sep = document.createElement('span'); sep.textContent = '·'; sep.setAttribute('aria-hidden', 'true');
+    const extra = document.createElement('span'); extra.textContent = metaText;
+    meta.append(sep, extra);
+  }
+  info.append(titleEl, meta);
+  row.appendChild(info);
+  const arrow = document.createElement('span'); arrow.className = 'recent-list-arrow'; arrow.textContent = '→'; arrow.setAttribute('aria-hidden', 'true');
+  row.appendChild(arrow);
+  return row;
+}
+
 function loadImageEl(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();

@@ -56,10 +56,55 @@ function collectionItemThumbEl(sub, isOwner) {
 
 async function fetchCollection(id) {
   const { data, error } = await sb.from('mosaic_collections')
-    .select('id,owner_id,title,description,is_public,created_at,mosaic_collection_items(submission_id,added_at,mosaic_submissions(id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at))')
+    .select('id,owner_id,title,description,is_public,is_published,published_at,end_date,created_at,mosaic_collection_items(submission_id,added_at,mosaic_submissions(id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at))')
     .eq('id', id).maybeSingle();
   if (error) { console.error('load collection error:', error); return null; }
   return data;
+}
+
+// ---------- publish status (owner-facing badge + toggle button) ----------
+// isExhibitionLive (common.js) is the same "is it actually visible on
+// discovery surfaces" check the landing page and /exhibitions browse-all
+// page use — shown here so the owner sees their exhibition's status the
+// same way everyone else's queries see it, including an expired end_date
+// reading as unpublished even though is_published is still true underneath.
+function renderCollectionStatus(collection, isOwner) {
+  const el = document.getElementById('collectionStatus');
+  if (!isOwner) { el.style.display = 'none'; return; }
+  const live = isExhibitionLive(collection);
+  el.classList.toggle('live', live);
+  if (live && collection.end_date) el.textContent = tr('statusPublishedEndsOn', { date: fmtCompletedDate(collection.end_date) });
+  else if (live) el.textContent = tr('statusPublished');
+  else if (collection.is_published && collection.end_date) el.textContent = tr('statusUnpublishedEnded', { date: fmtCompletedDate(collection.end_date) });
+  else el.textContent = tr('statusUnpublished');
+  el.style.display = '';
+}
+async function toggleCollectionPublish(collection) {
+  const btn = document.getElementById('publishCollectionBtn');
+  const wasLive = isExhibitionLive(collection);
+  btn.disabled = true;
+  // Publishing while an already-passed end_date is still set would leave
+  // it reading as unpublished right back — see isExhibitionLive — which
+  // would make the button look like it did nothing. Clear it so "Publish"
+  // always actually goes live.
+  const patch = wasLive
+    ? { is_published: false }
+    : { is_published: true, published_at: new Date().toISOString(), ...(collection.end_date && collection.end_date < todayDateStr() ? { end_date: null } : {}) };
+  const { error } = await sb.from('mosaic_collections').update(patch).eq('id', collection.id);
+  btn.disabled = false;
+  if (error) { console.error('publish collection error:', error); toast(tr('couldNotPublishCollection')); return; }
+  Object.assign(collection, patch);
+  toast(tr(wasLive ? 'unpublishedToast' : 'publishedToast'));
+  renderCollectionStatus(collection, true);
+  renderPublishButton(collection);
+}
+function renderPublishButton(collection) {
+  const btn = document.getElementById('publishCollectionBtn');
+  const live = isExhibitionLive(collection);
+  btn.textContent = tr(live ? 'unpublishBtn' : 'publishBtn');
+  btn.classList.toggle('btn-primary', !live);
+  btn.classList.toggle('btn-cancel', live);
+  btn.onclick = () => toggleCollectionPublish(collection);
 }
 
 function isCollectionOwner() {
@@ -114,12 +159,17 @@ async function openCollection(id) {
   bylineEl.innerHTML = '';
   bylineEl.appendChild(miniAvatarEl(ownerName, owner && owner.avatar_url, collection.owner_id));
 
+  renderCollectionStatus(collection, isOwner);
+
+  const publishBtn = document.getElementById('publishCollectionBtn');
   const addBtn = document.getElementById('addArtworkBtn');
   const editBtn = document.getElementById('editCollectionBtn');
   const deleteBtn = document.getElementById('deleteCollectionBtn');
+  publishBtn.style.display = isOwner ? '' : 'none';
   addBtn.style.display = isOwner ? '' : 'none';
   editBtn.style.display = isOwner ? '' : 'none';
   deleteBtn.style.display = isOwner ? '' : 'none';
+  if (isOwner) renderPublishButton(collection);
   addBtn.onclick = openAddArtworkModal;
   editBtn.onclick = () => openEditCollectionModal(collection);
   deleteBtn.onclick = () => deleteCollection(collection);
@@ -179,6 +229,7 @@ function openEditCollectionModal(collection) {
   document.getElementById('ec-title').value = collection.title;
   document.getElementById('ec-desc').value = collection.description || '';
   document.getElementById('ec-public').checked = collection.is_public;
+  document.getElementById('ec-enddate').value = collection.end_date || '';
   document.getElementById('ec-error').textContent = '';
   document.getElementById('edit-collection-modal').classList.add('open');
 }
@@ -195,6 +246,7 @@ document.getElementById('ec-submit').onclick = async () => {
     title,
     description: document.getElementById('ec-desc').value.trim() || null,
     is_public: document.getElementById('ec-public').checked,
+    end_date: document.getElementById('ec-enddate').value || null,
   }).eq('id', currentCollection.id);
   btn.disabled = false;
   if (error) { console.error('update collection error:', error); errorEl.textContent = tr('couldNotCreateCollectionMsg', { msg: error.message }); return; }

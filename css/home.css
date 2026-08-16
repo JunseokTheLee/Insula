@@ -2,6 +2,57 @@
 .main-scroll.home-scroll{scroll-snap-type:y proximity;scroll-behavior:smooth;}
 .snap-panel{min-height:100%;scroll-snap-align:start;display:flex;flex-direction:column;}
 
+/* ---------- landing: recent activity (latest artworks + exhibitions lists) ----------
+   Deliberately not a .snap-panel — it's a short, glanceable strip meant to
+   sit above the hero, not a full-viewport section of its own. */
+.recent-activity{flex-shrink:0;width:100%;max-width:1400px;margin:0 auto;padding:28px 32px 8px;}
+.recent-activity-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;}
+.recent-list-col{min-width:0;}
+.recent-list-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;min-width:0;}
+.recent-list-header .section-label{margin:0;}
+.recent-list-header .cta-text{margin-top:0;flex-shrink:0;}
+.recent-list{display:flex;flex-direction:column;}
+.recent-list-row{
+  display:flex;align-items:center;gap:14px;padding:10px 2px;
+  border-bottom:1px solid var(--hairline);text-decoration:none;color:inherit;
+  transition:background .12s linear;
+}
+.recent-list:last-child .recent-list-row:last-child{border-bottom:none;}
+.recent-list-row:hover{background:var(--forest-08);}
+.recent-list-thumb{
+  width:52px;height:52px;flex-shrink:0;border-radius:4px;object-fit:cover;
+  background:var(--paper);box-shadow:0 0 0 0.5px var(--hairline-strong);
+}
+.recent-list-thumb-empty{position:relative;}
+.recent-list-thumb-empty::after{
+  content:'🖼';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:16px;opacity:.2;
+}
+.recent-list-info{flex:1;min-width:0;}
+.recent-list-title{
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--forest);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.recent-list-meta{
+  display:flex;align-items:center;gap:6px;margin-top:4px;
+  font-family:'General Sans',sans-serif;font-size:12px;color:var(--muted);
+  white-space:nowrap;overflow:hidden;
+}
+.recent-list-meta-name{overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.recent-list-avatar{width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--hairline);}
+.recent-list-avatar-fallback{
+  display:flex;align-items:center;justify-content:center;background:var(--forest);color:var(--paper);
+  font-family:'Space Grotesk',sans-serif;font-size:9px;font-weight:700;
+}
+.recent-list-arrow{flex-shrink:0;color:var(--muted);font-size:14px;opacity:.5;transition:opacity .12s linear,transform .12s linear;}
+.recent-list-row:hover .recent-list-arrow{opacity:1;transform:translateX(2px);color:var(--forest);}
+@media (max-width:900px){
+  .recent-activity-inner{grid-template-columns:1fr;gap:8px;}
+}
+@media (max-width:640px){
+  .recent-activity{padding:18px 16px 4px;}
+}
+
 .hero{flex-shrink:0;padding:6vh 32px 48px;animation:fadeIn .4s ease-out;background:var(--paper);}
 .hero-inner{display:flex;gap:64px;align-items:center;max-width:1400px;margin:0 auto;}
 .hero-left{flex:1 1 460px;min-width:0;max-width:640px;position:relative;padding-left:20px;}
@@ -59,11 +110,10 @@
   display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
   max-width:1400px;margin:0 auto;
 }
-.stat-tile{background:var(--paper);padding:26px 12px 26px 20px;text-align:left;border:1px solid var(--hairline-strong);border-left:3px solid var(--coral);}
+.stat-tile{padding:4px 12px 4px 20px;text-align:left;border-left:3px solid var(--coral);}
 .stat-tile:nth-child(4n+2){border-left-color:var(--mint);}
 .stat-tile:nth-child(4n+3){border-left-color:var(--gold);}
 .stat-tile:nth-child(4n+4){border-left-color:var(--forest);}
-.stat-icon{font-size:16px;margin-bottom:10px;opacity:.7;}
 .stat-value{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;letter-spacing:-.01em;color:var(--forest);}
 .stat-label{font-family:'General Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);margin-top:6px;}
 @media (max-width:900px){
@@ -228,7 +278,7 @@
 
 .projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;padding:0 32px 32px;}
 .project-card{
-  position:relative;border:none;border-radius:0;cursor:pointer;
+  position:relative;border:none;border-radius:0;cursor:pointer;min-width:0;
   background:var(--paper);box-shadow:0 0 0 0.5px var(--hairline-strong);
   transition:background .12s linear;
   opacity:0;animation:cardIn .35s ease-out forwards;
@@ -261,7 +311,7 @@
 /* ---------- landing: latest artworks ---------- */
 .artworks-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;padding:0 32px 32px;width:100%;max-width:1464px;margin:0 auto;}
 .artwork-card{
-  position:relative;border:none;border-radius:0;cursor:pointer;
+  position:relative;border:none;border-radius:0;cursor:pointer;min-width:0;
   background:var(--paper);box-shadow:0 0 0 0.5px var(--hairline-strong);
   transition:background .12s linear;
   opacity:0;animation:cardIn .35s ease-out forwards;
@@ -295,6 +345,15 @@
 .artwork-card .art-date{font-family:'General Sans',sans-serif;font-size:11px;color:var(--muted);margin-top:6px;opacity:.75;}
 @media (max-width:900px){ .artworks-grid{grid-template-columns:repeat(3,1fr);} }
 @media (max-width:640px){ .artworks-grid{grid-template-columns:repeat(2,1fr);padding-left:16px;padding-right:16px;padding-bottom:56px;} }
+
+/* ---------- landing: latest collections ---------- */
+/* Reuses .artwork-card/.artworks-grid — same card shell, minus the cover
+   photo a brand-new collection may not have yet. */
+.collection-card-img-empty{position:relative;}
+.collection-card-img-empty::after{
+  content:'🖼';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:22px;opacity:.2;
+}
 
 #new-project-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
 #new-project-dialog h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin:0 0 10px;color:var(--forest);}

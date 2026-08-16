@@ -11,7 +11,7 @@ export async function onRequestGet({ params, request, env }) {
 
   const assetResponse = await env.ASSETS.fetch(new Request(new URL('/ko/collection', request.url), request));
 
-  if (!collection) return notFoundResponse(assetResponse, '컬렉션을 찾을 수 없습니다 | Weavo');
+  if (!collection) return notFoundResponse(assetResponse, '전시를 찾을 수 없습니다 | Weavo');
 
   const owner = await pgFetchOne(`profiles?id=eq.${encodeURIComponent(collection.owner_id)}&select=name,username&limit=1`);
   const ownerName = (owner && (owner.username || owner.name)) || '익명';
@@ -20,7 +20,7 @@ export async function onRequestGet({ params, request, env }) {
   const title = `${collection.title} | Weavo`;
   const description = collection.description
     ? collection.description.slice(0, 300)
-    : `${ownerName}님이 Weavo에서 큐레이션한 컬렉션입니다.`;
+    : `${ownerName}님이 Weavo에서 큐레이션한 미니 전시입니다.`;
 
   return renderEntityPage(assetResponse, {
     title, description, canonical,

@@ -146,18 +146,11 @@ function profileProjectCardEl(project) {
 let profileCollections = [];
 async function fetchUserCollections(userId) {
   const { data, error } = await sb.from('mosaic_collections')
-    .select('id,title,description,is_public,created_at,mosaic_collection_items(submission_id,added_at,mosaic_submissions(thumb_url,image_url))')
+    .select('id,title,description,is_public,is_published,end_date,created_at,mosaic_collection_items(submission_id,added_at,mosaic_submissions(thumb_url,image_url))')
     .eq('owner_id', userId)
     .order('created_at', { ascending: false });
   if (error) { console.error('load collections error:', error); toast(tr('couldNotLoadCollections')); return []; }
   return data || [];
-}
-function collectionCoverUrl(collection) {
-  const items = collection.mosaic_collection_items || [];
-  if (!items.length) return null;
-  const latest = items.reduce((a, b) => (new Date(a.added_at) > new Date(b.added_at) ? a : b));
-  const sub = latest.mosaic_submissions;
-  return sub ? cdnUrl(sub.thumb_url || sub.image_url) : null;
 }
 function collectionCardEl(collection, isOwner) {
   const card = document.createElement('a');
@@ -181,6 +174,13 @@ function collectionCardEl(collection, isOwner) {
     const badge = document.createElement('span');
     badge.className = 'pv-card-archived-badge';
     badge.textContent = tr('privateBadge');
+    title.appendChild(document.createTextNode(' '));
+    title.appendChild(badge);
+  }
+  if (isOwner && !isExhibitionLive(collection)) {
+    const badge = document.createElement('span');
+    badge.className = 'pv-card-archived-badge';
+    badge.textContent = tr('statusUnpublished');
     title.appendChild(document.createTextNode(' '));
     title.appendChild(badge);
   }
@@ -211,6 +211,7 @@ function openNewCollectionModal() {
   document.getElementById('nc-title').value = '';
   document.getElementById('nc-desc').value = '';
   document.getElementById('nc-public').checked = true;
+  document.getElementById('nc-enddate').value = '';
   document.getElementById('nc-error').textContent = '';
   document.getElementById('new-collection-modal').classList.add('open');
 }
@@ -224,10 +225,15 @@ document.getElementById('nc-submit').onclick = async () => {
   errorEl.textContent = '';
   const btn = document.getElementById('nc-submit');
   btn.disabled = true;
+  // is_published defaults to false at the database level (see
+  // supabase_mosaic_collections_publish.sql) — every new exhibition starts
+  // as a draft regardless of is_public, and the owner publishes it
+  // themselves from the exhibition's own page when it's ready.
   const { error } = await sb.from('mosaic_collections').insert({
     owner_id: me.id, title,
     description: document.getElementById('nc-desc').value.trim() || null,
     is_public: document.getElementById('nc-public').checked,
+    end_date: document.getElementById('nc-enddate').value || null,
   });
   btn.disabled = false;
   if (error) { console.error('create collection error:', error); errorEl.textContent = tr('couldNotCreateCollectionMsg', { msg: error.message }); return; }

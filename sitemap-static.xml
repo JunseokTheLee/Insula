@@ -62,6 +62,18 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
   </url>
   <url>
+    <loc>https://weavo.art/en/exhibitions</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/exhibitions"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/exhibitions"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
+  </url>
+  <url>
+    <loc>https://weavo.art/ko/exhibitions</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/exhibitions"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/exhibitions"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
+  </url>
+  <url>
     <loc>https://weavo.art/en/privacy</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/privacy"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/privacy"/>

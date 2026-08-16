@@ -36,6 +36,7 @@
       <a href="/en/projects" class="nav-link">Projects</a>
       <a href="/en/network" class="nav-link">Network</a>
       <a href="/en/artists" class="nav-link">Artists</a>
+      <a href="/en/exhibitions" class="nav-link">Exhibitions</a>
       <a href="/en/about" class="nav-link">About</a>
     </nav>
     <div id="identity">
@@ -90,11 +91,11 @@
     </div>
     <div class="profile-section" id="profileCollectionsSection" style="display:none;">
       <div class="profile-section-head">
-        <h2 class="section-label">Collections</h2>
+        <h2 class="section-label">Exhibitions</h2>
         <button type="button" class="section-new-btn" id="newCollectionBtn" style="display:none;">+ New</button>
       </div>
       <div class="profile-collections-grid" id="profileCollectionsGrid"></div>
-      <div class="empty-note" id="profileCollectionsEmpty" style="display:none;">No collections yet — gather saved pieces into a board.</div>
+      <div class="empty-note" id="profileCollectionsEmpty" style="display:none;">No exhibitions yet — gather saved pieces into a mini-exhibition.</div>
     </div>
     <div class="profile-section">
       <h2 class="section-label">Network</h2>
@@ -117,24 +118,28 @@
   </footer>
 </div>
 
-<!-- New collection modal -->
+<!-- New exhibition modal -->
 <div id="new-collection-modal" class="modal-overlay">
   <div id="new-collection-dialog" class="modal-panel">
-    <h3>New Collection</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">A named board built from artwork you've already saved — like a mini exhibition.</p>
+    <h3>New Exhibition</h3>
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">A named board built from artwork you've already saved — a mini-exhibition of your own. Starts unpublished; you publish it yourself when it's ready.</p>
     <div class="field">
       <label for="nc-title">Title</label>
       <input type="text" id="nc-title" placeholder="e.g. Autumn Palettes" maxlength="80">
     </div>
     <div class="field">
       <label for="nc-desc">Description <span class="field-hint">(optional)</span></label>
-      <textarea id="nc-desc" placeholder="What ties this collection together?" maxlength="500"></textarea>
+      <textarea id="nc-desc" placeholder="What ties this exhibition together?" maxlength="500"></textarea>
     </div>
     <div class="field">
       <label for="nc-public" style="display:flex;align-items:center;gap:8px;font-weight:400;">
         <input type="checkbox" id="nc-public" checked style="width:auto;">
-        Anyone can view this collection
+        Anyone can view this exhibition
       </label>
+    </div>
+    <div class="field">
+      <label for="nc-enddate">End date <span class="field-hint">(optional)</span></label>
+      <input type="date" id="nc-enddate">
     </div>
     <div class="field-error" id="nc-error"></div>
     <div class="modal-actions">
@@ -144,13 +149,13 @@
   </div>
 </div>
 
-<!-- Add to collection picker -->
+<!-- Add to exhibition picker -->
 <div id="add-to-collection-modal" class="modal-overlay">
   <div id="add-to-collection-dialog" class="modal-panel">
-    <h3>Add to Collection</h3>
+    <h3>Add to Exhibition</h3>
     <div id="atc-list"></div>
-    <div class="empty-note" id="atc-empty" style="display:none;padding:16px;">You don't have any collections yet.</div>
-    <button type="button" id="atc-new" class="section-new-btn" style="margin-top:4px;">+ New collection</button>
+    <div class="empty-note" id="atc-empty" style="display:none;padding:16px;">You don't have any exhibitions yet.</div>
+    <button type="button" id="atc-new" class="section-new-btn" style="margin-top:4px;">+ New exhibition</button>
     <div class="modal-actions">
       <button id="atc-done" class="btn-primary">Done</button>
     </div>

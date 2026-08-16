@@ -4,27 +4,28 @@
 <link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Projects | Weavo</title>
-<meta name="description" content="Browse every collaborative mosaic project on Weavo and see how each community canvas is coming together.">
-<link rel="canonical" href="https://weavo.art/en/projects">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/projects">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/projects">
+<title>All Exhibitions | Weavo</title>
+<meta name="description" content="Browse every public mini-exhibition curated by the Weavo community.">
+<link rel="canonical" href="https://weavo.art/en/exhibitions">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/exhibitions">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/exhibitions">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Projects | Weavo">
-<meta property="og:description" content="Browse every collaborative mosaic project on Weavo and see how each community canvas is coming together.">
-<meta property="og:url" content="https://weavo.art/en/projects">
+<meta property="og:title" content="All Exhibitions | Weavo">
+<meta property="og:description" content="Browse every public mini-exhibition curated by the Weavo community.">
+<meta property="og:url" content="https://weavo.art/en/exhibitions">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Projects | Weavo">
-<meta name="twitter:description" content="Browse every collaborative mosaic project on Weavo and see how each community canvas is coming together.">
+<meta name="twitter:title" content="All Exhibitions | Weavo">
+<meta name="twitter:description" content="Browse every public mini-exhibition curated by the Weavo community.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Projects","item":"https://weavo.art/en/projects"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Exhibitions","item":"https://weavo.art/en/exhibitions"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/home.css">
+<link rel="stylesheet" href="/css/artists.css">
 </head>
 <body>
 
@@ -32,10 +33,10 @@
   <header class="topnav">
     <a class="logo" id="logoHome" href="/en/">Weavo</a>
     <nav class="nav-links">
-      <a href="/en/projects" class="nav-link active">Projects</a>
+      <a href="/en/projects" class="nav-link">Projects</a>
       <a href="/en/network" class="nav-link">Network</a>
       <a href="/en/artists" class="nav-link">Artists</a>
-      <a href="/en/exhibitions" class="nav-link">Exhibitions</a>
+      <a href="/en/exhibitions" class="nav-link active">Exhibitions</a>
       <a href="/en/about" class="nav-link">About</a>
     </nav>
     <div id="identity">
@@ -50,81 +51,22 @@
       </div>
   </header>
 
-  <main class="main-scroll home-scroll">
-    <h1 class="sr-only">Projects</h1>
-    <section class="snap-panel" id="currentProjectsPanel">
-      <div class="carousel-section" id="carouselSection">
-        <div class="carousel-header">
-          <h2 class="section-label">Current Projects</h2>
-          <div class="carousel-nav">
-            <button class="car-arrow" id="carPrev" aria-label="Previous project">&#8249;</button>
-            <button class="car-arrow" id="carNext" aria-label="Next project">&#8250;</button>
-          </div>
-        </div>
-        <div class="carousel-track-wrap">
-          <div class="carousel-track" id="carouselTrack"></div>
-        </div>
-        <div class="carousel-dots" id="carouselDots"></div>
-      </div>
-
-      <button type="button" class="scroll-hint" id="scrollHint" aria-label="Scroll to all projects">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-      </button>
-    </section>
-
-    <section class="snap-panel" id="projectsPanel">
-      <div class="carousel-header" style="margin-top:32px;">
-        <h2 class="section-label">All Projects</h2>
-        <button class="cta-text" id="newProjectBtn" style="display:none;margin-top:0;">+ New Project</button>
-      </div>
-      <div class="projects-grid" id="projectsGrid"></div>
-      <div class="empty-note" id="projectsEmpty" style="display:none;">No projects yet.</div>
-    </section>
+  <main class="main main-scroll">
+    <div class="backnav">
+      <a class="back" href="/en/projects">&larr; Back</a>
+    </div>
+    <div class="artists-page" style="padding-bottom:0;max-width:1464px;">
+      <h1 class="artists-page-title">All Exhibitions</h1>
+      <div class="artists-page-desc">Every public mini-exhibition curated by the Weavo community, newest first.</div>
+    </div>
+    <div class="artworks-grid" id="exhibitionsGrid"></div>
+    <div class="empty-note" id="exhibitionsEmpty" style="display:none;">No public exhibitions yet — start one from your profile.</div>
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>
     <span class="sep" aria-hidden="true">&middot;</span>
     <a href="/en/disclaimer">Disclaimer</a>
   </footer>
-</div>
-
-<!-- New project modal (admin only) -->
-<div id="new-project-modal" class="modal-overlay">
-  <div id="new-project-dialog" class="modal-panel">
-    <h3>New Weavo Project</h3>
-    <div class="field">
-      <label for="np-title">Title</label>
-      <input type="text" id="np-title" placeholder="Project title" maxlength="60">
-    </div>
-    <div class="field">
-      <label for="np-desc">Description <span class="field-hint">(optional)</span></label>
-      <textarea id="np-desc" placeholder="What's this weavo about?" maxlength="300"></textarea>
-    </div>
-    <div style="display:flex;gap:10px;">
-      <div class="field" style="flex:1;">
-        <label for="np-width">Width (cells)</label>
-        <input type="text" inputmode="numeric" id="np-width" placeholder="e.g. 40">
-      </div>
-      <div class="field" style="flex:1;">
-        <label for="np-height">Height (cells)</label>
-        <input type="text" inputmode="numeric" id="np-height" placeholder="e.g. 30">
-      </div>
-    </div>
-    <div class="field">
-      <label>Reference Image</label>
-      <div class="img-upload-area" id="ref-picker">
-        <div class="img-placeholder"><span class="up-icon">🖼</span><span>Click or drag an image here</span></div>
-        <img class="img-preview" alt="">
-        <button type="button" class="img-remove" aria-label="Remove image">✕</button>
-        <input type="file" class="img-input" accept="image/*">
-      </div>
-    </div>
-    <div class="field-error" id="np-error"></div>
-    <div class="modal-actions">
-      <button id="np-cancel" class="btn-cancel">Cancel</button>
-      <button id="np-submit" class="btn-primary">Create</button>
-    </div>
-  </div>
 </div>
 
 <!-- Edit profile modal -->
@@ -212,10 +154,7 @@
 <script src="/js/supabase-client.js"></script>
 <script src="/js/i18n/en.js"></script>
 <script src="/js/common.js"></script>
-<script src="/js/color-engine.js"></script>
-<script src="/js/matching.js"></script>
 <script src="/js/auth.js"></script>
-<script src="/js/project-preview.js"></script>
-<script src="/js/home.js"></script>
+<script src="/js/exhibitions.js"></script>
 </body>
 </html>

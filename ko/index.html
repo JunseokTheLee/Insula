@@ -38,6 +38,7 @@
       <a href="/ko/projects" class="nav-link">프로젝트</a>
       <a href="/ko/network" class="nav-link">네트워크</a>
       <a href="/ko/artists" class="nav-link">아티스트</a>
+      <a href="/ko/exhibitions" class="nav-link">전시</a>
       <a href="/ko/about" class="nav-link">소개</a>
     </nav>
     <div id="identity">
@@ -53,6 +54,27 @@
   </header>
 
   <main class="main-scroll home-scroll">
+    <section class="recent-activity" id="recentActivityPanel">
+      <div class="recent-activity-inner">
+        <div class="recent-list-col">
+          <div class="recent-list-header">
+            <h2 class="section-label">최근 전시</h2>
+            <a href="/ko/exhibitions" class="cta-text">모든 전시 보기</a>
+          </div>
+          <div class="recent-list" id="recentCollectionsList"></div>
+          <div class="empty-note" id="recentCollectionsEmpty" style="display:none;">아직 게시된 전시가 없습니다 — 프로필에서 전시를 게시해보세요.</div>
+        </div>
+        <div class="recent-list-col">
+          <div class="recent-list-header">
+            <h2 class="section-label">최근 작품</h2>
+            <a href="/ko/projects" class="cta-text">모든 프로젝트 보기</a>
+          </div>
+          <div class="recent-list" id="recentArtworksList"></div>
+          <div class="empty-note" id="recentArtworksEmpty" style="display:none;">아직 등록된 작품이 없습니다 — 첫 번째 작품을 제출해 보세요.</div>
+        </div>
+      </div>
+    </section>
+
     <section class="snap-panel" id="heroPanel">
       <div class="hero">
         <div class="hero-inner">
@@ -75,10 +97,10 @@
 
       <div class="stats-bar" id="statsBar">
         <div class="stats-bar-inner">
-          <div class="stat-tile"><div class="stat-icon">👥</div><div class="stat-value" id="statArtists">0</div><div class="stat-label">아티스트</div></div>
-          <div class="stat-tile"><div class="stat-icon">🎨</div><div class="stat-value" id="statArtworks">0</div><div class="stat-label">제출된 작품</div></div>
-          <div class="stat-tile"><div class="stat-icon">🖼️</div><div class="stat-value" id="statProjects">0</div><div class="stat-label">진행 중인 프로젝트</div></div>
-          <div class="stat-tile"><div class="stat-icon">✅</div><div class="stat-value" id="statFill">0%</div><div class="stat-label">채워진 칸</div></div>
+          <div class="stat-tile"><div class="stat-value" id="statArtists">0</div><div class="stat-label">아티스트</div></div>
+          <div class="stat-tile"><div class="stat-value" id="statArtworks">0</div><div class="stat-label">제출된 작품</div></div>
+          <div class="stat-tile"><div class="stat-value" id="statProjects">0</div><div class="stat-label">진행 중인 프로젝트</div></div>
+          <div class="stat-tile"><div class="stat-value" id="statFill">0%</div><div class="stat-label">채워진 칸</div></div>
         </div>
       </div>
 
@@ -136,7 +158,7 @@
         <div class="hiw-header">
           <h2 class="section-label">캔버스 너머</h2>
           <h3 class="hiw-title">커뮤니티를 만나는 두 가지 방법.</h3>
-          <p class="hiw-intro">Weavo에는 함께 채워가는 캔버스만 있는 것이 아닙니다. Network는 누가 누구에게 주목하고 있는지를 지도로 보여주고, Collections는 마음에 남는 작품들을 한곳에 모아둘 수 있게 해줍니다.</p>
+          <p class="hiw-intro">Weavo에는 함께 채워가는 캔버스만 있는 것이 아닙니다. Network는 누가 누구에게 주목하고 있는지를 지도로 보여주고, 전시는 마음에 남는 작품들을 한곳에 모아둘 수 있게 해줍니다.</p>
         </div>
 
         <div class="feature-row">
@@ -175,14 +197,14 @@
 
         <div class="feature-row reverse">
           <div class="feature-text">
-            <span class="feature-tag">Collections</span>
-            <h3>마음에 남는 작품을 나만의 방식으로 모아보세요.</h3>
-            <p>작품을 저장하면 나의 보관함에 담깁니다 — Collection을 만들면 그중 몇 점을 의도를 가지고 하나로 묶을 수 있습니다. 제목과 함께 어떤 기준으로 모았는지 짧은 설명을 남기고, 언제든 작품을 추가하거나 뺄 수 있으며, 비공개로 둘지 누구나 볼 수 있게 할지도 직접 정할 수 있습니다.</p>
-            <a href="/ko/profile" class="cta-text" style="margin-top:0;">Collection 만들기 <span aria-hidden="true">&rarr;</span></a>
+            <span class="feature-tag">전시</span>
+            <h3>마음에 남는 작품으로 나만의 미니 전시를 열어보세요.</h3>
+            <p>작품을 저장하면 나의 보관함에 담깁니다 — 전시를 만들면 그중 몇 점을 의도를 가지고 하나로 묶을 수 있습니다. 제목과 함께 어떤 기준으로 모았는지 짧은 설명을 남기고, 언제든 작품을 추가하거나 뺄 수 있으며, 비공개로 둘지 누구나 볼 수 있게 할지도 직접 정할 수 있습니다.</p>
+            <a href="/ko/profile" class="cta-text" style="margin-top:0;">전시 만들기 <span aria-hidden="true">&rarr;</span></a>
           </div>
           <div class="feature-diagram">
             <div class="feature-diagram-panel feature-diagram-light">
-              <svg viewBox="0 0 420 210" class="fd-collections" role="img" aria-label="작품 색상 견본이 작게 격자로 담긴 두 개의 컬렉션 보드에 각각 제목과 공개 또는 비공개 표시가 있고, 그 옆에는 새 컬렉션을 만들 수 있는 점선 카드가 놓여 있는 다이어그램.">
+              <svg viewBox="0 0 420 210" class="fd-collections" role="img" aria-label="작품 색상 견본이 작게 격자로 담긴 두 개의 전시 보드에 각각 제목과 공개 또는 비공개 표시가 있고, 그 옆에는 새 전시를 만들 수 있는 점선 카드가 놓여 있는 다이어그램.">
                 <g class="fd-card">
                   <rect x="24" y="16" width="118" height="170" rx="2" class="fd-card-body"/>
                   <rect x="32" y="24" width="49" height="49" class="fd-swatch" fill="#FF8C69"/>
@@ -204,7 +226,7 @@
                 <g class="fd-card">
                   <rect x="300" y="16" width="118" height="170" rx="2" class="fd-card-new"/>
                   <text x="359" y="98" class="fd-card-plus" text-anchor="middle">+</text>
-                  <text x="359" y="161" class="fd-card-meta" text-anchor="middle">새 컬렉션</text>
+                  <text x="359" y="161" class="fd-card-meta" text-anchor="middle">새 전시</text>
                 </g>
               </svg>
             </div>
@@ -213,14 +235,6 @@
       </div>
     </section>
 
-    <section class="snap-panel" id="recentArtworksPanel">
-      <div class="carousel-header" style="margin-top:32px;">
-        <h2 class="section-label">최근 작품</h2>
-        <a href="/ko/projects" class="cta-text" style="margin-top:0;">모든 프로젝트 보기</a>
-      </div>
-      <div class="artworks-grid" id="recentArtworksGrid"></div>
-      <div class="empty-note" id="recentArtworksEmpty" style="display:none;">아직 등록된 작품이 없습니다 — 첫 번째 작품을 제출해 보세요.</div>
-    </section>
   </main>
 
   <footer id="legal-footer">
