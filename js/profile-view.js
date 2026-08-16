@@ -193,11 +193,9 @@ function collectionCardEl(collection, isOwner) {
 }
 function renderCollectionsSection(collections, isOwner) {
   profileCollections = collections;
-  const section = document.getElementById('profileCollectionsSection');
   const grid = document.getElementById('profileCollectionsGrid');
   grid.innerHTML = '';
   document.getElementById('newCollectionBtn').style.display = isOwner ? '' : 'none';
-  section.style.display = (isOwner || collections.length) ? '' : 'none';
   document.getElementById('profileCollectionsEmpty').style.display = collections.length ? 'none' : '';
   for (const c of collections) grid.appendChild(collectionCardEl(c, isOwner));
 }
@@ -574,12 +572,11 @@ async function loadProfileView(userId) {
   document.getElementById('profileLinksList').innerHTML = '';
   document.getElementById('profileAvatarWrap').innerHTML = '';
   document.getElementById('profileBio').style.display = 'none';
-  document.getElementById('profileProjectsSection').style.display = 'none';
   document.getElementById('profileProjectsGrid').innerHTML = '';
+  document.getElementById('profileProjectsEmpty').style.display = 'none';
   document.getElementById('profileSubmittedGrid').innerHTML = '';
   document.getElementById('profileLikedGrid').innerHTML = '';
   document.getElementById('profileCollectionsGrid').innerHTML = '';
-  document.getElementById('profileCollectionsSection').style.display = 'none';
   document.getElementById('profileSubmittedEmpty').style.display = 'none';
   document.getElementById('profileLikedEmpty').style.display = 'none';
   document.getElementById('profileSaveCounts').style.display = 'none';
@@ -633,11 +630,9 @@ async function loadProfileView(userId) {
     linksEl.appendChild(a);
   }
 
-  if (participatedProjects.length) {
-    const projectsGrid = document.getElementById('profileProjectsGrid');
-    for (const project of participatedProjects) projectsGrid.appendChild(profileProjectCardEl(project));
-    document.getElementById('profileProjectsSection').style.display = '';
-  }
+  const projectsGrid = document.getElementById('profileProjectsGrid');
+  if (!participatedProjects.length) document.getElementById('profileProjectsEmpty').style.display = '';
+  else for (const project of participatedProjects) projectsGrid.appendChild(profileProjectCardEl(project));
 
   const submittedGrid = document.getElementById('profileSubmittedGrid');
   if (!artwork.length) document.getElementById('profileSubmittedEmpty').style.display = '';
