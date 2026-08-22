@@ -113,44 +113,73 @@ function normalizeProfileUrl(raw) {
     select.appendChild(opt);
   }
 })();
-(function buildEditProfileDisabilityOptions() {
-  const select = document.getElementById('ep-disabilities');
-  for (const group of DISABILITY_GROUPS) {
-    const optgroup = document.createElement('optgroup');
-    optgroup.label = disabilityGroupLabel(group.key);
-    for (const key of group.keys) {
-      const opt = document.createElement('option');
-      opt.value = key; opt.textContent = disabilityLabel(key);
-      optgroup.appendChild(opt);
+// Custom checkbox dropdown (not a native <select multiple>) — every option
+// toggles on a plain left click instead of needing ctrl/cmd-click. Mirrors
+// the add-to-exhibition dropdown pattern in lightbox.js (button + absolute
+// menu of clickable <label> rows, closes on outside click / Escape).
+function disabilityRowEl(key) {
+  const row = document.createElement('label');
+  row.className = 'ep-disabilities-row';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox'; cb.id = `ep-disability-${key}`; cb.value = key;
+  cb.onchange = () => {
+    if (cb.checked) {
+      const toClear = DISABILITY_EXCLUSIVE_KEYS.includes(key)
+        ? DISABILITY_KEYS.filter(k => k !== key)
+        : DISABILITY_EXCLUSIVE_KEYS;
+      for (const otherKey of toClear) document.getElementById(`ep-disability-${otherKey}`).checked = false;
     }
-    select.appendChild(optgroup);
+    updateEpDisabilitiesSummary();
+  };
+  const span = document.createElement('span'); span.textContent = disabilityLabel(key);
+  row.append(cb, span);
+  return row;
+}
+(function buildEditProfileDisabilityOptions() {
+  const menu = document.getElementById('ep-disabilities-menu');
+  for (const key of DISABILITY_STANDALONE_KEYS) menu.appendChild(disabilityRowEl(key));
+  const divider = document.createElement('div'); divider.className = 'ep-disabilities-divider';
+  menu.appendChild(divider);
+  for (const group of DISABILITY_GROUPS) {
+    const groupLabel = document.createElement('div');
+    groupLabel.className = 'ep-disabilities-group-label';
+    groupLabel.textContent = disabilityGroupLabel(group.key);
+    menu.appendChild(groupLabel);
+    for (const key of group.keys) menu.appendChild(disabilityRowEl(key));
   }
-  select.size = 12;
 })();
-// 'prefer_not_to_say' is exclusive with every other disability option. A
-// native multi-select's change event doesn't say which option the click
-// just toggled, so the previous selection is tracked here to diff against.
-let epDisabilitiesPrevSelected = new Set();
-document.getElementById('ep-disabilities').onchange = () => {
-  const select = document.getElementById('ep-disabilities');
-  const current = new Set([...select.selectedOptions].map(o => o.value));
-  const justAdded = [...current].find(k => !epDisabilitiesPrevSelected.has(k));
-  if (justAdded === 'prefer_not_to_say') {
-    for (const opt of select.options) if (opt.value !== 'prefer_not_to_say') opt.selected = false;
-  } else if (justAdded) {
-    const preferOpt = select.querySelector('option[value="prefer_not_to_say"]');
-    if (preferOpt) preferOpt.selected = false;
-  }
-  epDisabilitiesPrevSelected = new Set([...select.selectedOptions].map(o => o.value));
-};
+function updateEpDisabilitiesSummary() {
+  const summary = document.querySelector('#ep-disabilities-btn .ep-disabilities-summary');
+  const labels = getCheckedDisabilities().map(disabilityLabel);
+  summary.textContent = labels.length ? labels.join(', ') : tr('selectDisabilitiesPlaceholder');
+  summary.classList.toggle('has-value', labels.length > 0);
+}
 function getCheckedDisabilities() {
-  return [...document.getElementById('ep-disabilities').selectedOptions].map(o => o.value);
+  return DISABILITY_KEYS.filter(key => document.getElementById(`ep-disability-${key}`).checked);
 }
 function setCheckedDisabilities(values) {
   const set = new Set(values || []);
-  for (const opt of document.getElementById('ep-disabilities').options) opt.selected = set.has(opt.value);
-  epDisabilitiesPrevSelected = set;
+  for (const key of DISABILITY_KEYS) document.getElementById(`ep-disability-${key}`).checked = set.has(key);
+  updateEpDisabilitiesSummary();
 }
+function closeEpDisabilitiesMenu() {
+  document.getElementById('ep-disabilities-menu').classList.remove('open');
+  document.getElementById('ep-disabilities-btn').classList.remove('open');
+  document.getElementById('ep-disabilities-btn').setAttribute('aria-expanded', 'false');
+}
+document.getElementById('ep-disabilities-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  const menu = document.getElementById('ep-disabilities-menu');
+  const willOpen = !menu.classList.contains('open');
+  closeEpDisabilitiesMenu();
+  if (!willOpen) return;
+  menu.classList.add('open');
+  const btn = document.getElementById('ep-disabilities-btn');
+  btn.classList.add('open'); btn.setAttribute('aria-expanded', 'true');
+});
+document.addEventListener('click', e => {
+  if (!document.querySelector('.ep-disabilities-wrap').contains(e.target)) closeEpDisabilitiesMenu();
+});
 // `forced` = true is the first-sign-in onboarding flow, or any later
 // sign-in before every mandatory field (username, country) has been set:
 // no Cancel, no backdrop/Escape dismissal, until they're all filled in.
@@ -183,6 +212,7 @@ function openEditProfileModal(profile, forced) {
   // onboarding form back to the stale profile values.
   if (document.getElementById('edit-profile-modal').classList.contains('open')) return;
   profileEditRequired = !!forced;
+  closeEpDisabilitiesMenu();
   document.getElementById('ep-country').value = profile.country_id ? String(profile.country_id) : '';
   epAvatarPicker.setExisting(cdnUrl(profile.avatar_url || me.avatar || ''));
   document.getElementById('ep-username').value = profile.username || '';
@@ -332,6 +362,7 @@ addEventListener('keydown', e => {
   const confirmModal = document.getElementById('confirm-modal');
   if (confirmModal.classList.contains('open')) { document.getElementById('confirm-cancel').click(); return; }
   if (typeof window.closeLightbox === 'function' && document.getElementById('lightbox-modal')?.classList.contains('open')) { window.closeLightbox(); return; }
+  if (document.getElementById('ep-disabilities-menu').classList.contains('open')) { closeEpDisabilitiesMenu(); return; }
   const editModal = document.getElementById('edit-profile-modal');
   if (editModal.classList.contains('open')) { closeEditProfileModal(); return; }
   const anyOpen = document.querySelector('.modal-overlay.open');

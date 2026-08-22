@@ -511,13 +511,18 @@ const LINK_PLATFORMS = [
   { key: 'website',   label: 'Website' },
 ];
 
-// Options for the profile editor's disability multi-select, grouped into
-// <optgroup>s (see buildEditProfileDisabilityOptions in auth.js). Stored in
-// profiles.disabilities (text[]) as these stable keys — never the display
-// label — so a language switch doesn't fork a user's saved values. Labels
-// are looked up per-language via disabilityLabel()/disabilityGroupLabel()
-// (see js/i18n/{en,ko}.js). 'prefer_not_to_say' is mutually exclusive with
-// every other option.
+// Options for the profile editor's disability multi-select — a custom
+// checkbox dropdown (see buildEditProfileDisabilityOptions in auth.js), not
+// a native <select multiple>, so picking an option is a plain left click
+// rather than needing ctrl/cmd-click. DISABILITY_STANDALONE_KEYS render
+// above all groups with no group header; the rest are grouped into
+// labeled sections. Stored in profiles.disabilities (text[]) as these
+// stable keys — never the display label — so a language switch doesn't
+// fork a user's saved values. Labels are looked up per-language via
+// disabilityLabel()/disabilityGroupLabel() (see js/i18n/{en,ko}.js).
+// DISABILITY_EXCLUSIVE_KEYS are mutually exclusive with every other option
+// (and with each other) — picking one clears the rest.
+const DISABILITY_STANDALONE_KEYS = ['no_disability'];
 const DISABILITY_GROUPS = [
   { key: 'physical', keys: ['mobility', 'dexterity', 'limb_difference'] },
   { key: 'vision', keys: ['blind', 'low_vision', 'color_blindness'] },
@@ -528,7 +533,8 @@ const DISABILITY_GROUPS = [
   { key: 'speech_communication', keys: ['speech', 'nonverbal_communication'] },
   { key: 'other', keys: ['other', 'prefer_not_to_say'] },
 ];
-const DISABILITY_KEYS = DISABILITY_GROUPS.flatMap(g => g.keys);
+const DISABILITY_KEYS = [...DISABILITY_STANDALONE_KEYS, ...DISABILITY_GROUPS.flatMap(g => g.keys)];
+const DISABILITY_EXCLUSIVE_KEYS = ['no_disability', 'prefer_not_to_say'];
 
 // Points the lang-toggle buttons at the sibling page under the other
 // language directory (same path + query), and marks the current one active.

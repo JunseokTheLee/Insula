@@ -215,8 +215,39 @@ body.no-scroll-lock{overflow:hidden;}
 .field select{cursor:pointer;}
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--forest);}
 .field-error{font-family:'General Sans',sans-serif;font-size:11px;color:var(--coral);min-height:14px;}
-.field select[multiple]{padding:4px;}
-.field select[multiple] option{padding:6px 8px;border-radius:4px;}
+
+/* ---------- disabilities multi-select dropdown (edit-profile modal) ---------- */
+/* A custom checkbox dropdown rather than a native <select multiple> — every
+   row toggles on a plain left click instead of requiring ctrl/cmd-click. */
+.ep-disabilities-wrap{position:relative;}
+.ep-disabilities-btn{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+  padding:10px 12px;border:1px solid var(--hairline-strong);border-radius:8px;background:#fff;
+  font-family:'General Sans',sans-serif;font-size:13px;color:var(--ink);cursor:pointer;text-align:left;
+  transition:border-color .12s linear;
+}
+.ep-disabilities-btn:hover,.ep-disabilities-btn.open{border-color:var(--forest);}
+.ep-disabilities-summary{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);}
+.ep-disabilities-summary.has-value{color:var(--ink);}
+.ep-disabilities-caret{font-size:10px;opacity:.7;flex-shrink:0;transition:transform .12s ease;}
+.ep-disabilities-btn.open .ep-disabilities-caret{transform:rotate(180deg);}
+.ep-disabilities-menu{
+  display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:20;
+  max-height:280px;overflow-y:auto;background:#fff;border:1px solid var(--hairline-strong);border-radius:8px;
+  padding:6px;box-shadow:0 10px 28px rgba(0,0,0,.12);
+}
+.ep-disabilities-menu.open{display:block;}
+.ep-disabilities-divider{height:1px;background:var(--hairline-strong);margin:6px 4px;}
+.ep-disabilities-group-label{
+  font-family:'General Sans',sans-serif;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--muted);padding:8px 8px 4px;
+}
+.ep-disabilities-row{
+  display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;
+  font-family:'General Sans',sans-serif;font-size:12.5px;color:var(--ink);
+}
+.ep-disabilities-row:hover{background:rgba(58,58,56,.06);}
+.ep-disabilities-row input{width:auto;flex-shrink:0;cursor:pointer;accent-color:var(--forest);}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;padding-top:2px;}
 .modal-actions button{padding:9px 18px;border-radius:20px;font-family:'General Sans',sans-serif;font-size:13px;cursor:pointer;border:none;font-weight:600;transition:background .12s linear;}
 .modal-actions button:active{opacity:.85;}

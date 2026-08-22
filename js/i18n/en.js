@@ -102,6 +102,7 @@ const T = {
   addToExhibitionBtn: 'Add to Exhibition',
   newExhibitionTitlePlaceholder: 'New exhibition title…',
   createLabel: 'Create',
+  selectDisabilitiesPlaceholder: 'Select disabilities…',
 };
 
 function tr(key, vars) {
@@ -122,6 +123,7 @@ const DISABILITY_GROUP_LABELS = {
   other: 'Other',
 };
 const DISABILITY_LABELS = {
+  no_disability: 'No disability',
   mobility: 'Mobility disability (e.g. wheelchair or mobility aid user)',
   dexterity: 'Dexterity / fine motor disability',
   limb_difference: 'Limb difference',

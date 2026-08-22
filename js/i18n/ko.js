@@ -102,6 +102,7 @@ const T = {
   addToExhibitionBtn: '전시에 추가',
   newExhibitionTitlePlaceholder: '새 전시 제목…',
   createLabel: '만들기',
+  selectDisabilitiesPlaceholder: '장애 유형 선택…',
 };
 
 function tr(key, vars) {
@@ -122,6 +123,7 @@ const DISABILITY_GROUP_LABELS = {
   other: '기타',
 };
 const DISABILITY_LABELS = {
+  no_disability: '장애 없음',
   mobility: '지체 장애 (예: 휠체어 또는 보행 보조기구 사용)',
   dexterity: '손 조작 / 소근육 장애',
   limb_difference: '사지 결손 또는 차이',

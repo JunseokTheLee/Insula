@@ -113,8 +113,13 @@
       <textarea id="ep-bio" placeholder="자신을 간단히 소개해보세요…" maxlength="300"></textarea>
     </div>
     <div class="field">
-      <label for="ep-disabilities">장애 유형 <span class="field-hint">(선택 사항 &mdash; Ctrl/Cmd 클릭으로 여러 개 선택)</span></label>
-      <select id="ep-disabilities" multiple></select>
+      <label id="ep-disabilities-label">장애 유형 <span class="field-hint">(선택 사항)</span></label>
+      <div class="ep-disabilities-wrap">
+        <button type="button" id="ep-disabilities-btn" class="ep-disabilities-btn" aria-haspopup="true" aria-expanded="false">
+          <span class="ep-disabilities-summary"></span><span class="ep-disabilities-caret" aria-hidden="true">&#9662;</span>
+        </button>
+        <div class="ep-disabilities-menu" id="ep-disabilities-menu"></div>
+      </div>
     </div>
     <div id="ep-links-fields"></div>
     <div class="field-error" id="ep-error"></div>
