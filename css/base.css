@@ -196,14 +196,14 @@ body.no-scroll-lock{overflow:hidden;}
   background-position:top left,top left,top right,top right,bottom left,bottom left,bottom right,bottom right;
 }
 .modal-overlay.open .modal-panel{transform:scale(1);}
-#confirm-dialog,#auth-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
+#confirm-dialog,#auth-dialog,#report-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
 #edit-profile-dialog{
   width:calc(100vw - 40px);max-width:1600px;
   height:calc(100vh - 40px);max-height:calc(100vh - 40px);
   padding:40px;
 }
 #edit-profile-dialog>*{width:100%;max-width:520px;margin-left:auto;margin-right:auto;}
-#confirm-dialog h3,#edit-profile-dialog h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin-top:0;margin-bottom:10px;color:var(--forest);}
+#confirm-dialog h3,#edit-profile-dialog h3,#report-dialog h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin-top:0;margin-bottom:10px;color:var(--forest);}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
 .field label{font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;color:var(--ink);}
 .field .field-hint{font-weight:400;color:var(--muted);}
@@ -422,6 +422,14 @@ body.no-scroll-lock{overflow:hidden;}
 #lb-exhibit-btn .icon::before{content:"🗂";}
 #lb-delete-btn .icon::before{content:"🗑";}
 #lb-delete-btn:hover{background:var(--coral);color:var(--forest-dark);border-color:var(--coral);}
+#lb-report-btn .icon::before{content:"🚩";}
+#lb-report-btn:hover{background:rgba(247,247,245,.1);}
+
+/* ---------- report/delete button group on a lightbox comment row ---------- */
+.lbc-head-actions{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.lbc-head-actions .lbc-delete{margin-left:0;}
+.lbc-report{background:none;border:none;color:rgba(247,247,245,.5);font-size:11px;cursor:pointer;padding:0;font-family:inherit;}
+.lbc-report:hover{color:var(--paper);}
 
 /* ---------- add-to-exhibition multi-select dropdown (lightbox sidebar) ---------- */
 .lb-exhibit-wrap{position:relative;display:inline-flex;}

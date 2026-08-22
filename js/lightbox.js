@@ -143,6 +143,20 @@ const lbExhibitBtn = document.getElementById('lb-exhibit-btn');
 const lbExhibitMenu = document.getElementById('lb-exhibit-menu');
 if (lbExhibitBtn) lbExhibitBtn.querySelector('.lb-exhibit-label').textContent = tr('addToExhibitionBtn');
 
+// ---------- report this artwork (built dynamically — same rationale as the
+// exhibit dropdown above) ----------
+const lbReportBtn = document.createElement('button');
+lbReportBtn.type = 'button';
+lbReportBtn.id = 'lb-report-btn';
+lbReportBtn.className = 'lb-action-btn';
+lbReportBtn.innerHTML = `<span class="icon"></span><span>${tr('reportBtnLabel')}</span>`;
+lbReportBtn.setAttribute('aria-label', tr('reportAriaLabel_submission'));
+(() => {
+  const actions = document.querySelector('.lightbox-actions');
+  if (actions) actions.insertBefore(lbReportBtn, document.getElementById('lb-delete-btn'));
+})();
+lbReportBtn.onclick = () => { if (lbCurrentSub) openReportModal('submission', lbCurrentSub.id); };
+
 function lbExhibitRowEl(collection) {
   const row = document.createElement('label');
   row.className = 'lb-exhibit-row';
@@ -256,6 +270,7 @@ function populateLightboxContent(sub) {
   else { linkEl.textContent = ''; linkEl.removeAttribute('href'); }
   document.getElementById('lightbox-caption').classList.remove('hidden');
   setupLightboxEngagement(sub);
+  lbReportBtn.style.display = me.id && me.id === sub.author_id ? 'none' : '';
   const deleteBtn = document.getElementById('lb-delete-btn');
   deleteBtn.style.display = me.id === sub.author_id ? '' : 'none';
   deleteBtn.onclick = () => deleteWeavoSubmission(sub);
@@ -465,11 +480,23 @@ function commentItemEl(c, isReply) {
   time.textContent = fmtShortDate(c.created_at);
   head.appendChild(time);
   const canManage = me.id && (me.id === c.author_id || (lbCurrentSub && me.id === lbCurrentSub.author_id));
-  if (canManage) {
-    const del = document.createElement('button');
-    del.type = 'button'; del.className = 'lbc-delete'; del.textContent = tr('deleteLabel');
-    del.onclick = () => deleteWeavoComment(c.id);
-    head.appendChild(del);
+  const canReport = me.id && me.id !== c.author_id;
+  if (canManage || canReport) {
+    const headActions = document.createElement('div'); headActions.className = 'lbc-head-actions';
+    if (canReport) {
+      const report = document.createElement('button');
+      report.type = 'button'; report.className = 'lbc-report'; report.textContent = tr('reportBtnLabel');
+      report.setAttribute('aria-label', tr('reportAriaLabel_comment'));
+      report.onclick = () => openReportModal('comment', c.id);
+      headActions.appendChild(report);
+    }
+    if (canManage) {
+      const del = document.createElement('button');
+      del.type = 'button'; del.className = 'lbc-delete'; del.textContent = tr('deleteLabel');
+      del.onclick = () => deleteWeavoComment(c.id);
+      headActions.appendChild(del);
+    }
+    head.appendChild(headActions);
   }
   el.appendChild(head);
   const body = document.createElement('div'); body.className = 'lbc-body'; body.textContent = c.body;

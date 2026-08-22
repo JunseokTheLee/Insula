@@ -582,6 +582,7 @@ async function loadProfileView(userId) {
   document.getElementById('profileLikedEmpty').style.display = 'none';
   document.getElementById('profileSaveCounts').style.display = 'none';
   document.getElementById('profileSaveBtn').style.display = 'none';
+  document.getElementById('profileReportBtn').style.display = 'none';
   resetProfileGraph(userId);
 
   const isOwner = me.id && me.id === userId;
@@ -667,6 +668,9 @@ async function loadProfileView(userId) {
     saveBtn.textContent = isSaving ? tr('savingLabel') : tr('saveLabel');
     saveBtn.onclick = () => toggleUserSave(userId, saveBtn);
   }
+  const reportBtn = document.getElementById('profileReportBtn');
+  reportBtn.style.display = isOwner ? 'none' : '';
+  reportBtn.onclick = () => openReportModal('profile', userId);
   document.getElementById('profileSavesN').textContent = saveCounts.saves;
   document.getElementById('profileSavedByN').textContent = saveCounts.savedBy;
   document.getElementById('profileSaveCounts').style.display = '';

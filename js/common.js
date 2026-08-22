@@ -397,6 +397,85 @@ function confirmDialog(message, { title = tr('areYouSure'), okLabel = tr('contin
   });
 }
 
+// ---------- report modal (posts, comments, accounts) ----------
+// Built once here — same rationale as the lightbox's add-to-exhibition
+// dropdown (js/lightbox.js) — rather than repeated in every page's static
+// HTML, since the markup is identical everywhere a report button can appear
+// (lightbox actions, comment rows, profile header). `targetType` matches
+// public.reports' check constraint: 'submission' | 'comment' | 'profile'.
+const REPORT_REASON_KEYS = ['spam', 'harassment', 'hate_speech', 'nudity', 'misinformation', 'other'];
+let reportModalEl = null;
+function buildReportModal() {
+  if (reportModalEl) return reportModalEl;
+  const wrap = document.createElement('div');
+  wrap.className = 'modal-overlay';
+  wrap.id = 'report-modal';
+  wrap.innerHTML = `
+    <div class="modal-panel" id="report-dialog">
+      <h3 id="report-title"></h3>
+      <div class="field">
+        <label for="report-reason" id="report-reason-label"></label>
+        <select id="report-reason"></select>
+      </div>
+      <div class="field">
+        <label for="report-details" id="report-details-label"></label>
+        <textarea id="report-details" maxlength="1000" rows="3"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="report-cancel" class="btn-cancel"></button>
+        <button type="button" id="report-submit" class="btn-primary"></button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  const reasonSelect = wrap.querySelector('#report-reason');
+  for (const key of REPORT_REASON_KEYS) {
+    const opt = document.createElement('option');
+    opt.value = key; opt.textContent = tr(`reportReason_${key}`);
+    reasonSelect.appendChild(opt);
+  }
+  const close = () => wrap.classList.remove('open');
+  wrap.querySelector('#report-cancel').onclick = close;
+  wrap.onclick = e => { if (e.target === e.currentTarget) close(); };
+  reportModalEl = wrap;
+  return wrap;
+}
+function openReportModal(targetType, targetId) {
+  if (!me.id) { openAuthModal(); return; }
+  const wrap = buildReportModal();
+  wrap.querySelector('#report-title').textContent = tr(`reportTitle_${targetType}`);
+  wrap.querySelector('#report-reason-label').textContent = tr('reportReasonLabel');
+  wrap.querySelector('#report-reason').value = REPORT_REASON_KEYS[0];
+  wrap.querySelector('#report-details-label').innerHTML = '';
+  wrap.querySelector('#report-details-label').append(
+    tr('reportDetailsLabel') + ' ', Object.assign(document.createElement('span'), { className: 'field-hint', textContent: tr('optionalHint') })
+  );
+  const details = wrap.querySelector('#report-details');
+  details.value = '';
+  details.placeholder = tr('reportDetailsPlaceholder');
+  wrap.querySelector('#report-cancel').textContent = tr('cancelLabel');
+  const submitBtn = wrap.querySelector('#report-submit');
+  submitBtn.textContent = tr('reportSubmitLabel');
+  submitBtn.disabled = false;
+  submitBtn.onclick = async () => {
+    submitBtn.disabled = true;
+    const reason = wrap.querySelector('#report-reason').value;
+    const { error } = await sb.from('reports').insert({
+      reporter_id: me.id, target_type: targetType, target_id: String(targetId),
+      reason, details: details.value.trim() || null,
+    });
+    submitBtn.disabled = false;
+    if (error) {
+      wrap.classList.remove('open');
+      toast(error.code === '23505' ? tr('alreadyReportedToast') : tr('couldNotSubmitReport'));
+      if (error.code !== '23505') console.error('submit report error:', error);
+      return;
+    }
+    wrap.classList.remove('open');
+    toast(tr('reportSubmittedToast'));
+  };
+  wrap.classList.add('open');
+}
+
 // ---------- reusable drag/drop image picker ----------
 const MAX_IMG_BYTES = 8 * 1024 * 1024;
 function setupPicker(containerId) {
