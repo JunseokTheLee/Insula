@@ -113,42 +113,43 @@ function normalizeProfileUrl(raw) {
     select.appendChild(opt);
   }
 })();
-// 'prefer_not_to_say' is exclusive with every other disability option:
-// picking it clears the rest, and picking any other option clears it.
 (function buildEditProfileDisabilityOptions() {
-  const wrap = document.getElementById('ep-disabilities-fields');
-  for (const key of DISABILITY_KEYS) {
-    const id = `ep-disability-${key}`;
-    const option = document.createElement('label');
-    option.className = 'ep-checkbox-option'; option.htmlFor = id;
-    const cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.id = id; cb.value = key;
-    cb.onchange = () => {
-      option.classList.toggle('checked', cb.checked);
-      if (!cb.checked) return;
-      const others = key === 'prefer_not_to_say'
-        ? DISABILITY_KEYS.filter(k => k !== 'prefer_not_to_say')
-        : ['prefer_not_to_say'];
-      for (const otherKey of others) {
-        const other = document.getElementById(`ep-disability-${otherKey}`);
-        other.checked = false;
-        other.closest('.ep-checkbox-option').classList.remove('checked');
-      }
-    };
-    option.append(cb, document.createTextNode(' ' + disabilityLabel(key)));
-    wrap.appendChild(option);
+  const select = document.getElementById('ep-disabilities');
+  for (const group of DISABILITY_GROUPS) {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = disabilityGroupLabel(group.key);
+    for (const key of group.keys) {
+      const opt = document.createElement('option');
+      opt.value = key; opt.textContent = disabilityLabel(key);
+      optgroup.appendChild(opt);
+    }
+    select.appendChild(optgroup);
   }
+  select.size = 12;
 })();
+// 'prefer_not_to_say' is exclusive with every other disability option. A
+// native multi-select's change event doesn't say which option the click
+// just toggled, so the previous selection is tracked here to diff against.
+let epDisabilitiesPrevSelected = new Set();
+document.getElementById('ep-disabilities').onchange = () => {
+  const select = document.getElementById('ep-disabilities');
+  const current = new Set([...select.selectedOptions].map(o => o.value));
+  const justAdded = [...current].find(k => !epDisabilitiesPrevSelected.has(k));
+  if (justAdded === 'prefer_not_to_say') {
+    for (const opt of select.options) if (opt.value !== 'prefer_not_to_say') opt.selected = false;
+  } else if (justAdded) {
+    const preferOpt = select.querySelector('option[value="prefer_not_to_say"]');
+    if (preferOpt) preferOpt.selected = false;
+  }
+  epDisabilitiesPrevSelected = new Set([...select.selectedOptions].map(o => o.value));
+};
 function getCheckedDisabilities() {
-  return DISABILITY_KEYS.filter(key => document.getElementById(`ep-disability-${key}`).checked);
+  return [...document.getElementById('ep-disabilities').selectedOptions].map(o => o.value);
 }
 function setCheckedDisabilities(values) {
   const set = new Set(values || []);
-  for (const key of DISABILITY_KEYS) {
-    const cb = document.getElementById(`ep-disability-${key}`);
-    cb.checked = set.has(key);
-    cb.closest('.ep-checkbox-option').classList.toggle('checked', cb.checked);
-  }
+  for (const opt of document.getElementById('ep-disabilities').options) opt.selected = set.has(opt.value);
+  epDisabilitiesPrevSelected = set;
 }
 // `forced` = true is the first-sign-in onboarding flow, or any later
 // sign-in before every mandatory field (username, country) has been set:

@@ -110,19 +110,44 @@ function tr(key, vars) {
   return s;
 }
 
-// Display labels for DISABILITY_KEYS (see js/common.js).
+// Display labels for DISABILITY_GROUPS/DISABILITY_KEYS (see js/common.js).
+const DISABILITY_GROUP_LABELS = {
+  physical: 'Physical & Mobility',
+  vision: 'Vision',
+  hearing: 'Hearing',
+  neurodivergent_learning: 'Neurodivergence & Learning',
+  mental_health: 'Mental Health',
+  chronic_health: 'Chronic Health',
+  speech_communication: 'Speech & Communication',
+  other: 'Other',
+};
 const DISABILITY_LABELS = {
-  physical_mobility: 'Physical / mobility disability',
-  blind_low_vision: 'Blind / low vision',
-  deaf_hard_of_hearing: 'Deaf / hard of hearing',
-  neurodivergent: 'Neurodivergent (ADHD, autism, dyslexia, etc.)',
-  chronic_illness: 'Chronic illness / chronic pain',
-  mental_health: 'Mental health condition',
-  speech_communication: 'Speech / communication disability',
+  mobility: 'Mobility disability (e.g. wheelchair or mobility aid user)',
+  dexterity: 'Dexterity / fine motor disability',
+  limb_difference: 'Limb difference',
+  blind: 'Blind',
+  low_vision: 'Low vision',
+  color_blindness: 'Color blindness',
+  deaf: 'Deaf',
+  hard_of_hearing: 'Hard of hearing',
+  adhd: 'ADHD',
+  autism: 'Autism spectrum',
+  learning_disability: 'Dyslexia or other learning disability',
+  tourettes_tic: "Tourette's or tic disorder",
+  intellectual_developmental: 'Intellectual or developmental disability',
+  anxiety: 'Anxiety disorder',
+  depression: 'Depression',
+  mental_health_other: 'Other mental health condition',
+  chronic_illness: 'Chronic illness',
+  chronic_pain: 'Chronic pain',
+  fatigue_condition: 'Long-term fatigue (e.g. ME/CFS, long COVID)',
+  speech: 'Speech disability',
+  nonverbal_communication: 'Non-verbal / augmentative communication (AAC)',
   other: 'Other disability',
   prefer_not_to_say: 'Prefer not to say',
 };
 function disabilityLabel(key) { return DISABILITY_LABELS[key] || key; }
+function disabilityGroupLabel(key) { return DISABILITY_GROUP_LABELS[key] || key; }
 function fmtJoined(dateStr) {
   const d = new Date(dateStr);
   return `Joined ${d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;

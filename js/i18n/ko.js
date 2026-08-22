@@ -110,19 +110,44 @@ function tr(key, vars) {
   return s;
 }
 
-// Display labels for DISABILITY_KEYS (see js/common.js).
+// Display labels for DISABILITY_GROUPS/DISABILITY_KEYS (see js/common.js).
+const DISABILITY_GROUP_LABELS = {
+  physical: '신체 및 이동',
+  vision: '시각',
+  hearing: '청각',
+  neurodivergent_learning: '신경다양성 및 학습',
+  mental_health: '정신 건강',
+  chronic_health: '만성 건강 질환',
+  speech_communication: '언어 및 의사소통',
+  other: '기타',
+};
 const DISABILITY_LABELS = {
-  physical_mobility: '지체 / 이동 장애',
-  blind_low_vision: '시각 장애 / 저시력',
-  deaf_hard_of_hearing: '청각 장애 / 난청',
-  neurodivergent: '신경다양성 (ADHD, 자폐, 난독증 등)',
-  chronic_illness: '만성 질환 / 만성 통증',
-  mental_health: '정신 건강 관련 어려움',
-  speech_communication: '언어 / 의사소통 장애',
+  mobility: '지체 장애 (예: 휠체어 또는 보행 보조기구 사용)',
+  dexterity: '손 조작 / 소근육 장애',
+  limb_difference: '사지 결손 또는 차이',
+  blind: '전맹',
+  low_vision: '저시력',
+  color_blindness: '색각 이상 (색맹/색약)',
+  deaf: '농 (청각 상실)',
+  hard_of_hearing: '난청',
+  adhd: 'ADHD (주의력결핍 과잉행동장애)',
+  autism: '자폐 스펙트럼',
+  learning_disability: '난독증 등 학습 장애',
+  tourettes_tic: '투렛 증후군 또는 틱 장애',
+  intellectual_developmental: '지적 장애 또는 발달 장애',
+  anxiety: '불안 장애',
+  depression: '우울증',
+  mental_health_other: '기타 정신 건강 관련 어려움',
+  chronic_illness: '만성 질환',
+  chronic_pain: '만성 통증',
+  fatigue_condition: '만성 피로 (예: 근육통성 뇌척수염, 롱코비드)',
+  speech: '언어 장애',
+  nonverbal_communication: '비언어적 의사소통 / 보완대체의사소통(AAC) 사용',
   other: '기타 장애',
   prefer_not_to_say: '밝히고 싶지 않음',
 };
 function disabilityLabel(key) { return DISABILITY_LABELS[key] || key; }
+function disabilityGroupLabel(key) { return DISABILITY_GROUP_LABELS[key] || key; }
 function fmtJoined(dateStr) {
   const d = new Date(dateStr);
   return `${d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })} 가입`;

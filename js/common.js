@@ -511,23 +511,24 @@ const LINK_PLATFORMS = [
   { key: 'website',   label: 'Website' },
 ];
 
-// Options for the profile editor's disability multi-select. Stored in
+// Options for the profile editor's disability multi-select, grouped into
+// <optgroup>s (see buildEditProfileDisabilityOptions in auth.js). Stored in
 // profiles.disabilities (text[]) as these stable keys — never the display
 // label — so a language switch doesn't fork a user's saved values. Labels
-// are looked up per-language via disabilityLabel() (see js/i18n/{en,ko}.js).
-// 'prefer_not_to_say' is mutually exclusive with every other option (see
-// buildEditProfileDisabilityOptions in auth.js).
-const DISABILITY_KEYS = [
-  'physical_mobility',
-  'blind_low_vision',
-  'deaf_hard_of_hearing',
-  'neurodivergent',
-  'chronic_illness',
-  'mental_health',
-  'speech_communication',
-  'other',
-  'prefer_not_to_say',
+// are looked up per-language via disabilityLabel()/disabilityGroupLabel()
+// (see js/i18n/{en,ko}.js). 'prefer_not_to_say' is mutually exclusive with
+// every other option.
+const DISABILITY_GROUPS = [
+  { key: 'physical', keys: ['mobility', 'dexterity', 'limb_difference'] },
+  { key: 'vision', keys: ['blind', 'low_vision', 'color_blindness'] },
+  { key: 'hearing', keys: ['deaf', 'hard_of_hearing'] },
+  { key: 'neurodivergent_learning', keys: ['adhd', 'autism', 'learning_disability', 'tourettes_tic', 'intellectual_developmental'] },
+  { key: 'mental_health', keys: ['anxiety', 'depression', 'mental_health_other'] },
+  { key: 'chronic_health', keys: ['chronic_illness', 'chronic_pain', 'fatigue_condition'] },
+  { key: 'speech_communication', keys: ['speech', 'nonverbal_communication'] },
+  { key: 'other', keys: ['other', 'prefer_not_to_say'] },
 ];
+const DISABILITY_KEYS = DISABILITY_GROUPS.flatMap(g => g.keys);
 
 // Points the lang-toggle buttons at the sibling page under the other
 // language directory (same path + query), and marks the current one active.
