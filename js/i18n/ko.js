@@ -109,6 +109,20 @@ function tr(key, vars) {
   if (vars) for (const k in vars) s = s.split(`{${k}}`).join(vars[k]);
   return s;
 }
+
+// Display labels for DISABILITY_KEYS (see js/common.js).
+const DISABILITY_LABELS = {
+  physical_mobility: '지체 / 이동 장애',
+  blind_low_vision: '시각 장애 / 저시력',
+  deaf_hard_of_hearing: '청각 장애 / 난청',
+  neurodivergent: '신경다양성 (ADHD, 자폐, 난독증 등)',
+  chronic_illness: '만성 질환 / 만성 통증',
+  mental_health: '정신 건강 관련 어려움',
+  speech_communication: '언어 / 의사소통 장애',
+  other: '기타 장애',
+  prefer_not_to_say: '밝히고 싶지 않음',
+};
+function disabilityLabel(key) { return DISABILITY_LABELS[key] || key; }
 function fmtJoined(dateStr) {
   const d = new Date(dateStr);
   return `${d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })} 가입`;

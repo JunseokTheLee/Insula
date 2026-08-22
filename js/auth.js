@@ -5,7 +5,7 @@
 // finishes should `await authReady` (see below) before doing it.
 "use strict";
 
-let me = { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null };
+let me = { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: [] };
 
 async function signIn(provider = 'google') {
   const options = { redirectTo: location.origin + location.pathname };
@@ -16,17 +16,18 @@ function meFromUser(u) {
   const name = u.user_metadata.full_name || u.user_metadata.name || (u.email ? u.email.split('@')[0] : tr('anonymous'));
   return {
     id: u.id, name, avatar: u.user_metadata.avatar_url || '',
-    isAdmin: false, username: '', bio: '', links: {}, countryId: null
+    isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: []
   };
 }
 async function loadMyProfile() {
   if (!me.id) return;
-  const { data } = await sb.from('profiles').select('is_admin,username,bio,links,avatar_url,country_id').eq('id', me.id).maybeSingle();
+  const { data } = await sb.from('profiles').select('is_admin,username,bio,links,avatar_url,country_id,disabilities').eq('id', me.id).maybeSingle();
   me.isAdmin = !!(data && data.is_admin);
   me.username = (data && data.username) || '';
   me.bio = (data && data.bio) || '';
   me.links = (data && data.links) || {};
   me.countryId = (data && data.country_id) || null;
+  me.disabilities = (data && data.disabilities) || [];
   // A custom uploaded avatar (if any) takes priority over the Google avatar
   // meFromUser() set — otherwise upsertBaseProfile() below would clobber it
   // back to the Google photo on every sign-in.
@@ -37,7 +38,7 @@ async function loadMyProfile() {
 // onboarding mode until they finish.
 function maybeRequireProfileSetup() {
   if (me.id && (!me.username || !me.countryId)) {
-    openEditProfileModal({ username: me.username, bio: me.bio, links: me.links, avatar_url: me.avatar, country_id: me.countryId }, true);
+    openEditProfileModal({ username: me.username, bio: me.bio, links: me.links, avatar_url: me.avatar, country_id: me.countryId, disabilities: me.disabilities }, true);
   }
 }
 async function upsertBaseProfile() {
@@ -112,6 +113,43 @@ function normalizeProfileUrl(raw) {
     select.appendChild(opt);
   }
 })();
+// 'prefer_not_to_say' is exclusive with every other disability option:
+// picking it clears the rest, and picking any other option clears it.
+(function buildEditProfileDisabilityOptions() {
+  const wrap = document.getElementById('ep-disabilities-fields');
+  for (const key of DISABILITY_KEYS) {
+    const id = `ep-disability-${key}`;
+    const option = document.createElement('label');
+    option.className = 'ep-checkbox-option'; option.htmlFor = id;
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.id = id; cb.value = key;
+    cb.onchange = () => {
+      option.classList.toggle('checked', cb.checked);
+      if (!cb.checked) return;
+      const others = key === 'prefer_not_to_say'
+        ? DISABILITY_KEYS.filter(k => k !== 'prefer_not_to_say')
+        : ['prefer_not_to_say'];
+      for (const otherKey of others) {
+        const other = document.getElementById(`ep-disability-${otherKey}`);
+        other.checked = false;
+        other.closest('.ep-checkbox-option').classList.remove('checked');
+      }
+    };
+    option.append(cb, document.createTextNode(' ' + disabilityLabel(key)));
+    wrap.appendChild(option);
+  }
+})();
+function getCheckedDisabilities() {
+  return DISABILITY_KEYS.filter(key => document.getElementById(`ep-disability-${key}`).checked);
+}
+function setCheckedDisabilities(values) {
+  const set = new Set(values || []);
+  for (const key of DISABILITY_KEYS) {
+    const cb = document.getElementById(`ep-disability-${key}`);
+    cb.checked = set.has(key);
+    cb.closest('.ep-checkbox-option').classList.toggle('checked', cb.checked);
+  }
+}
 // `forced` = true is the first-sign-in onboarding flow, or any later
 // sign-in before every mandatory field (username, country) has been set:
 // no Cancel, no backdrop/Escape dismissal, until they're all filled in.
@@ -131,6 +169,7 @@ function stashEditProfileDraftIfOpen() {
     bio: document.getElementById('ep-bio').value,
     countryId: document.getElementById('ep-country').value,
     links,
+    disabilities: getCheckedDisabilities(),
   }));
 }
 function openEditProfileModal(profile, forced) {
@@ -150,6 +189,7 @@ function openEditProfileModal(profile, forced) {
   for (const { key } of LINK_PLATFORMS) {
     document.getElementById(`ep-link-${key}`).value = (profile.links && profile.links[key]) || '';
   }
+  setCheckedDisabilities(profile.disabilities);
   const draftRaw = sessionStorage.getItem(EP_DRAFT_KEY);
   if (draftRaw) {
     sessionStorage.removeItem(EP_DRAFT_KEY);
@@ -161,6 +201,7 @@ function openEditProfileModal(profile, forced) {
       for (const { key } of LINK_PLATFORMS) {
         document.getElementById(`ep-link-${key}`).value = (draft.links && draft.links[key]) || '';
       }
+      setCheckedDisabilities(draft.disabilities);
     } catch (e) { console.error('restore edit-profile draft error:', e); }
   }
   document.getElementById('ep-error').textContent = '';
@@ -206,7 +247,8 @@ document.getElementById('ep-submit').onclick = async () => {
   } else if (epAvatarPicker.wasRemoved()) {
     avatarUrl = null;
   }
-  const payload = { id: me.id, username, bio: bio || null, links, country_id: countryId };
+  const disabilities = getCheckedDisabilities();
+  const payload = { id: me.id, username, bio: bio || null, links, country_id: countryId, disabilities };
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl;
   const { error } = await sb.from('profiles').upsert(payload);
   btn.disabled = false;
@@ -217,6 +259,7 @@ document.getElementById('ep-submit').onclick = async () => {
   }
   me.username = username || '';
   me.countryId = countryId;
+  me.disabilities = disabilities;
   if (avatarUrl !== undefined) { me.avatar = avatarUrl || ''; updateIdentityUI(); }
   const wasRequired = profileEditRequired;
   profileEditRequired = false;
@@ -296,7 +339,7 @@ addEventListener('keydown', e => {
 
 // ---------- boot ----------
 sb.auth.onAuthStateChange(async (_event, session) => {
-  me = session ? meFromUser(session.user) : { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null };
+  me = session ? meFromUser(session.user) : { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: [] };
   if (me.id) { await loadMyProfile(); upsertBaseProfile(); }
   updateIdentityUI();
   maybeRequireProfileSetup();

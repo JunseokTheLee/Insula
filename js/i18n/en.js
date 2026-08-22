@@ -109,6 +109,20 @@ function tr(key, vars) {
   if (vars) for (const k in vars) s = s.split(`{${k}}`).join(vars[k]);
   return s;
 }
+
+// Display labels for DISABILITY_KEYS (see js/common.js).
+const DISABILITY_LABELS = {
+  physical_mobility: 'Physical / mobility disability',
+  blind_low_vision: 'Blind / low vision',
+  deaf_hard_of_hearing: 'Deaf / hard of hearing',
+  neurodivergent: 'Neurodivergent (ADHD, autism, dyslexia, etc.)',
+  chronic_illness: 'Chronic illness / chronic pain',
+  mental_health: 'Mental health condition',
+  speech_communication: 'Speech / communication disability',
+  other: 'Other disability',
+  prefer_not_to_say: 'Prefer not to say',
+};
+function disabilityLabel(key) { return DISABILITY_LABELS[key] || key; }
 function fmtJoined(dateStr) {
   const d = new Date(dateStr);
   return `Joined ${d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;

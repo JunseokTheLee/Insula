@@ -603,7 +603,7 @@ window.ProfileView = function ProfileView(deps) {
     document.getElementById('profile-links').innerHTML = '';
 
     const [{ data: profile }, artworks, participatedProjects, savedWeavoArt] = await Promise.all([
-      sb.from('profiles').select('id,name,username,avatar_url,bio,neurodivergence,links,created_at').eq('id', userId).maybeSingle(),
+      sb.from('profiles').select('id,name,username,avatar_url,bio,disabilities,links,created_at').eq('id', userId).maybeSingle(),
       fetchUserArtworks(userId),
       fetchParticipatedProjects(userId),
       fetchSavedWeavoArt(userId)
@@ -626,8 +626,8 @@ window.ProfileView = function ProfileView(deps) {
     }
     document.getElementById('profile-bio').textContent = profile.bio || '';
     const tagsEl = document.getElementById('profile-tags');
-    for (const tag of (profile.neurodivergence || []).filter(t => t !== 'Prefer not to say')) {
-      const t = document.createElement('span'); t.className = 'nd-tag'; t.textContent = tag;
+    for (const key of (profile.disabilities || []).filter(k => k !== 'prefer_not_to_say')) {
+      const t = document.createElement('span'); t.className = 'profile-disability-tag'; t.textContent = disabilityLabel(key);
       tagsEl.appendChild(t);
     }
     const pieces = artworks.filter(rec => rec.imageUrl || !rec.body);

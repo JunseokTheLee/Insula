@@ -511,6 +511,24 @@ const LINK_PLATFORMS = [
   { key: 'website',   label: 'Website' },
 ];
 
+// Options for the profile editor's disability multi-select. Stored in
+// profiles.disabilities (text[]) as these stable keys — never the display
+// label — so a language switch doesn't fork a user's saved values. Labels
+// are looked up per-language via disabilityLabel() (see js/i18n/{en,ko}.js).
+// 'prefer_not_to_say' is mutually exclusive with every other option (see
+// buildEditProfileDisabilityOptions in auth.js).
+const DISABILITY_KEYS = [
+  'physical_mobility',
+  'blind_low_vision',
+  'deaf_hard_of_hearing',
+  'neurodivergent',
+  'chronic_illness',
+  'mental_health',
+  'speech_communication',
+  'other',
+  'prefer_not_to_say',
+];
+
 // Points the lang-toggle buttons at the sibling page under the other
 // language directory (same path + query), and marks the current one active.
 function wireLangToggle() {

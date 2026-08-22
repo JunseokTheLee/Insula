@@ -570,6 +570,7 @@ async function loadProfileView(userId) {
   document.getElementById('profileName').textContent = tr('loading');
   document.getElementById('profileMeta').textContent = '';
   document.getElementById('profileLinksList').innerHTML = '';
+  document.getElementById('profileDisabilityTags').innerHTML = '';
   document.getElementById('profileAvatarWrap').innerHTML = '';
   document.getElementById('profileBio').style.display = 'none';
   document.getElementById('profileProjectsGrid').innerHTML = '';
@@ -585,7 +586,7 @@ async function loadProfileView(userId) {
 
   const isOwner = me.id && me.id === userId;
   const [{ data: profile }, artwork, liked, collections, saveCounts, isSaving] = await Promise.all([
-    sb.from('profiles').select('id,name,username,avatar_url,bio,links,country_id,created_at').eq('id', userId).maybeSingle(),
+    sb.from('profiles').select('id,name,username,avatar_url,bio,links,country_id,disabilities,created_at').eq('id', userId).maybeSingle(),
     fetchUserArtwork(userId),
     fetchLikedWeavoArt(userId),
     fetchUserCollections(userId),
@@ -619,6 +620,12 @@ async function loadProfileView(userId) {
   document.getElementById('profileMeta').textContent = countryLabel ? `${joinedText} · ${countryLabel}` : joinedText;
   const bioEl = document.getElementById('profileBio');
   if (profile.bio) { bioEl.textContent = profile.bio; bioEl.style.display = ''; }
+  const tagsEl = document.getElementById('profileDisabilityTags');
+  for (const key of (profile.disabilities || []).filter(k => k !== 'prefer_not_to_say')) {
+    const tag = document.createElement('span');
+    tag.className = 'profile-disability-tag'; tag.textContent = disabilityLabel(key);
+    tagsEl.appendChild(tag);
+  }
   const linksEl = document.getElementById('profileLinksList');
   for (const { key, label } of LINK_PLATFORMS) {
     const url = profile.links && profile.links[key];

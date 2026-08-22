@@ -16,9 +16,9 @@ alter table public.profiles
 
 revoke insert, update on public.profiles from authenticated;
 
-grant insert (id, name, avatar_url, username, bio, neurodivergence, links, country_id, city)
+grant insert (id, name, avatar_url, username, bio, disabilities, links, country_id, city)
   on public.profiles to authenticated;
-grant update (name, avatar_url, username, bio, neurodivergence, links, country_id, city)
+grant update (name, avatar_url, username, bio, disabilities, links, country_id, city)
   on public.profiles to authenticated;
 
 drop policy if exists "Users can update their own profile" on public.profiles;

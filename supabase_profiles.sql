@@ -10,13 +10,28 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+-- Renamed from `neurodivergence` to `disabilities` to reflect a broader,
+-- disability-inclusive framing rather than one centered on neurodivergence
+-- specifically. Must run before the `add column if not exists` below —
+-- installs that already ran this file before the rename get their existing
+-- column (and its data) renamed in place; that add-column line is then a
+-- no-op for them, and creates the column fresh for brand-new installs.
+do $$ begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'profiles' and column_name = 'neurodivergence'
+  ) then
+    alter table public.profiles rename column neurodivergence to disabilities;
+  end if;
+end $$;
+
 -- Profile fields users fill in themselves (separate from the Google name/avatar,
 -- which are set automatically on sign-in).
 alter table public.profiles
-  add column if not exists username        text,
-  add column if not exists bio             text,
-  add column if not exists neurodivergence text[] not null default '{}',
-  add column if not exists links           jsonb not null default '{}'::jsonb;
+  add column if not exists username     text,
+  add column if not exists bio          text,
+  add column if not exists disabilities text[] not null default '{}',
+  add column if not exists links        jsonb not null default '{}'::jsonb;
 
 -- Case-insensitive unique usernames; null allowed until a user sets one.
 create unique index if not exists profiles_username_key
