@@ -1,7 +1,7 @@
 // Standalone artwork page (/{lang}/artworks/{id}) — the same piece a
 // project/profile page's lightbox shows inline, but at its own real,
 // shareable, indexable URL. Reuses lightbox.js's populateLightboxContent()
-// for the actual content (image, artist card, description, likes/saves,
+// for the actual content (image, artist card, description, likes/follows,
 // comments) since this page embeds that same markup directly in the page
 // body instead of inside a modal. Needs sb, me, tr, common.js and
 // lightbox.js already loaded.

@@ -1,5 +1,5 @@
 // Profile page: header, contributed/submitted/liked artwork, and this
-// user's own save-relationship graph. Reads the profile's user id from
+// user's own follow-relationship graph. Reads the profile's user id from
 // ?user= (falls back to the signed-in user once auth resolves, if none
 // given). Needs common.js, auth.js, lightbox.js and js/graph-common.js.
 "use strict";
@@ -244,7 +244,7 @@ document.getElementById('nc-submit').onclick = async () => {
 let atcSubmission = null;
 function atcRowEl(collection) {
   const row = document.createElement('label');
-  row.className = 'saves-list-row';
+  row.className = 'list-row';
   row.style.cursor = 'pointer';
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox'; checkbox.style.width = 'auto';
@@ -260,7 +260,7 @@ function atcRowEl(collection) {
     if (checkbox.checked) items.push({ submission_id: atcSubmission.id, added_at: new Date().toISOString(), mosaic_submissions: atcSubmission });
     else { const idx = items.findIndex(i => i.submission_id === atcSubmission.id); if (idx !== -1) items.splice(idx, 1); }
   };
-  const name = document.createElement('span'); name.className = 'saves-list-name'; name.textContent = collection.title;
+  const name = document.createElement('span'); name.className = 'list-name'; name.textContent = collection.title;
   row.append(checkbox, name);
   return row;
 }
@@ -312,66 +312,66 @@ function profileArtThumbEl(sub, pending, showBoardBtn) {
   return el;
 }
 
-// ---------- this profile's saves list modal ----------
-// fetchSaveCounts/fetchIsSaving/toggleUserSave live in common.js (shared
-// with the lightbox's own artist save button — see setupLightboxArtistSave
-// in lightbox.js) — only the list-modal bits, specific to this page's UI,
-// stay here.
-// direction: 'saves' = people userId saves (their outgoing list), 'savedBy' = people who save userId (their followers)
-async function fetchUserSaveList(userId, direction) {
-  const col = direction === 'saves' ? 'saver_id' : 'saved_id';
-  const otherCol = direction === 'saves' ? 'saved_id' : 'saver_id';
+// ---------- this profile's follow list modal ----------
+// fetchFollowCounts/fetchIsFollowing/toggleUserFollow live in common.js
+// (shared with the lightbox's own artist follow button — see
+// setupLightboxArtistFollow in lightbox.js) — only the list-modal bits,
+// specific to this page's UI, stay here.
+// direction: 'following' = people userId follows (their outgoing list), 'followers' = people who follow userId
+async function fetchUserFollowList(userId, direction) {
+  const col = direction === 'following' ? 'saver_id' : 'saved_id';
+  const otherCol = direction === 'following' ? 'saved_id' : 'saver_id';
   const { data: rows, error } = await sb.from('user_saves').select(otherCol).eq(col, userId);
-  if (error) { console.error('load save list error:', error); return []; }
+  if (error) { console.error('load follow list error:', error); return []; }
   const ids = [...new Set((rows || []).map(r => r[otherCol]))];
   if (!ids.length) return [];
   const { data: profiles, error: profErr } = await sb.from('profiles')
     .select('id,name,username,avatar_url').in('id', ids);
-  if (profErr) { console.error('load save list profiles error:', profErr); return []; }
+  if (profErr) { console.error('load follow list profiles error:', profErr); return []; }
   return profiles || [];
 }
-function saveListRowEl(p) {
+function followListRowEl(p) {
   const row = document.createElement('a');
-  row.className = 'saves-list-row';
+  row.className = 'list-row';
   row.href = profileUrl(p.username || p.id);
   const name = p.username || p.name || tr('anonymous');
   if (p.avatar_url) {
     const img = document.createElement('img');
-    img.className = 'saves-list-avatar'; img.src = cdnUrl(p.avatar_url);
+    img.className = 'list-avatar'; img.src = cdnUrl(p.avatar_url);
     img.alt = tr('artistAvatarAlt', { name });
     row.appendChild(img);
   } else {
     const fb = document.createElement('div');
-    fb.className = 'saves-list-avatar-fallback';
+    fb.className = 'list-avatar-fallback';
     fb.textContent = name.charAt(0).toUpperCase();
     row.appendChild(fb);
   }
   const nameEl = document.createElement('span');
-  nameEl.className = 'saves-list-name'; nameEl.textContent = name;
+  nameEl.className = 'list-name'; nameEl.textContent = name;
   row.appendChild(nameEl);
   return row;
 }
-let savesListToken = 0;
-async function openSavesListModal(userId, direction) {
-  const token = ++savesListToken;
-  const modal = document.getElementById('saves-list-modal');
-  const title = document.getElementById('saves-list-title');
-  const content = document.getElementById('saves-list-content');
-  const empty = document.getElementById('saves-list-empty');
-  title.textContent = tr(direction === 'saves' ? 'savesListTitle' : 'savedByListTitle');
+let followListToken = 0;
+async function openFollowListModal(userId, direction) {
+  const token = ++followListToken;
+  const modal = document.getElementById('follow-list-modal');
+  const title = document.getElementById('follow-list-title');
+  const content = document.getElementById('follow-list-content');
+  const empty = document.getElementById('follow-list-empty');
+  title.textContent = tr(direction === 'following' ? 'followingListTitle' : 'followersListTitle');
   content.innerHTML = '';
   empty.style.display = 'none';
   modal.classList.add('open');
-  const list = await fetchUserSaveList(userId, direction);
-  if (token !== savesListToken) return; // a newer open superseded this one
+  const list = await fetchUserFollowList(userId, direction);
+  if (token !== followListToken) return; // a newer open superseded this one
   if (!list.length) { empty.style.display = ''; return; }
-  for (const p of list) content.appendChild(saveListRowEl(p));
+  for (const p of list) content.appendChild(followListRowEl(p));
 }
-document.getElementById('saves-list-modal').addEventListener('click', e => {
+document.getElementById('follow-list-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
 });
 
-// ---------- this profile's own network graph (Obsidian-style local graph of save relationships) ----------
+// ---------- this profile's own network graph (Obsidian-style local graph of follow relationships) ----------
 let graphSim    = null;  // running d3-force simulation, so it can be stopped on navigation
 let graphRootId = null;  // the profile this section was opened on, for the "Back" breadcrumb
 
@@ -386,8 +386,8 @@ function resetProfileGraph(userId) {
   document.getElementById('profileGraphCrumb').style.display = 'none';
   document.getElementById('profileGraphEmpty').style.display = 'none';
 }
-// Direct (1-hop) save relationships around `userId`: people they save
-// (outgoing) and people who save them (incoming). user_saves rows are
+// Direct (1-hop) follow relationships around `userId`: people they follow
+// (outgoing) and people who follow them (incoming). user_saves rows are
 // public, so this works for any profile, not just the signed-in user's own.
 async function fetchGraphNeighbors(userId) {
   const [{ data: outRows, error: outErr }, { data: inRows, error: inErr }] = await Promise.all([
@@ -397,11 +397,11 @@ async function fetchGraphNeighbors(userId) {
   if (outErr) console.error('load graph (outgoing) error:', outErr);
   if (inErr)  console.error('load graph (incoming) error:', inErr);
 
-  const outIds = new Set(); // people userId saves
+  const outIds = new Set(); // people userId follows
   for (const row of (outRows || [])) {
     if (row.saved_id && row.saved_id !== userId) outIds.add(row.saved_id);
   }
-  const inIds = new Set(); // people who save userId
+  const inIds = new Set(); // people who follow userId
   for (const row of (inRows || [])) {
     if (row.saver_id && row.saver_id !== userId) inIds.add(row.saver_id);
   }
@@ -471,7 +471,7 @@ async function renderProfileGraphFor(centerId, isRoot) {
   // 'auto-start-reverse' (not plain 'auto') so a marker also renders
   // correctly at the *start* of a line — flipped 180° so it points
   // outward rather than back along the line — which is what a mutual
-  // (both-directions) save relationship below needs on both ends.
+  // (both-directions) follow relationship below needs on both ends.
   const arrow = (id, fill) => defs.append('marker').attr('id', id)
     .attr('viewBox', '0 -5 10 10').attr('refX', 24).attr('refY', 0)
     .attr('markerWidth', 6).attr('markerHeight', 6).attr('orient', 'auto-start-reverse')
@@ -482,9 +482,9 @@ async function renderProfileGraphFor(centerId, isRoot) {
   const root = svg.append('g');
   svg.call(d3.zoom().scaleExtent([0.4, 2.5]).on('zoom', ev => root.attr('transform', ev.transform)));
 
-  // 'out' (I saved them): single faint arrow pointing away from center.
-  // 'in' (they saved me): single solid arrow pointing toward center.
-  // 'mutual' (both): solid arrows on BOTH ends, so a two-way save
+  // 'out' (I follow them): single faint arrow pointing away from center.
+  // 'in' (they follow me): single solid arrow pointing toward center.
+  // 'mutual' (both): solid arrows on BOTH ends, so a two-way follow
   // relationship is visually unmistakable rather than relying on the
   // thicker .pg-mutual line alone.
   const link = root.append('g').selectAll('line').data(links).join('line')
@@ -580,19 +580,19 @@ async function loadProfileView(userId) {
   document.getElementById('profileCollectionsGrid').innerHTML = '';
   document.getElementById('profileSubmittedEmpty').style.display = 'none';
   document.getElementById('profileLikedEmpty').style.display = 'none';
-  document.getElementById('profileSaveCounts').style.display = 'none';
-  document.getElementById('profileSaveBtn').style.display = 'none';
+  document.getElementById('profileFollowCounts').style.display = 'none';
+  document.getElementById('profileFollowBtn').style.display = 'none';
   document.getElementById('profileReportBtn').style.display = 'none';
   resetProfileGraph(userId);
 
   const isOwner = me.id && me.id === userId;
-  const [{ data: profile }, artwork, liked, collections, saveCounts, isSaving] = await Promise.all([
+  const [{ data: profile }, artwork, liked, collections, followCounts, isFollowing] = await Promise.all([
     sb.from('profiles').select('id,name,username,avatar_url,bio,links,country_id,disabilities,created_at').eq('id', userId).maybeSingle(),
     fetchUserArtwork(userId),
     fetchLikedWeavoArt(userId),
     fetchUserCollections(userId),
-    fetchSaveCounts(userId),
-    (me.id && !isOwner) ? fetchIsSaving(me.id, userId) : Promise.resolve(false),
+    fetchFollowCounts(userId),
+    (me.id && !isOwner) ? fetchIsFollowing(me.id, userId) : Promise.resolve(false),
   ]);
   if (!profile) { document.getElementById('profileName').textContent = tr('userNotFound'); return; }
   // Canonicalize the address bar to /artists/{username} once a username is
@@ -661,21 +661,21 @@ async function loadProfileView(userId) {
   const uploadBtn = document.getElementById('profileUploadBtn');
   uploadBtn.style.display = isOwner ? '' : 'none';
 
-  const saveBtn = document.getElementById('profileSaveBtn');
-  saveBtn.style.display = isOwner ? 'none' : '';
+  const followBtn = document.getElementById('profileFollowBtn');
+  followBtn.style.display = isOwner ? 'none' : '';
   if (!isOwner) {
-    saveBtn.classList.toggle('saving', isSaving);
-    saveBtn.textContent = isSaving ? tr('savingLabel') : tr('saveLabel');
-    saveBtn.onclick = () => toggleUserSave(userId, saveBtn);
+    followBtn.classList.toggle('following', isFollowing);
+    followBtn.textContent = isFollowing ? tr('followingLabel') : tr('followLabel');
+    followBtn.onclick = () => toggleUserFollow(userId, followBtn);
   }
   const reportBtn = document.getElementById('profileReportBtn');
   reportBtn.style.display = isOwner ? 'none' : '';
   reportBtn.onclick = () => openReportModal('profile', userId);
-  document.getElementById('profileSavesN').textContent = saveCounts.saves;
-  document.getElementById('profileSavedByN').textContent = saveCounts.savedBy;
-  document.getElementById('profileSaveCounts').style.display = '';
-  document.getElementById('profileSavesCount').onclick = () => openSavesListModal(userId, 'saves');
-  document.getElementById('profileSavedByCount').onclick = () => openSavesListModal(userId, 'savedBy');
+  document.getElementById('profileFollowingN').textContent = followCounts.following;
+  document.getElementById('profileFollowersN').textContent = followCounts.followers;
+  document.getElementById('profileFollowCounts').style.display = '';
+  document.getElementById('profileFollowingCount').onclick = () => openFollowListModal(userId, 'following');
+  document.getElementById('profileFollowersCount').onclick = () => openFollowListModal(userId, 'followers');
 
   renderProfileGraphFor(userId, true);
 }

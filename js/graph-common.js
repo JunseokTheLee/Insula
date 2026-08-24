@@ -1,4 +1,4 @@
-// Shared d3-force helpers for the two save-relationship graphs (profile's
+// Shared d3-force helpers for the two follow-relationship graphs (profile's
 // own network and the sitewide network page).
 "use strict";
 

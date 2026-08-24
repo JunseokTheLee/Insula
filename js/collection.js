@@ -183,7 +183,7 @@ async function openCollection(id) {
 // change from other tabs/pages between opens.
 function aaRowEl(sub) {
   const row = document.createElement('label');
-  row.className = 'saves-list-row';
+  row.className = 'list-row';
   row.style.cursor = 'pointer';
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox'; checkbox.style.width = 'auto';
@@ -201,10 +201,10 @@ function aaRowEl(sub) {
     renderCollectionItemsGrid();
   };
   const thumb = document.createElement('img');
-  thumb.className = 'saves-list-thumb'; thumb.src = cdnUrl(sub.thumb_url || sub.image_url);
+  thumb.className = 'list-thumb'; thumb.src = cdnUrl(sub.thumb_url || sub.image_url);
   thumb.alt = '';
   const name = document.createElement('span');
-  name.className = 'saves-list-name'; name.textContent = sub.art_title || tr('untitledArtwork');
+  name.className = 'list-name'; name.textContent = sub.art_title || tr('untitledArtwork');
   row.append(checkbox, thumb, name);
   return row;
 }

@@ -61,14 +61,14 @@
         <div class="profile-head-info">
           <h1 id="profileName">Loading…</h1>
           <div class="profile-meta" id="profileMeta"></div>
-          <div class="profile-save-counts" id="profileSaveCounts" style="display:none;">
-            <button type="button" class="profile-save-count-btn" id="profileSavesCount"><strong id="profileSavesN">0</strong> Saves</button>
-            <button type="button" class="profile-save-count-btn" id="profileSavedByCount"><strong id="profileSavedByN">0</strong> Saved by</button>
+          <div class="profile-follow-counts" id="profileFollowCounts" style="display:none;">
+            <button type="button" class="profile-follow-count-btn" id="profileFollowingCount"><strong id="profileFollowingN">0</strong> Following</button>
+            <button type="button" class="profile-follow-count-btn" id="profileFollowersCount"><strong id="profileFollowersN">0</strong> Followers</button>
           </div>
           <div class="profile-links" id="profileLinksList"></div>
         </div>
         <div class="profile-head-actions">
-          <button type="button" id="profileSaveBtn" style="display:none;">Save</button>
+          <button type="button" id="profileFollowBtn" style="display:none;">Follow</button>
           <button type="button" id="profileUploadBtn" style="display:none;">Upload Artwork</button>
           <button type="button" id="profileEditBtn" style="display:none;">Edit Profile</button>
           <button type="button" id="profileReportBtn" style="display:none;">Report</button>
@@ -102,7 +102,7 @@
     </div>
     <div class="profile-section">
       <h2 class="section-label">Network</h2>
-      <div class="profile-graph-desc">Saves connect people directly — an arrow points from someone who saves another artist to the person they save, and a double-headed link means they save each other. Drag to rearrange, scroll to zoom, click a node to explore.</div>
+      <div class="profile-graph-desc">Follows connect people directly — an arrow points from someone who follows another artist to the person they follow, and a double-headed link means they follow each other. Drag to rearrange, scroll to zoom, click a node to explore.</div>
       <div class="profile-graph-panel" id="profileGraphPanel">
         <div class="profile-graph-crumb" id="profileGraphCrumb">
           <button type="button" id="profileGraphBack">&larr; Back</button>
@@ -110,7 +110,7 @@
           <a href="#" id="profileGraphCrumbVisit">View profile &rarr;</a>
         </div>
         <svg id="profileGraphSvg"></svg>
-        <div class="profile-graph-empty" id="profileGraphEmpty">No saves yet — nothing to map.</div>
+        <div class="profile-graph-empty" id="profileGraphEmpty">No follows yet — nothing to map.</div>
       </div>
     </div>
   </main>
@@ -227,7 +227,7 @@
       <div class="lb-artist-info">
         <a id="lightbox-artist-name" class="lb-artist-name"></a>
       </div>
-    <button type="button" id="lightbox-artist-save-btn" class="lb-artist-save-btn" style="display:none;">Save</button>
+    <button type="button" id="lightbox-artist-follow-btn" class="lb-artist-follow-btn" style="display:none;">Follow</button>
     </div>
     <div id="lightbox-artist-about">
       <div class="lb-artist-about-label">About the artist</div>
@@ -352,12 +352,12 @@
   </div>
 </div>
 
-<!-- Saves / Saved by list -->
-<div id="saves-list-modal" class="modal-overlay">
-  <div id="saves-list-dialog" class="modal-panel">
-    <h3 id="saves-list-title">Saves</h3>
-    <div id="saves-list-content"></div>
-    <div class="empty-note" id="saves-list-empty" style="display:none;">No one yet.</div>
+<!-- Following / Followers list -->
+<div id="follow-list-modal" class="modal-overlay">
+  <div id="follow-list-dialog" class="modal-panel">
+    <h3 id="follow-list-title">Following</h3>
+    <div id="follow-list-content"></div>
+    <div class="empty-note" id="follow-list-empty" style="display:none;">No one yet.</div>
   </div>
 </div>
 

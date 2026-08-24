@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Network | Weavo</title>
-<meta name="description" content="An interactive map of the Weavo community, connected by whose artwork they've saved.">
+<meta name="description" content="An interactive map of the Weavo community, connected by who follows whom.">
 <link rel="canonical" href="https://weavo.art/en/network">
 <link rel="alternate" hreflang="en" href="https://weavo.art/en/network">
 <link rel="alternate" hreflang="ko" href="https://weavo.art/ko/network">
@@ -13,13 +13,13 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
 <meta property="og:title" content="Network | Weavo">
-<meta property="og:description" content="An interactive map of the Weavo community, connected by whose artwork they've saved.">
+<meta property="og:description" content="An interactive map of the Weavo community, connected by who follows whom.">
 <meta property="og:url" content="https://weavo.art/en/network">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Network | Weavo">
-<meta name="twitter:description" content="An interactive map of the Weavo community, connected by whose artwork they've saved.">
+<meta name="twitter:description" content="An interactive map of the Weavo community, connected by who follows whom.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Network","item":"https://weavo.art/en/network"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -58,10 +58,10 @@
     </div>
     <div class="network-page">
       <h1 class="network-page-title">Network</h1>
-      <div class="profile-graph-desc">The whole Weavo community, mapped by saves — every arrow points from someone who saves another artist to the person they save. Bigger circles have more connections. Drag to rearrange, scroll to zoom, click someone to highlight their local network, then click again (them or anyone in that network) to visit a profile.</div>
+      <div class="profile-graph-desc">The whole Weavo community, mapped by follows — every arrow points from someone who follows another artist to the person they follow. Bigger circles have more connections. Drag to rearrange, scroll to zoom, click someone to highlight their local network, then click again (them or anyone in that network) to visit a profile.</div>
       <div class="profile-graph-panel network-graph-panel" id="globalGraphPanel">
         <svg id="globalGraphSvg"></svg>
-        <div class="profile-graph-empty" id="globalGraphEmpty" style="display:none;">No saves yet — nothing to map.</div>
+        <div class="profile-graph-empty" id="globalGraphEmpty" style="display:none;">No follows yet — nothing to map.</div>
         <div class="zoom-toolbar" id="globalGraphZoomToolbar" style="display:none;">
           <button type="button" class="zoom-btn" id="globalGraph-zoom-out" aria-label="Zoom out">&minus;</button>
           <span class="zoom-level" id="globalGraph-zoom-level">100%</span>

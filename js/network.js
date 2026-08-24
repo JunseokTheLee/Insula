@@ -1,4 +1,4 @@
-// Sitewide network page: every user, mapped by save relationships.
+// Sitewide network page: every user, mapped by follow relationships.
 // Needs js/graph-common.js for truncateLabel.
 "use strict";
 
@@ -30,8 +30,8 @@ document.getElementById('globalGraph-zoom-reset').onclick = () => {
   globalFitAllView();
 };
 function globalNodeRadius(d) { return Math.max(9, Math.min(24, 9 + Math.sqrt(d.degree || 1) * 3.2)); }
-// Every save across the whole app, collapsed into an undirected pair per
-// two users with a direction flag each way, so A-saved-B and B-saved-A
+// Every follow across the whole app, collapsed into an undirected pair per
+// two users with a direction flag each way, so A-followed-B and B-followed-A
 // (independent facts, same as the per-profile graph) render as one mutual
 // link instead of two overlapping ones.
 async function fetchGlobalGraphData() {
@@ -45,12 +45,12 @@ async function fetchGlobalGraphData() {
 
   const pairs = new Map(); // "smallerId|largerId" -> {a,b,aToB,bToA}
   for (const row of (rows || [])) {
-    const saverId = row.saver_id, savedId = row.saved_id;
-    if (!saverId || !savedId || saverId === savedId) continue;
-    const [a, b] = saverId < savedId ? [saverId, savedId] : [savedId, saverId];
+    const followerId = row.saver_id, followedId = row.saved_id;
+    if (!followerId || !followedId || followerId === followedId) continue;
+    const [a, b] = followerId < followedId ? [followerId, followedId] : [followedId, followerId];
     let p = pairs.get(`${a}|${b}`);
     if (!p) { p = { a, b, aToB: false, bToA: false }; pairs.set(`${a}|${b}`, p); }
-    if (saverId === a) p.aToB = true; else p.bToA = true;
+    if (followerId === a) p.aToB = true; else p.bToA = true;
   }
 
   const degree = new Map();
@@ -59,7 +59,7 @@ async function fetchGlobalGraphData() {
     degree.set(p.b, (degree.get(p.b) || 0) + 1);
   }
 
-  // Every profile becomes a node — including ones with no saves yet, which
+  // Every profile becomes a node — including ones with no follows yet, which
   // just render as isolated, unconnected nodes — since this is the sitewide
   // "every user" view, not just the users who happen to be connected.
   const nodes = profiles.map(p => ({

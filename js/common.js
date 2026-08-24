@@ -543,42 +543,43 @@ function miniAvatarEl(name, avatarUrl, userId, sizeClass) {
   return link;
 }
 
-// ---------- user-to-user saves (follow) ----------
-// Direct saves are asymmetric (like a follow) — shared by the profile
-// page's own Save button/counts (js/profile-view.js) and the lightbox's
-// artist-card save button (js/lightbox.js's setupLightboxArtistSave), since
-// both let you save/unsave a person, just from different surfaces.
-async function fetchSaveCounts(userId) {
-  const [{ count: saves, error: savesErr }, { count: savedBy, error: savedByErr }] = await Promise.all([
+// ---------- user-to-user follows ----------
+// Follows are asymmetric — shared by the profile page's own Follow
+// button/counts (js/profile-view.js) and the lightbox's artist-card follow
+// button (js/lightbox.js's setupLightboxArtistFollow), since both let you
+// follow/unfollow a person, just from different surfaces. Backed by the
+// user_saves table (saver_id/saved_id columns) under the hood.
+async function fetchFollowCounts(userId) {
+  const [{ count: following, error: followingErr }, { count: followers, error: followersErr }] = await Promise.all([
     sb.from('user_saves').select('*', { count: 'exact', head: true }).eq('saver_id', userId),
     sb.from('user_saves').select('*', { count: 'exact', head: true }).eq('saved_id', userId),
   ]);
-  if (savesErr) console.error('load save counts (saves) error:', savesErr);
-  if (savedByErr) console.error('load save counts (saved by) error:', savedByErr);
-  return { saves: saves || 0, savedBy: savedBy || 0 };
+  if (followingErr) console.error('load follow counts (following) error:', followingErr);
+  if (followersErr) console.error('load follow counts (followers) error:', followersErr);
+  return { following: following || 0, followers: followers || 0 };
 }
-async function fetchIsSaving(viewerId, targetId) {
+async function fetchIsFollowing(viewerId, targetId) {
   const { data, error } = await sb.from('user_saves').select('saver_id')
     .eq('saver_id', viewerId).eq('saved_id', targetId).maybeSingle();
-  if (error) console.error('load is-saving error:', error);
+  if (error) console.error('load is-following error:', error);
   return !!data;
 }
-// Updates #profileSavedByN in place if present (the profile page's own
+// Updates #profileFollowersN in place if present (the profile page's own
 // counts row) — a no-op elsewhere (e.g. the lightbox's artist-card button),
 // where that element doesn't exist on the page at all.
-async function toggleUserSave(targetId, btn) {
+async function toggleUserFollow(targetId, btn) {
   if (!me.id) { openAuthModal(); return; }
-  const wasSaving = btn.classList.contains('saving');
+  const wasFollowing = btn.classList.contains('following');
   btn.disabled = true;
-  const { error } = wasSaving
+  const { error } = wasFollowing
     ? await sb.from('user_saves').delete().eq('saver_id', me.id).eq('saved_id', targetId)
     : await sb.from('user_saves').insert({ saver_id: me.id, saved_id: targetId });
   btn.disabled = false;
-  if (error) { console.error('toggle save error:', error); toast(tr('couldNotUpdateSaveUser')); return; }
-  btn.classList.toggle('saving', !wasSaving);
-  btn.textContent = !wasSaving ? tr('savingLabel') : tr('saveLabel');
-  const savedByEl = document.getElementById('profileSavedByN');
-  if (savedByEl) savedByEl.textContent = Number(savedByEl.textContent || 0) + (wasSaving ? -1 : 1);
+  if (error) { console.error('toggle follow error:', error); toast(tr('couldNotUpdateFollowUser')); return; }
+  btn.classList.toggle('following', !wasFollowing);
+  btn.textContent = !wasFollowing ? tr('followingLabel') : tr('followLabel');
+  const followersEl = document.getElementById('profileFollowersN');
+  if (followersEl) followersEl.textContent = Number(followersEl.textContent || 0) + (wasFollowing ? -1 : 1);
 }
 
 // Keys must match what the profile editor already writes into

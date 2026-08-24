@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>네트워크 | Weavo</title>
-<meta name="description" content="누가 누구의 작품을 저장했는지 보여주는 Weavo 커뮤니티 네트워크를 살펴보세요.">
+<meta name="description" content="누가 누구를 팔로우하는지 보여주는 Weavo 커뮤니티 네트워크를 살펴보세요.">
 <link rel="canonical" href="https://weavo.art/ko/network">
 <link rel="alternate" hreflang="en" href="https://weavo.art/en/network">
 <link rel="alternate" hreflang="ko" href="https://weavo.art/ko/network">
@@ -13,13 +13,13 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
 <meta property="og:title" content="네트워크 | Weavo">
-<meta property="og:description" content="누가 누구의 작품을 저장했는지 보여주는 Weavo 커뮤니티 네트워크를 살펴보세요.">
+<meta property="og:description" content="누가 누구를 팔로우하는지 보여주는 Weavo 커뮤니티 네트워크를 살펴보세요.">
 <meta property="og:url" content="https://weavo.art/ko/network">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="네트워크 | Weavo">
-<meta name="twitter:description" content="누가 누구의 작품을 저장했는지 보여주는 Weavo 커뮤니티 네트워크를 살펴보세요.">
+<meta name="twitter:description" content="누가 누구를 팔로우하는지 보여주는 Weavo 커뮤니티 네트워크를 살펴보세요.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/ko/"},{"@type":"ListItem","position":2,"name":"네트워크","item":"https://weavo.art/ko/network"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -58,10 +58,10 @@
     </div>
     <div class="network-page">
       <h1 class="network-page-title">네트워크</h1>
-      <div class="profile-graph-desc">위보 커뮤니티 전체를 저장 관계로 그린 지도입니다 — 화살표는 저장한 사람에서 저장된 사람 쪽을 가리킵니다. 원이 클수록 연결이 많은 사람입니다. 드래그로 배치를 바꾸고, 스크롤로 확대/축소하고, 사람을 클릭해 그 사람의 네트워크를 강조해보세요. 그 후 그 사람이나 네트워크 안의 누군가를 다시 클릭하면 프로필로 이동합니다.</div>
+      <div class="profile-graph-desc">위보 커뮤니티 전체를 팔로우 관계로 그린 지도입니다 — 화살표는 팔로우한 사람에서 팔로우 받는 사람 쪽을 가리킵니다. 원이 클수록 연결이 많은 사람입니다. 드래그로 배치를 바꾸고, 스크롤로 확대/축소하고, 사람을 클릭해 그 사람의 네트워크를 강조해보세요. 그 후 그 사람이나 네트워크 안의 누군가를 다시 클릭하면 프로필로 이동합니다.</div>
       <div class="profile-graph-panel network-graph-panel" id="globalGraphPanel">
         <svg id="globalGraphSvg"></svg>
-        <div class="profile-graph-empty" id="globalGraphEmpty" style="display:none;">아직 저장한 사람이 없어 표시할 네트워크가 없습니다.</div>
+        <div class="profile-graph-empty" id="globalGraphEmpty" style="display:none;">아직 팔로우한 사람이 없어 표시할 네트워크가 없습니다.</div>
         <div class="zoom-toolbar" id="globalGraphZoomToolbar" style="display:none;">
           <button type="button" class="zoom-btn" id="globalGraph-zoom-out" aria-label="축소">&minus;</button>
           <span class="zoom-level" id="globalGraph-zoom-level">100%</span>

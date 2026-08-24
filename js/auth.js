@@ -325,7 +325,7 @@ async function deleteMyStorageFiles() {
 // — the client SDK has no self-serve "delete my account" call, only an
 // admin API that needs a service-role key that must never reach the
 // browser. That function drops the auth.users row, which cascades to
-// profiles, submissions, comments, and saves.
+// profiles, submissions, comments, and follows.
 document.getElementById('ep-delete-account').onclick = async () => {
   const proceed = await confirmDialog(
     tr('deleteAccountMessage', { username: me.username }),
