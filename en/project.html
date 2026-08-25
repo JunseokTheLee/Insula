@@ -72,9 +72,15 @@
         <div class="colors-needed-label"><span>Colors still needed</span> <span class="field-hint">— artwork with these tones uploaded to a profile will automatically be matched in</span></div>
         <div class="color-swatches" id="colorSwatches"></div>
       </div>
-      <div class="project-view-tabs" id="projectViewTabs">
-        <button type="button" class="pv-tab active" id="pvTabWeavo">Weavo</button>
-        <button type="button" class="pv-tab" id="pvTabList">List</button>
+      <div class="project-head-controls">
+        <div class="project-view-tabs" id="projectViewTabs">
+          <button type="button" class="pv-tab active" id="pvTabWeavo">Weavo</button>
+          <button type="button" class="pv-tab" id="pvTabList">List</button>
+        </div>
+        <button type="button" class="reference-preview" id="referencePreview" aria-label="Enlarge reference preview" style="display:none;">
+          <canvas id="referencePreviewCanvas"></canvas>
+          <span class="reference-preview-label">Preview</span>
+        </button>
       </div>
     </div>
     <div class="weavo-grid-wrap" id="weavoGridWrap">
@@ -84,10 +90,6 @@
         <button type="button" class="zoom-btn" id="weavo-zoom-in" aria-label="Zoom in">+</button>
         <button type="button" class="zoom-btn" id="weavo-zoom-reset" aria-label="Reset view">&#8634;</button>
       </div>
-      <button type="button" class="reference-preview" id="referencePreview" aria-label="Enlarge reference preview" style="display:none;">
-        <canvas id="referencePreviewCanvas"></canvas>
-        <span class="reference-preview-label">Preview</span>
-      </button>
       <div class="weavo-stage" id="weavoStage">
         <div class="weavo-grid" id="weavoGrid"></div>
       </div>

@@ -72,9 +72,15 @@
         <div class="colors-needed-label"><span>아직 필요한 색상</span> <span class="field-hint">— 프로필에 이 색조의 작품을 업로드하면 자동으로 매칭돼요</span></div>
         <div class="color-swatches" id="colorSwatches"></div>
       </div>
-      <div class="project-view-tabs" id="projectViewTabs">
-        <button type="button" class="pv-tab active" id="pvTabWeavo">Weavo</button>
-        <button type="button" class="pv-tab" id="pvTabList">목록</button>
+      <div class="project-head-controls">
+        <div class="project-view-tabs" id="projectViewTabs">
+          <button type="button" class="pv-tab active" id="pvTabWeavo">Weavo</button>
+          <button type="button" class="pv-tab" id="pvTabList">목록</button>
+        </div>
+        <button type="button" class="reference-preview" id="referencePreview" aria-label="미리보기 확대" style="display:none;">
+          <canvas id="referencePreviewCanvas"></canvas>
+          <span class="reference-preview-label">미리보기</span>
+        </button>
       </div>
     </div>
     <div class="weavo-grid-wrap" id="weavoGridWrap">
@@ -84,10 +90,6 @@
         <button type="button" class="zoom-btn" id="weavo-zoom-in" aria-label="확대">+</button>
         <button type="button" class="zoom-btn" id="weavo-zoom-reset" aria-label="보기 초기화">&#8634;</button>
       </div>
-      <button type="button" class="reference-preview" id="referencePreview" aria-label="미리보기 확대" style="display:none;">
-        <canvas id="referencePreviewCanvas"></canvas>
-        <span class="reference-preview-label">미리보기</span>
-      </button>
       <div class="weavo-stage" id="weavoStage">
         <div class="weavo-grid" id="weavoGrid"></div>
       </div>

@@ -24,8 +24,9 @@
 .color-swatch .swatch-dot.more{background:repeating-linear-gradient(45deg,var(--paper),var(--paper) 5px,#ececea 5px,#ececea 10px);}
 .color-swatch .swatch-count{font-family:'General Sans',sans-serif;font-size:11px;color:var(--muted);font-weight:600;}
 
+.project-head-controls{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:16px;}
 .project-view-tabs{
-  display:inline-flex;background:var(--forest-08);border:1px solid var(--hairline-strong);border-radius:20px;padding:2px;gap:2px;margin-top:16px;
+  display:inline-flex;background:var(--forest-08);border:1px solid var(--hairline-strong);border-radius:20px;padding:2px;gap:2px;
 }
 .pv-tab{
   appearance:none;border:none;background:transparent;cursor:pointer;
@@ -53,10 +54,13 @@
 .project-list-view{margin:0 32px 32px;animation:fadeIn .3s ease-out;}
 .project-list-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,180px));gap:1px;justify-content:start;}
 
-/* ---------- reference preview (corner "what it's supposed to look like") ---------- */
+/* ---------- reference preview ("what it's supposed to look like") ----------
+   Sits next to the view tabs, above the grid, instead of floating on top of
+   it — an absolute-positioned corner overlay was covering whichever mosaic
+   cells happened to be underneath it. */
 .reference-preview{
-  position:absolute;left:14px;bottom:14px;z-index:5;
-  border:1px solid rgba(247,247,245,.3);border-radius:2px;overflow:hidden;
+  position:relative;flex-shrink:0;z-index:1;
+  border:1px solid var(--hairline-strong);border-radius:2px;overflow:hidden;
   width:96px;background:var(--forest-dark);padding:0;line-height:0;cursor:zoom-in;
   box-shadow:none;
   transition:width .2s ease-out,border-color .12s linear;
@@ -75,13 +79,17 @@
   display:block;padding:4px 6px;background:rgba(0,0,0,.5);color:var(--paper);font-family:'General Sans',sans-serif;font-size:11px;font-weight:600;
   text-align:center;line-height:1.3;
 }
-.reference-preview.enlarged{width:min(50vw,340px);cursor:zoom-out;}
+.reference-preview.enlarged{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:min(50vw,340px);z-index:50;cursor:zoom-out;
+  box-shadow:0 12px 40px rgba(0,0,0,.4);
+}
 
 #reshape-project-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
 #reshape-project-dialog h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin:0 0 10px;color:var(--forest);}
 
 @media (max-width:640px){
-  .reference-preview{width:72px;left:10px;bottom:10px;}
+  .reference-preview{width:72px;}
   .reference-preview.enlarged{width:min(70vw,300px);}
   .project-head{padding-left:16px;padding-right:16px;}
   .weavo-grid-wrap{margin-left:16px;margin-right:16px;margin-bottom:56px;}
