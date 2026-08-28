@@ -91,7 +91,19 @@ function colorDistanceSq(a, b) {
 // RGB-based metric's ~0-765. Above this, the closest open cell is
 // different enough from the artwork's average color that it won't
 // visually read as a match — flag it for the user.
-const POOR_MATCH_DISTANCE = 60;
+//
+// Those vivid-swatch numbers are misleading for what this actually gates,
+// though: real uploaded artwork averages out to desaturated, mixed-lighting
+// colors, not pure hues. A visibly blue photo and a visibly orange one
+// commonly average to something like (80,100,150) vs (150,110,80) — only
+// ~53 apart — so the old value of 60 let clearly different color families
+// (blue vs. orange/red/green, or blue vs. flat gray) match into each
+// other's open cells whenever nothing better was available. 30 keeps
+// genuine same-family variation (navy/sky-blue/violet-blue) matching while
+// rejecting those cross-family and gray fits — leaving the piece pooled
+// (see matching.js) rather than forced into a cell it won't visually read
+// as filling, even when that cell is the only one open.
+const POOR_MATCH_DISTANCE = 30;
 
 // Greedy nearest-color assignment used when reshaping a project onto a
 // new grid: each already-submitted piece claims the closest still-free
