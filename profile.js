@@ -626,7 +626,7 @@ window.ProfileView = function ProfileView(deps) {
     }
     document.getElementById('profile-bio').textContent = profile.bio || '';
     const tagsEl = document.getElementById('profile-tags');
-    for (const key of (profile.disabilities || []).filter(k => k !== 'prefer_not_to_say')) {
+    for (const key of (profile.disabilities || []).filter(k => k !== 'prefer_not_to_say' && k !== 'no_disability')) {
       const t = document.createElement('span'); t.className = 'profile-disability-tag'; t.textContent = disabilityLabel(key);
       tagsEl.appendChild(t);
     }

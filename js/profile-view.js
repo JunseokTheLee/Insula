@@ -622,7 +622,7 @@ async function loadProfileView(userId) {
   const bioEl = document.getElementById('profileBio');
   if (profile.bio) { bioEl.textContent = profile.bio; bioEl.style.display = ''; }
   const tagsEl = document.getElementById('profileDisabilityTags');
-  for (const key of (profile.disabilities || []).filter(k => k !== 'prefer_not_to_say')) {
+  for (const key of (profile.disabilities || []).filter(k => k !== 'prefer_not_to_say' && k !== 'no_disability')) {
     const tag = document.createElement('span');
     tag.className = 'profile-disability-tag'; tag.textContent = disabilityLabel(key);
     tagsEl.appendChild(tag);
