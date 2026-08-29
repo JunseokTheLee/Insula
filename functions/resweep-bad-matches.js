@@ -16,7 +16,7 @@
 //   4. It defaults to DRY_RUN — logs what WOULD be unmatched without
 //      changing anything. Read the count, then set DRY_RUN = false below
 //      and re-run to actually sweep.
-const DRY_RUN = true;
+const DRY_RUN = false;
 
 (async () => {
   const { data: rows, error } = await sb.from('mosaic_pixels')
