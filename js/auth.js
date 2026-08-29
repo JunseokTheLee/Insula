@@ -56,6 +56,8 @@ function updateIdentityUI() {
   document.getElementById('logoutBtn').style.display = me.id ? '' : 'none';
   const newProjectBtn = document.getElementById('newProjectBtn');
   if (newProjectBtn) newProjectBtn.style.display = me.isAdmin ? '' : 'none';
+  const deleteAcctCta = document.getElementById('deleteAcctCta');
+  if (deleteAcctCta) deleteAcctCta.textContent = me.id ? tr('myProfile') : tr('signIn');
 }
 document.getElementById('loginBtn').onclick = openAuthModal;
 document.getElementById('logoutBtn').onclick = signOut;
@@ -69,6 +71,8 @@ document.getElementById('auth-modal').addEventListener('click', e => { if (e.tar
 function goToMyProfile() { me.id ? (location.href = profileUrl(me.id)) : openAuthModal(); }
 document.getElementById('myAvatar').onclick = goToMyProfile;
 document.getElementById('myName').onclick = goToMyProfile;
+const deleteAcctCtaEl = document.getElementById('deleteAcctCta');
+if (deleteAcctCtaEl) deleteAcctCtaEl.onclick = goToMyProfile;
 
 // ---------- edit profile modal ----------
 // Same normalize-then-validate approach the profile editor has always used:
