@@ -88,11 +88,6 @@
 #reshape-project-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
 #reshape-project-dialog h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin:0 0 10px;color:var(--forest);}
 
-/* "Fullscreen" trigger for the weavo grid — mobile only (see the media
-   query below); on the phone the grid pops into a full-viewport overlay
-   via js/common.js initMfsPanel + the .mfs-* rules in base.css. */
-.pv-fullscreen-btn{display:none;}
-
 @media (max-width:640px){
   .reference-preview{width:72px;}
   .reference-preview.enlarged{width:min(70vw,300px);}
@@ -102,21 +97,23 @@
   .color-swatches{gap:9px;}
   .color-swatch .swatch-dot{width:28px;height:28px;}
 
-  .pv-fullscreen-btn{
-    display:inline-flex;align-items:center;gap:6px;flex-shrink:0;line-height:1;
-    appearance:none;cursor:pointer;border:1px solid var(--hairline-strong);
-    background:var(--forest-08);color:var(--forest);border-radius:16px;padding:8px 13px;
-    font-family:'General Sans',sans-serif;font-size:12px;font-weight:600;
+  /* <body data-mobile-fs>: the whole project page is a chrome-free
+     full-viewport view on the phone (base.css hides the topnav/backnav/
+     footer and adds the floating "←"). Keep a slim head — title, progress
+     and the Weavo/List tabs — then let the mosaic grid fill the rest;
+     the verbose description and colour-need list drop away. */
+  body[data-mobile-fs] .main{display:flex;flex-direction:column;overflow:hidden;}
+  body[data-mobile-fs] .project-head{padding:52px 16px 10px;flex-shrink:0;}
+  body[data-mobile-fs] .project-head h1{font-size:20px;margin-bottom:6px;}
+  body[data-mobile-fs] .project-head > p,
+  body[data-mobile-fs] .colors-needed{display:none;}
+  body[data-mobile-fs] .project-head-controls{margin-top:12px;}
+  body[data-mobile-fs] .weavo-grid-wrap{
+    flex:1;height:auto;min-height:0;margin:0;border-radius:0;border-left:none;border-right:none;
   }
-  .pv-fullscreen-btn.is-hidden{display:none;}
-  /* fullscreen grid: override initMfsPanel's default paper-panel look so it
-     stays the dark, centred, non-scrolling pan/zoom canvas it is in-page. */
-  .weavo-grid-wrap.mfs-open{
-    padding:0;background:var(--forest-dark);
-    flex-direction:row;align-items:center;justify-content:center;
-    overflow:hidden;height:100dvh;margin:0;
+  body[data-mobile-fs] .project-list-view{
+    flex:1;min-height:0;overflow-y:auto;margin:0;padding:4px 16px 24px;
   }
-  .weavo-grid-wrap.mfs-open .zoom-toolbar{top:auto;bottom:16px;right:16px;}
 }
 
 /* ============ STANDALONE ARTWORK PAGE (/artworks/{id}) ============
