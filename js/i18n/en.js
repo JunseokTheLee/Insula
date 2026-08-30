@@ -125,6 +125,8 @@ const T = {
   reportSubmittedToast: "Report submitted — thank you.",
   alreadyReportedToast: "You've already reported this.",
   couldNotSubmitReport: 'Could not submit report. Try again.',
+  mfsClose: 'Close',
+  mfsExpand: 'View fullscreen',
 };
 
 function tr(key, vars) {

@@ -125,6 +125,8 @@ const T = {
   reportSubmittedToast: '신고가 접수되었습니다. 감사합니다.',
   alreadyReportedToast: '이미 신고하셨습니다.',
   couldNotSubmitReport: '신고를 제출할 수 없습니다. 다시 시도해주세요.',
+  mfsClose: '닫기',
+  mfsExpand: '전체 화면으로 보기',
 };
 
 function tr(key, vars) {

@@ -678,6 +678,19 @@ async function loadProfileView(userId) {
   document.getElementById('profileFollowersCount').onclick = () => openFollowListModal(userId, 'followers');
 
   renderProfileGraphFor(userId, true);
+
+  // Mobile: let the Projects / Network sections pop fullscreen (css/base.css
+  // .mfs-*) — a short in-page panel is an awkward surface to pan the graph
+  // or scroll the grid inside on a phone. The graph re-fits to the new size
+  // on enter/exit, since renderProfileGraphFor reads the panel's live
+  // dimensions (initMfsPanel guards against re-wiring on later renders).
+  const graphSection = document.getElementById('profileGraphPanel').closest('.mfs-panel');
+  if (graphSection) initMfsPanel(graphSection, {
+    onEnter: () => renderProfileGraphFor(graphRootId, true),
+    onExit: () => renderProfileGraphFor(graphRootId, true),
+  });
+  const projectsSection = document.getElementById('profileProjectsGrid').closest('.mfs-panel');
+  if (projectsSection && participatedProjects.length) initMfsPanel(projectsSection);
 }
 
 // ---------- upload artwork (to the profile pool — not directly into a project) ----------

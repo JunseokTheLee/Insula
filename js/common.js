@@ -636,3 +636,68 @@ function wireLangToggle() {
     }
   });
 }
+
+// ---------- mobile fullscreen popups (see .mfs-* in css/base.css) ----------
+// Narrow screens only: lets a surface break out into a fixed, chrome-free
+// full-viewport overlay with a floating corner button. Used two ways — a
+// whole standalone page via <body data-mobile-fs> (Projects, Network), and
+// an in-page section that expands on demand via .mfs-panel (the profile
+// page's Projects / Network sections), where panning the graph or scrolling
+// the grid inside a short in-page panel is fiddly on a phone.
+const MFS_MOBILE_MQ = window.matchMedia('(max-width: 640px)');
+
+function mfsCornerBtn(glyph, onClick) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'mfs-close-btn';
+  btn.setAttribute('aria-label', tr('mfsClose'));
+  btn.textContent = glyph;
+  btn.addEventListener('click', onClick);
+  return btn;
+}
+
+// Wires a .mfs-panel: injects the "expand" button (shown only on mobile via
+// CSS) that pops the panel fullscreen, plus the "×" that collapses it back.
+// opts.label — expand button text (defaults to tr('mfsExpand')).
+// opts.onEnter / opts.onExit — run one frame after the class toggles, once
+// layout has settled (the graph panel uses this to re-fit to the new size).
+function initMfsPanel(panel, opts = {}) {
+  if (!panel || panel.dataset.mfsInit) return;
+  panel.dataset.mfsInit = '1';
+
+  const expand = document.createElement('button');
+  expand.type = 'button';
+  expand.className = 'mfs-expand-btn';
+  expand.textContent = opts.label || tr('mfsExpand');
+  const close = mfsCornerBtn('✕', () => setOpen(false));
+
+  const label = panel.querySelector('.section-label, .profile-section-head');
+  if (label) label.insertAdjacentElement('afterend', expand);
+  else panel.prepend(expand);
+  panel.appendChild(close);
+
+  function setOpen(open) {
+    panel.classList.toggle('mfs-open', open);
+    document.body.classList.toggle('mfs-lock', open);
+    requestAnimationFrame(() => { (open ? opts.onEnter : opts.onExit)?.(); });
+  }
+  expand.addEventListener('click', () => setOpen(true));
+  // Rotating back to a wide viewport while open — drop back inline so the
+  // fixed overlay doesn't get stranded on top of the desktop layout.
+  MFS_MOBILE_MQ.addEventListener('change', e => { if (!e.matches) setOpen(false); });
+  addEventListener('keydown', e => {
+    if (e.key === 'Escape' && panel.classList.contains('mfs-open')) setOpen(false);
+  });
+}
+
+// <body data-mobile-fs>: the standalone Projects / Network pages. On mobile
+// the page chrome is hidden by CSS; add the floating "back" control that
+// returns wherever the user came from.
+if (document.body.hasAttribute('data-mobile-fs')) {
+  const back = mfsCornerBtn('←', () => {
+    if (history.length > 1) history.back();
+    else location.href = `/${CURRENT_LANG}/`;
+  });
+  back.classList.add('mfs-back-btn');
+  document.body.appendChild(back);
+}
