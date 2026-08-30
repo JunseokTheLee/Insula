@@ -152,7 +152,11 @@
 .scroll-hint.hidden{display:none;}
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
 
-/* ---------- features: mosaic / network / exhibitions, three columns ---------- */
+/* ---------- landing "How It Works": the Mosaic explainer ----------
+   Network and Exhibitions used to sit alongside this as two more columns;
+   they now live as "What is this?" popups on /network and /exhibitions
+   (the .feature-diagram / .fd-* marks moved to base.css so those pages can
+   reuse them without pulling in all of home.css). */
 .features3{flex-shrink:0;width:100%;max-width:1400px;margin:0 auto;padding:64px 32px 64px;}
 .hiw-header{max-width:640px;margin:0 0 40px;}
 .hiw-header .section-label{margin:4px 0 14px;}
@@ -160,31 +164,12 @@
 .hiw-intro{font-family:'General Sans',sans-serif;color:var(--muted);font-size:15px;line-height:1.6;margin:0;}
 
 .features3-cols{display:flex;gap:48px;align-items:flex-start;border-top:1px solid var(--hairline);}
-.feature-col{flex:1 1 0;min-width:0;border-left:3px solid var(--coral);padding:32px 0 0 24px;}
+.feature-col{flex:1 1 0;min-width:0;max-width:760px;border-left:3px solid var(--coral);padding:32px 0 0 24px;}
 .feature-col:nth-child(2){border-left-color:var(--mint);}
 .feature-col:nth-child(3){border-left-color:var(--gold);}
 .feature-tag{display:block;font-family:'General Sans',sans-serif;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
 .feature-col h3{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.01em;margin:0 0 12px;color:var(--forest);}
 .feature-col > p{font-family:'General Sans',sans-serif;font-size:14.5px;line-height:1.65;color:var(--ink);margin:0 0 20px;}
-.feature-diagram{margin-bottom:20px;display:flex;align-items:center;justify-content:center;}
-.feature-diagram-panel{width:100%;max-width:440px;border:1px solid var(--hairline-strong);border-radius:2px;overflow:hidden;}
-.feature-diagram-panel svg{width:100%;height:auto;display:block;}
-.feature-diagram-dark{background:var(--forest-dark);padding:18px;}
-.feature-diagram-light{background:#fff;padding:18px;}
-/* network diagram — mirrors the real Network page's dark graph panel */
-.fd-link{stroke:rgba(247,247,245,.3);stroke-width:1.4px;}
-.fd-link-mint{stroke:var(--mint);stroke-width:1.6px;}
-.fd-node{fill:var(--paper);stroke:rgba(247,247,245,.35);stroke-width:1.5px;}
-.fd-node-mint{stroke:var(--mint);stroke-width:2.5px;}
-.fd-node-center{stroke:var(--mint);stroke-width:3px;}
-/* collections diagram — mirrors the profile page's collection board cards */
-.fd-card-body{fill:var(--paper);stroke:var(--hairline-strong);stroke-width:1px;}
-.fd-swatch{opacity:.92;}
-.fd-swatch-empty{fill:none;stroke:var(--hairline-strong);stroke-width:1px;stroke-dasharray:3 3;}
-.fd-card-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;fill:var(--forest);}
-.fd-card-meta{font-family:'General Sans',sans-serif;font-size:9px;fill:var(--muted);}
-.fd-card-new{fill:none;stroke:var(--hairline-strong);stroke-width:1.5px;stroke-dasharray:5 4;}
-.fd-card-plus{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;fill:var(--hairline-strong);}
 
 /* compact step list — the Mosaic column's condensed "how it works" */
 .hiw-steps-compact{list-style:none;margin:0 0 20px;padding:0;}

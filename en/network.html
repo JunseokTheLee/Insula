@@ -57,8 +57,10 @@
       <a class="back" href="/en/projects">&larr; Back</a>
     </div>
     <div class="network-page">
-      <h1 class="network-page-title">Network</h1>
-      <div class="profile-graph-desc">The whole Weavo community, mapped by follows — every arrow points from someone who follows another artist to the person they follow. Bigger circles have more connections. Drag to rearrange, scroll to zoom, click someone to highlight their local network, then click again (them or anyone in that network) to visit a profile.</div>
+      <div class="page-title-row">
+        <h1 class="network-page-title">Network</h1>
+        <button type="button" class="info-btn" data-info-open aria-haspopup="dialog">What is this?</button>
+      </div>
       <div class="profile-graph-panel network-graph-panel" id="globalGraphPanel">
         <svg id="globalGraphSvg"></svg>
         <div class="profile-graph-empty" id="globalGraphEmpty" style="display:none;">No follows yet — nothing to map.</div>
@@ -165,6 +167,41 @@
     <div class="modal-actions">
       <button id="confirm-cancel" class="btn-cancel">Cancel</button>
       <button id="confirm-ok" class="btn-primary">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- "What is this?" info popup (the Network explainer, moved off the landing page) -->
+<div id="info-modal" class="modal-overlay">
+  <div id="info-dialog" class="modal-panel">
+    <button type="button" class="info-dialog-close" data-info-close aria-label="Close">&#10005;</button>
+    <span class="feature-tag">Network</span>
+    <h3>A living map of the whole community.</h3>
+    <p>Every follow draws a line — from the person doing the following to the artist they follow. Bigger circles have more connections. Click anyone to light up their local network, drag nodes to rearrange the map, scroll to zoom, and click again (them or anyone in that network) to visit a profile.</p>
+    <div class="feature-diagram">
+      <div class="feature-diagram-panel feature-diagram-dark">
+        <svg viewBox="0 0 420 260" class="fd-network" role="img" aria-label="A network diagram of nodes representing artists, connected by directional links representing follows, with the artist's own connections highlighted in mint.">
+          <defs>
+            <marker id="fdArrowMint" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#9EFFBF"/>
+            </marker>
+            <marker id="fdArrowMuted" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L8,4 L0,8 Z" fill="rgba(247,247,245,.4)"/>
+            </marker>
+          </defs>
+          <line x1="325.64" y1="62.97" x2="333.80" y2="165.05" class="fd-link" marker-end="url(#fdArrowMuted)"/>
+          <line x1="67.18" y1="176.27" x2="92.09" y2="76.64" class="fd-link" marker-end="url(#fdArrowMuted)"/>
+          <line x1="211.62" y1="222.71" x2="320.82" y2="184.91" class="fd-link" marker-end="url(#fdArrowMuted)"/>
+          <line x1="194.33" y1="121.14" x2="105.45" y2="70.91" class="fd-link fd-link-mint" marker-end="url(#fdArrowMint)"/>
+          <line x1="321.07" y1="174.43" x2="226.71" y2="136.69" class="fd-link fd-link-mint" marker-end="url(#fdArrowMint)"/>
+          <circle cx="325" cy="55" r="8" class="fd-node"/>
+          <circle cx="65" cy="185" r="9" class="fd-node"/>
+          <circle cx="205" cy="225" r="7" class="fd-node"/>
+          <circle cx="95" cy="65" r="12" class="fd-node fd-node-mint"/>
+          <circle cx="335" cy="180" r="15" class="fd-node fd-node-mint"/>
+          <circle cx="210" cy="130" r="18" class="fd-node fd-node-center"/>
+        </svg>
+      </div>
     </div>
   </div>
 </div>

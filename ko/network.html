@@ -57,8 +57,10 @@
       <a class="back" href="/ko/projects">&larr; 뒤로</a>
     </div>
     <div class="network-page">
-      <h1 class="network-page-title">네트워크</h1>
-      <div class="profile-graph-desc">위보 커뮤니티 전체를 팔로우 관계로 그린 지도입니다 — 화살표는 팔로우한 사람에서 팔로우 받는 사람 쪽을 가리킵니다. 원이 클수록 연결이 많은 사람입니다. 드래그로 배치를 바꾸고, 스크롤로 확대/축소하고, 사람을 클릭해 그 사람의 네트워크를 강조해보세요. 그 후 그 사람이나 네트워크 안의 누군가를 다시 클릭하면 프로필로 이동합니다.</div>
+      <div class="page-title-row">
+        <h1 class="network-page-title">네트워크</h1>
+        <button type="button" class="info-btn" data-info-open aria-haspopup="dialog">이건 뭔가요?</button>
+      </div>
       <div class="profile-graph-panel network-graph-panel" id="globalGraphPanel">
         <svg id="globalGraphSvg"></svg>
         <div class="profile-graph-empty" id="globalGraphEmpty" style="display:none;">아직 팔로우한 사람이 없어 표시할 네트워크가 없습니다.</div>
@@ -165,6 +167,41 @@
     <div class="modal-actions">
       <button id="confirm-cancel" class="btn-cancel">취소</button>
       <button id="confirm-ok" class="btn-primary">계속</button>
+    </div>
+  </div>
+</div>
+
+<!-- "이건 뭔가요?" 안내 팝업 (랜딩 페이지에서 옮겨온 네트워크 설명) -->
+<div id="info-modal" class="modal-overlay">
+  <div id="info-dialog" class="modal-panel">
+    <button type="button" class="info-dialog-close" data-info-close aria-label="닫기">&#10005;</button>
+    <span class="feature-tag">Network</span>
+    <h3>커뮤니티 전체를 잇는 살아있는 지도.</h3>
+    <p>누군가 다른 아티스트를 팔로우할 때마다 그 사이에 하나의 선이 그려집니다 — 팔로우한 사람에서, 팔로우 받는 아티스트를 향해서요. 연결이 많을수록 원은 커집니다. 누구든 클릭하면 그 사람의 네트워크가 밝게 강조되고, 노드를 드래그해 지도를 재배치하거나 스크롤로 확대/축소할 수 있으며, 다시 클릭하면(그 사람이나 네트워크 안의 누군가를) 프로필로 이동합니다.</p>
+    <div class="feature-diagram">
+      <div class="feature-diagram-panel feature-diagram-dark">
+        <svg viewBox="0 0 420 260" class="fd-network" role="img" aria-label="아티스트를 나타내는 원들이 팔로우 관계를 뜻하는 방향성 있는 선으로 연결되어 있고, 그중 자신과 연결된 노드는 민트색으로 강조된 네트워크 다이어그램.">
+          <defs>
+            <marker id="fdArrowMint" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#9EFFBF"/>
+            </marker>
+            <marker id="fdArrowMuted" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L8,4 L0,8 Z" fill="rgba(247,247,245,.4)"/>
+            </marker>
+          </defs>
+          <line x1="325.64" y1="62.97" x2="333.80" y2="165.05" class="fd-link" marker-end="url(#fdArrowMuted)"/>
+          <line x1="67.18" y1="176.27" x2="92.09" y2="76.64" class="fd-link" marker-end="url(#fdArrowMuted)"/>
+          <line x1="211.62" y1="222.71" x2="320.82" y2="184.91" class="fd-link" marker-end="url(#fdArrowMuted)"/>
+          <line x1="194.33" y1="121.14" x2="105.45" y2="70.91" class="fd-link fd-link-mint" marker-end="url(#fdArrowMint)"/>
+          <line x1="321.07" y1="174.43" x2="226.71" y2="136.69" class="fd-link fd-link-mint" marker-end="url(#fdArrowMint)"/>
+          <circle cx="325" cy="55" r="8" class="fd-node"/>
+          <circle cx="65" cy="185" r="9" class="fd-node"/>
+          <circle cx="205" cy="225" r="7" class="fd-node"/>
+          <circle cx="95" cy="65" r="12" class="fd-node fd-node-mint"/>
+          <circle cx="335" cy="180" r="15" class="fd-node fd-node-mint"/>
+          <circle cx="210" cy="130" r="18" class="fd-node fd-node-center"/>
+        </svg>
+      </div>
     </div>
   </div>
 </div>

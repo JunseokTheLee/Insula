@@ -701,3 +701,20 @@ if (document.body.hasAttribute('data-mobile-fs')) {
   back.classList.add('mfs-back-btn');
   document.body.appendChild(back);
 }
+
+// ---------- "what is this?" info popup ----------
+// The Network / Exhibitions explainers were lifted off the landing page onto
+// the surfaces they describe. Any [data-info-open] control opens #info-modal;
+// a backdrop click or a [data-info-close] control closes it. Escape is
+// already handled by the generic .modal-overlay.open handler in auth.js.
+(function wireInfoPopup() {
+  const modal = document.getElementById('info-modal');
+  if (!modal) return;
+  const close = () => modal.classList.remove('open');
+  document.querySelectorAll('[data-info-open]').forEach(btn => {
+    btn.addEventListener('click', () => modal.classList.add('open'));
+  });
+  modal.addEventListener('click', e => {
+    if (e.target === modal || e.target.closest('[data-info-close]')) close();
+  });
+})();

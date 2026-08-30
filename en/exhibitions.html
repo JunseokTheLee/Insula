@@ -56,7 +56,10 @@
       <a class="back" href="/en/projects">&larr; Back</a>
     </div>
     <div class="artists-page" style="padding-bottom:0;max-width:1464px;">
-      <h1 class="artists-page-title">All Exhibitions</h1>
+      <div class="page-title-row">
+        <h1 class="artists-page-title">All Exhibitions</h1>
+        <button type="button" class="info-btn" data-info-open aria-haspopup="dialog">What is an exhibition?</button>
+      </div>
       <div class="artists-page-desc">Every public mini-exhibition curated by the Weavo community, newest first.</div>
     </div>
     <div class="artworks-grid" id="exhibitionsGrid"></div>
@@ -156,6 +159,45 @@
     <div class="modal-actions">
       <button id="confirm-cancel" class="btn-cancel">Cancel</button>
       <button id="confirm-ok" class="btn-primary">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- "What is an exhibition?" info popup (the Exhibitions explainer, moved off the landing page) -->
+<div id="info-modal" class="modal-overlay">
+  <div id="info-dialog" class="modal-panel">
+    <button type="button" class="info-dialog-close" data-info-close aria-label="Close">&#10005;</button>
+    <span class="feature-tag">Exhibitions</span>
+    <h3>Curate a mini-exhibition of the pieces that matter to you.</h3>
+    <p>Saving an artwork adds it to your pool — starting an Exhibition turns a handful of those pieces into something shaped on purpose. Give it a title and a short description of what ties it together, add or remove pieces any time, and choose whether it stays private or anyone can browse it.</p>
+    <div class="feature-diagram">
+      <div class="feature-diagram-panel feature-diagram-light">
+        <svg viewBox="0 0 420 210" class="fd-collections" role="img" aria-label="Two exhibition boards, each holding a small grid of artwork swatches with a title and a public or private label, next to a dashed placeholder card for starting a new exhibition.">
+          <g class="fd-card">
+            <rect x="24" y="16" width="118" height="170" rx="2" class="fd-card-body"/>
+            <rect x="32" y="24" width="49" height="49" class="fd-swatch" fill="#FF8C69"/>
+            <rect x="85" y="24" width="49" height="49" class="fd-swatch" fill="#F4D35E"/>
+            <rect x="32" y="77" width="49" height="49" class="fd-swatch" fill="#1A3C2B"/>
+            <rect x="85" y="77" width="49" height="49" class="fd-swatch" fill="#9EFFBF"/>
+            <text x="32" y="146" class="fd-card-title">Quiet Blues</text>
+            <text x="32" y="161" class="fd-card-meta">12 pieces &middot; Public</text>
+          </g>
+          <g class="fd-card">
+            <rect x="162" y="16" width="118" height="170" rx="2" class="fd-card-body"/>
+            <rect x="170" y="24" width="49" height="49" class="fd-swatch" fill="#9EFFBF"/>
+            <rect x="223" y="24" width="49" height="49" class="fd-swatch" fill="#FF8C69"/>
+            <rect x="170" y="77" width="49" height="49" class="fd-swatch-empty"/>
+            <rect x="223" y="77" width="49" height="49" class="fd-swatch" fill="#F4D35E"/>
+            <text x="170" y="146" class="fd-card-title">Studio Sketches</text>
+            <text x="170" y="161" class="fd-card-meta">6 pieces &middot; Private</text>
+          </g>
+          <g class="fd-card">
+            <rect x="300" y="16" width="118" height="170" rx="2" class="fd-card-new"/>
+            <text x="359" y="98" class="fd-card-plus" text-anchor="middle">+</text>
+            <text x="359" y="161" class="fd-card-meta" text-anchor="middle">New Exhibition</text>
+          </g>
+        </svg>
+      </div>
     </div>
   </div>
 </div>
