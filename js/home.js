@@ -175,7 +175,11 @@ document.getElementById('np-submit').onclick = async () => {
   } catch (err) {
     console.error('weavo pixel insert error:', err);
     toast(tr('couldNotCreateProjectRetry'));
-    if (projectId) await sb.from('mosaic_projects').delete().eq('id', projectId);
+    // Roll back the half-created project via the RPC — a plain delete would
+    // cascade into any mosaic_submissions (there are none this early, but
+    // there's now exactly one supported delete path; see
+    // supabase_mosaic_project_delete.sql).
+    if (projectId) await sb.rpc('delete_mosaic_project', { p_project_id: projectId });
   } finally {
     btn.disabled = false;
   }

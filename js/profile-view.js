@@ -764,9 +764,14 @@ async function resolveProfileHandle(handle) {
 }
 
 authReady.then(async () => {
+  // Captured before loadProfileView() — it canonicalizes the URL via
+  // replaceState, which drops the fragment.
+  const wantUpload = location.hash === '#upload';
   const requested = routeParam('artists', 'user');
   const handle = requested || me.id;
   if (!handle) { document.getElementById('profileName').textContent = tr('userNotFound'); return; }
   const userId = await resolveProfileHandle(handle);
   await loadProfileView(userId);
+  // Deep link from the homepage's "Upload Artwork" button.
+  if (wantUpload && me.id && userId === me.id) document.getElementById('profileUploadBtn').click();
 });

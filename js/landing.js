@@ -100,6 +100,15 @@ document.getElementById('scrollHint').onclick = () => {
   document.getElementById('howItWorksPanel').scrollIntoView({ behavior: 'smooth' });
 };
 
+// Artwork is uploaded from the artist's own profile (the upload modal only
+// exists on profile.html), so this just routes there — signed out, it opens
+// the auth modal instead. The #upload hash tells profile-view.js to pop the
+// upload modal straight away.
+document.getElementById('heroUploadBtn').onclick = () => {
+  if (!me.id) { openAuthModal(); return; }
+  location.href = profileUrl(me.id) + '#upload';
+};
+
 // ---------- how-it-works: mobile carousel dots ----------
 // The three feature columns are a static row on desktop and a horizontal
 // swipe carousel below 900px (css/home.css). Build position dots for the
