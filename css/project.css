@@ -97,22 +97,35 @@
   .color-swatches{gap:9px;}
   .color-swatch .swatch-dot{width:28px;height:28px;}
 
-  /* <body data-mobile-fs>: the whole project page is a chrome-free
-     full-viewport view on the phone (base.css hides the topnav/backnav/
-     footer and adds the floating "←"). Keep a slim head — title, progress
-     and the Weavo/List tabs — then let the mosaic grid fill the rest;
-     the verbose description and colour-need list drop away. */
-  body[data-mobile-fs] .main{display:flex;flex-direction:column;overflow:hidden;}
-  body[data-mobile-fs] .project-head{padding:52px 16px 10px;flex-shrink:0;}
-  body[data-mobile-fs] .project-head h1{font-size:20px;margin-bottom:6px;}
+  /* <body data-mobile-fs>: on a phone the project page is a chrome-free
+     full-viewport surface (base.css hides the topnav/backnav/footer and
+     adds the floating "←"). Mirror the Network page — hand the mosaic the
+     whole screen (an explicit 100dvh, like .network-graph-panel, rather
+     than a flex-grow height that fitWeavoStage() can measure as ~0 before
+     layout settles) and float the only control that has to stay reachable
+     (the Weavo/List toggle + reference preview) into the bottom-left corner,
+     clear of the "←" (top-left) and zoom bar (top-right). Title, progress,
+     description and colour-need list drop away. */
+  body[data-mobile-fs] .main{overflow:hidden;}
+  body[data-mobile-fs] .project-head{
+    position:fixed;left:12px;bottom:12px;z-index:150;margin:0;padding:0;width:auto;
+  }
+  body[data-mobile-fs] .project-head h1,
   body[data-mobile-fs] .project-head > p,
+  body[data-mobile-fs] .project-progress,
+  body[data-mobile-fs] .archived-banner,
   body[data-mobile-fs] .colors-needed{display:none;}
-  body[data-mobile-fs] .project-head-controls{margin-top:12px;}
+  body[data-mobile-fs] .project-head-controls{
+    margin:0;gap:8px;flex-direction:column;align-items:flex-start;
+  }
+  body[data-mobile-fs] .project-view-tabs{
+    background:rgba(247,247,245,.95);box-shadow:0 2px 10px rgba(0,0,0,.14);
+  }
   body[data-mobile-fs] .weavo-grid-wrap{
-    flex:1;height:auto;min-height:0;margin:0;border-radius:0;border-left:none;border-right:none;
+    height:100dvh;min-height:0;margin:0;border:none;border-radius:0;
   }
   body[data-mobile-fs] .project-list-view{
-    flex:1;min-height:0;overflow-y:auto;margin:0;padding:4px 16px 24px;
+    height:100dvh;overflow-y:auto;margin:0;padding:56px 16px 76px;
   }
 }
 

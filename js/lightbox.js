@@ -372,6 +372,28 @@ function applyArtDetailsToCaption(sub) {
   else { linkEl.textContent = ''; linkEl.removeAttribute('href'); }
 }
 
+// The like/comments/exhibit buttons are the same for everyone, but Edit,
+// Delete, Report and admin "Remove from project" depend on who's signed in
+// — and `me` is a mutable global that auth.js reassigns on every auth-state
+// change (token refresh, tab refocus, a transient null session). Split out
+// so it can be re-run on 'weavo:authchange' (below) if a lightbox is open
+// when auth settles/flips, instead of being frozen to whatever `me` was the
+// moment the lightbox opened.
+function applyLightboxOwnerControls(sub) {
+  const isOwner = !!(me.id && me.id === sub.author_id);
+  lbReportBtn.style.display = isOwner ? 'none' : '';
+  const deleteBtn = document.getElementById('lb-delete-btn');
+  deleteBtn.style.display = isOwner ? '' : 'none';
+  deleteBtn.onclick = () => deleteWeavoSubmission(sub);
+  lbEditBtn.style.display = isOwner ? '' : 'none';
+  const removeBtn = document.getElementById('lb-remove-btn');
+  removeBtn.style.display = (me.isAdmin && !isOwner && sub.project_id) ? '' : 'none';
+  removeBtn.onclick = () => removeSubmissionFromProject(sub);
+}
+document.addEventListener('weavo:authchange', () => {
+  if (lbCurrentSub) applyLightboxOwnerControls(lbCurrentSub);
+});
+
 function populateLightboxContent(sub) {
   lbCurrentSub = sub;
   closeLbExhibitMenu();
@@ -382,14 +404,7 @@ function populateLightboxContent(sub) {
   setupLightboxArtistFollow(sub);
   document.getElementById('lightbox-caption').classList.remove('hidden');
   setupLightboxEngagement(sub);
-  lbReportBtn.style.display = me.id && me.id === sub.author_id ? 'none' : '';
-  const deleteBtn = document.getElementById('lb-delete-btn');
-  deleteBtn.style.display = me.id === sub.author_id ? '' : 'none';
-  deleteBtn.onclick = () => deleteWeavoSubmission(sub);
-  lbEditBtn.style.display = me.id && me.id === sub.author_id ? '' : 'none';
-  const removeBtn = document.getElementById('lb-remove-btn');
-  removeBtn.style.display = (me.isAdmin && me.id !== sub.author_id && sub.project_id) ? '' : 'none';
-  removeBtn.onclick = () => removeSubmissionFromProject(sub);
+  applyLightboxOwnerControls(sub);
   const commentsBtn = document.getElementById('lb-comments-btn');
   commentsBtn.classList.add('active');
   commentsBtn.setAttribute('aria-expanded', 'true');

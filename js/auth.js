@@ -375,6 +375,9 @@ sb.auth.onAuthStateChange(async (_event, session) => {
   if (me.id) { await loadMyProfile(); upsertBaseProfile(); }
   updateIdentityUI();
   maybeRequireProfileSetup();
+  // Lets anything already on screen that keys off `me` (e.g. the lightbox's
+  // owner-only Edit/Delete buttons) re-evaluate now that it may have flipped.
+  document.dispatchEvent(new CustomEvent('weavo:authchange'));
 });
 // `authReady` is assigned synchronously (it's a Promise, not a value that
 // depends on timing) so any script tag loaded after this one can safely
@@ -389,4 +392,5 @@ window.authReady = (async () => {
   if (me.id) { await loadMyProfile(); upsertBaseProfile(); }
   updateIdentityUI();
   maybeRequireProfileSetup();
+  document.dispatchEvent(new CustomEvent('weavo:authchange'));
 })();
