@@ -396,6 +396,7 @@ document.addEventListener('weavo:authchange', () => {
 
 function populateLightboxContent(sub) {
   lbCurrentSub = sub;
+  setImgFullscreen(false); // a fresh piece always starts un-blown-up
   closeLbExhibitMenu();
   lbImg.src = cdnUrl(sub.image_url);
   applyArtDetailsToCaption(sub);
@@ -420,14 +421,43 @@ function openLightbox(sub) {
   resetLbZoom();
   lbModal?.classList.add('open');
 }
-function closeLightbox() { lbModal?.classList.remove('open'); }
+function closeLightbox() { setImgFullscreen(false); lbModal?.classList.remove('open'); }
 window.closeLightbox = closeLightbox;
 lbModal?.addEventListener('click', e => { if (e.target === e.currentTarget) closeLightbox(); });
 lbStage.addEventListener('click', e => { if (e.target === lbStage) closeLightbox(); });
 document.getElementById('lightbox-close')?.addEventListener('click', closeLightbox);
 lbZoomInBtn.onclick = () => setLbZoom(lbScale + LB_ZOOM_STEP);
 lbZoomOutBtn.onclick = () => setLbZoom(lbScale - LB_ZOOM_STEP);
-lbImg.addEventListener('dblclick', () => setLbZoom(lbScale > 1 ? 1 : 2.5));
+
+// ---------- tap the image to fill the viewport ----------
+// .img-fs goes on whichever element wraps the shared #lightboxStage markup:
+// the modal on project/profile, or #artworkStage on the standalone page.
+const lbFsHost = lbModal || document.getElementById('artworkStage');
+let lbImgMoved = false; // true while panning a zoomed image, so the trailing click doesn't toggle
+let lbClickTimer = null; // lets a genuine dblclick (zoom) pre-empt the single-click (fullscreen)
+function isImgFullscreen() { return !!lbFsHost && lbFsHost.classList.contains('img-fs'); }
+function setImgFullscreen(on) {
+  if (!lbFsHost) return;
+  clearTimeout(lbClickTimer); lbClickTimer = null; // drop any pending single-click toggle
+  lbFsHost.classList.toggle('img-fs', on);
+  document.body.classList.toggle('lb-img-fs-lock', on);
+  if (!on) resetLbZoom();
+}
+lbImg.addEventListener('click', () => {
+  if (lbImgMoved) { lbImgMoved = false; return; }
+  if (lbClickTimer) return;
+  lbClickTimer = setTimeout(() => { lbClickTimer = null; setImgFullscreen(!isImgFullscreen()); }, 200);
+});
+lbImg.addEventListener('dblclick', () => {
+  clearTimeout(lbClickTimer); lbClickTimer = null;
+  setLbZoom(lbScale > 1 ? 1 : 2.5);
+});
+// Capture phase so this runs before auth.js's window-level Escape handler
+// (which would otherwise close the whole lightbox) — first Escape just drops
+// out of the blown-up image.
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && isImgFullscreen()) { e.stopPropagation(); setImgFullscreen(false); }
+}, true);
 lbStage.addEventListener('wheel', e => {
   e.preventDefault();
   setLbZoom(lbScale + (e.deltaY < 0 ? LB_ZOOM_STEP : -LB_ZOOM_STEP));
@@ -436,6 +466,7 @@ lbStage.addEventListener('wheel', e => {
 // drag-to-pan (mouse) when zoomed in
 let lbDragging = false, lbStartX = 0, lbStartY = 0, lbOrigX = 0, lbOrigY = 0;
 lbImg.addEventListener('mousedown', e => {
+  lbImgMoved = false;
   if (lbScale <= LB_MIN_ZOOM) return;
   e.preventDefault();
   lbDragging = true;
@@ -445,6 +476,7 @@ lbImg.addEventListener('mousedown', e => {
 });
 addEventListener('mousemove', e => {
   if (!lbDragging) return;
+  lbImgMoved = true;
   lbX = lbOrigX + (e.clientX - lbStartX);
   lbY = lbOrigY + (e.clientY - lbStartY);
   lbImg.style.transform = `translate(${lbX}px, ${lbY}px) scale(${lbScale})`;
@@ -457,7 +489,9 @@ function lbTouchDist(touches) {
 }
 let lbPinchStartDist = 0, lbPinchStartScale = 1;
 lbStage.addEventListener('touchstart', e => {
+  lbImgMoved = false;
   if (e.touches.length === 2) {
+    lbImgMoved = true; // a pinch is never a tap
     lbPinchStartDist = lbTouchDist(e.touches);
     lbPinchStartScale = lbScale;
   } else if (e.touches.length === 1 && lbScale > LB_MIN_ZOOM) {
@@ -473,6 +507,7 @@ lbStage.addEventListener('touchmove', e => {
     setLbZoom(lbPinchStartScale * (lbTouchDist(e.touches) / lbPinchStartDist));
   } else if (e.touches.length === 1 && lbDragging) {
     e.preventDefault();
+    lbImgMoved = true;
     lbX = lbOrigX + (e.touches[0].clientX - lbStartX);
     lbY = lbOrigY + (e.touches[0].clientY - lbStartY);
     lbImg.style.transform = `translate(${lbX}px, ${lbY}px) scale(${lbScale})`;
