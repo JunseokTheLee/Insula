@@ -157,6 +157,108 @@ lbReportBtn.setAttribute('aria-label', tr('reportAriaLabel_submission'));
 })();
 lbReportBtn.onclick = () => { if (lbCurrentSub) openReportModal('submission', lbCurrentSub.id); };
 
+// ---------- edit this artwork's details (author only — button + modal built
+// dynamically here, same rationale as the exhibit dropdown / report button
+// above: keeps it out of every page's copy of the lightbox markup). Only the
+// five text detail fields are editable; the image and its placement are not
+// (that would be a delete-and-resubmit — see supabase_mosaic_edit_art_details.sql). ----------
+const lbEditBtn = document.createElement('button');
+lbEditBtn.type = 'button';
+lbEditBtn.id = 'lb-edit-btn';
+lbEditBtn.className = 'lb-action-btn';
+lbEditBtn.style.display = 'none';
+lbEditBtn.innerHTML = `<span class="icon"></span><span>${tr('editArtworkBtn')}</span>`;
+lbEditBtn.setAttribute('aria-label', tr('editArtworkTitle'));
+(() => {
+  const actions = document.querySelector('.lightbox-actions');
+  if (actions) actions.insertBefore(lbEditBtn, document.getElementById('lb-delete-btn'));
+})();
+
+const lbEditModal = document.createElement('div');
+lbEditModal.id = 'lb-edit-modal';
+lbEditModal.className = 'modal-overlay';
+lbEditModal.innerHTML = `
+  <div class="modal-panel">
+    <h3>${tr('editArtworkTitle')}</h3>
+    <div class="field">
+      <label for="lb-edit-title">${tr('artTitleLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
+      <input type="text" id="lb-edit-title" placeholder="${tr('artTitlePlaceholder')}" maxlength="80">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div class="field" style="flex:1;">
+        <label for="lb-edit-material">${tr('artMaterialLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
+        <input type="text" id="lb-edit-material" placeholder="${tr('artMaterialPlaceholder')}" maxlength="100">
+      </div>
+      <div class="field" style="flex:1;">
+        <label for="lb-edit-completed">${tr('artCompletedLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
+        <input type="date" id="lb-edit-completed" max="">
+      </div>
+    </div>
+    <div class="field">
+      <label for="lb-edit-desc">${tr('artStatementLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
+      <textarea id="lb-edit-desc" placeholder="${tr('artStatementPlaceholder')}" maxlength="500"></textarea>
+    </div>
+    <div class="field">
+      <label for="lb-edit-link">${tr('artLinkLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
+      <input type="text" id="lb-edit-link" placeholder="https://your-portfolio.com" maxlength="300">
+    </div>
+    <div class="field-error" id="lb-edit-error"></div>
+    <div class="modal-actions">
+      <button type="button" id="lb-edit-cancel" class="btn-cancel">${tr('cancelLabel')}</button>
+      <button type="button" id="lb-edit-save" class="btn-primary">${tr('saveLabel')}</button>
+    </div>
+  </div>`;
+document.body.appendChild(lbEditModal);
+
+function closeLbEditModal() { lbEditModal.classList.remove('open'); }
+lbEditModal.querySelector('#lb-edit-cancel').onclick = closeLbEditModal;
+lbEditModal.addEventListener('click', e => { if (e.target === lbEditModal) closeLbEditModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && lbEditModal.classList.contains('open')) closeLbEditModal(); });
+
+function openLbEditModal() {
+  const sub = lbCurrentSub;
+  if (!sub) return;
+  lbEditModal.querySelector('#lb-edit-title').value = sub.art_title || '';
+  lbEditModal.querySelector('#lb-edit-material').value = sub.art_material || '';
+  const completedEl = lbEditModal.querySelector('#lb-edit-completed');
+  // Same upper bound as the DB's mosaic_submissions_art_completed_date_range check.
+  completedEl.max = new Date().toISOString().slice(0, 10);
+  completedEl.value = sub.art_completed_date || '';
+  lbEditModal.querySelector('#lb-edit-desc').value = sub.art_description || '';
+  lbEditModal.querySelector('#lb-edit-link').value = sub.art_link || '';
+  lbEditModal.querySelector('#lb-edit-error').textContent = '';
+  lbEditModal.classList.add('open');
+}
+lbEditBtn.onclick = openLbEditModal;
+
+lbEditModal.querySelector('#lb-edit-save').onclick = async () => {
+  const sub = lbCurrentSub;
+  if (!sub) return;
+  const errorEl = lbEditModal.querySelector('#lb-edit-error');
+  const link = lbEditModal.querySelector('#lb-edit-link').value.trim();
+  if (link && !safeHref(link)) { errorEl.textContent = tr('linkMustBeValidUrl'); return; }
+  errorEl.textContent = '';
+  const patch = {
+    art_title: lbEditModal.querySelector('#lb-edit-title').value.trim() || null,
+    art_material: lbEditModal.querySelector('#lb-edit-material').value.trim() || null,
+    art_completed_date: lbEditModal.querySelector('#lb-edit-completed').value || null,
+    art_description: lbEditModal.querySelector('#lb-edit-desc').value.trim() || null,
+    art_link: link || null,
+  };
+  const saveBtn = lbEditModal.querySelector('#lb-edit-save');
+  saveBtn.disabled = true;
+  const { error } = await sb.from('mosaic_submissions').update(patch).eq('id', sub.id);
+  saveBtn.disabled = false;
+  if (error) { console.error('edit artwork error:', error); errorEl.textContent = tr('couldNotUpdateArtwork'); return; }
+  Object.assign(sub, patch);
+  applyArtDetailsToCaption(sub);
+  closeLbEditModal();
+  toast(tr('artworkUpdatedToast'));
+  // Lets the host page refresh anything showing the old title/details
+  // (thumbnail alt/tooltips, meta tags) — same hook shape as onSubmissionDeleted.
+  if (typeof window.onSubmissionUpdated === 'function') window.onSubmissionUpdated(sub);
+};
+
 function lbExhibitRowEl(collection) {
   const row = document.createElement('label');
   row.className = 'lb-exhibit-row';
@@ -248,10 +350,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLbExhib
 // standalone /artworks/{id} page, which reuses this same markup inline
 // (no modal chrome, nothing to open/close) so a single implementation
 // backs both surfaces.
-function populateLightboxContent(sub) {
-  lbCurrentSub = sub;
-  closeLbExhibitMenu();
-  lbImg.src = cdnUrl(sub.image_url);
+// Writes just the editable text details (title, material, completed date,
+// statement, link) plus the image alt into the shared caption markup. Split
+// out of populateLightboxContent so the "Edit" save path can re-render these
+// in place without re-fetching comments/likes/artist details.
+function applyArtDetailsToCaption(sub) {
   lbImg.alt = sub.art_title
     ? tr('artworkThumbAlt', { title: sub.art_title, name: sub.author_name || tr('anonymous') })
     : tr('artworkImgAltFallback', { name: sub.author_name || tr('anonymous') });
@@ -260,20 +363,28 @@ function populateLightboxContent(sub) {
     sub.art_material || null,
     sub.art_completed_date ? fmtCompletedDate(sub.art_completed_date) : null,
   ].filter(Boolean).join(' · ');
-  renderLightboxArtistCard(sub);
-  loadLightboxArtistDetails(sub);
-  setupLightboxArtistFollow(sub);
   document.getElementById('lightbox-cap-desc').textContent = sub.art_description || '';
   const linkEl = document.getElementById('lightbox-cap-link');
   const href = sub.art_link ? safeHref(sub.art_link) : null;
   if (href) { linkEl.textContent = sub.art_link; linkEl.href = href; }
   else { linkEl.textContent = ''; linkEl.removeAttribute('href'); }
+}
+
+function populateLightboxContent(sub) {
+  lbCurrentSub = sub;
+  closeLbExhibitMenu();
+  lbImg.src = cdnUrl(sub.image_url);
+  applyArtDetailsToCaption(sub);
+  renderLightboxArtistCard(sub);
+  loadLightboxArtistDetails(sub);
+  setupLightboxArtistFollow(sub);
   document.getElementById('lightbox-caption').classList.remove('hidden');
   setupLightboxEngagement(sub);
   lbReportBtn.style.display = me.id && me.id === sub.author_id ? 'none' : '';
   const deleteBtn = document.getElementById('lb-delete-btn');
   deleteBtn.style.display = me.id === sub.author_id ? '' : 'none';
   deleteBtn.onclick = () => deleteWeavoSubmission(sub);
+  lbEditBtn.style.display = me.id && me.id === sub.author_id ? '' : 'none';
   const removeBtn = document.getElementById('lb-remove-btn');
   removeBtn.style.display = (me.isAdmin && me.id !== sub.author_id && sub.project_id) ? '' : 'none';
   removeBtn.onclick = () => removeSubmissionFromProject(sub);

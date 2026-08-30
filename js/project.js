@@ -478,6 +478,10 @@ document.getElementById('rs-submit').onclick = async () => {
 window.onSubmissionDeleted = () => {
   if (currentProject) { renderWeavoGrid(currentProject); renderColorsNeeded(currentProject); }
 };
+// An edited title feeds the grid cells' alt text / list-view titles.
+window.onSubmissionUpdated = () => {
+  if (currentProject) renderWeavoGrid(currentProject);
+};
 
 authReady.then(async () => {
   const id = routeParam('projects', 'id');

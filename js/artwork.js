@@ -79,6 +79,13 @@ async function loadArtworkPage(id) {
 // the artwork's project if it still exists, else the projects list.
 window.onSubmissionDeleted = sub => { location.href = sub && sub.project_id ? projectUrl(sub.project_id) : `/${CURRENT_LANG}/projects`; };
 
+// The lightbox already re-rendered the visible caption in place — just
+// refresh the <title>/meta tags and JSON-LD off the edited details.
+window.onSubmissionUpdated = sub => {
+  updateArtworkMeta(sub);
+  renderArtworkJsonLd(sub);
+};
+
 authReady.then(async () => {
   const id = routeParam('artworks', 'id');
   if (!id) { document.getElementById('lightbox-cap-title').textContent = tr('artworkNotFound'); return; }

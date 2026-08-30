@@ -764,6 +764,7 @@ document.getElementById('ua-submit').onclick = async () => {
 };
 
 window.onSubmissionDeleted = () => { if (profileUserId) loadProfileView(profileUserId); };
+window.onSubmissionUpdated = () => { if (profileUserId) loadProfileView(profileUserId); };
 window.onProfileSaved = () => { if (profileUserId) loadProfileView(profileUserId); };
 
 // The /artists/{handle} route accepts either a real user id (links built

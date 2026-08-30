@@ -127,6 +127,16 @@ const T = {
   couldNotSubmitReport: 'Could not submit report. Try again.',
   mfsClose: 'Close',
   mfsExpand: 'View fullscreen',
+  editArtworkBtn: 'Edit',
+  editArtworkTitle: 'Edit artwork details',
+  artTitleLabel: 'Title', artTitlePlaceholder: 'Untitled',
+  artMaterialLabel: 'Material', artMaterialPlaceholder: 'e.g. Oil on canvas',
+  artCompletedLabel: 'Date completed',
+  artStatementLabel: 'Artist statement', artStatementPlaceholder: "What's the story behind this piece?",
+  artLinkLabel: 'Link to more of your work',
+  saveLabel: 'Save',
+  artworkUpdatedToast: 'Artwork updated',
+  couldNotUpdateArtwork: 'Could not update artwork — try again',
 };
 
 function tr(key, vars) {

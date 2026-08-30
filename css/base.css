@@ -420,6 +420,7 @@ body.no-scroll-lock{overflow:hidden;}
 #lb-comments-btn .icon::before{content:"💬";}
 #lb-comments-btn.active{background:rgba(247,247,245,.16);}
 #lb-exhibit-btn .icon::before{content:"🗂";}
+#lb-edit-btn .icon::before{content:"✎";}
 #lb-delete-btn .icon::before{content:"🗑";}
 #lb-delete-btn:hover{background:var(--coral);color:var(--forest-dark);border-color:var(--coral);}
 #lb-report-btn .icon::before{content:"🚩";}

@@ -127,6 +127,16 @@ const T = {
   couldNotSubmitReport: '신고를 제출할 수 없습니다. 다시 시도해주세요.',
   mfsClose: '닫기',
   mfsExpand: '전체 화면으로 보기',
+  editArtworkBtn: '편집',
+  editArtworkTitle: '작품 정보 편집',
+  artTitleLabel: '제목', artTitlePlaceholder: '제목 없음',
+  artMaterialLabel: '재료', artMaterialPlaceholder: '예: 캔버스에 유화',
+  artCompletedLabel: '완성일',
+  artStatementLabel: '작가 노트', artStatementPlaceholder: '이 작품에 담긴 이야기는 무엇인가요?',
+  artLinkLabel: '포트폴리오 링크',
+  saveLabel: '저장',
+  artworkUpdatedToast: '작품이 수정되었습니다',
+  couldNotUpdateArtwork: '작품을 수정할 수 없습니다 — 다시 시도해주세요',
 };
 
 function tr(key, vars) {

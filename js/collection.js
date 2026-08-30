@@ -268,6 +268,7 @@ async function deleteCollection(collection) {
 }
 
 window.onSubmissionDeleted = () => { if (currentCollection) openCollection(currentCollection.id); };
+window.onSubmissionUpdated = () => { if (currentCollection) openCollection(currentCollection.id); };
 
 authReady.then(async () => {
   const id = routeParam('collections');

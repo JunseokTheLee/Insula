@@ -146,5 +146,6 @@ document.getElementById('heroUploadBtn').onclick = () => {
 // this after they succeed, same hook project.html/profile.html/artwork.js
 // define — refreshes the grid so a deleted/removed piece doesn't linger.
 window.onSubmissionDeleted = () => loadRecentArtworks();
+window.onSubmissionUpdated = () => loadRecentArtworks();
 
 authReady.then(() => { loadHeroPreview(); renderStats(); loadRecentArtworks(); loadRecentCollections(); });
