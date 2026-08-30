@@ -37,6 +37,7 @@ const T = {
   couldNotLoadArtworks: 'Could not load artworks',
   untitledArtwork: 'Untitled artwork',
   goToProject: 'Go to project {n}',
+  goToSlide: 'Go to slide {n}',
   projectNotFound: 'Project not found',
   archivedIterationLabel: 'This is an archived iteration (v{version}) — frozen the way it looked before a reshape.',
   enlargePreview: 'Enlarge reference preview', shrinkPreview: 'Shrink reference preview',

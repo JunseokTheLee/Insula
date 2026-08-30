@@ -100,6 +100,39 @@ document.getElementById('scrollHint').onclick = () => {
   document.getElementById('howItWorksPanel').scrollIntoView({ behavior: 'smooth' });
 };
 
+// ---------- how-it-works: mobile carousel dots ----------
+// The three feature columns are a static row on desktop and a horizontal
+// swipe carousel below 900px (css/home.css). Build position dots for the
+// carousel and keep them in sync with scroll; on desktop the row doesn't
+// scroll, so the (hidden) dots just stay put.
+(function setupFeaturesCarousel() {
+  const track = document.querySelector('.features3-cols');
+  const dotsWrap = document.getElementById('features3Dots');
+  if (!track || !dotsWrap) return;
+  const cols = [...track.children];
+  if (cols.length < 2) return;
+
+  dotsWrap.innerHTML = '';
+  cols.forEach((col, i) => {
+    const dot = document.createElement('button');
+    dot.type = 'button';
+    dot.className = 'car-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', tr('goToSlide', { n: i + 1 }));
+    dot.onclick = () => track.scrollTo({ left: col.offsetLeft - cols[0].offsetLeft, behavior: 'smooth' });
+    dotsWrap.appendChild(dot);
+  });
+  const dots = [...dotsWrap.children];
+  const step = () => cols[1].offsetLeft - cols[0].offsetLeft;
+
+  track.addEventListener('scroll', () => {
+    clearTimeout(track._dt);
+    track._dt = setTimeout(() => {
+      const i = Math.min(cols.length - 1, Math.max(0, Math.round(track.scrollLeft / step())));
+      dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
+    }, 60);
+  }, { passive: true });
+})();
+
 // The lightbox's delete/remove-from-project actions (js/lightbox.js) call
 // this after they succeed, same hook project.html/profile.html/artwork.js
 // define — refreshes the grid so a deleted/removed piece doesn't linger.

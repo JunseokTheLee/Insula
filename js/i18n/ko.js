@@ -37,6 +37,7 @@ const T = {
   couldNotLoadArtworks: '작품을 불러올 수 없습니다',
   untitledArtwork: '제목 없는 작품',
   goToProject: '{n}번째 프로젝트로 이동',
+  goToSlide: '{n}번째 슬라이드로 이동',
   projectNotFound: '프로젝트를 찾을 수 없습니다',
   archivedIterationLabel: '이전 버전(v{version})입니다 — 재구성 전 모습 그대로 보존되었습니다.',
   enlargePreview: '미리보기 확대', shrinkPreview: '미리보기 축소',

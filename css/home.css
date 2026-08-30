@@ -180,13 +180,30 @@
 .hiw-steps-compact h4{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14.5px;margin:0 0 4px;color:var(--forest);}
 .hiw-steps-compact p{font-family:'General Sans',sans-serif;font-size:13px;line-height:1.55;color:var(--muted);margin:0;}
 
+/* dots sit under the feature columns — only shown once they become a
+   swipe carousel below 900px (see media query). */
+.features3-dots{display:none;}
+
 @media (max-width:900px){
-  .features3-cols{flex-direction:column;gap:0;}
-  .feature-col{padding:28px 0 0 16px;}
-  .feature-col + .feature-col{border-top:1px solid var(--hairline);margin-top:28px;padding-top:28px;}
+  /* The three columns turn into a horizontal swipe carousel: one card per
+     view with a sliver of the next peeking, position dots below. */
+  .features3-cols{
+    flex-direction:row;gap:16px;
+    margin:0 -32px;padding:0 32px;
+    overflow-x:auto;scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .features3-cols::-webkit-scrollbar{display:none;}
+  .feature-col{
+    flex:0 0 86%;scroll-snap-align:start;
+    padding:28px 0 0 16px;border-top:1px solid var(--hairline);
+  }
+  .feature-col + .feature-col{margin-top:0;padding-top:28px;}
+  .features3-dots{display:flex;gap:10px;justify-content:center;margin-top:24px;}
 }
 @media (max-width:640px){
   .features3{padding:40px 16px 48px;}
+  .features3-cols{margin:0 -16px;padding:0 16px;}
 }
 
 /* ---------- carousel ---------- */
