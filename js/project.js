@@ -72,6 +72,10 @@ function setProjectViewMode(mode) {
   document.getElementById('pvTabList').classList.toggle('active', mode === 'list');
   document.getElementById('weavoGridWrap').style.display = mode === 'weavo' ? '' : 'none';
   document.getElementById('projectListView').style.display = mode === 'list' ? '' : 'none';
+  // The "Fullscreen" trigger only makes sense over the weavo grid — hide it
+  // (and drop out of the fullscreen overlay) when the List view is showing.
+  document.getElementById('weavoFullscreenBtn').classList.toggle('is-hidden', mode !== 'weavo');
+  if (mode !== 'weavo') document.getElementById('weavoGridWrap')._mfsSetOpen?.(false);
 }
 document.getElementById('pvTabWeavo').onclick = () => setProjectViewMode('weavo');
 document.getElementById('pvTabList').onclick   = () => setProjectViewMode('list');
@@ -196,7 +200,13 @@ async function renderWeavoGrid(project) {
       cell.classList.add('filled');
       const sub = { ...px.mosaic_submissions, pixel_id: px.id };
       cell.href = artworkUrl(sub.id);
-      interceptClick(cell, () => { if (!weavoSuppressClick) openLightbox(sub); });
+      interceptClick(cell, () => {
+        if (weavoSuppressClick) return;
+        // The lightbox is its own full-screen view — step out of the
+        // fullscreen grid overlay first so it doesn't sit behind it (mobile).
+        weavoWrap._mfsSetOpen?.(false);
+        openLightbox(sub);
+      });
       filledSubs.push(sub);
     }
     grid.appendChild(cell);
@@ -311,6 +321,16 @@ weavoWrap.addEventListener('wheel', e => {
   setMsZoom(msScale + (e.deltaY < 0 ? MS_ZOOM_STEP : -MS_ZOOM_STEP));
 }, { passive: false });
 addEventListener('resize', () => { if (currentProject) fitWeavoStage(currentProject); });
+
+// Mobile: pop the weavo grid into a full-viewport overlay (css/base.css
+// .mfs-*, trigger in the backnav row) so panning/zooming the mosaic isn't
+// boxed into the short in-page panel. Re-fit the stage to the new viewport
+// and reset to a 100% fit on the way in and out.
+initMfsPanel(weavoWrap, {
+  triggerEl: document.getElementById('weavoFullscreenBtn'),
+  onEnter: () => { if (currentProject) { fitWeavoStage(currentProject); setMsZoom(MS_MIN_ZOOM); } },
+  onExit:  () => { if (currentProject) { fitWeavoStage(currentProject); setMsZoom(MS_MIN_ZOOM); } },
+});
 
 // drag-to-pan (mouse) when zoomed in — a plain click (no movement) still
 // reaches the cell underneath so viewing artwork keeps working while zoomed.

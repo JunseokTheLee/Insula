@@ -55,6 +55,7 @@
     <div class="backnav">
       <a class="back" href="/en/projects">&larr; Back</a>
       <div style="display:flex;gap:10px;align-items:center;">
+        <button type="button" class="pv-fullscreen-btn" id="weavoFullscreenBtn">&#10530; Fullscreen</button>
         <button class="btn-cancel" id="reshapeProjectBtn" style="display:none;padding:11px 18px;border-radius:20px;font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
           Reshape Grid
         </button>
@@ -83,7 +84,7 @@
         </button>
       </div>
     </div>
-    <div class="weavo-grid-wrap" id="weavoGridWrap">
+    <div class="weavo-grid-wrap mfs-panel" id="weavoGridWrap">
       <div class="zoom-toolbar">
         <button type="button" class="zoom-btn" id="weavo-zoom-out" aria-label="Zoom out">&minus;</button>
         <span class="zoom-level" id="weavo-zoom-level">100%</span>

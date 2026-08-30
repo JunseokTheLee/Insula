@@ -656,24 +656,32 @@ function mfsCornerBtn(glyph, onClick) {
   return btn;
 }
 
-// Wires a .mfs-panel: injects the "expand" button (shown only on mobile via
-// CSS) that pops the panel fullscreen, plus the "×" that collapses it back.
-// opts.label — expand button text (defaults to tr('mfsExpand')).
+// Wires a .mfs-panel so it can pop fullscreen on mobile, plus the "×" that
+// collapses it back.
+// opts.triggerEl — an existing element to use as the open trigger (e.g. the
+//   project page's grid, whose trigger lives up in the toolbar, not inside
+//   the dark canvas). When omitted, a .mfs-expand-btn is created and dropped
+//   in after the panel's .section-label / .profile-section-head.
+// opts.label — created-button text (defaults to tr('mfsExpand')).
 // opts.onEnter / opts.onExit — run one frame after the class toggles, once
-// layout has settled (the graph panel uses this to re-fit to the new size).
+//   layout has settled (the graph / grid use this to re-fit to the new size).
+// Exposes panel._mfsSetOpen(bool) so callers can force it closed (e.g. when
+// the project page switches away from the grid view).
 function initMfsPanel(panel, opts = {}) {
   if (!panel || panel.dataset.mfsInit) return;
   panel.dataset.mfsInit = '1';
 
-  const expand = document.createElement('button');
-  expand.type = 'button';
-  expand.className = 'mfs-expand-btn';
-  expand.textContent = opts.label || tr('mfsExpand');
+  let trigger = opts.triggerEl || null;
+  if (!trigger) {
+    trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'mfs-expand-btn';
+    trigger.textContent = opts.label || tr('mfsExpand');
+    const anchor = panel.querySelector('.section-label, .profile-section-head');
+    if (anchor) anchor.insertAdjacentElement('afterend', trigger);
+    else panel.prepend(trigger);
+  }
   const close = mfsCornerBtn('✕', () => setOpen(false));
-
-  const label = panel.querySelector('.section-label, .profile-section-head');
-  if (label) label.insertAdjacentElement('afterend', expand);
-  else panel.prepend(expand);
   panel.appendChild(close);
 
   function setOpen(open) {
@@ -681,13 +689,14 @@ function initMfsPanel(panel, opts = {}) {
     document.body.classList.toggle('mfs-lock', open);
     requestAnimationFrame(() => { (open ? opts.onEnter : opts.onExit)?.(); });
   }
-  expand.addEventListener('click', () => setOpen(true));
+  trigger.addEventListener('click', () => setOpen(true));
   // Rotating back to a wide viewport while open — drop back inline so the
   // fixed overlay doesn't get stranded on top of the desktop layout.
   MFS_MOBILE_MQ.addEventListener('change', e => { if (!e.matches) setOpen(false); });
   addEventListener('keydown', e => {
     if (e.key === 'Escape' && panel.classList.contains('mfs-open')) setOpen(false);
   });
+  panel._mfsSetOpen = setOpen;
 }
 
 // <body data-mobile-fs>: the standalone Projects / Network pages. On mobile
