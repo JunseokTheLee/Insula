@@ -131,7 +131,8 @@ const T = {
   editArtworkTitle: 'Edit artwork details',
   artTitleLabel: 'Title', artTitlePlaceholder: 'Untitled',
   artMaterialLabel: 'Material', artMaterialPlaceholder: 'e.g. Oil on canvas',
-  artCompletedLabel: 'Date completed',
+  artCompletedLabel: 'Year completed', artYearPlaceholder: 'e.g. 2020',
+  artCompletedYearInvalid: 'Enter a year between {min} and {max}.',
   artStatementLabel: 'Artist statement', artStatementPlaceholder: "What's the story behind this piece?",
   artLinkLabel: 'Link to more of your work',
   saveLabel: 'Save',
@@ -199,6 +200,11 @@ function fmtShortDate(dateStr) {
 function fmtCompletedDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+// Artwork's "year completed" — stored as YYYY-01-01 (see artDateToYear in
+// common.js), shown as just the year.
+function fmtCompletedYear(dateStr) {
+  return String(dateStr).slice(0, 4);
 }
 function pieceContributedText(n) {
   return `${n} piece${n !== 1 ? 's' : ''} contributed`;

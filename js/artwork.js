@@ -37,7 +37,7 @@ function renderArtworkJsonLd(sub) {
   };
   if (sub.art_description) data.description = sub.art_description;
   if (sub.art_material) data.artMedium = sub.art_material;
-  if (sub.art_completed_date) data.dateCreated = sub.art_completed_date;
+  if (sub.art_completed_date) data.dateCreated = artDateToYear(sub.art_completed_date);
   if (project) data.isPartOf = { '@type': 'CreativeWork', name: project.title, url: `${location.origin}${projectUrl(project.id)}` };
   injectJsonLd([data]);
 }

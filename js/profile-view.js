@@ -704,9 +704,9 @@ document.getElementById('profileUploadBtn').onclick = () => {
   artPicker.reset();
   document.getElementById('ua-title').value = '';
   document.getElementById('ua-material').value = '';
-  // Can't complete a piece in the future — same bound as the DB's
-  // mosaic_submissions_art_completed_date_range check constraint.
-  document.getElementById('ua-completed').max = new Date().toISOString().slice(0, 10);
+  // Year-only field (stored as YYYY-01-01 — see artYearToDate in common.js).
+  // Can't be a future year, same bound as the DB's art_completed_date check.
+  document.getElementById('ua-completed').max = new Date().getFullYear();
   document.getElementById('ua-completed').value = '';
   document.getElementById('ua-desc').value = '';
   document.getElementById('ua-link').value = '';
@@ -722,11 +722,13 @@ document.getElementById('ua-submit').onclick = async () => {
   if (!file) { errorEl.textContent = tr('addImageFirst'); return; }
   const link = document.getElementById('ua-link').value.trim();
   if (link && !safeHref(link)) { errorEl.textContent = tr('linkMustBeValidUrl'); return; }
+  const completedYear = artYearToDate(document.getElementById('ua-completed').value);
+  if (completedYear.error) { errorEl.textContent = completedYear.error; return; }
   errorEl.textContent = '';
   const meta = {
     title: document.getElementById('ua-title').value.trim(),
     material: document.getElementById('ua-material').value.trim(),
-    completedDate: document.getElementById('ua-completed').value || null,
+    completedDate: completedYear.date,
     description: document.getElementById('ua-desc').value.trim(),
     link
   };

@@ -191,7 +191,7 @@ lbEditModal.innerHTML = `
       </div>
       <div class="field" style="flex:1;">
         <label for="lb-edit-completed">${tr('artCompletedLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
-        <input type="date" id="lb-edit-completed" max="">
+        <input type="number" inputmode="numeric" id="lb-edit-completed" placeholder="${tr('artYearPlaceholder')}" min="${MIN_ART_YEAR}" max="">
       </div>
     </div>
     <div class="field">
@@ -221,9 +221,9 @@ function openLbEditModal() {
   lbEditModal.querySelector('#lb-edit-title').value = sub.art_title || '';
   lbEditModal.querySelector('#lb-edit-material').value = sub.art_material || '';
   const completedEl = lbEditModal.querySelector('#lb-edit-completed');
-  // Same upper bound as the DB's mosaic_submissions_art_completed_date_range check.
-  completedEl.max = new Date().toISOString().slice(0, 10);
-  completedEl.value = sub.art_completed_date || '';
+  // Year-only field (stored as YYYY-01-01 — see artDateToYear in common.js).
+  completedEl.max = new Date().getFullYear();
+  completedEl.value = artDateToYear(sub.art_completed_date);
   lbEditModal.querySelector('#lb-edit-desc').value = sub.art_description || '';
   lbEditModal.querySelector('#lb-edit-link').value = sub.art_link || '';
   lbEditModal.querySelector('#lb-edit-error').textContent = '';
@@ -237,11 +237,13 @@ lbEditModal.querySelector('#lb-edit-save').onclick = async () => {
   const errorEl = lbEditModal.querySelector('#lb-edit-error');
   const link = lbEditModal.querySelector('#lb-edit-link').value.trim();
   if (link && !safeHref(link)) { errorEl.textContent = tr('linkMustBeValidUrl'); return; }
+  const completedYear = artYearToDate(lbEditModal.querySelector('#lb-edit-completed').value);
+  if (completedYear.error) { errorEl.textContent = completedYear.error; return; }
   errorEl.textContent = '';
   const patch = {
     art_title: lbEditModal.querySelector('#lb-edit-title').value.trim() || null,
     art_material: lbEditModal.querySelector('#lb-edit-material').value.trim() || null,
-    art_completed_date: lbEditModal.querySelector('#lb-edit-completed').value || null,
+    art_completed_date: completedYear.date,
     art_description: lbEditModal.querySelector('#lb-edit-desc').value.trim() || null,
     art_link: link || null,
   };
@@ -361,7 +363,7 @@ function applyArtDetailsToCaption(sub) {
   document.getElementById('lightbox-cap-title').textContent = sub.art_title || '';
   document.getElementById('lightbox-cap-meta').textContent = [
     sub.art_material || null,
-    sub.art_completed_date ? fmtCompletedDate(sub.art_completed_date) : null,
+    sub.art_completed_date ? fmtCompletedYear(sub.art_completed_date) : null,
   ].filter(Boolean).join(' · ');
   document.getElementById('lightbox-cap-desc').textContent = sub.art_description || '';
   const linkEl = document.getElementById('lightbox-cap-link');

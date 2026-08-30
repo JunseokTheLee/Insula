@@ -131,7 +131,8 @@ const T = {
   editArtworkTitle: '작품 정보 편집',
   artTitleLabel: '제목', artTitlePlaceholder: '제목 없음',
   artMaterialLabel: '재료', artMaterialPlaceholder: '예: 캔버스에 유화',
-  artCompletedLabel: '완성일',
+  artCompletedLabel: '작업년도', artYearPlaceholder: '예: 2020',
+  artCompletedYearInvalid: '{min}년에서 {max}년 사이의 연도를 입력하세요.',
   artStatementLabel: '작가 노트', artStatementPlaceholder: '이 작품에 담긴 이야기는 무엇인가요?',
   artLinkLabel: '포트폴리오 링크',
   saveLabel: '저장',
@@ -199,6 +200,10 @@ function fmtShortDate(dateStr) {
 function fmtCompletedDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+// 작품의 작업년도 — YYYY-01-01로 저장되며(common.js의 artDateToYear 참고) 연도만 표시.
+function fmtCompletedYear(dateStr) {
+  return String(dateStr).slice(0, 4) + '년';
 }
 function pieceContributedText(n) {
   return `${n}점 참여`;

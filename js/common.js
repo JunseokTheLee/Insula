@@ -11,6 +11,29 @@ function escapeHtml(s) {
   const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
 }
 
+// The artwork "year completed" field is a year only, but it's stored in the
+// existing date column mosaic_submissions.art_completed_date as YYYY-01-01
+// (month/day are a fixed placeholder — no schema change needed, and the
+// `art_completed_date <= current_date` check still holds for any past year
+// or Jan 1 of the current one). The UI only ever shows/collects the year:
+// input in js/profile-view.js's upload form and js/lightbox.js's edit
+// modal, rendered via fmtCompletedYear() in the i18n files.
+const MIN_ART_YEAR = 1900;
+function artDateToYear(dateStr) {
+  return dateStr ? String(dateStr).slice(0, 4) : '';
+}
+// { date } for a valid year or blank input; { error } for anything else.
+function artYearToDate(yearStr) {
+  const raw = String(yearStr || '').trim();
+  if (!raw) return { date: null };
+  const y = Number(raw);
+  const maxYear = new Date().getFullYear();
+  if (!Number.isInteger(y) || y < MIN_ART_YEAR || y > maxYear) {
+    return { error: tr('artCompletedYearInvalid', { min: MIN_ART_YEAR, max: maxYear }) };
+  }
+  return { date: `${y}-01-01` };
+}
+
 // Submissions/profile links are user-supplied — only ever wire up http(s)
 // links as an href so a submission can't sneak in a javascript: URI.
 function safeHref(url) {
