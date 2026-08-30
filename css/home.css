@@ -185,17 +185,21 @@
 .features3-dots{display:none;}
 
 @media (max-width:900px){
-  /* The three columns turn into a horizontal swipe carousel: one card per
-     view with a sliver of the next peeking, position dots below. */
+  /* The three columns turn into a horizontal swipe carousel: each card is
+     centred in view with an equal sliver of its neighbours peeking on both
+     sides, position dots below. The track bleeds to the screen edges (the
+     negative margin cancels .features3's gutter); its own inline padding
+     is the peek gutter, and cards fill the content box so they sit
+     symmetrically within it and snap dead-centre. */
   .features3-cols{
     flex-direction:row;gap:16px;
-    margin:0 -32px;padding:0 32px;
+    margin:0 -32px;padding:0 40px;
     overflow-x:auto;scroll-snap-type:x mandatory;
     -webkit-overflow-scrolling:touch;scrollbar-width:none;
   }
   .features3-cols::-webkit-scrollbar{display:none;}
   .feature-col{
-    flex:0 0 86%;scroll-snap-align:start;
+    flex:0 0 100%;scroll-snap-align:center;
     padding:28px 0 0 16px;border-top:1px solid var(--hairline);
   }
   .feature-col + .feature-col{margin-top:0;padding-top:28px;}
@@ -203,7 +207,7 @@
 }
 @media (max-width:640px){
   .features3{padding:40px 16px 48px;}
-  .features3-cols{margin:0 -16px;padding:0 16px;}
+  .features3-cols{margin:0 -16px;padding:0 32px;}
 }
 
 /* ---------- carousel ---------- */
