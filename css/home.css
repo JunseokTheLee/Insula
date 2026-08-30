@@ -51,6 +51,16 @@
 }
 @media (max-width:640px){
   .recent-activity{padding:18px 16px 4px;}
+  .recent-activity-inner{gap:22px;}
+  /* Latest Artworks / Latest Exhibitions collapse to a single row of cover
+     thumbnails on phones — title, byline and arrow drop away so all five
+     sit side by side at a glance instead of as a tall vertical list. */
+  .recent-list{flex-direction:row;gap:8px;}
+  .recent-list-row{flex:1 1 0;min-width:0;padding:0;gap:0;border-bottom:none;}
+  .recent-list-row:hover{background:none;}
+  .recent-list-info,
+  .recent-list-arrow{display:none;}
+  .recent-list-thumb{width:100%;height:auto;aspect-ratio:1;}
 }
 
 .hero{flex-shrink:0;padding:6vh 32px 48px;animation:fadeIn .4s ease-out;background:var(--paper);}
