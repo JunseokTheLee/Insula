@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weavo Website Review and Next Steps (2026-09-01)</title>
+<style>
+  :root{
+    --paper:#F7F7F5; --ink:#302F2B; --forest:#1A3C2B; --mint:#9EFFBF;
+    --coral:#FF8C69; --amber:#D98E27; --line:#E3E3DE; --muted:#6B6A64;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:40px 20px 80px;
+    background:var(--paper); color:var(--ink);
+    font-family:'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+    line-height:1.7; font-size:15px;
+  }
+  .wrap{max-width:940px; margin:0 auto;}
+  .langbar{display:flex; justify-content:flex-end; gap:8px; margin-bottom:14px;}
+  .langbar button{
+    font:inherit; font-size:13px; font-weight:600; cursor:pointer;
+    padding:6px 15px; border-radius:16px; border:1px solid var(--line);
+    background:#fff; color:var(--muted);
+  }
+  .langbar button[aria-pressed="true"]{
+    background:var(--forest); border-color:var(--forest); color:#fff;
+  }
+  header{border-bottom:3px solid var(--forest); padding-bottom:18px; margin-bottom:34px;}
+  h1{font-size:26px; margin:0 0 8px; color:var(--forest); line-height:1.35;}
+  .sub{color:var(--muted); font-size:14px; margin:0;}
+  h2{
+    font-size:20px; color:var(--forest); margin:44px 0 14px;
+    padding-bottom:8px; border-bottom:1px solid var(--line);
+  }
+  h3{font-size:16px; margin:26px 0 8px; color:var(--ink);}
+  p{margin:10px 0;}
+  ul,ol{margin:10px 0 10px 22px; padding:0;}
+  li{margin:6px 0;}
+  blockquote{margin:12px 0; padding:10px 16px; border-left:3px solid var(--line); color:#4A4944;}
+  code{
+    background:#EFEFEA; padding:2px 6px; border-radius:4px;
+    font-family:Consolas,'D2Coding',monospace; font-size:13px; color:#42413C;
+  }
+  pre{
+    background:#2B2A26; color:#F1F1EC; padding:14px 16px; border-radius:8px;
+    overflow-x:auto; font-family:Consolas,'D2Coding',monospace; font-size:13px; line-height:1.6;
+  }
+  pre code{background:none; color:inherit; padding:0;}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14px;}
+  th,td{border:1px solid var(--line); padding:9px 11px; text-align:left; vertical-align:top;}
+  th{background:#EDEDE8; font-weight:600;}
+  td.num{text-align:right; white-space:nowrap;}
+  .box{
+    border:1px solid var(--line); border-left:4px solid var(--forest);
+    background:#fff; padding:14px 18px; border-radius:6px; margin:18px 0;
+  }
+  .box.warn{border-left-color:var(--coral);}
+  .box.ok{border-left-color:#3E9B63;}
+  .box h4{margin:0 0 6px; font-size:15px; color:var(--forest);}
+  .box.warn h4{color:#C0522F;}
+  .box.ok h4{color:#2F7A4C;}
+  .tag{
+    display:inline-block; padding:2px 9px; border-radius:11px;
+    font-size:12px; font-weight:600; white-space:nowrap;
+  }
+  .t-high{background:#FFE1D6; color:#B2451F;}
+  .t-mid{background:#FFF0CF; color:#8A5B10;}
+  .t-low{background:#E6F3EA; color:#2F7A4C;}
+  footer{margin-top:56px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:13px;}
+  .lang[hidden]{display:none;}
+  @media print{
+    body{padding:0;} pre{white-space:pre-wrap;} .langbar{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="langbar">
+    <button id="btn-en" type="button" aria-pressed="true">English</button>
+    <button id="btn-ko" type="button" aria-pressed="false">한국어</button>
+  </div>
+
+  <!-- ================= ENGLISH ================= -->
+  <div class="lang" id="lang-en">
+
+    <header>
+      <h1>Weavo Website Review and Next Steps</h1>
+      <p class="sub">1 September 2026 · Notes gathered while preparing the Google Play submission</p>
+    </header>
+
+    <p>
+      Going through the Play Store submission gave us a chance to look at the website from a few different
+      angles. Because the app and the site share the same service, the items the store review asks about and
+      the things users feel as slowness turned out to overlap quite a bit. Here is what we found.
+    </p>
+    <p>
+      Everything below comes from actually loading the site, measuring it, and reading the code. We have also
+      marked what looks urgent and what can wait, in case that helps when you plan the order of work.
+      Where a number or a code location is useful, we left it in.
+    </p>
+
+    <h2>At a glance</h2>
+
+    <table>
+      <thead>
+        <tr><th style="width:52px">#</th><th>Item</th><th style="width:120px">Area</th><th style="width:96px">Urgency</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>The header logo is a 7.9 MB image shown at 30 px</td><td>Performance</td><td><span class="tag t-high">High</span></td></tr>
+        <tr><td>2</td><td>Artworks without a thumbnail fall back to the original file (up to 4.7 MB)</td><td>Performance</td><td><span class="tag t-high">High</span></td></tr>
+        <tr><td>3</td><td>Profile pictures are stored at full camera resolution (e.g. 3000×4000)</td><td>Performance</td><td><span class="tag t-high">High</span></td></tr>
+        <tr><td>4</td><td>The link preview image (og:image) is that same 8 MB file</td><td>Sharing</td><td><span class="tag t-mid">Medium</span></td></tr>
+        <tr><td>5</td><td>There is no way to block a user or their content (reporting exists)</td><td>Store policy</td><td><span class="tag t-mid">Medium</span></td></tr>
+        <tr><td>6</td><td>No terms of use or community guidelines page</td><td>Store policy</td><td><span class="tag t-mid">Medium</span></td></tr>
+        <tr><td>7</td><td><code>.well-known/assetlinks.json</code> is missing, so app links are not verified</td><td>App integration</td><td><span class="tag t-mid">Medium</span></td></tr>
+        <tr><td>8</td><td>CSS and JS are cached for four hours, so deployments show up late</td><td>Operations</td><td><span class="tag t-low">Low</span></td></tr>
+        <tr><td>9</td><td>Security headers (HSTS, CSP, X-Frame-Options) are not set</td><td>Security</td><td><span class="tag t-low">Low</span></td></tr>
+        <tr><td>10</td><td>The disability wording in the privacy policy could be a little more explicit</td><td>Store policy</td><td><span class="tag t-low">Low</span></td></tr>
+        <tr><td>11</td><td>Storing push notification tokens (the app side is ready; the web side is not built yet)</td><td>App integration</td><td><span class="tag t-low">Later</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="box ok">
+      <h4>Already in good shape — nothing to do here</h4>
+      <ul>
+        <li><strong>Account deletion page</strong> — <code>/en/delete-account</code> opens without signing in and explains both how to delete and what gets removed. That satisfies the store's URL requirement as it stands.</li>
+        <li><strong>Reporting</strong> — artwork, comments and accounts can all be reported, with reason categories and duplicate protection.</li>
+        <li><strong>Mobile layout</strong> — at 375 px wide there is no horizontal overflow, and the recent artworks row lays out the way it was intended.</li>
+        <li><strong>Accessibility basics</strong> — <code>html lang</code> is set, every image has <code>alt</code>, there is exactly one <code>h1</code>, and no button is missing a label. No JavaScript console errors either.</li>
+        <li><strong>Privacy policy</strong> — the collected fields (name, email, profile picture, username, bio, links, country/city, disability tags, artwork, comments, likes, exhibitions, follows) are already documented.</li>
+      </ul>
+    </div>
+
+    <h2>1. Performance — the home page transfers 22.5 MB</h2>
+
+    <p>
+      We measured a first load of the home page on a mobile viewport (375×812). Four causes stack up,
+      and none of them is difficult to address.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>What is downloaded</th><th class="num">Size</th><th>Displayed at</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>logo.png</code> (header logo)</td><td class="num">7,944 KB</td><td>30 × 30 px</td></tr>
+        <tr><td>Six artwork images</td><td class="num">~13,500 KB</td><td>62 × 62 px thumbnails</td></tr>
+        <tr><td>Google Fonts CSS</td><td class="num">373 KB</td><td>—</td></tr>
+        <tr><td>d3.min.js</td><td class="num">273 KB</td><td>—</td></tr>
+        <tr><td>supabase-js</td><td class="num">208 KB</td><td>—</td></tr>
+        <tr><td><strong>Total</strong></td><td class="num"><strong>22,567 KB</strong></td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h3>1-1. The header logo — a one-line change with the biggest payoff</h3>
+    <p>
+      In <code>css/base.css</code>, <code>.logo::before</code> uses <code>../logo.png</code> as its background
+      image. That file is 3840 × 3840 pixels and 7.9 MB. It is displayed at 30 px, and
+      <strong>it loads on every single page.</strong>
+    </p>
+    <pre><code>/* current — css/base.css */
+.logo::before { ... background-image: url("../logo.png"); ... }</code></pre>
+    <p>
+      Creating one downscaled copy (something like <code>logo-64.png</code> at 64 or 96 px) and pointing this
+      rule at it brings the same image down to roughly 5–10 KB. That single line removes about 35% of the
+      page weight. If you want it crisp on high-density screens, a 96 px copy — or <code>image-set()</code> —
+      is more than enough.
+    </p>
+
+    <h3>1-2. Artworks whose thumbnail is empty</h3>
+    <p>
+      The code in <code>js/landing.js</code> is already correct: <code>sub.thumb_url || sub.image_url</code>.
+      The issue is that <strong>some artworks have no <code>thumb_url</code>, so the fallback kicks in</strong>.
+      On the home page we saw 4.7 MB, 2.4 MB and 1.7 MB originals being used inside 62 px tiles.
+    </p>
+    <p>
+      These are likely pieces uploaded before thumbnails existed, or uploads where only the thumbnail step
+      failed — <code>uploadArtworkImage</code> deliberately returns the full-resolution URL when the thumbnail
+      fails, so the upload itself still succeeds. A one-off backfill script for existing artworks should clear
+      this up. Adding <code>loading="lazy"</code> to the list images would be a good safety net as well.
+    </p>
+
+    <h3>1-3. Profile pictures kept at original resolution</h3>
+    <p>
+      Among the author avatars in the recent artworks list we found 3000 × 4000 (2.2 MB) and 2612 × 3146
+      (1.3 MB) images. Artwork uploads go through <code>makeThumbnailBlob</code> to produce a 480 px copy, but
+      <strong>profile pictures have no equivalent step, so the camera original is stored as is.</strong>
+      Avatars are never shown larger than about 96 px, so running them through the same function on upload
+      would help a lot. Cleaning up the existing avatars at the same time would make list views noticeably lighter.
+    </p>
+
+    <div class="box">
+      <h4>With those four addressed</h4>
+      <p style="margin:0">
+        The home page drops from 22.5 MB to <strong>somewhere around 1 MB</strong>. For anyone visiting on
+        mobile data, that difference is very noticeable.
+      </p>
+    </div>
+
+    <h2>2. The link preview image</h2>
+    <p>
+      <code>og:image</code> and <code>twitter:image</code> both point at the same
+      <code>https://weavo.art/logo.png</code> (8 MB) used by the header. Services like KakaoTalk and Facebook
+      cap preview images (typically around 5–8 MB), so <strong>shared links may show no preview at all, or a
+      very slow one.</strong>
+    </p>
+    <p>
+      A dedicated 1200 × 630 share image solves it. We prepared something in the same visual family while
+      making the Play Store banner — happy to share those source files if that would save you time.
+    </p>
+
+    <h2>3. Items connected to app store policy</h2>
+
+    <h3>3-1. Blocking</h3>
+    <p>
+      Google Play asks apps that host user-generated content to offer <strong>both reporting and blocking</strong>.
+      Weavo's reporting is solid, but there is no blocking, so the review team may come back asking for it —
+      more so because people can leave comments on each other's work.
+    </p>
+    <p>
+      The scope looks small: a <code>user_blocks</code> table, a "Block" action sitting next to the report
+      button that already exists on artwork, comments and profiles, and hiding a blocked person's artwork and
+      comments from lists. That is generally enough to meet the requirement.
+    </p>
+
+    <h3>3-2. Terms of use and community guidelines</h3>
+    <p>
+      <code>/en/terms</code> does not exist yet (the privacy policy and disclaimer do). What the policy looks
+      for is that prohibited content and behaviour are written down somewhere, and that people agree to them
+      before posting.
+    </p>
+    <p>
+      Conveniently, the report reasons already in the product — spam, harassment, hate speech, nudity or
+      sexual content, misinformation — describe the service's standards well. Reusing that wording as a short
+      guidelines page would be enough, and a single line in the upload dialog ("By posting you agree to the
+      community guidelines") completes the requirement.
+    </p>
+    <p>
+      This also ties back to what we declared during submission. In the content rating questionnaire we stated
+      that <strong>nudity and graphic violence are not permitted</strong>; having a page on the site that says
+      so makes that answer much easier to stand behind.
+    </p>
+
+    <h3>3-3. Disability wording in the privacy policy</h3>
+    <p>
+      Re-reading the policy, this is <strong>already covered</strong>:
+    </p>
+    <blockquote>
+      When you fill in your profile, your username, bio, links, country/city and (if you choose to add them)
+      disability tags are stored as well.
+    </blockquote>
+    <p>
+      Since the collection is documented, it lines up with what we declared to the store. This is not urgent.
+      That said, disability information counts as a special category under GDPR and as sensitive personal
+      information under Korean law, so adding one short paragraph covering the three points below would make
+      any future question easy to answer:
+    </p>
+    <ul>
+      <li>that the field is <strong>sensitive information</strong> and <strong>optional</strong></li>
+      <li>that choosing it means it is <strong>shown publicly on the profile</strong></li>
+      <li>that it can be cleared or switched to "prefer not to say" at any time, and is deleted with the account</li>
+    </ul>
+    <p>
+      Whenever it is convenient, mentioning why the app uses the camera and photo library (artwork and profile
+      picture uploads) and how push notifications work would also bring the app and the site's descriptions in line.
+    </p>
+
+    <h2>4. Working together with the app</h2>
+
+    <h3>4-1. assetlinks.json — connecting web links to the app</h3>
+    <p>
+      <code>https://weavo.art/.well-known/assetlinks.json</code> currently returns 404. This file is what lets
+      a <code>https://weavo.art/…</code> link open in the app instead of the browser. On Android 12 and above,
+      without it the app will not open at all.
+    </p>
+    <p>The contents are below; the fingerprint is from the upload key we generated.</p>
+    <pre><code>[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "art.weavo.app",
+    "sha256_cert_fingerprints": [
+      "19:E2:1F:C9:37:31:03:40:E0:B5:E5:F2:DC:3A:5F:FB:EC:4D:85:BD:EB:03:FF:2F:0F:58:72:59:23:FF:BD:59"
+    ]
+  }
+}]</code></pre>
+    <div class="box warn">
+      <h4>This will need one update after the store release</h4>
+      <p style="margin:0">
+        When an app is distributed through Play, Google re-signs it with its own key. After release, the
+        fingerprint shown on the <em>App signing</em> page in Play Console needs to be
+        <strong>added</strong> to the list above so links also open for people who installed from the store.
+        We will send that value across once it appears — keeping both entries in the list is the right setup.
+      </p>
+    </div>
+
+    <h3>4-2. Static file caching and how quickly deployments appear</h3>
+    <p>
+      <code>/css</code> and <code>/js</code> are served with <code>max-age=14400</code> (four hours). A browser
+      refresh fetches the new files right away, but the app's WebView reuses still-valid cached copies during
+      ordinary navigation, so <strong>after a deployment the app could show the old page for up to four hours.</strong>
+      That is what was behind the "the mobile layout changed but the app still shows the old one" report.
+    </p>
+    <p>
+      We have added a safety net on the app side already: shortly after a page loads, the app quietly
+      re-validates the CSS and JS and refreshes once if anything actually changed. So there is no rush here.
+    </p>
+    <p>
+      Longer term, serving <code>/css</code> and <code>/js</code> with <code>no-cache</code> plus ETag, or
+      putting a version in the filename (<code>home.css?v=3</code>), is the cleaner answer. Both the app and
+      browsers would then always see the latest, and purging the Cloudflare cache on deploy removes the edge
+      delay too.
+    </p>
+
+    <h3>4-3. Push notifications (for later)</h3>
+    <p>
+      The app is already set up to hand its FCM token to the site (a <code>GET_PUSH_TOKEN</code> request and a
+      <code>PUSH_TOKEN</code> event). All that is missing is the web side storing that token against the user,
+      after which follow and like notifications become possible. This is not part of the first release, so
+      there is no time pressure.
+    </p>
+
+    <h2>5. Security headers</h2>
+    <p>
+      The responses include <code>x-content-type-options</code> and <code>referrer-policy</code>, but the three
+      below are not set. Most of them are a few clicks in Cloudflare.
+    </p>
+    <table>
+      <thead><tr><th style="width:250px">Header</th><th>Why it is worth having</th></tr></thead>
+      <tbody>
+        <tr><td><code>Strict-Transport-Security</code></td><td>Forces later visits onto HTTPS. It can be switched on directly in Cloudflare's SSL settings.</td></tr>
+        <tr><td><code>X-Frame-Options</code><br>(or CSP <code>frame-ancestors</code>)</td><td>Stops another site from hiding Weavo inside an iframe and capturing clicks. Worth having given that signed-in actions include account deletion and uploads.</td></tr>
+        <tr><td><code>Content-Security-Policy</code></td><td>Restricts where scripts may come from. The site loads external CDNs (jsdelivr, Google Fonts, Fontshare), so this one needs a list drawn up first — it can come after the other two.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>6. How quickly the upload screen opens</h2>
+    <p>
+      Tapping the upload tab in the app moves to the profile page and then opens the upload dialog, and this
+      felt slow. It turned out the site already handles <code>location.hash === '#upload'</code> by opening the
+      dialog on arrival, so we changed the app to navigate straight to <code>/{lang}/profile#upload</code>.
+      No web change was needed for that.
+    </p>
+    <p>
+      What remains is simply how long the profile page itself takes to load. Tidying the images (avatars and
+      thumbnails especially) should take a good part of that away; if more is needed after that, loading the
+      artwork grid lazily would be the next thing to look at.
+    </p>
+
+    <h2>A suggested order</h2>
+    <ol>
+      <li><strong>Swap the logo file</strong> — one line, biggest effect (1-1)</li>
+      <li><strong>Replace og:image</strong> — same piece of work, and link sharing starts behaving (2)</li>
+      <li><strong>Backfill thumbnails and downscale avatars</strong> — list views get visibly faster (1-2, 1-3)</li>
+      <li><strong>Publish assetlinks.json</strong> — a single file upload (4-1)</li>
+      <li><strong>Blocking and a guidelines page</strong> — finishing these within the store's roughly two-week testing period keeps the schedules from colliding (3-1, 3-2)</li>
+      <li><strong>Security headers, caching policy, privacy wording</strong> — whenever there is room (3-3, 4-2, 5)</li>
+    </ol>
+
+    <div class="box">
+      <h4>Where the app side stands</h4>
+      <ul style="margin-bottom:0">
+        <li>All Play Console listing information and policy declarations are filled in — data safety, content rating, target age and review sign-in details included.</li>
+        <li>The store icon, feature graphic and screenshots are uploaded.</li>
+        <li>Next comes uploading the build to internal testing, then closed testing, then the production release.</li>
+      </ul>
+    </div>
+
+    <footer>
+      Weavo app development · written 2026-09-01 · Measured on a 375×812 mobile viewport, first load of the home page (<code>/ko/</code>)<br>
+      If anything here reads differently from your side, or you would weigh it differently, please say so — we would rather work it out together.
+    </footer>
+
+  </div>
+
+  <!-- ================= 한국어 ================= -->
+  <div class="lang" id="lang-ko" hidden>
+
+    <header>
+      <h1>Weavo 웹사이트 점검 결과와 함께 정리한 다음 작업</h1>
+      <p class="sub">2026년 9월 1일 · 앱 스토어 등록을 준비하면서 확인한 내용을 함께 나눕니다</p>
+    </header>
+
+    <p>
+      구글 Play 스토어 등록 절차를 밟으면서 웹사이트를 여러 각도로 살펴볼 기회가 있었습니다.
+      앱과 웹이 같은 서비스를 공유하다 보니, 스토어 심사에 필요한 항목과 사용자가 체감하는 속도 문제가
+      자연스럽게 함께 드러났습니다. 그 과정에서 확인한 내용을 정리했습니다.
+    </p>
+    <p>
+      아래 항목들은 실제로 사이트를 열어 측정하고 코드를 확인한 결과입니다. 어느 것이 급하고 어느 것이
+      여유가 있는지도 함께 표시했으니, 우선순위를 정하실 때 참고가 되면 좋겠습니다.
+      숫자나 코드 위치가 필요한 부분은 그대로 적어 두었습니다.
+    </p>
+
+    <h2>한눈에 보기</h2>
+
+    <table>
+      <thead>
+        <tr><th style="width:52px">순위</th><th>항목</th><th style="width:110px">성격</th><th style="width:96px">시급도</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>헤더 로고 이미지 7.9MB — 30px로 표시되는데 원본이 그대로 내려옵니다</td><td>성능</td><td><span class="tag t-high">높음</span></td></tr>
+        <tr><td>2</td><td>썸네일이 없는 작품은 원본(최대 4.7MB)이 그대로 목록에 쓰입니다</td><td>성능</td><td><span class="tag t-high">높음</span></td></tr>
+        <tr><td>3</td><td>프로필 사진이 원본 해상도로 저장됩니다 (3000×4000 등)</td><td>성능</td><td><span class="tag t-high">높음</span></td></tr>
+        <tr><td>4</td><td>링크 미리보기 이미지(og:image)도 같은 8MB 파일입니다</td><td>공유</td><td><span class="tag t-mid">중간</span></td></tr>
+        <tr><td>5</td><td>사용자·콘텐츠 차단 기능이 없습니다 (신고는 있음)</td><td>스토어 정책</td><td><span class="tag t-mid">중간</span></td></tr>
+        <tr><td>6</td><td>이용약관·커뮤니티 가이드라인 페이지가 없습니다</td><td>스토어 정책</td><td><span class="tag t-mid">중간</span></td></tr>
+        <tr><td>7</td><td><code>.well-known/assetlinks.json</code> 이 없어 앱 링크 연결이 미완성입니다</td><td>앱 연동</td><td><span class="tag t-mid">중간</span></td></tr>
+        <tr><td>8</td><td>CSS·JS 캐시가 4시간이라 배포가 늦게 반영됩니다</td><td>운영</td><td><span class="tag t-low">낮음</span></td></tr>
+        <tr><td>9</td><td>보안 헤더(HSTS·CSP·X-Frame-Options)가 없습니다</td><td>보안</td><td><span class="tag t-low">낮음</span></td></tr>
+        <tr><td>10</td><td>개인정보처리방침의 장애 정보 문구를 조금 더 명확히 하면 좋겠습니다</td><td>스토어 정책</td><td><span class="tag t-low">낮음</span></td></tr>
+        <tr><td>11</td><td>푸시 알림 토큰 저장 (앱 쪽은 준비 완료, 웹 구현은 아직)</td><td>앱 연동</td><td><span class="tag t-low">나중에</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="box ok">
+      <h4>이미 잘 되어 있어 손대지 않아도 되는 것들</h4>
+      <ul>
+        <li><strong>계정 삭제 페이지</strong> — <code>/ko/delete-account</code> 가 로그인 없이 열리고 삭제 절차와 삭제 범위까지 안내합니다. 스토어가 요구하는 URL 요건을 그대로 충족합니다</li>
+        <li><strong>신고 기능</strong> — 작품·댓글·계정 신고가 사유 선택과 중복 방지까지 갖춰져 있습니다</li>
+        <li><strong>모바일 레이아웃</strong> — 375px 폭에서 가로 스크롤이 생기지 않고, 최근 작품도 의도한 가로 배치로 표시됩니다</li>
+        <li><strong>접근성 기본</strong> — <code>html lang</code>, 이미지 <code>alt</code>, <code>h1</code> 한 개, 레이블 없는 버튼 0개. 자바스크립트 콘솔 오류도 없습니다</li>
+        <li><strong>개인정보처리방침</strong> — 수집 항목(이름·이메일·프로필 사진·사용자명·소개·링크·국가/도시·장애 태그·작품·댓글·좋아요·전시·팔로우)이 이미 문서화되어 있습니다</li>
+      </ul>
+    </div>
+
+    <h2>1. 성능 — 홈 화면 한 번 여는 데 22.5MB</h2>
+
+    <p>
+      모바일(375×812) 환경에서 홈을 열고 실제 내려받는 양을 측정했습니다.
+      네 가지 원인이 겹쳐 있고, 각각은 고치기 어렵지 않습니다.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>내려받는 파일</th><th class="num">크기</th><th>화면에 표시되는 크기</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>logo.png</code> (헤더 로고)</td><td class="num">7,944 KB</td><td>30 × 30 px</td></tr>
+        <tr><td>작품 이미지 6장</td><td class="num">약 13,500 KB</td><td>62 × 62 px 썸네일</td></tr>
+        <tr><td>Google Fonts CSS</td><td class="num">373 KB</td><td>—</td></tr>
+        <tr><td>d3.min.js</td><td class="num">273 KB</td><td>—</td></tr>
+        <tr><td>supabase-js</td><td class="num">208 KB</td><td>—</td></tr>
+        <tr><td><strong>합계</strong></td><td class="num"><strong>22,567 KB</strong></td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h3>1-1. 헤더 로고 — 한 줄 수정으로 가장 큰 효과</h3>
+    <p>
+      <code>css/base.css</code> 의 <code>.logo::before</code> 가 배경 이미지로 <code>../logo.png</code> 를 씁니다.
+      이 파일이 3840 × 3840 픽셀, 7.9MB 입니다. 표시되는 크기는 30px 이고,
+      <strong>모든 페이지에서 매번 불러옵니다.</strong>
+    </p>
+    <pre><code>/* 현재 — css/base.css */
+.logo::before { ... background-image: url("../logo.png"); ... }</code></pre>
+    <p>
+      64px 또는 96px 사본(<code>logo-64.png</code> 정도)을 하나 만들어 이 자리만 바꾸면 됩니다.
+      같은 그림이 5~10KB 로 줄어, 이 한 줄만으로 페이지 무게의 약 35%가 사라집니다.
+      고해상도 화면까지 고려하시면 <code>image-set()</code> 이나 2배 크기(96px) 한 장이면 충분합니다.
+    </p>
+
+    <h3>1-2. 썸네일이 비어 있는 작품들</h3>
+    <p>
+      <code>js/landing.js</code> 의 <code>sub.thumb_url || sub.image_url</code> 는 올바르게 작성되어 있습니다.
+      문제는 <strong>일부 작품에 <code>thumb_url</code> 이 비어 있어 원본으로 넘어간다</strong>는 점입니다.
+      실제로 홈에 걸린 작품 중 4.7MB, 2.4MB, 1.7MB 짜리 원본이 62px 칸에 쓰이고 있었습니다.
+    </p>
+    <p>
+      썸네일 기능이 생기기 전에 올라온 작품이거나, 업로드 중 썸네일 저장만 실패한 경우로 보입니다
+      (<code>uploadArtworkImage</code> 는 썸네일이 실패해도 원본 URL 을 돌려주도록 되어 있어 업로드 자체는 성공합니다).
+      기존 작품들의 썸네일을 한 번 채워 넣는 스크립트를 돌리면 정리될 것 같습니다.
+      목록 쪽에 <code>loading="lazy"</code> 를 함께 넣어 두면 더 안전합니다.
+    </p>
+
+    <h3>1-3. 프로필 사진 원본 저장</h3>
+    <p>
+      최근 작품 목록의 작성자 아바타 중에 3000 × 4000 (2.2MB), 2612 × 3146 (1.3MB) 짜리가 있었습니다.
+      작품 이미지는 <code>makeThumbnailBlob</code> 으로 480px 사본을 만들지만,
+      <strong>프로필 사진에는 같은 처리가 없어 카메라 원본이 그대로 올라갑니다.</strong>
+      아바타는 화면에서 최대 96px 정도로만 쓰이니, 업로드 시 같은 함수로 한 번 줄여 저장하면 좋겠습니다.
+      기존 아바타도 같이 정리하면 목록 화면이 훨씬 가벼워집니다.
+    </p>
+
+    <div class="box">
+      <h4>네 가지를 정리하면</h4>
+      <p style="margin:0">
+        홈 화면이 22.5MB 에서 <strong>1MB 안팎</strong>으로 내려갑니다.
+        모바일 데이터로 접속하는 분들에게는 체감 차이가 매우 큽니다.
+      </p>
+    </div>
+
+    <h2>2. 링크 미리보기 이미지</h2>
+    <p>
+      <code>og:image</code> 와 <code>twitter:image</code> 가 헤더 로고와 같은 <code>https://weavo.art/logo.png</code>
+      (8MB) 를 가리키고 있습니다. 카카오톡·페이스북 같은 서비스는 미리보기 이미지 크기에 제한(대체로 5~8MB)이 있어서,
+      <strong>링크를 공유해도 미리보기가 안 뜨거나 늦게 뜰 수 있습니다.</strong>
+    </p>
+    <p>
+      1200 × 630 크기의 공유 전용 이미지를 한 장 만들어 <code>og:image</code> 에 지정하시면 해결됩니다.
+      Play 스토어 배너를 만들면서 같은 계열의 디자인을 준비해 두었으니, 필요하시면 그 소스를 공유드리겠습니다.
+    </p>
+
+    <h2>3. 앱 스토어 정책과 관련된 부분</h2>
+
+    <h3>3-1. 차단(Block) 기능</h3>
+    <p>
+      구글 Play 는 사용자 제작 콘텐츠를 다루는 앱에 <strong>신고 수단과 차단 수단을 함께</strong> 요구합니다.
+      Weavo 는 신고는 잘 갖춰져 있는데 차단이 없어서, 심사에서 보완 요청을 받을 가능성이 있습니다.
+      댓글을 주고받을 수 있는 구조라 더 그렇습니다.
+    </p>
+    <p>
+      구현 범위는 크지 않을 것 같습니다 — <code>user_blocks</code> 정도의 테이블을 두고,
+      이미 신고 버튼이 있는 자리(작품·댓글·프로필)에 "차단"을 나란히 두어,
+      차단한 사용자의 작품과 댓글이 목록에서 보이지 않게 하는 정도면 요건을 충족합니다.
+    </p>
+
+    <h3>3-2. 이용약관 · 커뮤니티 가이드라인</h3>
+    <p>
+      <code>/ko/terms</code> 가 아직 없습니다(개인정보처리방침과 면책 고지는 있습니다).
+      같은 정책이 요구하는 것은 "금지되는 콘텐츠와 행동이 어딘가에 적혀 있고, 업로드 전에 그것에 동의한다"는 구조입니다.
+    </p>
+    <p>
+      마침 신고 사유 목록(스팸 · 괴롭힘 · 혐오 발언 · 노출 또는 선정적 콘텐츠 · 허위 정보)이
+      이미 서비스의 기준을 잘 보여주고 있어서, 그 문장을 그대로 옮겨 짧은 가이드라인 페이지를 만드시면 충분합니다.
+      업로드 창에 "게시하면 커뮤니티 가이드라인에 동의하는 것으로 봅니다" 한 줄만 더해도 요건이 완성됩니다.
+    </p>
+    <p>
+      이 부분은 스토어 심사에서 저희가 답한 내용과도 이어집니다.
+      콘텐츠 등급 설문에서 <strong>노출·폭력 콘텐츠를 허용하지 않는다</strong>고 신고했는데,
+      그 근거가 되는 문서가 사이트에 있으면 설명이 훨씬 명확해집니다.
+    </p>
+
+    <h3>3-3. 개인정보처리방침의 장애 정보 문구</h3>
+    <p>
+      방침을 다시 확인해 보니 <strong>이미 다음과 같이 안내되어 있었습니다.</strong>
+    </p>
+    <blockquote>
+      프로필을 작성하면 사용자 이름, 소개, 링크, 국가/도시, (선택 시) 장애 태그도 저장됩니다.
+    </blockquote>
+    <p>
+      수집 사실이 문서화되어 있으므로 스토어 신고 내용과 어긋나지 않습니다. 급한 항목은 아닙니다.
+      다만 장애 정보는 유럽 GDPR 의 특별범주, 국내법의 민감정보에 해당해서,
+      다음 세 가지를 한 문단으로 덧붙여 두시면 나중에 문의가 와도 답하기 편합니다.
+    </p>
+    <ul>
+      <li>이 항목이 <strong>민감정보</strong>이며 <strong>선택 사항</strong>이라는 점</li>
+      <li>선택하면 <strong>프로필에 공개 표시</strong>된다는 점</li>
+      <li>언제든 비우거나 "밝히지 않음"으로 바꿀 수 있고, 계정 삭제 시 함께 삭제된다는 점</li>
+    </ul>
+    <p>
+      덧붙여, 앱이 카메라와 사진 보관함에 접근하는 목적(작품·프로필 사진 업로드)과
+      푸시 알림 관련 문구도 언젠가 넣어 두시면 앱과 웹의 설명이 일치하게 됩니다.
+    </p>
+
+    <h2>4. 앱과의 연동</h2>
+
+    <h3>4-1. assetlinks.json — 앱 링크 연결</h3>
+    <p>
+      <code>https://weavo.art/.well-known/assetlinks.json</code> 이 아직 404 입니다.
+      이 파일이 있어야 <code>https://weavo.art/…</code> 링크를 눌렀을 때 브라우저 대신 앱이 열립니다.
+      안드로이드 12 이상에서는 이 파일이 없으면 앱으로 열리지 않습니다.
+    </p>
+    <p>내용은 아래와 같고, 지문 값은 저희 쪽에서 만든 업로드 키의 것입니다.</p>
+    <pre><code>[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "art.weavo.app",
+    "sha256_cert_fingerprints": [
+      "19:E2:1F:C9:37:31:03:40:E0:B5:E5:F2:DC:3A:5F:FB:EC:4D:85:BD:EB:03:FF:2F:0F:58:72:59:23:FF:BD:59"
+    ]
+  }
+}]</code></pre>
+    <div class="box warn">
+      <h4>스토어 출시 뒤에 한 번 갱신이 필요합니다</h4>
+      <p style="margin:0">
+        Play 스토어로 배포하면 구글이 자체 서명 키로 앱을 다시 서명합니다.
+        출시 후 Play Console 의 <em>앱 서명</em> 화면에 표시되는 지문을 위 목록에
+        <strong>추가</strong>해 주셔야 스토어에서 설치한 앱에서도 링크가 열립니다.
+        그 값이 나오면 저희가 전달드리겠습니다. 두 값을 모두 넣어 두면 됩니다.
+      </p>
+    </div>
+
+    <h3>4-2. 정적 파일 캐시와 배포 반영</h3>
+    <p>
+      <code>/css</code>·<code>/js</code> 파일이 <code>max-age=14400</code>(4시간)으로 내려옵니다.
+      브라우저에서 새로고침하면 곧바로 새 파일을 받지만, 앱의 WebView 는 일반 화면 이동에서
+      유효기간이 남은 캐시를 그대로 써서 <strong>웹을 배포해도 앱에는 최대 4시간 옛 화면이 남았습니다.</strong>
+      최근 "모바일 배치로 바꿨는데 앱에서는 예전 그대로 보인다"고 하셨던 것이 이 문제였습니다.
+    </p>
+    <p>
+      앱 쪽에는 이미 안전장치를 넣어 두었습니다 — 화면이 뜬 뒤 CSS·JS 를 조용히 재확인해서
+      바뀐 것이 있으면 한 번 새로고침합니다. 그래서 지금 당장 급한 일은 아닙니다.
+    </p>
+    <p>
+      다만 근본적으로는 <code>/css</code>·<code>/js</code> 를 <code>no-cache</code> + ETag 로 두거나
+      파일 이름에 버전을 붙이는 방식(<code>home.css?v=3</code>)이 깔끔합니다.
+      그러면 앱·브라우저 모두 항상 최신을 보게 되고, 배포할 때 Cloudflare 캐시를 함께 비우면
+      엣지 지연도 사라집니다.
+    </p>
+
+    <h3>4-3. 푸시 알림 (나중에)</h3>
+    <p>
+      앱은 이미 FCM 토큰을 웹에 넘길 준비가 되어 있습니다
+      (<code>GET_PUSH_TOKEN</code> 요청과 <code>PUSH_TOKEN</code> 이벤트).
+      웹에서 이 토큰을 사용자와 묶어 저장하는 부분만 만들면, 팔로우·좋아요 알림을 보낼 수 있습니다.
+      이번 첫 출시에는 포함하지 않기로 했으니 여유 있게 진행하셔도 됩니다.
+    </p>
+
+    <h2>5. 보안 헤더</h2>
+    <p>
+      응답 헤더에 <code>x-content-type-options</code> 와 <code>referrer-policy</code> 는 있는데,
+      아래 세 가지가 비어 있습니다. Cloudflare 설정에서 대부분 클릭 몇 번으로 켤 수 있습니다.
+    </p>
+    <table>
+      <thead><tr><th style="width:230px">헤더</th><th>있으면 좋은 이유</th></tr></thead>
+      <tbody>
+        <tr><td><code>Strict-Transport-Security</code></td><td>이후 접속을 항상 HTTPS 로 강제합니다. Cloudflare SSL 설정에서 바로 켤 수 있습니다</td></tr>
+        <tr><td><code>X-Frame-Options</code><br>(또는 CSP <code>frame-ancestors</code>)</td><td>다른 사이트가 Weavo 를 iframe 안에 숨겨 두고 클릭을 가로채는 것을 막습니다. 로그인 상태에서 계정 삭제·업로드 같은 동작이 있으니 넣어 두면 좋습니다</td></tr>
+        <tr><td><code>Content-Security-Policy</code></td><td>스크립트 출처를 제한합니다. 외부 CDN(jsdelivr·Google Fonts·Fontshare)을 쓰고 있어 목록 정리가 필요하니, 위 두 가지보다 뒤에 하셔도 됩니다</td></tr>
+      </tbody>
+    </table>
+
+    <h2>6. 업로드 화면 진입 속도</h2>
+    <p>
+      앱에서 업로드 탭을 누르면 프로필 페이지로 이동한 뒤 업로드 창이 열리는데, 이 과정이 느리다는 이야기가 있었습니다.
+      확인해 보니 웹에 이미 <code>location.hash === '#upload'</code> 로 도착 즉시 창을 여는 처리가 있어서,
+      앱에서 <code>/{lang}/profile#upload</code> 로 바로 이동하도록 고쳤습니다. 웹은 수정 없이 그대로 동작합니다.
+    </p>
+    <p>
+      남은 체감 시간은 프로필 페이지 자체가 뜨는 시간입니다.
+      이미지 정리(특히 아바타·썸네일)만으로도 상당히 줄어들 것으로 보이고,
+      더 필요하면 작품 그리드를 나중에 불러오는 정도를 검토해 볼 수 있겠습니다.
+    </p>
+
+    <h2>제안하는 순서</h2>
+    <ol>
+      <li><strong>로고 파일 교체</strong> — 한 줄 수정으로 가장 큰 효과가 납니다 (1-1)</li>
+      <li><strong>og:image 교체</strong> — 같은 작업의 연장이고 링크 공유가 정상화됩니다 (2)</li>
+      <li><strong>썸네일 백필 + 아바타 축소</strong> — 목록 화면이 눈에 띄게 빨라집니다 (1-2, 1-3)</li>
+      <li><strong>assetlinks.json 배포</strong> — 파일 하나 올리는 작업입니다 (4-1)</li>
+      <li><strong>차단 기능 + 가이드라인 페이지</strong> — 스토어 테스트 기간(약 2주) 안에 마무리되면 일정이 겹치지 않습니다 (3-1, 3-2)</li>
+      <li><strong>보안 헤더, 캐시 정책, 방침 문구 보강</strong> — 여유 있을 때 (3-3, 4-2, 5)</li>
+    </ol>
+
+    <div class="box">
+      <h4>앱 쪽 진행 상황</h4>
+      <ul style="margin-bottom:0">
+        <li>Play Console 등록 정보와 정책 신고는 모두 입력을 마쳤습니다 (데이터 안전, 콘텐츠 등급, 타겟 연령, 심사용 계정 포함)</li>
+        <li>스토어 아이콘·배너·스크린샷도 등록했습니다</li>
+        <li>다음은 내부 테스트에 빌드를 올리고, 비공개 테스트를 거쳐 정식 출시로 넘어가는 순서입니다</li>
+      </ul>
+    </div>
+
+    <footer>
+      Weavo 앱 개발 · 2026-09-01 작성 · 측정 환경: 모바일 뷰포트 375×812, 홈(<code>/ko/</code>) 최초 로드 기준<br>
+      궁금한 점이나 다르게 보시는 부분이 있으면 언제든 말씀해 주세요. 함께 조정하면 좋겠습니다.
+    </footer>
+
+  </div>
+
+<script>
+  // 언어 전환 — 기본은 영어, 버튼으로 한국어 전환. html lang 도 함께 바꿔 스크린리더가 올바르게 읽게 한다.
+  (function () {
+    var en = document.getElementById('lang-en');
+    var ko = document.getElementById('lang-ko');
+    var btnEn = document.getElementById('btn-en');
+    var btnKo = document.getElementById('btn-ko');
+    function show(lang) {
+      var isKo = lang === 'ko';
+      ko.hidden = !isKo;
+      en.hidden = isKo;
+      btnKo.setAttribute('aria-pressed', String(isKo));
+      btnEn.setAttribute('aria-pressed', String(!isKo));
+      document.documentElement.lang = isKo ? 'ko' : 'en';
+    }
+    btnEn.addEventListener('click', function () { show('en'); });
+    btnKo.addEventListener('click', function () { show('ko'); });
+  })();
+</script>
+
+</div>
+</body>
+</html>

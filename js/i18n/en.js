@@ -4,6 +4,12 @@
 window.CURRENT_LANG = 'en';
 
 const T = {
+  notificationsTitle: 'Notifications', notifBellLabel: 'Notifications',
+  notifEmpty: 'Nothing here yet.', notifMarkAllRead: 'Mark all read',
+  notifLikedYourArtwork: 'liked your artwork',
+  notifCommented: 'commented: {preview}', notifReplied: 'replied: {preview}',
+  notifCommentedOnArtwork: 'commented on your artwork', notifRepliedToComment: 'replied to your comment',
+  notifFollowedYou: 'started following you',
   guest: 'Guest', signIn: 'Sign in', myProfile: 'My Profile',
   loading: 'Loading…', anonymous: 'Anonymous', optionalHint: '(optional)',
   moreLabel: 'more', deleteLabel: 'Delete', replyLabel: 'Reply',

@@ -57,7 +57,9 @@ body.no-scroll-lock{overflow:hidden;}
 }
 .logo::before{
   content:'';display:block;width:30px;height:30px;flex-shrink:0;border-radius:50%;
-  background-image:url('../logo.png');background-size:cover;background-position:center;
+  /* Downscaled 96px copy (not the 3840px, ~8MB ../logo.png): this rule loads on
+     every page and the mark never renders larger than ~30px @3x. */
+  background-image:url('../logo-96.png');background-size:cover;background-position:center;
 }
 .logo:hover{opacity:.75;}
 
@@ -704,3 +706,78 @@ html[lang="ko"] * {
 .fd-card-meta{font-family:'General Sans',sans-serif;font-size:9px;fill:var(--muted);}
 .fd-card-new{fill:none;stroke:var(--hairline-strong);stroke-width:1.5px;stroke-dasharray:5 4;}
 .fd-card-plus{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;fill:var(--hairline-strong);}
+
+/* ============ NOTIFICATION BELL + FEED (js/notifications.js) ============ */
+.notif-wrap{position:relative;display:inline-flex;flex-shrink:0;}
+.notif-bell{
+  appearance:none;border:none;background:none;cursor:pointer;position:relative;
+  width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  color:var(--ink);transition:background .12s linear;
+}
+.notif-bell:hover{background:var(--forest-08);}
+.notif-bell[aria-expanded="true"]{background:var(--forest-08);color:var(--forest);}
+.notif-badge{
+  display:none;position:absolute;top:1px;right:0;min-width:16px;height:16px;padding:0 4px;
+  border-radius:9px;background:var(--coral);color:#fff;box-sizing:border-box;
+  font-family:'General Sans',sans-serif;font-size:10px;font-weight:700;line-height:16px;text-align:center;
+  border:1.5px solid var(--paper);
+}
+.notif-badge.show{display:block;}
+
+.notif-panel{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:60;
+  width:340px;max-width:calc(100vw - 32px);
+  background:#fff;border:1px solid var(--hairline-strong);border-radius:12px;
+  box-shadow:0 12px 32px rgba(0,0,0,.14);overflow:hidden;
+  flex-direction:column;
+}
+.notif-panel.open{display:flex;}
+.notif-panel-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:12px 14px;border-bottom:1px solid var(--hairline);
+}
+.notif-panel-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--ink);}
+.notif-mark-all{
+  appearance:none;border:none;background:none;cursor:pointer;
+  font-family:'General Sans',sans-serif;font-size:12px;font-weight:600;color:var(--forest);padding:2px 4px;
+}
+.notif-mark-all:hover{text-decoration:underline;}
+.notif-list{max-height:min(420px,70vh);overflow-y:auto;}
+.notif-item{
+  display:flex;align-items:flex-start;gap:10px;padding:11px 14px;text-decoration:none;
+  border-bottom:1px solid var(--hairline);transition:background .12s linear;
+}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:rgba(58,58,56,.05);}
+.notif-item.unread{background:var(--forest-08);}
+.notif-item.unread:hover{background:rgba(26,60,43,.13);}
+.notif-avatar{
+  width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;
+  border:1px solid var(--hairline-strong);
+}
+.notif-avatar-fallback{
+  display:flex;align-items:center;justify-content:center;background:var(--forest-08);
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--forest);
+}
+.notif-item-body{flex:1;min-width:0;}
+.notif-item-text{
+  font-family:'General Sans',sans-serif;font-size:12.5px;line-height:1.45;color:var(--ink);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.notif-item-text strong{font-weight:600;}
+.notif-item-time{font-family:'General Sans',sans-serif;font-size:11px;color:var(--muted);margin-top:3px;}
+.notif-item-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--coral);flex-shrink:0;margin-top:6px;
+}
+.notif-empty{
+  display:none;text-align:center;color:var(--muted);
+  font-family:'General Sans',sans-serif;font-size:12.5px;padding:40px 16px;
+}
+.notif-empty.show{display:block;}
+
+@media (max-width:640px){
+  .notif-panel{
+    position:fixed;top:auto;right:8px;left:8px;width:auto;max-width:none;
+  }
+  .notif-list{max-height:60vh;}
+}

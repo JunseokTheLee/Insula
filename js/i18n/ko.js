@@ -4,6 +4,12 @@
 window.CURRENT_LANG = 'ko';
 
 const T = {
+  notificationsTitle: '알림', notifBellLabel: '알림',
+  notifEmpty: '아직 알림이 없습니다.', notifMarkAllRead: '모두 읽음 처리',
+  notifLikedYourArtwork: '님이 회원님의 작품을 좋아합니다',
+  notifCommented: '님의 댓글: {preview}', notifReplied: '님의 답글: {preview}',
+  notifCommentedOnArtwork: '님이 회원님의 작품에 댓글을 남겼습니다', notifRepliedToComment: '님이 회원님의 댓글에 답글을 남겼습니다',
+  notifFollowedYou: '님이 회원님을 팔로우하기 시작했습니다',
   guest: '게스트', signIn: '로그인', myProfile: '내 프로필',
   loading: '불러오는 중…', anonymous: '익명', optionalHint: '(선택)',
   moreLabel: '더보기', deleteLabel: '삭제', replyLabel: '답글',

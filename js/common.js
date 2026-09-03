@@ -84,6 +84,7 @@ function exhibitionCardEl(collection, owner, i) {
   if (coverUrl) {
     const img = document.createElement('img');
     img.className = 'artwork-card-img';
+    img.loading = 'lazy';
     img.src = coverUrl;
     img.alt = '';
     card.appendChild(img);
@@ -99,7 +100,7 @@ function exhibitionCardEl(collection, owner, i) {
   const byline = document.createElement('div'); byline.className = 'art-byline';
   if (owner && owner.avatar_url) {
     const avatar = document.createElement('img');
-    avatar.className = 'art-byline-avatar'; avatar.src = cdnUrl(owner.avatar_url); avatar.alt = '';
+    avatar.className = 'art-byline-avatar'; avatar.loading = 'lazy'; avatar.src = cdnUrl(owner.avatar_url); avatar.alt = '';
     byline.appendChild(avatar);
   } else {
     const fallback = document.createElement('div');
@@ -176,6 +177,9 @@ function recentListRowEl({ href, thumbUrl, title, avatarUrl, name, metaText, onP
 
   const img = document.createElement('img');
   img.className = thumbUrl ? 'recent-list-thumb' : 'recent-list-thumb recent-list-thumb-empty';
+  img.loading = 'lazy';
+  // Some older artworks have no thumb_url and fall back to the full-res
+  // original (see callers) — lazy-loading keeps those off the critical path.
   if (thumbUrl) img.src = thumbUrl;
   img.alt = '';
   row.appendChild(img);
@@ -185,7 +189,7 @@ function recentListRowEl({ href, thumbUrl, title, avatarUrl, name, metaText, onP
   const meta = document.createElement('div'); meta.className = 'recent-list-meta';
   if (avatarUrl) {
     const avatar = document.createElement('img');
-    avatar.className = 'recent-list-avatar'; avatar.src = avatarUrl; avatar.alt = '';
+    avatar.className = 'recent-list-avatar'; avatar.loading = 'lazy'; avatar.src = avatarUrl; avatar.alt = '';
     meta.appendChild(avatar);
   } else {
     const fallback = document.createElement('div');

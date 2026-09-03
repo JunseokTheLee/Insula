@@ -46,8 +46,19 @@
 
 /logo.png
   Cache-Control: public, max-age=86400
+/logo-96.png
+  Cache-Control: public, max-age=86400
 /logo.ico
   Cache-Control: public, max-age=86400
+
+# Security headers applied to every response. `x-content-type-options` and
+# `referrer-policy` are already set at the Cloudflare edge, so they're not
+# repeated here to avoid emitting them twice. Content-Security-Policy is
+# deliberately left out for now — it needs an allowlist drawn up for the
+# external CDNs the site loads (jsdelivr, Google Fonts, Fontshare) first.
+/*
+  X-Frame-Options: SAMEORIGIN
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
 
 /robots.txt
   Cache-Control: public, max-age=3600
