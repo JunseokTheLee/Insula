@@ -65,6 +65,7 @@ document.getElementById('logoutBtn').onclick = signOut;
 function openAuthModal() { document.getElementById('auth-modal').classList.add('open'); }
 function closeAuthModal() { document.getElementById('auth-modal').classList.remove('open'); }
 document.getElementById('google-signin-btn').onclick = () => signIn('google');
+document.getElementById('apple-signin-btn').onclick = () => signIn('apple');
 document.getElementById('auth-close').onclick = closeAuthModal;
 document.getElementById('auth-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAuthModal(); });
 

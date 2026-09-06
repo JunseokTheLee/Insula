@@ -275,6 +275,8 @@ body.no-scroll-lock{overflow:hidden;}
 .oauth-signin-btn:active{opacity:.85;}
 #google-signin-btn{background:#fff;color:var(--ink);}
 #google-signin-btn:hover{background:var(--forest-08);border-color:var(--forest);}
+#apple-signin-btn{background:#000;color:#fff;border-color:#000;}
+#apple-signin-btn:hover{background:#1a1a1a;}
 #auth-close{background:none;border:none;cursor:pointer;color:var(--muted);font-family:'General Sans',sans-serif;font-size:12px;padding:2px 8px;}
 #auth-close:hover{color:var(--forest);}
 
