@@ -61,12 +61,14 @@ function renderRecentArtworks(list) {
   document.getElementById('recentArtworksEmpty').style.display = list.length ? 'none' : 'block';
 }
 async function loadRecentArtworks() {
+  // Fetched past the display count (5) so filtering out blocked authors
+  // below doesn't leave the list looking sparse.
   const { data, error } = await sb.from('mosaic_submissions')
     .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at')
     .order('created_at', { ascending: false })
-    .limit(5);
+    .limit(30);
   if (error) { console.error('load recent artworks error:', error); toast(tr('couldNotLoadArtworks')); return; }
-  renderRecentArtworks(data || []);
+  renderRecentArtworks((data || []).filter(sub => !isUserBlocked(sub.author_id)).slice(0, 5));
 }
 
 // ---------- latest exhibitions (list) ----------

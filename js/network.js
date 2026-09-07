@@ -43,10 +43,13 @@ async function fetchGlobalGraphData() {
   if (profErr) { console.error('load global network profiles error:', profErr); return { nodes: [], links: [] }; }
   if (!profiles || !profiles.length) return { nodes: [], links: [] };
 
+  const visibleProfiles = profiles.filter(p => !isUserBlocked(p.id));
+
   const pairs = new Map(); // "smallerId|largerId" -> {a,b,aToB,bToA}
   for (const row of (rows || [])) {
     const followerId = row.saver_id, followedId = row.saved_id;
     if (!followerId || !followedId || followerId === followedId) continue;
+    if (isUserBlocked(followerId) || isUserBlocked(followedId)) continue;
     const [a, b] = followerId < followedId ? [followerId, followedId] : [followedId, followerId];
     let p = pairs.get(`${a}|${b}`);
     if (!p) { p = { a, b, aToB: false, bToA: false }; pairs.set(`${a}|${b}`, p); }
@@ -62,7 +65,7 @@ async function fetchGlobalGraphData() {
   // Every profile becomes a node — including ones with no follows yet, which
   // just render as isolated, unconnected nodes — since this is the sitewide
   // "every user" view, not just the users who happen to be connected.
-  const nodes = profiles.map(p => ({
+  const nodes = visibleProfiles.map(p => ({
     id: p.id, label: p.username || p.name || tr('anonymous'), avatar_url: p.avatar_url || '', degree: degree.get(p.id) || 0,
   }));
   const links = [...pairs.values()].map(p => ({

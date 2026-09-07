@@ -503,6 +503,38 @@ function openReportModal(targetType, targetId) {
   wrap.classList.add('open');
 }
 
+// ---------- user blocking (Apple App Store 1.2 UGC requirement) ----------
+// myBlockedIds is populated once per sign-in (see loadMyProfile in auth.js)
+// rather than queried per-render, since it's read from a lot of places:
+// three Block/Unblock buttons (lightbox artwork actions, lightbox comment
+// rows, profile header) plus the client-side filters that keep a blocked
+// user's comments/artwork/profile out of the comment list, recent-artworks
+// feed, artist directory, and network graphs (never the project mosaic's
+// cells themselves — a placed piece stays put either way).
+let myBlockedIds = new Set();
+function isUserBlocked(userId) { return myBlockedIds.has(userId); }
+
+// Shared by every surface that offers a block/unblock control — same
+// rationale as toggleUserFollow. `btn` is only used to show a disabled
+// state while the request is in flight; callers re-render their own label
+// off isUserBlocked() once this resolves.
+async function toggleUserBlock(targetId, btn) {
+  if (!me.id) { openAuthModal(); return; }
+  const wasBlocked = isUserBlocked(targetId);
+  if (!wasBlocked) {
+    const proceed = await confirmDialog(tr('blockUserConfirmMessage'), { title: tr('blockUserConfirmTitle'), okLabel: tr('blockUserConfirmOkLabel') });
+    if (!proceed) return;
+  }
+  if (btn) btn.disabled = true;
+  const { error } = wasBlocked
+    ? await sb.from('user_blocks').delete().eq('blocker_id', me.id).eq('blocked_id', targetId)
+    : await sb.from('user_blocks').insert({ blocker_id: me.id, blocked_id: targetId });
+  if (btn) btn.disabled = false;
+  if (error) { console.error('toggle block error:', error); toast(tr('couldNotUpdateBlockUser')); return; }
+  if (wasBlocked) myBlockedIds.delete(targetId); else myBlockedIds.add(targetId);
+  toast(wasBlocked ? tr('userUnblockedToast') : tr('userBlockedToast'));
+}
+
 // ---------- reusable drag/drop image picker ----------
 const MAX_IMG_BYTES = 8 * 1024 * 1024;
 function setupPicker(containerId) {

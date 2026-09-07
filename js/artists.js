@@ -44,7 +44,7 @@ async function loadArtists() {
     .not('username', 'is', null)
     .order('username', { ascending: true });
   if (error) { console.error('load artists error:', error); toast(tr('couldNotLoadArtists')); return; }
-  allArtists = data || [];
+  allArtists = (data || []).filter(p => !isUserBlocked(p.id));
   renderArtists(filterArtists(document.getElementById('artistSearchInput').value));
 }
 

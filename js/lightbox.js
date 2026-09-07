@@ -157,6 +157,31 @@ lbReportBtn.setAttribute('aria-label', tr('reportAriaLabel_submission'));
 })();
 lbReportBtn.onclick = () => { if (lbCurrentSub) openReportModal('submission', lbCurrentSub.id); };
 
+// ---------- block this artwork's author (sits next to Report — same
+// rationale for building it here rather than in every page's markup) ----------
+const lbBlockBtn = document.createElement('button');
+lbBlockBtn.type = 'button';
+lbBlockBtn.id = 'lb-block-btn';
+lbBlockBtn.className = 'lb-action-btn';
+lbBlockBtn.innerHTML = `<span class="icon"></span><span class="lb-block-label"></span>`;
+(() => {
+  const actions = document.querySelector('.lightbox-actions');
+  if (actions) actions.insertBefore(lbBlockBtn, document.getElementById('lb-delete-btn'));
+})();
+function refreshLbBlockBtn() {
+  if (!lbCurrentSub) return;
+  const blocked = isUserBlocked(lbCurrentSub.author_id);
+  lbBlockBtn.querySelector('.lb-block-label').textContent = tr(blocked ? 'unblockLabel' : 'blockLabel');
+  lbBlockBtn.setAttribute('aria-label', tr(blocked ? 'unblockAriaLabel_submission' : 'blockAriaLabel_submission'));
+  lbBlockBtn.classList.toggle('blocked', blocked);
+}
+lbBlockBtn.onclick = async () => {
+  if (!lbCurrentSub) return;
+  await toggleUserBlock(lbCurrentSub.author_id, lbBlockBtn);
+  refreshLbBlockBtn();
+  loadLightboxComments(lbCurrentSub); // re-filter now that the author's block state just changed
+};
+
 // ---------- edit this artwork's details (author only — button + modal built
 // dynamically here, same rationale as the exhibit dropdown / report button
 // above: keeps it out of every page's copy of the lightbox markup). Only the
@@ -382,6 +407,8 @@ function applyArtDetailsToCaption(sub) {
 function applyLightboxOwnerControls(sub) {
   const isOwner = !!(me.id && me.id === sub.author_id);
   lbReportBtn.style.display = isOwner ? 'none' : '';
+  lbBlockBtn.style.display = isOwner ? 'none' : '';
+  refreshLbBlockBtn();
   const deleteBtn = document.getElementById('lb-delete-btn');
   deleteBtn.style.display = isOwner ? '' : 'none';
   deleteBtn.onclick = () => deleteWeavoSubmission(sub);
@@ -603,8 +630,11 @@ async function fetchWeavoComments(submissionId) {
 }
 async function loadLightboxComments(sub) {
   const myRequest = ++lbCommentsRequestId;
-  const comments = await fetchWeavoComments(sub.id);
+  const allComments = await fetchWeavoComments(sub.id);
   if (myRequest !== lbCommentsRequestId) return; // a different piece was opened meanwhile
+  // A blocked commenter's whole thread (their replies too) drops out here —
+  // see the myBlockedIds banner comment in common.js.
+  const comments = allComments.filter(c => !isUserBlocked(c.author_id));
   document.getElementById('lb-comments-count').textContent = comments.length;
   renderCommentThread(document.getElementById('lightbox-comments-list'), comments);
 }
@@ -652,6 +682,21 @@ function commentItemEl(c, isReply) {
       report.setAttribute('aria-label', tr('reportAriaLabel_comment'));
       report.onclick = () => openReportModal('comment', c.id);
       headActions.appendChild(report);
+      const block = document.createElement('button');
+      block.type = 'button'; block.className = 'lbc-report lbc-block';
+      const setBlockLabel = () => {
+        const blocked = isUserBlocked(c.author_id);
+        block.textContent = tr(blocked ? 'unblockLabel' : 'blockLabel');
+        block.setAttribute('aria-label', tr(blocked ? 'unblockAriaLabel_comment' : 'blockAriaLabel_comment'));
+      };
+      setBlockLabel();
+      block.onclick = async () => {
+        await toggleUserBlock(c.author_id, block);
+        setBlockLabel();
+        refreshLbBlockBtn();
+        if (lbCurrentSub) loadLightboxComments(lbCurrentSub);
+      };
+      headActions.appendChild(block);
     }
     if (canManage) {
       const del = document.createElement('button');

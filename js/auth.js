@@ -32,6 +32,11 @@ async function loadMyProfile() {
   // meFromUser() set — otherwise upsertBaseProfile() below would clobber it
   // back to the Google photo on every sign-in.
   if (data && data.avatar_url) me.avatar = data.avatar_url;
+  // Read once per sign-in rather than per-render — see the file banner
+  // comment on myBlockedIds in common.js for everywhere this feeds into.
+  const { data: blocks, error: blocksErr } = await sb.from('user_blocks').select('blocked_id').eq('blocker_id', me.id);
+  if (blocksErr) console.error('load blocked users error:', blocksErr);
+  myBlockedIds = new Set((blocks || []).map(b => b.blocked_id));
 }
 // First sign-in (or any later sign-in before every mandatory field has
 // been set — username and country) forces the edit-profile modal open in
@@ -203,6 +208,35 @@ function stashEditProfileDraftIfOpen() {
     disabilities: getCheckedDisabilities(),
   }));
 }
+// ---------- blocked-users list (edit-profile modal) ----------
+// Small, secondary section tucked into the same modal as the danger zone —
+// this is the one surface that needs the *names* behind myBlockedIds (every
+// other block-related UI only ever needs the id set itself), so it fetches
+// those profiles fresh each time the modal opens rather than caching them.
+async function renderBlockedUsersSection(forced) {
+  const section = document.getElementById('ep-blocked-section');
+  const list = document.getElementById('ep-blocked-list');
+  if (!section || !list) return;
+  document.getElementById('ep-blocked-title').textContent = tr('blockedUsersTitle');
+  if (forced || !myBlockedIds.size) { section.style.display = 'none'; list.innerHTML = ''; return; }
+  section.style.display = '';
+  list.innerHTML = `<div class="ep-blocked-loading">${tr('loading')}</div>`;
+  const ids = [...myBlockedIds];
+  const { data: profiles, error } = await sb.from('profiles').select('id,name,username,avatar_url').in('id', ids);
+  if (error) { console.error('load blocked users error:', error); list.innerHTML = ''; return; }
+  list.innerHTML = '';
+  for (const p of (profiles || [])) {
+    const row = document.createElement('div'); row.className = 'list-row ep-blocked-row';
+    row.appendChild(miniAvatarEl(p.username || p.name, p.avatar_url, p.id));
+    const name = document.createElement('span'); name.className = 'list-name'; name.textContent = p.username || p.name || tr('anonymous');
+    row.appendChild(name);
+    const unblockBtn = document.createElement('button');
+    unblockBtn.type = 'button'; unblockBtn.className = 'ep-blocked-unblock'; unblockBtn.textContent = tr('unblockLabel');
+    unblockBtn.onclick = async () => { await toggleUserBlock(p.id, unblockBtn); renderBlockedUsersSection(forced); };
+    row.appendChild(unblockBtn);
+    list.appendChild(row);
+  }
+}
 function openEditProfileModal(profile, forced) {
   // Supabase's client re-fires onAuthStateChange (e.g. on a token refresh
   // triggered by the tab regaining focus after switching away and back)
@@ -214,6 +248,7 @@ function openEditProfileModal(profile, forced) {
   if (document.getElementById('edit-profile-modal').classList.contains('open')) return;
   profileEditRequired = !!forced;
   closeEpDisabilitiesMenu();
+  renderBlockedUsersSection(forced);
   document.getElementById('ep-country').value = profile.country_id ? String(profile.country_id) : '';
   epAvatarPicker.setExisting(cdnUrl(profile.avatar_url || me.avatar || ''));
   document.getElementById('ep-username').value = profile.username || '';
@@ -373,6 +408,7 @@ addEventListener('keydown', e => {
 // ---------- boot ----------
 sb.auth.onAuthStateChange(async (_event, session) => {
   me = session ? meFromUser(session.user) : { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: [] };
+  if (!me.id) myBlockedIds = new Set();
   if (me.id) { await loadMyProfile(); upsertBaseProfile(); }
   updateIdentityUI();
   maybeRequireProfileSetup();
@@ -391,6 +427,7 @@ window.authReady = (async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (session) me = meFromUser(session.user);
   if (me.id) { await loadMyProfile(); upsertBaseProfile(); }
+  else myBlockedIds = new Set();
   updateIdentityUI();
   maybeRequireProfileSetup();
   document.dispatchEvent(new CustomEvent('weavo:authchange'));

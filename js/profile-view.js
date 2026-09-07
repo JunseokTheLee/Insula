@@ -406,7 +406,7 @@ async function fetchGraphNeighbors(userId) {
     if (row.saver_id && row.saver_id !== userId) inIds.add(row.saver_id);
   }
 
-  const ids = new Set([...outIds, ...inIds]);
+  const ids = new Set([...outIds, ...inIds].filter(id => !isUserBlocked(id)));
   if (!ids.size) return [];
 
   const { data: profiles, error: profErr } = await sb.from('profiles')
@@ -583,6 +583,7 @@ async function loadProfileView(userId) {
   document.getElementById('profileFollowCounts').style.display = 'none';
   document.getElementById('profileFollowBtn').style.display = 'none';
   document.getElementById('profileReportBtn').style.display = 'none';
+  document.getElementById('profileBlockBtn').style.display = 'none';
   resetProfileGraph(userId);
 
   const isOwner = me.id && me.id === userId;
@@ -671,6 +672,15 @@ async function loadProfileView(userId) {
   const reportBtn = document.getElementById('profileReportBtn');
   reportBtn.style.display = isOwner ? 'none' : '';
   reportBtn.onclick = () => openReportModal('profile', userId);
+  const blockBtn = document.getElementById('profileBlockBtn');
+  blockBtn.style.display = isOwner ? 'none' : '';
+  if (!isOwner) {
+    blockBtn.textContent = isUserBlocked(userId) ? tr('unblockLabel') : tr('blockLabel');
+    blockBtn.onclick = async () => {
+      await toggleUserBlock(userId, blockBtn);
+      blockBtn.textContent = isUserBlocked(userId) ? tr('unblockLabel') : tr('blockLabel');
+    };
+  }
   document.getElementById('profileFollowingN').textContent = followCounts.following;
   document.getElementById('profileFollowersN').textContent = followCounts.followers;
   document.getElementById('profileFollowCounts').style.display = '';

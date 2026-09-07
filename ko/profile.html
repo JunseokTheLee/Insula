@@ -72,6 +72,7 @@
           <button type="button" id="profileUploadBtn" style="display:none;">작품 업로드</button>
           <button type="button" id="profileEditBtn" style="display:none;">프로필 수정</button>
           <button type="button" id="profileReportBtn" style="display:none;">신고</button>
+          <button type="button" id="profileBlockBtn" style="display:none;">차단</button>
         </div>
       </div>
       <p id="profileBio" style="display:none;"></p>
@@ -316,6 +317,10 @@
     </div>
     <div class="ep-danger-zone" id="ep-danger-zone">
       <button type="button" id="ep-delete-account" class="link-danger">계정 삭제</button>
+    </div>
+    <div class="ep-blocked-section" id="ep-blocked-section" style="display:none;">
+      <h4 id="ep-blocked-title">차단한 사용자</h4>
+      <div id="ep-blocked-list"></div>
     </div>
   </div>
 </div>
