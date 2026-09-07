@@ -1,0 +1,20 @@
+/* ============ BROWSE ARTWORKS ============ */
+.artworks-page{padding:28px 32px 20px;max-width:1464px;margin:0 auto;animation:fadeIn .3s ease-out;}
+.artworks-page-title{font-family:'Pretendard',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.01em;color:var(--gray-900);margin:0 0 8px;}
+.artworks-page-desc{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 20px;max-width:640px;}
+
+.artworks-toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:24px;}
+.artworks-search{
+  flex:1 1 260px;max-width:360px;padding:11px 16px;border:1px solid var(--border-strong);border-radius:var(--r-full);
+  font-family:'Pretendard',sans-serif;font-size:13px;color:var(--text);background:#fff;outline:none;
+  transition:border-color .12s linear;
+}
+.artworks-search:focus{border-color:var(--primary);}
+.artworks-sort{
+  padding:11px 16px;border:1px solid var(--border-strong);border-radius:var(--r-full);
+  font-family:'Pretendard',sans-serif;font-size:13px;color:var(--text);background:#fff;outline:none;cursor:pointer;
+}
+
+@media (max-width:640px){
+  .artworks-page{padding:16px 16px 12px;}
+}

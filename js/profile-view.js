@@ -793,6 +793,7 @@ authReady.then(async () => {
   // Captured before loadProfileView() — it canonicalizes the URL via
   // replaceState, which drops the fragment.
   const wantUpload = location.hash === '#upload';
+  const wantNewCollection = location.hash === '#new-collection';
   const requested = routeParam('artists', 'user');
   const handle = requested || me.id;
   if (!handle) { document.getElementById('profileName').textContent = tr('userNotFound'); return; }
@@ -800,4 +801,6 @@ authReady.then(async () => {
   await loadProfileView(userId);
   // Deep link from the homepage's "Upload Artwork" button.
   if (wantUpload && me.id && userId === me.id) document.getElementById('profileUploadBtn').click();
+  // Deep link from the exhibitions page's "create your own" CTA banner.
+  if (wantNewCollection && me.id && userId === me.id) document.getElementById('newCollectionBtn').click();
 });

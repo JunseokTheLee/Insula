@@ -41,6 +41,7 @@ const T = {
   couldNotLoadProjects: '프로젝트를 불러올 수 없습니다',
   couldNotLoadArtists: '작가 목록을 불러올 수 없습니다',
   couldNotLoadArtworks: '작품을 불러올 수 없습니다',
+  couldNotLoadArtworks: '작품을 불러올 수 없습니다',
   untitledArtwork: '제목 없는 작품',
   goToProject: '{n}번째 프로젝트로 이동',
   goToSlide: '{n}번째 슬라이드로 이동',
@@ -157,6 +158,7 @@ const T = {
   saveLabel: '저장',
   artworkUpdatedToast: '작품이 수정되었습니다',
   couldNotUpdateArtwork: '작품을 수정할 수 없습니다 — 다시 시도해주세요',
+  linkCopied: '링크가 복사되었습니다',
 };
 
 function tr(key, vars) {

@@ -25,7 +25,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/home.css">
-<link rel="stylesheet" href="/css/artists.css">
+<link rel="stylesheet" href="/css/exhibitions.css">
 </head>
 <body>
 
@@ -35,6 +35,7 @@
     <nav class="nav-links">
       <a href="/en/projects" class="nav-link">Projects</a>
       <a href="/en/network" class="nav-link">Network</a>
+      <a href="/en/artworks" class="nav-link">Explore</a>
       <a href="/en/artists" class="nav-link">Artists</a>
       <a href="/en/exhibitions" class="nav-link active">Exhibitions</a>
       <a href="/en/about" class="nav-link">About</a>
@@ -55,15 +56,28 @@
     <div class="backnav">
       <a class="back" href="/en/projects">&larr; Back</a>
     </div>
-    <div class="artists-page" style="padding-bottom:0;max-width:1464px;">
+    <div class="exhibitions-page" style="padding-bottom:0;">
       <div class="page-title-row">
-        <h1 class="artists-page-title">All Exhibitions</h1>
+        <h1 class="exhibitions-page-title">All Exhibitions</h1>
         <button type="button" class="info-btn" data-info-open aria-haspopup="dialog">What is an exhibition?</button>
       </div>
-      <div class="artists-page-desc">Every public mini-exhibition curated by the Weavo community, newest first.</div>
+      <div class="exhibitions-page-desc">Every public mini-exhibition curated by the Weavo community.</div>
+      <div class="exhibition-tabs" id="exhibitionTabs">
+        <button type="button" class="exhibition-tab" id="exTabFeatured" disabled title="Coming soon">Featured</button>
+        <button type="button" class="exhibition-tab" id="exTabPopular" disabled title="Coming soon">Popular</button>
+        <button type="button" class="exhibition-tab active" id="exTabRecent">Recent</button>
+        <button type="button" class="exhibition-tab" id="exTabMine">My Exhibitions</button>
+      </div>
     </div>
     <div class="artworks-grid" id="exhibitionsGrid"></div>
     <div class="empty-note" id="exhibitionsEmpty" style="display:none;">No public exhibitions yet — start one from your profile.</div>
+    <div class="exhibitions-cta-banner">
+      <div class="exhibitions-cta-text">
+        <h3>A small exhibition creates a bigger story.</h3>
+        <p>Your point of view could be exactly what someone else needed to see. Start your own exhibition now.</p>
+      </div>
+      <button type="button" class="cta" id="exhibitionsCtaBtn">Create an exhibition <span aria-hidden="true">&rarr;</span></button>
+    </div>
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>

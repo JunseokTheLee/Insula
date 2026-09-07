@@ -4,26 +4,28 @@
 <link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>계정 삭제 | Weavo</title>
-<meta name="description" content="Weavo 계정과 데이터를 앱이나 웹에서 영구적으로 삭제하는 방법과 삭제 시 일어나는 일을 안내합니다.">
-<link rel="canonical" href="https://weavo.art/ko/delete-account">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/delete-account">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/delete-account">
+<title>작품 탐색 | Weavo</title>
+<meta name="description" content="Weavo 커뮤니티에 제출된 모든 작품을 제목이나 작가 이름으로 검색해보세요.">
+<link rel="canonical" href="https://weavo.art/ko/artworks">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/artworks">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/artworks">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="계정 삭제 | Weavo">
-<meta property="og:description" content="Weavo 계정과 데이터를 앱이나 웹에서 영구적으로 삭제하는 방법과 삭제 시 일어나는 일을 안내합니다.">
-<meta property="og:url" content="https://weavo.art/ko/delete-account">
+<meta property="og:title" content="작품 탐색 | Weavo">
+<meta property="og:description" content="Weavo 커뮤니티에 제출된 모든 작품을 제목이나 작가 이름으로 검색해보세요.">
+<meta property="og:url" content="https://weavo.art/ko/artworks">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="계정 삭제 | Weavo">
-<meta name="twitter:description" content="Weavo 계정과 데이터를 앱이나 웹에서 영구적으로 삭제하는 방법과 삭제 시 일어나는 일을 안내합니다.">
+<meta name="twitter:title" content="작품 탐색 | Weavo">
+<meta name="twitter:description" content="Weavo 커뮤니티에 제출된 모든 작품을 제목이나 작가 이름으로 검색해보세요.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/ko/"},{"@type":"ListItem","position":2,"name":"계정 삭제","item":"https://weavo.art/ko/delete-account"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/ko/"},{"@type":"ListItem","position":2,"name":"작품 탐색","item":"https://weavo.art/ko/artworks"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/home.css">
+<link rel="stylesheet" href="/css/artworks.css">
 </head>
 <body>
 
@@ -32,9 +34,9 @@
     <a class="logo" id="logoHome" href="/ko/">Weavo</a>
     <nav class="nav-links">
       <a href="/ko/projects" class="nav-link">프로젝트</a>
-      <a href="/ko/network" class="nav-link">Network</a>
-      <a href="/ko/artworks" class="nav-link">작품 탐색</a>
-      <a href="/ko/artists" class="nav-link">아티스트</a>
+      <a href="/ko/network" class="nav-link">네트워크</a>
+      <a href="/ko/artworks" class="nav-link active">작품 탐색</a>
+      <a href="/ko/artists" class="nav-link">작가</a>
       <a href="/ko/exhibitions" class="nav-link">전시</a>
       <a href="/ko/about" class="nav-link">소개</a>
     </nav>
@@ -54,41 +56,21 @@
     <div class="backnav">
       <a class="back" href="/ko/projects">&larr; 뒤로</a>
     </div>
-    <div class="legal-page">
-      <h1>계정 삭제</h1>
-      <p class="legal-updated">최종 수정일 2026년 8월</p>
-      <div class="legal-body">
-        <p>이메일이나 별도의 문의 없이, 앱이나 웹사이트에서 언제든 직접 Weavo 계정과 관련된 모든 데이터를 영구적으로 삭제할 수 있습니다.</p>
-
-        <h2>계정 삭제 방법</h2>
-        <ol>
-          <li>Weavo 계정과 연결된 Google 계정으로 로그인합니다.</li>
-          <li>프로필을 열고 <strong>프로필 수정</strong>을 선택합니다.</li>
-          <li>맨 아래로 스크롤하여 위험 구역에서 <strong>계정 삭제</strong>를 선택합니다.</li>
-          <li>사용자 이름을 입력해 확인합니다. 삭제는 즉시 이루어지며 되돌릴 수 없습니다.</li>
-        </ol>
-        <p style="margin-top:16px;">
-          <button type="button" id="deleteAcctCta" class="cta">로그인</button>
-        </p>
-
-        <h2>삭제되는 항목</h2>
-        <p>계정을 삭제하면 다음이 영구적으로 제거됩니다.</p>
-        <ul>
-          <li>프로필 — 이름, 아바타, 소개, 링크, 국가/도시</li>
-          <li>제출한 모든 작품 (이미 공동 모자이크에 배치된 작품 포함)</li>
-          <li>댓글, 좋아요, 팔로우 및 팔로워 관계</li>
-          <li>전시와 저장한 작품</li>
-          <li>계정에 저장된 업로드 이미지(원본 및 썸네일)</li>
-        </ul>
-        <p>이는 저희 시스템에서 즉시, 영구적으로 처리됩니다. 인프라 제공업체의 데이터베이스 백업은 자체 순환 주기에 따라 삭제되며, 계정 삭제 후에는 저희도 접근하거나 복구할 수 없습니다.</p>
-
-        <h2>로그인할 수 없나요?</h2>
-        <p>Weavo 프로필과 연결된 Google 계정에 더 이상 접근할 수 없다면, <a href="mailto:jadyenthelee@gmail.com">jadyenthelee@gmail.com</a>으로 어떤 주소에서든 이메일을 보내 Weavo 사용자 이름을 알려주세요. 확인 후 수동으로 계정을 삭제해 드립니다.</p>
-
-        <h2>관련 문서</h2>
-        <p>삭제 전에 저희가 어떤 정보를 수집하고 어떻게 사용하는지는 <a href="/ko/privacy">개인정보처리방침</a>을 참고하세요.</p>
+    <div class="artworks-page">
+      <div class="page-title-row">
+        <h1 class="artworks-page-title">작품 탐색</h1>
+      </div>
+      <div class="artworks-page-desc">Weavo 커뮤니티에 제출된 모든 작품을 최신순으로 모았습니다.</div>
+      <div class="artworks-toolbar">
+        <input type="text" id="artworkSearchInput" class="artworks-search" placeholder="작품, 작가로 검색하세요" autocomplete="off" spellcheck="false">
+        <select id="artworkSortSelect" class="artworks-sort">
+          <option value="newest">최신순</option>
+          <option value="liked">인기순</option>
+        </select>
       </div>
     </div>
+    <div class="artworks-grid" id="artworksGrid"></div>
+    <div class="empty-note" id="artworksEmpty" style="display:none;">작품을 찾을 수 없습니다.</div>
   </main>
   <footer id="legal-footer">
     <a href="/ko/privacy">개인정보처리방침</a>
@@ -99,7 +81,7 @@
   </footer>
 </div>
 
-<!-- Edit profile modal -->
+<!-- 프로필 수정 모달 -->
 <div id="edit-profile-modal" class="modal-overlay">
   <div id="edit-profile-dialog" class="modal-panel">
     <div style="display:flex;justify-content:flex-end;margin:0 0 8px;">
@@ -109,19 +91,19 @@
       </div>
     </div>
     <h3 id="ep-dialog-title">프로필 수정</h3>
-    <p id="ep-required-note" style="display:none;font-size:12px;color:var(--muted);margin-top:-8px;">계정 생성을 완료하려면 사용자 이름을 설정하세요.</p>
+    <p id="ep-required-note" style="display:none;font-size:12px;color:var(--muted);margin-top:-8px;">계정 생성을 완료하려면 사용자 이름을 설정해 주세요.</p>
     <div class="field" style="align-items:center;">
-      <label style="text-align:center;">프로필 사진 <span class="field-hint">(선택)</span></label>
+      <label style="text-align:center;">프로필 사진 <span class="field-hint">(선택 사항)</span></label>
       <div class="img-upload-area avatar-picker" id="ep-avatar-picker">
         <div class="img-placeholder"><span class="up-icon">🙂</span><span>업로드</span></div>
         <img class="img-preview" alt="">
-        <button type="button" class="img-remove" aria-label="프로필 사진 제거">✕</button>
+        <button type="button" class="img-remove" aria-label="프로필 사진 삭제">✕</button>
         <input type="file" class="img-input" accept="image/*">
       </div>
     </div>
     <div class="field">
       <label for="ep-username">사용자 이름<span class="field-hint" id="ep-username-hint"></span></label>
-      <input type="text" id="ep-username" placeholder="yourname" maxlength="30">
+      <input type="text" id="ep-username" placeholder="사용자이름" maxlength="30">
     </div>
     <div class="field">
       <label for="ep-country">국가</label>
@@ -130,11 +112,11 @@
       </select>
     </div>
     <div class="field">
-      <label for="ep-bio">소개 <span class="field-hint">(선택)</span></label>
-      <textarea id="ep-bio" placeholder="자신에 대해 간단히 소개해주세요…" maxlength="300"></textarea>
+      <label for="ep-bio">소개 <span class="field-hint">(선택 사항)</span></label>
+      <textarea id="ep-bio" placeholder="자신에 대해 간단히 소개해 주세요…" maxlength="300"></textarea>
     </div>
     <div class="field">
-      <label id="ep-disabilities-label">장애 <span class="field-hint">(선택)</span></label>
+      <label id="ep-disabilities-label">장애 유형 <span class="field-hint">(선택 사항)</span></label>
       <div class="ep-disabilities-wrap">
         <button type="button" id="ep-disabilities-btn" class="ep-disabilities-btn" aria-haspopup="true" aria-expanded="false">
           <span class="ep-disabilities-summary"></span><span class="ep-disabilities-caret" aria-hidden="true">&#9662;</span>
@@ -154,12 +136,12 @@
   </div>
 </div>
 
-<!-- Auth modal -->
+<!-- 로그인 모달 -->
 <div id="auth-modal" class="modal-overlay">
   <div id="auth-dialog" class="modal-panel">
     <div class="auth-icon">🖼️</div>
-    <h3>Weavo에 참여하기</h3>
-    <p>로그인하고 커뮤니티 모자이크에 작품을 추가해보세요.</p>
+    <h3>Weavo에 참여하세요</h3>
+    <p>로그인하고 여러분의 작품을 커뮤니티 모자이크에 더해 보세요.</p>
     <button id="google-signin-btn" class="oauth-signin-btn">
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
         <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2z"/>
@@ -175,11 +157,11 @@
       </svg>
       <span>Apple로 계속하기</span>
     </button>
-    <button id="auth-close">나중에</button>
+    <button id="auth-close">나중에 하기</button>
   </div>
 </div>
 
-<!-- Confirm dialog -->
+<!-- 확인 대화상자 -->
 <div id="confirm-modal" class="modal-overlay">
   <div id="confirm-dialog" class="modal-panel">
     <h3 id="confirm-title">계속하시겠습니까?</h3>
@@ -201,5 +183,6 @@
 <script src="/js/common.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/notifications.js"></script>
+<script src="/js/artworks.js"></script>
 </body>
 </html>

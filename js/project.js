@@ -202,7 +202,24 @@ async function renderWeavoGrid(project) {
     grid.appendChild(cell);
   }
   document.getElementById('projectProgress').textContent = filledText(filledCount, (pixels || []).length);
+  renderProjectStats(filledSubs, (pixels || []).length);
   renderProjectList(filledSubs);
+}
+// Icon-stat row + contributor avatar stack — every number here comes from
+// the pixels/submissions already fetched above, no extra query.
+function renderProjectStats(filledSubs, total) {
+  document.getElementById('statCellsFilled').textContent = filledSubs.length;
+  document.getElementById('statCellsRemaining').textContent = Math.max(0, total - filledSubs.length);
+  const contributors = new Map();
+  for (const sub of filledSubs) {
+    if (sub.author_id && !contributors.has(sub.author_id)) contributors.set(sub.author_id, sub);
+  }
+  document.getElementById('statContributors').textContent = contributors.size;
+  const avatarsEl = document.getElementById('contributorAvatars');
+  avatarsEl.innerHTML = '';
+  for (const sub of contributors.values()) {
+    avatarsEl.appendChild(miniAvatarEl(sub.author_name, sub.author_avatar_url, sub.author_id, 'contributor-avatar'));
+  }
 }
 // List view: every artwork currently in the project, newest first — a
 // browsable alternative to hunting for a piece inside the weavo grid.
@@ -301,6 +318,21 @@ msZoomInBtn.onclick = () => setMsZoom(msScale + MS_ZOOM_STEP);
 msZoomOutBtn.onclick = () => setMsZoom(msScale - MS_ZOOM_STEP);
 document.getElementById('weavo-zoom-reset').onclick = () => setMsZoom(MS_MIN_ZOOM);
 
+// "Participate" — there's no per-project join flow (pool matching is
+// automatic/global, see js/matching.js), so this reuses the exact same
+// upload entry point the homepage's heroUploadBtn does.
+document.getElementById('projectParticipateBtn').onclick = () => {
+  if (me.id) location.href = `${profileUrl(me.id)}#upload`;
+  else openAuthModal();
+};
+document.getElementById('projectShareBtn').onclick = async () => {
+  try {
+    await navigator.clipboard.writeText(location.href);
+    toast(tr('linkCopied'));
+  } catch (err) {
+    console.error('copy link error:', err);
+  }
+};
 document.getElementById('referencePreview').onclick = () => {
   const el = document.getElementById('referencePreview');
   const enlarged = el.classList.toggle('enlarged');

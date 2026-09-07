@@ -1,20 +1,20 @@
 /* ============ GLOBAL NETWORK ============ */
 .network-page{padding:28px 32px 40px;max-width:1600px;margin:0 auto;animation:fadeIn .3s ease-out;}
-.network-page-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.01em;color:var(--forest);margin:0 0 10px;}
-.network-graph-panel{height:min(880px,85vh);margin-top:4px;background:var(--forest-dark);border-color:var(--forest-dark);}
+.network-page-title{font-family:'Pretendard',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.01em;color:var(--gray-900);margin:0 0 10px;}
+.network-graph-panel{height:min(880px,85vh);margin-top:4px;background:var(--primary-dark);border:none;border-radius:var(--r-lg);box-shadow:var(--shadow-md);}
 .network-graph-panel .profile-graph-empty{color:rgba(247,247,245,.55);}
 .network-graph-panel .pg-node .pg-ring{stroke:rgba(247,247,245,.35);}
-.network-graph-panel .pg-node:hover .pg-ring{stroke:var(--mint);}
-.network-graph-panel .pg-node.pg-selected .pg-ring{stroke:var(--mint);stroke-width:3px;}
-.network-graph-panel .pg-node .pg-fallback{fill:var(--paper);}
-.network-graph-panel .pg-node .pg-fallback-label{fill:var(--forest-dark);}
-.network-graph-panel .pg-label{fill:var(--paper);}
+.network-graph-panel .pg-node:hover .pg-ring{stroke:var(--violet-300);}
+.network-graph-panel .pg-node.pg-selected .pg-ring{stroke:var(--violet-300);stroke-width:3px;}
+.network-graph-panel .pg-node .pg-fallback{fill:var(--bg);}
+.network-graph-panel .pg-node .pg-fallback-label{fill:var(--primary-dark);}
+.network-graph-panel .pg-label{fill:var(--bg);}
 /* No one is selected on load (or once the selection is cleared), so no
    connection lines are shown at all — only the selected node's own links
    become visible (see .pg-link-visible, toggled from network.js). */
 .network-graph-panel .pg-link{stroke:rgba(247,247,245,.3);opacity:0;transition:opacity .15s linear;}
 .network-graph-panel .pg-link.pg-link-visible{opacity:1;}
-.network-graph-panel .pg-link.pg-mutual{stroke:var(--mint);}
+.network-graph-panel .pg-link.pg-mutual{stroke:var(--violet-300);}
 .network-graph-panel .pg-node,
 .network-graph-panel .pg-label{transition:opacity .15s linear;}
 .network-graph-panel .pg-node.pg-dimmed,

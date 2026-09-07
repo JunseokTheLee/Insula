@@ -25,6 +25,7 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/home.css">
 <link rel="stylesheet" href="/css/project.css">
 </head>
 <body data-mobile-fs>
@@ -35,6 +36,7 @@
     <nav class="nav-links">
       <a href="/en/projects" class="nav-link active">Projects</a>
       <a href="/en/network" class="nav-link">Network</a>
+      <a href="/en/artworks" class="nav-link">Explore</a>
       <a href="/en/artists" class="nav-link">Artists</a>
       <a href="/en/exhibitions" class="nav-link">Exhibitions</a>
       <a href="/en/about" class="nav-link">About</a>
@@ -55,7 +57,7 @@
     <div class="backnav">
       <a class="back" href="/en/projects">&larr; Back</a>
       <div style="display:flex;gap:10px;align-items:center;">
-        <button class="btn-cancel" id="reshapeProjectBtn" style="display:none;padding:11px 18px;border-radius:20px;font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+        <button class="btn-cancel" id="reshapeProjectBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
           Reshape Grid
         </button>
       </div>
@@ -68,6 +70,16 @@
         <a id="archivedBannerLink">View current version &rarr;</a>
       </div>
       <div class="project-progress" id="projectProgress"></div>
+      <div class="project-stats-row" id="projectStatsRow">
+        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🧩</span><div><div class="stat-value" id="statCellsFilled">0</div><div class="stat-label">Cells filled</div></div></div>
+        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🎨</span><div><div class="stat-value" id="statContributors">0</div><div class="stat-label">Contributors</div></div></div>
+        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">⬜</span><div><div class="stat-value" id="statCellsRemaining">0</div><div class="stat-label">Cells remaining</div></div></div>
+      </div>
+      <div class="project-actions-row">
+        <button type="button" class="cta" id="projectParticipateBtn">Participate <span aria-hidden="true">&uarr;</span></button>
+        <button type="button" class="cta-outline" id="projectShareBtn">Share</button>
+      </div>
+      <div class="contributor-avatars" id="contributorAvatars"></div>
       <div class="colors-needed" id="colorsNeeded" style="display:none;">
         <div class="colors-needed-label"><span>Colors still needed</span> <span class="field-hint">— artwork with these tones uploaded to a profile will automatically be matched in</span></div>
         <div class="color-swatches" id="colorSwatches"></div>

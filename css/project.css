@@ -1,58 +1,67 @@
 /* ============ PROJECT DETAIL ============ */
 .project-head{padding:28px 32px 20px;animation:fadeIn .3s ease-out;}
-.project-head h1{margin:0 0 8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--forest);letter-spacing:-.01em;}
-.project-head p{color:var(--muted);font-family:'General Sans',sans-serif;font-size:15px;line-height:1.6;margin:0 0 12px;max-width:560px;}
-.project-progress{color:var(--muted);font-family:'General Sans',sans-serif;font-size:12px;font-weight:600;}
+.project-head h1{margin:0 0 8px;font-family:'Pretendard',sans-serif;font-weight:700;font-size:30px;color:var(--primary);letter-spacing:-.01em;}
+.project-head p{color:var(--muted);font-family:'Pretendard',sans-serif;font-size:15px;line-height:1.6;margin:0 0 12px;max-width:560px;}
+.project-progress{color:var(--muted);font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;}
+
+.project-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:560px;margin:16px 0 0;}
+.project-actions-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:20px 0 0;}
+.contributor-avatars{display:flex;margin:14px 0 0;}
+.contributor-avatars .contributor-avatar{width:28px;height:28px;font-size:12px;margin-left:-8px;border:2px solid var(--bg);}
+.contributor-avatars .contributor-avatar:first-child{margin-left:0;}
+@media (max-width:640px){
+  .project-stats-row{grid-template-columns:repeat(3,1fr);gap:8px;max-width:none;}
+}
 
 .archived-banner{
-  margin:14px 0 0;padding:10px 14px;border-radius:10px;background:var(--forest-08);
-  border:1px solid var(--hairline-strong);font-family:'General Sans',sans-serif;font-size:13px;
-  color:var(--ink);display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin:14px 0 0;padding:10px 14px;border-radius:10px;background:var(--primary-soft);
+  border:1px solid var(--border-strong);font-family:'Pretendard',sans-serif;font-size:13px;
+  color:var(--text);display:flex;align-items:center;gap:10px;flex-wrap:wrap;
 }
-.archived-banner a{color:var(--forest);font-weight:600;text-decoration:underline;cursor:pointer;}
+.archived-banner a{color:var(--primary);font-weight:600;text-decoration:underline;cursor:pointer;}
 
 .colors-needed{margin-top:18px;animation:fadeIn .3s ease-out;}
-.colors-needed-label{font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px;}
+.colors-needed-label{font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px;}
 .colors-needed-label .field-hint{font-weight:400;font-size:12px;}
 .color-swatches{display:flex;flex-wrap:wrap;gap:10px;}
 .color-swatch{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:default;}
 .color-swatch .swatch-dot{
-  width:32px;height:32px;border-radius:8px;border:1px solid var(--hairline-strong);
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border-strong);
   box-shadow:none;display:flex;align-items:center;justify-content:center;
-  font-family:'General Sans',sans-serif;font-size:10px;font-weight:700;color:var(--muted);
+  font-family:'Pretendard',sans-serif;font-size:10px;font-weight:700;color:var(--muted);
 }
-.color-swatch .swatch-dot.more{background:repeating-linear-gradient(45deg,var(--paper),var(--paper) 5px,#ececea 5px,#ececea 10px);}
-.color-swatch .swatch-count{font-family:'General Sans',sans-serif;font-size:11px;color:var(--muted);font-weight:600;}
+.color-swatch .swatch-dot.more{background:repeating-linear-gradient(45deg,var(--bg),var(--bg) 5px,#ececea 5px,#ececea 10px);}
+.color-swatch .swatch-count{font-family:'Pretendard',sans-serif;font-size:11px;color:var(--muted);font-weight:600;}
 
 .project-head-controls{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:16px;}
 .project-view-tabs{
-  display:inline-flex;background:var(--forest-08);border:1px solid var(--hairline-strong);border-radius:20px;padding:2px;gap:2px;
+  display:inline-flex;background:var(--gray-100);border:none;border-radius:var(--r-full);padding:2px;gap:2px;
 }
 .pv-tab{
   appearance:none;border:none;background:transparent;cursor:pointer;
-  font-family:'General Sans',sans-serif;
-  font-size:12px;font-weight:600;padding:8px 16px;border-radius:16px;color:var(--muted);
+  font-family:'Pretendard',sans-serif;
+  font-size:12px;font-weight:600;padding:8px 16px;border-radius:var(--r-full);color:var(--muted);
   transition:background .12s linear,color .12s linear;
 }
-.pv-tab.active{background:var(--forest);color:var(--paper);box-shadow:none;}
+.pv-tab.active{background:var(--gradient-primary);color:#fff;box-shadow:none;}
 
 .weavo-grid-wrap{
-  margin:0 32px 32px;border-radius:0;overflow:hidden;background:var(--forest-dark);animation:fadeIn .3s ease-out;
-  position:relative;height:clamp(360px,66vh,720px);border:1px solid var(--hairline-strong);
+  margin:0 32px 32px;border-radius:var(--r-lg);overflow:hidden;background:var(--primary-dark);animation:fadeIn .3s ease-out;
+  position:relative;height:clamp(360px,66vh,720px);border:none;box-shadow:var(--shadow-md);
   display:flex;align-items:center;justify-content:center;touch-action:none;
 }
 .weavo-grid-wrap.zoomed{cursor:grab;}
 .weavo-grid-wrap.dragging{cursor:grabbing;}
 .weavo-stage{position:relative;transition:transform .15s ease-out;}
 .weavo-stage.no-transition{transition:none;}
-.weavo-grid{width:100%;height:100%;display:grid;gap:1px;background:var(--forest-dark);}
+.weavo-grid{width:100%;height:100%;display:grid;gap:1px;background:var(--primary-dark);}
 .weavo-cell{background-size:cover;background-position:center;background-color:#3a3a38;transition:transform .12s ease-out,outline-color .12s ease-out;display:block;}
 .weavo-cell.filled{cursor:zoom-in;color:inherit;text-decoration:none;}
-.weavo-cell.filled:hover{outline:2px solid var(--mint);outline-offset:-2px;position:relative;z-index:2;transform:scale(1.08);box-shadow:none;}
+.weavo-cell.filled:hover{outline:2px solid var(--violet-300);outline-offset:-2px;position:relative;z-index:2;transform:scale(1.08);box-shadow:none;}
 
 /* ---------- project detail: list view (all artworks in the project) ---------- */
 .project-list-view{margin:0 32px 32px;animation:fadeIn .3s ease-out;}
-.project-list-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,180px));gap:1px;justify-content:start;}
+.project-list-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,180px));gap:12px;justify-content:start;}
 
 /* ---------- reference preview ("what it's supposed to look like") ----------
    Sits next to the view tabs, above the grid, instead of floating on top of
@@ -60,23 +69,23 @@
    cells happened to be underneath it. */
 .reference-preview{
   position:relative;flex-shrink:0;z-index:1;
-  border:1px solid var(--hairline-strong);border-radius:2px;overflow:hidden;
-  width:96px;background:var(--forest-dark);padding:0;line-height:0;cursor:zoom-in;
+  border:none;border-radius:var(--r-sm);overflow:hidden;
+  width:96px;background:var(--primary-dark);padding:0;line-height:0;cursor:zoom-in;
   box-shadow:none;
   transition:width .2s ease-out,border-color .12s linear;
 }
-.reference-preview:hover{border-color:var(--mint);}
+.reference-preview:hover{border-color:var(--violet-300);}
 .reference-preview::after{
   content:'⤢';position:absolute;top:5px;right:5px;width:16px;height:16px;
   display:flex;align-items:center;justify-content:center;
-  background:rgba(0,0,0,.5);color:var(--paper);font-size:10px;line-height:1;
+  background:rgba(0,0,0,.5);color:var(--bg);font-size:10px;line-height:1;
   opacity:.75;transition:opacity .12s linear,background .12s linear;pointer-events:none;
 }
-.reference-preview:hover::after{opacity:1;background:var(--mint);color:var(--forest-dark);}
+.reference-preview:hover::after{opacity:1;background:var(--violet-300);color:var(--primary-dark);}
 .reference-preview.enlarged::after{content:'✕';}
 .reference-preview canvas{width:100%;display:block;}
 .reference-preview-label{
-  display:block;padding:4px 6px;background:rgba(0,0,0,.5);color:var(--paper);font-family:'General Sans',sans-serif;font-size:11px;font-weight:600;
+  display:block;padding:4px 6px;background:rgba(0,0,0,.5);color:var(--bg);font-family:'Pretendard',sans-serif;font-size:11px;font-weight:600;
   text-align:center;line-height:1.3;
 }
 .reference-preview.enlarged{
@@ -86,7 +95,7 @@
 }
 
 #reshape-project-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
-#reshape-project-dialog h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin:0 0 10px;color:var(--forest);}
+#reshape-project-dialog h3{font-family:'Pretendard',sans-serif;font-size:18px;font-weight:700;margin:0 0 10px;color:var(--primary);}
 
 @media (max-width:640px){
   .reference-preview{width:72px;}
@@ -114,6 +123,9 @@
   body[data-mobile-fs] .project-head > p,
   body[data-mobile-fs] .project-progress,
   body[data-mobile-fs] .archived-banner,
+  body[data-mobile-fs] .project-stats-row,
+  body[data-mobile-fs] .project-actions-row,
+  body[data-mobile-fs] .contributor-avatars,
   body[data-mobile-fs] .colors-needed{display:none;}
   body[data-mobile-fs] .project-head-controls{
     margin:0;gap:8px;flex-direction:column;align-items:flex-start;
@@ -133,12 +145,12 @@
    Reuses the exact same #lightbox-* markup/ids the in-context modal on
    project.html/profile.html populates via populateLightboxContent(), just
    laid out inline in the page instead of as a fixed-position overlay. */
-.artwork-breadcrumb{padding:0 32px;font-family:'General Sans',sans-serif;font-size:13px;color:var(--muted);margin:20px 0 14px;}
+.artwork-breadcrumb{padding:0 32px;font-family:'Pretendard',sans-serif;font-size:13px;color:var(--muted);margin:20px 0 14px;}
 .artwork-breadcrumb a{color:var(--muted);text-decoration:none;}
-.artwork-breadcrumb a:hover{color:var(--forest);text-decoration:underline;}
+.artwork-breadcrumb a:hover{color:var(--primary);text-decoration:underline;}
 .artwork-stage{
-  position:relative;background:rgba(15,20,17,.94);border-radius:0;
-  display:flex;align-items:stretch;gap:1px;overflow:hidden;
+  position:relative;background:rgba(15,20,17,.94);border-radius:var(--r-lg);
+  display:flex;align-items:stretch;gap:1px;overflow:hidden;box-shadow:var(--shadow-md);
   min-height:60vh;margin:0 32px 40px;
 }
 .artwork-stage .lightbox-stage{padding:24px;opacity:1;transform:none;}

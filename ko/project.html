@@ -25,6 +25,7 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/home.css">
 <link rel="stylesheet" href="/css/project.css">
 </head>
 <body data-mobile-fs>
@@ -35,6 +36,7 @@
     <nav class="nav-links">
       <a href="/ko/projects" class="nav-link active">프로젝트</a>
       <a href="/ko/network" class="nav-link">네트워크</a>
+      <a href="/ko/artworks" class="nav-link">작품 탐색</a>
       <a href="/ko/artists" class="nav-link">작가</a>
       <a href="/ko/exhibitions" class="nav-link">전시</a>
       <a href="/ko/about" class="nav-link">소개</a>
@@ -55,7 +57,7 @@
     <div class="backnav">
       <a class="back" href="/ko/projects">&larr; 뒤로</a>
       <div style="display:flex;gap:10px;align-items:center;">
-        <button class="btn-cancel" id="reshapeProjectBtn" style="display:none;padding:11px 18px;border-radius:20px;font-family:'General Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+        <button class="btn-cancel" id="reshapeProjectBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
           그리드 재구성
         </button>
       </div>
@@ -68,6 +70,16 @@
         <a id="archivedBannerLink">현재 버전 보기 &rarr;</a>
       </div>
       <div class="project-progress" id="projectProgress"></div>
+      <div class="project-stats-row" id="projectStatsRow">
+        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🧩</span><div><div class="stat-value" id="statCellsFilled">0</div><div class="stat-label">채워진 칸</div></div></div>
+        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🎨</span><div><div class="stat-value" id="statContributors">0</div><div class="stat-label">참여 아티스트</div></div></div>
+        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">⬜</span><div><div class="stat-value" id="statCellsRemaining">0</div><div class="stat-label">남은 칸</div></div></div>
+      </div>
+      <div class="project-actions-row">
+        <button type="button" class="cta" id="projectParticipateBtn">참여하기 <span aria-hidden="true">&uarr;</span></button>
+        <button type="button" class="cta-outline" id="projectShareBtn">공유하기</button>
+      </div>
+      <div class="contributor-avatars" id="contributorAvatars"></div>
       <div class="colors-needed" id="colorsNeeded" style="display:none;">
         <div class="colors-needed-label"><span>아직 필요한 색상</span> <span class="field-hint">— 프로필에 이 색조의 작품을 업로드하면 자동으로 매칭돼요</span></div>
         <div class="color-swatches" id="colorSwatches"></div>

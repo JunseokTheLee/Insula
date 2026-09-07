@@ -1,0 +1,33 @@
+/* ============ ALL EXHIBITIONS ============ */
+.exhibitions-page{padding:28px 32px 20px;max-width:1464px;margin:0 auto;animation:fadeIn .3s ease-out;}
+.exhibitions-page-title{font-family:'Pretendard',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.01em;color:var(--gray-900);margin:0 0 8px;}
+.exhibitions-page-desc{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 20px;max-width:640px;}
+
+/* ---------- filter tabs (추천/인기/최신순/내 전시회) ----------
+   Only "Recent" (the existing published_at sort) and "My Exhibitions"
+   (client-filtered by owner) are backed by real data — Featured/Popular
+   have no popularity metric to sort by yet, so they render visually but
+   stay disabled rather than fake a sort order. */
+.exhibition-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 24px;}
+.exhibition-tab{
+  appearance:none;cursor:pointer;border:none;background:var(--gray-100);color:var(--muted);
+  font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;padding:9px 18px;border-radius:var(--r-full);
+  transition:background .12s linear,color .12s linear;
+}
+.exhibition-tab:hover:not(:disabled){background:var(--primary-soft);color:var(--primary);}
+.exhibition-tab.active{background:var(--gradient-primary);color:#fff;}
+.exhibition-tab:disabled{opacity:.5;cursor:default;}
+
+/* ---------- "create your own" CTA banner ---------- */
+.exhibitions-cta-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;
+  margin:40px 32px 48px;padding:32px 40px;border-radius:var(--r-xl);
+  background:var(--gradient-hero);
+}
+.exhibitions-cta-text h3{font-family:'Pretendard',sans-serif;font-weight:700;font-size:20px;color:var(--gray-900);margin:0 0 6px;}
+.exhibitions-cta-text p{font-family:'Pretendard',sans-serif;font-size:13.5px;color:var(--text);opacity:.75;margin:0;max-width:420px;}
+
+@media (max-width:640px){
+  .exhibitions-page{padding:16px 16px 12px;}
+  .exhibitions-cta-banner{margin:28px 16px 40px;padding:24px;}
+}

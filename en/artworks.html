@@ -4,39 +4,38 @@
 <link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weavo — Exhibition</title>
-<meta name="description" content="A curated mini-exhibition of artwork on Weavo.">
-<link rel="canonical" href="https://weavo.art/en/projects">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/projects">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/projects">
+<title>Browse Artworks | Weavo</title>
+<meta name="description" content="Browse every artwork submitted to the Weavo community, searchable by title or artist.">
+<link rel="canonical" href="https://weavo.art/en/artworks">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/artworks">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/artworks">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Weavo — Exhibition">
-<meta property="og:description" content="A curated mini-exhibition of artwork on Weavo.">
-<meta property="og:url" content="https://weavo.art/en/projects">
+<meta property="og:title" content="Browse Artworks | Weavo">
+<meta property="og:description" content="Browse every artwork submitted to the Weavo community, searchable by title or artist.">
+<meta property="og:url" content="https://weavo.art/en/artworks">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Weavo — Exhibition">
-<meta name="twitter:description" content="A curated mini-exhibition of artwork on Weavo.">
+<meta name="twitter:title" content="Browse Artworks | Weavo">
+<meta name="twitter:description" content="Browse every artwork submitted to the Weavo community, searchable by title or artist.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Artworks","item":"https://weavo.art/en/artworks"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <link rel="stylesheet" href="/css/base.css">
-<link rel="stylesheet" href="/css/project.css">
-<link rel="stylesheet" href="/css/profile.css">
+<link rel="stylesheet" href="/css/home.css">
+<link rel="stylesheet" href="/css/artworks.css">
 </head>
 <body>
 
 <div class="app">
   <header class="topnav">
-   <a class="logo" id="logoHome" href="/en/">Weavo</a>
+    <a class="logo" id="logoHome" href="/en/">Weavo</a>
     <nav class="nav-links">
       <a href="/en/projects" class="nav-link">Projects</a>
       <a href="/en/network" class="nav-link">Network</a>
-      <a href="/en/artworks" class="nav-link">Explore</a>
+      <a href="/en/artworks" class="nav-link active">Explore</a>
       <a href="/en/artists" class="nav-link">Artists</a>
       <a href="/en/exhibitions" class="nav-link">Exhibitions</a>
       <a href="/en/about" class="nav-link">About</a>
@@ -55,31 +54,23 @@
 
   <main class="main main-scroll">
     <div class="backnav">
-      <a class="back" id="collectionBackBtn" href="/en/projects">&larr; Back</a>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <button class="btn-cancel" id="publishCollectionBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-          Publish
-        </button>
-        <button class="btn-cancel" id="addArtworkBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-          + Add artwork
-        </button>
-        <button class="btn-cancel" id="editCollectionBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-          Edit
-        </button>
-        <button class="btn-cancel" id="deleteCollectionBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--accent-warm);">
-          Delete
-        </button>
+      <a class="back" href="/en/projects">&larr; Back</a>
+    </div>
+    <div class="artworks-page">
+      <div class="page-title-row">
+        <h1 class="artworks-page-title">Browse Artworks</h1>
+      </div>
+      <div class="artworks-page-desc">Every artwork submitted to the Weavo community, newest first.</div>
+      <div class="artworks-toolbar">
+        <input type="text" id="artworkSearchInput" class="artworks-search" placeholder="Search by title or artist…" autocomplete="off" spellcheck="false">
+        <select id="artworkSortSelect" class="artworks-sort">
+          <option value="newest">Newest</option>
+          <option value="liked">Most Liked</option>
+        </select>
       </div>
     </div>
-    <div class="project-head">
-      <h1 id="collectionTitle">Loading…</h1>
-      <div class="profile-meta" id="collectionMeta"></div>
-      <div class="collection-status" id="collectionStatus" style="display:none;"></div>
-      <p id="collectionDesc" style="display:none;"></p>
-      <div id="collectionOwnerByline"></div>
-    </div>
-    <div class="profile-art-grid" id="collectionItemsGrid"></div>
-    <div class="empty-note" id="collectionItemsEmpty" style="display:none;">Nothing added to this exhibition yet.</div>
+    <div class="artworks-grid" id="artworksGrid"></div>
+    <div class="empty-note" id="artworksEmpty" style="display:none;">No artworks found.</div>
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>
@@ -88,103 +79,6 @@
     <span class="sep" aria-hidden="true">&middot;</span>
     <a href="/en/delete-account">Delete Account</a>
   </footer>
-</div>
-
-<!-- Edit exhibition modal -->
-<div id="edit-collection-modal" class="modal-overlay">
-  <div id="edit-collection-dialog" class="modal-panel">
-    <h3>Edit Exhibition</h3>
-    <div class="field">
-      <label for="ec-title">Title</label>
-      <input type="text" id="ec-title" maxlength="80">
-    </div>
-    <div class="field">
-      <label for="ec-desc">Description <span class="field-hint">(optional)</span></label>
-      <textarea id="ec-desc" maxlength="500"></textarea>
-    </div>
-    <div class="field">
-      <label for="ec-public" style="display:flex;align-items:center;gap:8px;font-weight:400;">
-        <input type="checkbox" id="ec-public" style="width:auto;">
-        Anyone can view this exhibition
-      </label>
-    </div>
-    <div class="field">
-      <label for="ec-enddate">End date <span class="field-hint">(optional — the exhibition unpublishes itself once this date passes)</span></label>
-      <input type="date" id="ec-enddate">
-    </div>
-    <div class="field-error" id="ec-error"></div>
-    <div class="modal-actions">
-      <button id="ec-cancel" class="btn-cancel">Cancel</button>
-      <button id="ec-submit" class="btn-primary">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- Add artwork picker -->
-<div id="add-artwork-modal" class="modal-overlay">
-  <div id="add-artwork-dialog" class="modal-panel">
-    <h3>Add Artwork</h3>
-    <div id="aa-list"></div>
-    <div class="empty-note" id="aa-empty" style="display:none;padding:16px;">Nothing in your saved pool yet — collect some artwork first.</div>
-    <div class="modal-actions">
-      <button id="aa-done" class="btn-primary">Done</button>
-    </div>
-  </div>
-</div>
-
-<!-- Lightbox -->
-<div id="lightbox-modal" class="modal-overlay lightbox-overlay">
-  <div class="lightbox-stage" id="lightboxStage">
-    <div class="zoom-toolbar">
-      <button type="button" class="zoom-btn" id="lightbox-zoom-out" aria-label="Zoom out">&minus;</button>
-      <span class="zoom-level" id="lightbox-zoom-level">100%</span>
-      <button type="button" class="zoom-btn" id="lightbox-zoom-in" aria-label="Zoom in">+</button>
-      <button type="button" class="zoom-btn" id="lightbox-close" aria-label="Close">&#10005;</button>
-    </div>
-    <img id="lightbox-img" src="" alt="">
-  </div>
-  <div id="lightbox-caption">
-    <div id="lightbox-cap-title"></div>
-    <div id="lightbox-cap-meta"></div>
-    <div id="lightbox-artist-card">
-      <div id="lightbox-artist-avatar-wrap"></div>
-      <div class="lb-artist-info">
-        <a id="lightbox-artist-name" class="lb-artist-name"></a>
-      </div>
-    <button type="button" id="lightbox-artist-follow-btn" class="lb-artist-follow-btn" style="display:none;">Follow</button>
-    </div>
-    <div id="lightbox-artist-about">
-      <div class="lb-artist-about-label">About the artist</div>
-      <div id="lightbox-artist-bio" class="lb-artist-bio"></div>
-    </div>
-    <div id="lightbox-cap-desc"></div>
-    <a id="lightbox-cap-link" target="_blank" rel="ugc nofollow noopener noreferrer"></a>
-    <div class="lightbox-actions">
-      <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="Like this artwork">
-        <span class="icon"></span><span id="lb-like-count">0</span>
-      </button>
-      <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="View comments" aria-expanded="true">
-        <span class="icon"></span><span id="lb-comments-count">0</span>
-      </button>
-      <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="Delete this artwork" style="display:none;">
-        <span class="icon"></span><span>Delete</span>
-      </button>
-      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="Remove from project" style="display:none;">
-        <span class="icon"></span><span>Remove from project</span>
-      </button>
-    </div>
-    <div id="lightbox-comments" class="lightbox-comments open">
-      <div id="lightbox-comments-list"></div>
-      <div id="lightbox-comment-form">
-        <textarea id="lightbox-comment-input" placeholder="Add a comment…" maxlength="1000"></textarea>
-        <button type="button" id="lightbox-comment-post">Post</button>
-      </div>
-    </div>
-    <div id="lightbox-country-map">
-      <div class="lb-country-map-label" id="lb-country-map-label"></div>
-      <svg id="lb-country-map-svg" viewBox="0 0 280 150" preserveAspectRatio="xMidYMid meet"></svg>
-    </div>
-  </div>
 </div>
 
 <!-- Edit profile modal -->
@@ -247,7 +141,7 @@
   <div id="auth-dialog" class="modal-panel">
     <div class="auth-icon">🖼️</div>
     <h3>Join Weavo</h3>
-    <p>Sign in to contribute your artwork to a community weavo.</p>
+    <p>Sign in to contribute your artwork to a community mosaic.</p>
     <button id="google-signin-btn" class="oauth-signin-btn">
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
         <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2z"/>
@@ -287,11 +181,8 @@
 <script src="/js/supabase-client.js"></script>
 <script src="/js/i18n/en.js"></script>
 <script src="/js/common.js"></script>
-<script src="/js/color-engine.js"></script>
-<script src="/js/matching.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/notifications.js"></script>
-<script src="/js/lightbox.js"></script>
-<script src="/js/collection.js"></script>
+<script src="/js/artworks.js"></script>
 </body>
 </html>

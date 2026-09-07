@@ -41,6 +41,7 @@ const T = {
   couldNotLoadProjects: 'Could not load projects',
   couldNotLoadArtists: 'Could not load artists',
   couldNotLoadArtworks: 'Could not load artworks',
+  couldNotLoadArtworks: 'Could not load artworks',
   untitledArtwork: 'Untitled artwork',
   goToProject: 'Go to project {n}',
   goToSlide: 'Go to slide {n}',
@@ -157,6 +158,7 @@ const T = {
   saveLabel: 'Save',
   artworkUpdatedToast: 'Artwork updated',
   couldNotUpdateArtwork: 'Could not update artwork — try again',
+  linkCopied: 'Link copied',
 };
 
 function tr(key, vars) {
