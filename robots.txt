@@ -12,4 +12,10 @@ Disallow: /ko/profile.html
 Disallow: /en/artwork.html
 Disallow: /ko/artwork.html
 
+# Developer-facing files that live in the repository (which is also the
+# deploy root) — not product pages, so keep them out of the index.
+Disallow: /DevDocs/
+Disallow: /CLAUDE.md
+Disallow: /README.md
+
 Sitemap: https://weavo.art/sitemap.xml

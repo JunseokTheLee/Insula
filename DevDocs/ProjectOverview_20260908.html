@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Weavo Project Overview</title>
+<style>
+  /* Self-contained: no external fonts, scripts or stylesheets (see CLAUDE.md §8). */
+  :root {
+    --bg: #fbfbf9; --fg: #1c1c1a; --muted: #5f5f5a; --line: #e3e2dc;
+    --accent: #0f766e; --accent-soft: #e6f4f1; --code-bg: #f1f1ec;
+    --warn-bg: #fff7e6; --warn-line: #f0c36d; --card: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413; --fg: #ececea; --muted: #a3a39c; --line: #2c2c29;
+      --accent: #5eead4; --accent-soft: #12302c; --code-bg: #1d1d1b;
+      --warn-bg: #2e2513; --warn-line: #8a6a2a; --card: #1a1a19;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo",
+                 "Malgun Gothic", "Noto Sans KR", Helvetica, Arial, sans-serif;
+    font-size: 15px; line-height: 1.65;
+  }
+
+  /* ── Language switching ─────────────────────────────────────────────
+     English is the default and is shown by CSS alone (works without JS).
+     Selecting 한 sets data-lang="ko" on <html>, which hides .en and shows .ko.
+     Every translatable element exists twice: once with class "en", once "ko". */
+  html:not([data-lang="ko"]) .ko { display: none !important; }
+  html[data-lang="ko"] .en { display: none !important; }
+
+  /* ── Sticky top bar: stays visible while scrolling (CLAUDE.md §8) ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 20px; background: var(--bg); border-bottom: 1px solid var(--line);
+  }
+  .topbar .brand { font-weight: 700; letter-spacing: .01em; text-decoration: none; color: var(--fg); }
+  .topbar .brand small { font-weight: 400; color: var(--muted); }
+  .lang-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .lang-btn {
+    appearance: none; border: 0; background: transparent; color: var(--muted);
+    font: inherit; font-size: 13px; font-weight: 600; padding: 5px 14px; cursor: pointer;
+  }
+  .lang-btn:hover { color: var(--fg); }
+  .lang-btn.active { background: var(--accent); color: #fff; }
+  @media (prefers-color-scheme: dark) { .lang-btn.active { color: #0b1a17; } }
+
+  .wrap { max-width: 960px; margin: 0 auto; padding: 28px 20px 96px; }
+  h1 { font-size: 30px; line-height: 1.2; margin: 0 0 6px; }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+  h2 { font-size: 21px; margin: 44px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); scroll-margin-top: 64px; }
+  h3 { font-size: 16px; margin: 22px 0 8px; }
+  p { margin: 0 0 12px; }
+  a { color: var(--accent); }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "D2Coding", monospace; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.5; margin: 0 0 14px; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin: 3px 0; }
+
+  .toc { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin-bottom: 8px; }
+  .toc ol { margin: 0; columns: 2; column-gap: 28px; }
+  .toc li { break-inside: avoid; }
+  @media (max-width: 640px) { .toc ol { columns: 1; } }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin: 14px 0 6px; }
+  .fact { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .fact .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .fact .v { font-weight: 600; }
+
+  .tbl { overflow-x: auto; margin: 0 0 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+
+  .note, .warn { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 0 0 14px; }
+  .warn { border-left-color: var(--warn-line); background: var(--warn-bg); }
+
+  .arch { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: 8px; margin: 14px 0 10px; }
+  .arch .box { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+  .arch .box b { display: block; margin-bottom: 4px; }
+  .arch .box ul { margin: 0; padding-left: 18px; }
+  .arch .arrow { align-self: center; color: var(--muted); font-size: 22px; }
+  @media (max-width: 720px) { .arch { grid-template-columns: 1fr; } .arch .arrow { transform: rotate(90deg); justify-self: center; } }
+
+  .steps { counter-reset: step; list-style: none; padding: 0; }
+  .steps li { counter-increment: step; position: relative; padding-left: 40px; margin: 0 0 10px; }
+  .steps li::before { content: counter(step); position: absolute; left: 0; top: 2px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  @media (prefers-color-scheme: dark) { .steps li::before { color: #0b1a17; } }
+
+  @media print { .topbar { position: static; } .lang-toggle { display: none; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="#top">Weavo <small><span class="en">· Project Overview</span><span class="ko">· 프로젝트 개요</span></small></a>
+  <div class="lang-toggle" role="group" aria-label="Language">
+    <button type="button" class="lang-btn active" data-lang="en" aria-pressed="true">EN</button>
+    <button type="button" class="lang-btn" data-lang="ko" aria-pressed="false">한</button>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <h1><span class="en">Weavo — Project Overview</span><span class="ko">Weavo — 프로젝트 개요</span></h1>
+  <div class="meta">
+    <span class="en">Written 2026-09-08 · Site: <a href="https://weavo.art">weavo.art</a> · Repository: <a href="https://github.com/JunseokTheLee/Insula">github.com/JunseokTheLee/Insula</a> (folder <code>Insula</code>)</span>
+    <span class="ko">작성 2026-09-08 · 사이트: <a href="https://weavo.art">weavo.art</a> · 저장소: <a href="https://github.com/JunseokTheLee/Insula">github.com/JunseokTheLee/Insula</a> (폴더 이름 <code>Insula</code>)</span>
+  </div>
+
+  <nav class="toc">
+    <ol>
+      <li><a href="#s1"><span class="en">What Weavo is</span><span class="ko">Weavo 란</span></a></li>
+      <li><a href="#s2"><span class="en">How a mosaic comes together</span><span class="ko">모자이크가 만들어지는 과정</span></a></li>
+      <li><a href="#s3"><span class="en">Architecture</span><span class="ko">아키텍처</span></a></li>
+      <li><a href="#s4"><span class="en">Repository layout</span><span class="ko">저장소 구조</span></a></li>
+      <li><a href="#s5"><span class="en">Pages</span><span class="ko">페이지 목록</span></a></li>
+      <li><a href="#s6"><span class="en">Cloudflare Pages Functions</span><span class="ko">Cloudflare Pages Functions</span></a></li>
+      <li><a href="#s7"><span class="en">Data model (Supabase)</span><span class="ko">데이터 모델 (Supabase)</span></a></li>
+      <li><a href="#s8"><span class="en">Languages &amp; SEO</span><span class="ko">다국어 · SEO</span></a></li>
+      <li><a href="#s9"><span class="en">Caching &amp; security headers</span><span class="ko">캐시 · 보안 헤더</span></a></li>
+      <li><a href="#s10"><span class="en">Local development &amp; deployment</span><span class="ko">로컬 실행 · 배포</span></a></li>
+      <li><a href="#s11"><span class="en">Observations &amp; follow-ups</span><span class="ko">관찰 사항 · 후속 과제</span></a></li>
+      <li><a href="#s12"><span class="en">About this document</span><span class="ko">이 문서에 대해</span></a></li>
+    </ol>
+  </nav>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s1"><span class="en">1. What Weavo is</span><span class="ko">1. Weavo 란</span></h2>
+
+  <p class="en">Weavo is a collaborative art-mosaic community. Artists upload their own artwork; Weavo reads each piece's dominant color and automatically places it in the best-matching open cell across every active mosaic project. Nobody picks a project or a position — the full picture only comes into focus as more artists add theirs. Seen from afar it reads as one image; up close, every "tile" is somebody's complete, independently made artwork, shown at full size and credited to its artist.</p>
+  <p class="en">The site describes this as a mosaic built in reverse: a normal mosaic starts from the finished image and cuts pieces to fit it, whereas Weavo starts with nothing but a color rule. People who have never seen each other's work make their pieces first, and the whole only appears once enough of them have gathered.</p>
+  <p class="en">Weavo is meant as a space where artists with and without disabilities are connected side by side through their work, without distinction — regardless of who made a piece or how, every piece takes part as an equal part of the whole.</p>
+
+  <p class="ko">Weavo 는 여러 사람의 작품이 모여 하나의 큰 모자이크를 완성하는 협업 예술 커뮤니티입니다. 작가는 자신의 작품만 올리면 됩니다. Weavo 가 작품의 대표 색상을 읽어, 진행 중인 모든 프로젝트를 통틀어 색이 가장 잘 맞는 빈 칸에 자동으로 배치합니다. 프로젝트나 위치를 사람이 고르지 않으며, 작품이 쌓일수록 전체 그림이 서서히 드러납니다. 멀리서 보면 하나의 이미지지만, 가까이 가면 각 "타일"이 누군가가 완성한 독립된 작품이고, 원본 크기로 작가 이름과 함께 보입니다.</p>
+  <p class="ko">사이트는 이것을 "거꾸로 만들어지는 모자이크"라고 설명합니다. 일반 모자이크는 완성 이미지를 먼저 정하고 거기에 맞춰 조각을 만들지만, Weavo 는 색상 규칙 외에는 아무것도 정하지 않고 시작합니다. 서로의 작품을 본 적 없는 사람들이 먼저 각자의 작품을 만들고, 충분히 모인 뒤에야 전체 모습이 나타납니다.</p>
+  <p class="ko">Weavo 는 장애인 아티스트와 비장애인 아티스트가 구분되지 않은 채 작품으로 나란히 연결되는 공간을 지향합니다. 누가, 어떤 방식으로 만들었는지와 관계없이 모든 작품은 전체를 완성하는 동등한 하나의 조각으로 참여합니다.</p>
+
+  <div class="facts">
+    <div class="fact"><div class="k"><span class="en">Domain</span><span class="ko">도메인</span></div><div class="v">weavo.art</div></div>
+    <div class="fact"><div class="k"><span class="en">Languages</span><span class="ko">언어</span></div><div class="v">English (/en/) · 한국어 (/ko/)</div></div>
+    <div class="fact"><div class="k"><span class="en">Frontend</span><span class="ko">프론트엔드</span></div><div class="v"><span class="en">Static HTML/CSS/JS, no build</span><span class="ko">정적 HTML/CSS/JS, 빌드 없음</span></div></div>
+    <div class="fact"><div class="k"><span class="en">Hosting</span><span class="ko">호스팅</span></div><div class="v">Cloudflare Pages + Functions</div></div>
+    <div class="fact"><div class="k"><span class="en">Backend</span><span class="ko">백엔드</span></div><div class="v">Supabase (Postgres · Auth · Storage)</div></div>
+    <div class="fact"><div class="k">Android</div><div class="v"><span class="en">TWA app <code>art.weavo.app</code></span><span class="ko">TWA 앱 <code>art.weavo.app</code></span></div></div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s2"><span class="en">2. How a mosaic comes together</span><span class="ko">2. 모자이크가 만들어지는 과정</span></h2>
+
+  <ol class="steps">
+    <li><span class="en"><b>An admin creates a project.</b> A reference image is reduced to a grid of target colors (<code>imageToColorGrid()</code> in <code>js/color-engine.js</code>); one <code>mosaic_pixels</code> row is created per cell. Cells that fall on transparent parts of the reference are skipped entirely and stay as permanent gaps.</span><span class="ko"><b>관리자가 프로젝트를 만듭니다.</b> 기준 이미지를 목표 색상 격자로 축소하고(<code>js/color-engine.js</code> 의 <code>imageToColorGrid()</code>), 칸마다 <code>mosaic_pixels</code> 행을 하나씩 만듭니다. 기준 이미지의 투명한 부분에 해당하는 칸은 아예 만들지 않아 영구적인 빈 자리로 남습니다.</span></li>
+    <li><span class="en"><b>An artist uploads artwork from their profile</b> (<code>js/profile-view.js</code>) into the Supabase Storage bucket <code>artwork</code>. No project is chosen and no tags are entered. The piece lands in <code>mosaic_submissions</code> with <code>project_id</code>/<code>pixel_id</code> empty — the artist's "pool".</span><span class="ko"><b>작가가 프로필에서 작품을 올립니다</b>(<code>js/profile-view.js</code>). 파일은 Supabase Storage 의 <code>artwork</code> 버킷에 저장됩니다. 프로젝트 선택도, 태그 입력도 없습니다. 작품은 <code>project_id</code>/<code>pixel_id</code> 가 비어 있는 상태로 <code>mosaic_submissions</code> 에 들어갑니다 — 작가의 "풀(pool)" 입니다.</span></li>
+    <li><span class="en"><b>The dominant color is computed in the browser.</b> <code>imageAverageColor()</code> samples the image on a 48×48 grid, weighted by alpha, so transparent padding (common on uploaded PNGs) no longer drags the average toward black.</span><span class="ko"><b>대표 색상은 브라우저에서 계산합니다.</b> <code>imageAverageColor()</code> 가 이미지를 48×48 격자로 샘플링하고 알파값으로 가중 평균을 냅니다. 업로드 PNG 에 흔한 투명 여백이 평균을 검정 쪽으로 끌어내리는 문제를 이렇게 피했습니다.</span></li>
+    <li><span class="en"><b>Cross-project matching runs</b> (<code>runPoolMatching()</code> in <code>js/matching.js</code>). Every pool piece, oldest upload first, claims the still-open cell closest to it by Lab color distance across <em>all</em> non-archived projects — but only if the match is good enough (<code>POOR_MATCH_DISTANCE</code>). The result is committed atomically by the <code>commit_pool_matches</code> RPC, which re-checks every assignment server-side because the browser's snapshot may already be stale.</span><span class="ko"><b>프로젝트를 가로지르는 매칭이 실행됩니다</b>(<code>js/matching.js</code> 의 <code>runPoolMatching()</code>). 풀에 있는 작품이 오래된 업로드 순으로, 보관되지 않은 <em>모든</em> 프로젝트의 빈 칸 가운데 Lab 색거리가 가장 가까운 칸을 차지합니다 — 단, 매칭 품질이 기준(<code>POOR_MATCH_DISTANCE</code>)을 넘을 때만입니다. 결과는 <code>commit_pool_matches</code> RPC 가 원자적으로 기록하며, 브라우저의 스냅샷이 이미 낡았을 수 있어 서버에서 모든 배정을 다시 검증합니다.</span></li>
+    <li><span class="en"><b>There is no server process or cron.</b> Matching is triggered right after anything that changes either side of the match — a new upload, a new project's cells coming online, a reshape, or a piece being removed — from the page that caused it. A throttled cleanup pass (<code>releasePoorlyMatchedPieces()</code>) returns badly matched pieces to the pool at most once per 6 hours sitewide, guarded DB-side by <code>claim_rematch_slot</code>.</span><span class="ko"><b>서버 프로세스나 크론은 없습니다.</b> 매칭은 매칭의 양쪽 중 하나가 바뀌는 순간 — 새 업로드, 새 프로젝트의 칸 생성, reshape, 작품 제거 — 그 동작을 일으킨 페이지에서 곧바로 실행됩니다. 색이 잘 맞지 않는 작품을 풀로 되돌리는 정리 작업(<code>releasePoorlyMatchedPieces()</code>)은 사이트 전체에서 6시간에 한 번만 돌며, <code>claim_rematch_slot</code> 이 DB 쪽에서 동시 실행을 막습니다.</span></li>
+  </ol>
+
+  <h3><span class="en">Cell state machine</span><span class="ko">칸(셀) 상태 머신</span></h3>
+  <p class="en">Cell ownership is enforced by the row-level-security policy on <code>mosaic_pixels</code> (<code>supabase_mosaic.sql</code>), so two browsers can't take the same cell:</p>
+  <p class="ko">칸의 점유는 <code>mosaic_pixels</code> 의 행 수준 보안(RLS) 정책(<code>supabase_mosaic.sql</code>)이 강제하므로, 두 브라우저가 같은 칸을 차지할 수 없습니다.</p>
+  <div class="tbl"><table>
+    <thead><tr><th><span class="en">State</span><span class="ko">상태</span></th><th><span class="en">Row</span><span class="ko">행 값</span></th><th><span class="en">Who may change it</span><span class="ko">누가 바꿀 수 있나</span></th></tr></thead>
+    <tbody>
+      <tr><td><span class="en">Open</span><span class="ko">비어 있음</span></td><td><code>filled=false</code></td><td><span class="en">Any signed-in user may claim it (→ Claimed)</span><span class="ko">로그인한 누구나 점유할 수 있음 (→ 점유됨)</span></td></tr>
+      <tr><td><span class="en">Claimed</span><span class="ko">점유됨</span></td><td><code>filled=true, submission_id=null, claimed_by=me</code></td><td><span class="en">Only the claimant may attach their submission (→ Filled). After 10 minutes the claim is stale and anyone may sweep it back to Open.</span><span class="ko">점유자만 자기 작품을 붙일 수 있음 (→ 채워짐). 10분이 지나면 점유가 만료되어 누구나 비어 있음으로 되돌릴 수 있음.</span></td></tr>
+      <tr><td><span class="en">Filled</span><span class="ko">채워짐</span></td><td><code>filled=true, submission_id=…</code></td><td><span class="en">Immutable to normal users. Freed only by deleting the submission (author or admin), which resets the pixel via <code>reset_pixel_on_submission_delete</code> / admin policy.</span><span class="ko">일반 사용자는 더 이상 바꿀 수 없음. 작품 삭제(작가 본인 또는 관리자)로만 풀리며, <code>reset_pixel_on_submission_delete</code> / 관리자 정책이 칸을 되돌림.</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3><span class="en">Key parameters</span><span class="ko">주요 파라미터</span></h3>
+  <div class="tbl"><table>
+    <thead><tr><th><span class="en">Parameter</span><span class="ko">항목</span></th><th><span class="en">Value</span><span class="ko">값</span></th><th><span class="en">Where</span><span class="ko">위치</span></th></tr></thead>
+    <tbody>
+      <tr><td><span class="en">Grid size</span><span class="ko">격자 크기</span></td><td><span class="en">1–100 × 1–100, at most 10,000 cells</span><span class="ko">가로·세로 각 1–100, 최대 10,000칸</span></td><td><code>supabase_mosaic.sql</code> (<code>mosaic_projects_dims_check</code>)</td></tr>
+      <tr><td><span class="en">Transparency cutoff</span><span class="ko">투명 판정 기준</span></td><td><span class="en">alpha &lt; 5 → pixel ignored / cell skipped</span><span class="ko">alpha &lt; 5 → 픽셀 무시 / 칸 생략</span></td><td><code>TRANSPARENT_ALPHA_THRESHOLD</code>, <code>js/color-engine.js</code></td></tr>
+      <tr><td><span class="en">Average-color sampling</span><span class="ko">평균색 샘플링</span></td><td><span class="en">48 × 48, alpha-weighted</span><span class="ko">48 × 48, 알파 가중</span></td><td><code>AVG_COLOR_SAMPLE_SIZE</code>, <code>js/color-engine.js</code></td></tr>
+      <tr><td><span class="en">Match quality bar</span><span class="ko">매칭 품질 기준</span></td><td><span class="en">Lab distance ≤ 30 (was 60)</span><span class="ko">Lab 거리 ≤ 30 (이전 60)</span></td><td><code>POOR_MATCH_DISTANCE</code>, <code>js/color-engine.js</code></td></tr>
+      <tr><td><span class="en">Release threshold</span><span class="ko">되돌림 기준</span></td><td><span class="en">distance &gt; 32 → sent back to the pool</span><span class="ko">거리 &gt; 32 → 풀로 되돌림</span></td><td><code>REMATCH_RELEASE_DISTANCE</code>, <code>js/matching.js</code></td></tr>
+      <tr><td><span class="en">Cleanup throttle</span><span class="ko">정리 작업 주기</span></td><td><span class="en">once per 6 hours, sitewide</span><span class="ko">사이트 전체 6시간에 1회</span></td><td><code>claim_rematch_slot</code>, <code>supabase_mosaic_rematch.sql</code></td></tr>
+      <tr><td><span class="en">Stale claim</span><span class="ko">점유 만료</span></td><td><span class="en">10 minutes</span><span class="ko">10분</span></td><td><span class="en">RLS policy on <code>mosaic_pixels</code></span><span class="ko"><code>mosaic_pixels</code> RLS 정책</span></td></tr>
+      <tr><td><span class="en">Submissions</span><span class="ko">제출</span></td><td><span class="en">one per cell (unique index); rate-limited per user</span><span class="ko">칸당 1개(유니크 인덱스); 사용자별 속도 제한</span></td><td><code>enforce_mosaic_submission_rate_limit</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s3"><span class="en">3. Architecture</span><span class="ko">3. 아키텍처</span></h2>
+
+  <div class="arch">
+    <div class="box"><b><span class="en">Browser</span><span class="ko">브라우저</span></b>
+      <ul>
+        <li><span class="en">Static HTML per page &amp; language</span><span class="ko">페이지·언어별 정적 HTML</span></li>
+        <li><span class="en">Plain JS, globals shared by load order</span><span class="ko">순수 JS, 로드 순서로 전역 공유</span></li>
+        <li>supabase-js · d3 · topojson (CDN)</li>
+        <li><span class="en">Color analysis &amp; matching run here</span><span class="ko">색 분석·매칭이 여기서 실행</span></li>
+      </ul></div>
+    <div class="arrow">→</div>
+    <div class="box"><b>Cloudflare Pages</b>
+      <ul>
+        <li><span class="en">Static assets from the repo root</span><span class="ko">저장소 루트를 정적 자산으로 서빙</span></li>
+        <li><span class="en">Functions: language redirect, meta pre-render, <code>/img</code> proxy, sitemaps, legacy 301s</span><span class="ko">Functions: 언어 리다이렉트, 메타 프리렌더, <code>/img</code> 프록시, 사이트맵, 옛 주소 301</span></li>
+        <li><code>_headers</code> · <code>_redirects</code></li>
+      </ul></div>
+    <div class="arrow">→</div>
+    <div class="box"><b>Supabase</b>
+      <ul>
+        <li><span class="en">Postgres with RLS + RPCs</span><span class="ko">Postgres (RLS + RPC)</span></li>
+        <li><span class="en">Auth (Google / Apple sign-in)</span><span class="ko">Auth (Google / Apple 로그인)</span></li>
+        <li><span class="en">Storage bucket <code>artwork</code></span><span class="ko">Storage 버킷 <code>artwork</code></span></li>
+      </ul></div>
+  </div>
+
+  <ul>
+    <li><span class="en"><b>The browser talks to Supabase directly</b> with the public anon key (<code>js/supabase-client.js</code>). Every permission is enforced by RLS policies and column-scoped grants, not by application code.</span><span class="ko"><b>브라우저가 공개 anon 키로 Supabase 에 직접 접속합니다</b>(<code>js/supabase-client.js</code>). 모든 권한은 앱 코드가 아니라 RLS 정책과 컬럼 단위 grant 가 강제합니다.</span></li>
+    <li><span class="en"><b>Multi-step writes go through RPCs</b> that re-validate on the server: <code>commit_pool_matches</code>, <code>reshape_mosaic_project</code>, <code>unmatch_submission(s)</code>, <code>delete_mosaic_project</code>, <code>delete_own_account</code>.</span><span class="ko"><b>여러 단계로 이루어진 쓰기는 RPC 를 거칩니다.</b> 서버에서 다시 검증합니다: <code>commit_pool_matches</code>, <code>reshape_mosaic_project</code>, <code>unmatch_submission(s)</code>, <code>delete_mosaic_project</code>, <code>delete_own_account</code>.</span></li>
+    <li><span class="en"><b>Images never hit Supabase egress twice per edge.</b> <code>cdnUrl()</code> in <code>js/common.js</code> rewrites Storage URLs to <code>/img/&lt;bucket&gt;/&lt;path&gt;</code>; <code>functions/img/[[path]].js</code> fetches the object once and caches it at the Cloudflare edge for a year.</span><span class="ko"><b>이미지는 엣지마다 Supabase 에서 한 번만 가져옵니다.</b> <code>js/common.js</code> 의 <code>cdnUrl()</code> 이 Storage URL 을 <code>/img/&lt;bucket&gt;/&lt;path&gt;</code> 로 바꾸고, <code>functions/img/[[path]].js</code> 가 객체를 한 번 받아 Cloudflare 엣지에 1년간 캐시합니다.</span></li>
+    <li><span class="en"><b>The Android app is a Trusted Web Activity</b> pointed at the same site (<code>.well-known/assetlinks.json</code>, package <code>art.weavo.app</code>).</span><span class="ko"><b>Android 앱은 같은 사이트를 감싼 Trusted Web Activity</b> 입니다(<code>.well-known/assetlinks.json</code>, 패키지 <code>art.weavo.app</code>).</span></li>
+  </ul>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s4"><span class="en">4. Repository layout</span><span class="ko">4. 저장소 구조</span></h2>
+
+<pre class="en"><code>index.html               static language-chooser fallback (functions/index.js normally answers first)
+en/  ko/                 one HTML page per feature, per language — same file names in both trees
+css/                     base.css + one stylesheet per page (home, project, profile, network, …)
+js/                      shared: supabase-client, common, auth, notifications, lightbox,
+                         color-engine, matching, graph-common; per page: landing, home, project,
+                         artwork(s), artists, profile-view, collection, exhibitions, network
+js/i18n/                 en.js / ko.js — runtime-only strings (toasts, dialogs), set CURRENT_LANG
+functions/               Cloudflare Pages Functions (see §6)
+supabase_*.sql           29 files: schema, RLS policies, RPCs — run by hand in the SQL editor
+_headers  _redirects     Cloudflare Pages headers / redirects
+robots.txt  sitemap.xml  sitemap-static.xml (dynamic sitemaps come from functions/)
+.well-known/             assetlinks.json (Android app links)
+logo.png  logo-96.png  logo.ico   brand assets served from the root
+apple.png  image.png  suggestion.png   images in the root that no page references
+node_modules/            wrangler + miniflare, committed (no package.json)
+DevDocs/                 developer documentation — this file
+README.md  CLAUDE.md     project readme / AI working rules
+SEO_DEPLOYMENT_CHECKLIST.md   manual post-deploy checks
+weavo_review.html        an earlier review document (2026-09-01; root-level, predates DevDocs/)
+profile.js               root-level leftover (not referenced by any page)</code></pre>
+
+<pre class="ko"><code>index.html               언어 선택 정적 폴백 (보통은 functions/index.js 가 먼저 응답)
+en/  ko/                 기능별 HTML 페이지를 언어마다 하나씩 — 두 트리의 파일 이름이 같다
+css/                     base.css + 페이지별 스타일시트 (home, project, profile, network, …)
+js/                      공통: supabase-client, common, auth, notifications, lightbox,
+                         color-engine, matching, graph-common / 페이지별: landing, home, project,
+                         artwork(s), artists, profile-view, collection, exhibitions, network
+js/i18n/                 en.js / ko.js — 런타임 문자열(토스트·대화상자)만, CURRENT_LANG 설정
+functions/               Cloudflare Pages Functions (6절 참고)
+supabase_*.sql           29개: 스키마·RLS 정책·RPC — SQL 에디터에서 수동 실행
+_headers  _redirects     Cloudflare Pages 헤더 / 리다이렉트
+robots.txt  sitemap.xml  sitemap-static.xml (동적 사이트맵은 functions/ 에서 생성)
+.well-known/             assetlinks.json (Android 앱 링크)
+logo.png  logo-96.png  logo.ico   루트에서 서빙되는 브랜드 자산
+apple.png  image.png  suggestion.png   어느 페이지도 참조하지 않는 루트의 이미지
+node_modules/            wrangler + miniflare, 커밋돼 있음 (package.json 없음)
+DevDocs/                 개발 문서 — 이 파일
+README.md  CLAUDE.md     프로젝트 readme / AI 작업 규칙
+SEO_DEPLOYMENT_CHECKLIST.md   배포 후 수동 점검 목록
+weavo_review.html        예전 검토 문서 (2026-09-01; 루트에 있음, DevDocs/ 이전에 만들어짐)
+profile.js               루트에 남아 있는 잔여 파일 (어느 페이지도 참조하지 않음)</code></pre>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s5"><span class="en">5. Pages</span><span class="ko">5. 페이지 목록</span></h2>
+  <p class="en">Every page exists twice, at <code>/en/…</code> and <code>/ko/…</code>. All pages load <code>supabase-client.js</code>, the language's i18n file, <code>common.js</code>, <code>auth.js</code> and <code>notifications.js</code>; the last column lists what each page adds on top.</p>
+  <p class="ko">모든 페이지는 <code>/en/…</code> 과 <code>/ko/…</code> 에 한 쌍으로 있습니다. 모든 페이지가 <code>supabase-client.js</code>, 해당 언어 i18n 파일, <code>common.js</code>, <code>auth.js</code>, <code>notifications.js</code> 를 로드하며, 마지막 열은 페이지가 추가로 로드하는 스크립트입니다.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>URL</th><th><span class="en">Purpose</span><span class="ko">역할</span></th><th><span class="en">Page scripts</span><span class="ko">페이지 스크립트</span></th></tr></thead>
+    <tbody>
+      <tr><td><code>/{lang}/</code></td><td><span class="en">Landing page: latest artworks/exhibitions, hero preview of a live project, stats, how-it-works</span><span class="ko">랜딩: 최신 작품·전시, 진행 중 프로젝트 미리보기, 통계, 작동 방식</span></td><td>color-engine, matching, project-preview, lightbox, landing</td></tr>
+      <tr><td><code>/{lang}/projects</code></td><td><span class="en">Project list; admins create new projects here (reference image → grid)</span><span class="ko">프로젝트 목록; 관리자는 여기서 새 프로젝트 생성 (기준 이미지 → 격자)</span></td><td>color-engine, matching, project-preview, home</td></tr>
+      <tr><td><code>/{lang}/projects/{id}</code></td><td><span class="en">Project detail: mosaic grid with pan/zoom, list view, admin reshape</span><span class="ko">프로젝트 상세: 팬/줌 되는 모자이크 격자, 목록 보기, 관리자 reshape</span></td><td>color-engine, matching, lightbox, project</td></tr>
+      <tr><td><code>/{lang}/artworks</code></td><td><span class="en">Browse every submitted artwork, newest first</span><span class="ko">제출된 모든 작품 탐색 (최신순)</span></td><td>artworks</td></tr>
+      <tr><td><code>/{lang}/artworks/{id}</code></td><td><span class="en">Single artwork page (opens the lightbox: likes, comments, details, artist card with a mini country-locator map drawn with d3 + topojson, report/delete)</span><span class="ko">작품 단일 페이지 (라이트박스: 좋아요·댓글·상세·d3 + topojson 으로 그린 작가 국가 위치 미니 지도가 있는 작가 카드·신고/삭제)</span></td><td>color-engine, matching, lightbox, artwork</td></tr>
+      <tr><td><code>/{lang}/artists</code></td><td><span class="en">Artist directory</span><span class="ko">아티스트 목록</span></td><td>artists</td></tr>
+      <tr><td><code>/{lang}/artists/{handle}</code></td><td><span class="en">Profile: header, upload form, contributed/pool/liked artwork, personal follow graph</span><span class="ko">프로필: 헤더, 업로드 폼, 참여/풀/좋아요 작품, 개인 팔로우 그래프</span></td><td>color-engine, matching, lightbox, graph-common, profile-view</td></tr>
+      <tr><td><code>/{lang}/exhibitions</code></td><td><span class="en">Published collections ("exhibitions")</span><span class="ko">발행된 컬렉션("전시") 목록</span></td><td>exhibitions</td></tr>
+      <tr><td><code>/{lang}/collections/{id}</code></td><td><span class="en">One collection and its items</span><span class="ko">컬렉션 하나와 그 안의 작품</span></td><td>color-engine, matching, lightbox, collection</td></tr>
+      <tr><td><code>/{lang}/network</code></td><td><span class="en">Sitewide "save" (follow) relationship graph, d3-force</span><span class="ko">사이트 전체 "저장"(팔로우) 관계 그래프, d3-force</span></td><td>graph-common, network</td></tr>
+      <tr><td><code>/{lang}/about</code> · <code>privacy</code> · <code>disclaimer</code> · <code>delete-account</code></td><td><span class="en">Static information pages; delete-account calls <code>delete_own_account</code></span><span class="ko">정적 안내 페이지; delete-account 는 <code>delete_own_account</code> 호출</span></td><td>—</td></tr>
+      <tr><td><code>/{lang}/404</code></td><td><span class="en">Not-found page, served with a real 404 status</span><span class="ko">찾을 수 없음 페이지 (실제 404 상태 코드)</span></td><td>—</td></tr>
+    </tbody>
+  </table></div>
+  <p class="en">The physical files are <code>en/project.html</code>, <code>en/artwork.html</code>, <code>en/profile.html</code> and <code>en/collection.html</code>; the clean <code>/projects/{id}</code>-style URLs are produced by the Functions in §6, and the bare <code>project</code>/<code>profile</code>/<code>artwork</code> template addresses are disallowed in <code>robots.txt</code>.</p>
+  <p class="ko">실제 파일은 <code>en/project.html</code>, <code>en/artwork.html</code>, <code>en/profile.html</code>, <code>en/collection.html</code> 이며, <code>/projects/{id}</code> 같은 깔끔한 URL 은 6절의 Functions 가 만듭니다. project/profile/artwork 템플릿 파일의 원래 주소는 <code>robots.txt</code> 에서 색인 제외돼 있습니다.</p>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s6"><span class="en">6. Cloudflare Pages Functions</span><span class="ko">6. Cloudflare Pages Functions</span></h2>
+  <div class="tbl"><table>
+    <thead><tr><th><span class="en">File</span><span class="ko">파일</span></th><th><span class="en">What it does</span><span class="ko">역할</span></th></tr></thead>
+    <tbody>
+      <tr><td><code>functions/index.js</code></td><td><span class="en">Root <code>/</code>: 302 to <code>/en/</code> or <code>/ko/</code> — <code>weavoLang</code> cookie, then <code>Accept-Language</code>, then English. Query string is forwarded; the URL fragment (OAuth tokens) survives on its own.</span><span class="ko">루트 <code>/</code>: <code>/en/</code> 또는 <code>/ko/</code> 로 302 — <code>weavoLang</code> 쿠키 → <code>Accept-Language</code> → 영어 순. 쿼리는 전달되고 URL 프래그먼트(OAuth 토큰)는 브라우저가 알아서 유지.</span></td></tr>
+      <tr><td><code>functions/_lib/render.js</code></td><td><span class="en">Shared <code>HTMLRewriter</code> pre-renderer: fetches the static template and rewrites only <code>&lt;head&gt;</code> tags (title, description, canonical, hreflang, OG/Twitter, JSON-LD) with the real entity. Same HTML for bots and browsers; client JS fills the tags again as a fallback.</span><span class="ko">공용 <code>HTMLRewriter</code> 프리렌더러: 정적 템플릿을 받아 <code>&lt;head&gt;</code> 태그(title, description, canonical, hreflang, OG/Twitter, JSON-LD)만 실제 데이터로 바꿉니다. 봇과 브라우저에 같은 HTML 을 주고, 클라이언트 JS 가 폴백으로 다시 채웁니다.</span></td></tr>
+      <tr><td><code>functions/{en,ko}/projects/[id].js</code><br><code>…/artworks/[id].js</code><br><code>…/artists/[handle].js</code><br><code>…/collections/[id].js</code></td><td><span class="en">Detail routes using the renderer above. Artist URLs canonicalize an id to the username when one exists. Missing entities return a real HTTP 404.</span><span class="ko">위 렌더러를 쓰는 상세 라우트. 작가 URL 은 id 로 들어와도 username 이 있으면 그쪽으로 정규화. 없는 항목은 실제 HTTP 404.</span></td></tr>
+      <tr><td><code>functions/{en,ko}/project.html.js</code><br><code>functions/{en,ko}/profile.html.js</code></td><td><span class="en">Permanent redirects from the legacy <code>project.html?id=</code> / <code>profile.html?user=</code> addresses to the clean URLs.</span><span class="ko">옛 <code>project.html?id=</code> / <code>profile.html?user=</code> 주소를 새 URL 로 영구 리다이렉트.</span></td></tr>
+      <tr><td><code>functions/img/[[path]].js</code></td><td><span class="en">Same-origin proxy for Supabase Storage public objects with a 1-year immutable edge cache.</span><span class="ko">Supabase Storage 공개 객체의 동일 출처 프록시. 엣지에 1년 immutable 캐시.</span></td></tr>
+      <tr><td><code>functions/sitemap-projects.xml.js</code><br><code>…-artworks.xml.js</code> · <code>…-artists.xml.js</code> · <code>…-collections.xml.js</code></td><td><span class="en">Dynamic sitemaps listed from the static <code>sitemap.xml</code> index. Artworks are capped at Supabase's default 1,000-row page.</span><span class="ko">정적 <code>sitemap.xml</code> 인덱스가 가리키는 동적 사이트맵. 작품 사이트맵은 Supabase 기본 페이지 크기 1,000행에 묶여 있음.</span></td></tr>
+      <tr><td><code>functions/resweep-bad-matches.js</code></td><td><span class="en">Not a route — a one-off console script (run as admin on the site) that re-checks placed pieces against the stricter match threshold and returns bad ones to the pool.</span><span class="ko">라우트가 아니라 일회성 콘솔 스크립트 — 관리자로 로그인한 사이트에서 실행해, 더 엄격해진 매칭 기준으로 배치된 작품을 재검사하고 안 맞는 것을 풀로 되돌림.</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s7"><span class="en">7. Data model (Supabase)</span><span class="ko">7. 데이터 모델 (Supabase)</span></h2>
+  <p class="en">All schema lives in the <code>supabase_*.sql</code> files at the repository root. Each is written to be run once, by hand, in the Supabase SQL editor, and is idempotent (<code>if not exists</code>, <code>drop policy if exists</code> …). <code>supabase_mosaic.sql</code> is the core; the others were added feature by feature.</p>
+  <p class="ko">스키마는 모두 저장소 루트의 <code>supabase_*.sql</code> 파일에 있습니다. 각 파일은 Supabase SQL 에디터에서 사람이 한 번 실행하는 것을 전제로 하며 멱등하게 작성돼 있습니다(<code>if not exists</code>, <code>drop policy if exists</code> …). <code>supabase_mosaic.sql</code> 이 핵심이고 나머지는 기능별로 추가된 것입니다.</p>
+
+  <h3><span class="en">Tables</span><span class="ko">테이블</span></h3>
+  <div class="tbl"><table>
+    <thead><tr><th><span class="en">Group</span><span class="ko">분류</span></th><th><span class="en">Tables</span><span class="ko">테이블</span></th><th><span class="en">Notes</span><span class="ko">비고</span></th></tr></thead>
+    <tbody>
+      <tr><td><span class="en">Mosaic core</span><span class="ko">모자이크 핵심</span></td><td><code>mosaic_projects</code> · <code>mosaic_pixels</code> · <code>mosaic_submissions</code> · <code>mosaic_meta</code></td><td><span class="en">Projects hold the reference image and grid size; one pixel row per cell; a submission is one artwork (with title, description, link, completion year, average color); <code>mosaic_meta</code> is the singleton row for the rematch throttle.</span><span class="ko">프로젝트는 기준 이미지와 격자 크기를 가짐; 칸마다 픽셀 행 하나; 제출은 작품 하나(제목·설명·링크·완성 연도·평균색); <code>mosaic_meta</code> 는 rematch 스로틀용 단일 행.</span></td></tr>
+      <tr><td><span class="en">People</span><span class="ko">사용자</span></td><td><code>profiles</code> · <code>user_saves</code> · <code>user_blocks</code> · <code>reports</code> · <code>notifications</code></td><td><span class="en">Profiles carry name, username (handle), avatar, bio, links, country/city, a disabilities field and the admin flag (<code>is_admin</code>, not client-writable). <code>user_saves</code> is a user-to-user "save" — the app's word for a follow — and feeds the network graphs. Blocks and reports are moderation. Notifications cover follows, likes, comments and replies.</span><span class="ko">프로필은 이름·username(핸들)·아바타·소개·링크·국가/도시·장애 정보·관리자 플래그(<code>is_admin</code>, 클라이언트가 수정 불가)를 가짐. <code>user_saves</code> 는 사용자 간 "저장(Save)" — 이 앱에서 팔로우를 부르는 말 — 이며 네트워크 그래프의 바탕. 차단·신고는 운영용. 알림은 팔로우·좋아요·댓글·답글.</span></td></tr>
+      <tr><td><span class="en">Engagement</span><span class="ko">반응</span></td><td><code>mosaic_submission_likes</code> · <code>mosaic_submission_comments</code></td><td><span class="en">Likes and threaded comments on artworks (the lightbox).</span><span class="ko">작품(라이트박스)에 대한 좋아요와 스레드 댓글.</span></td></tr>
+      <tr><td><span class="en">Legacy</span><span class="ko">잔재</span></td><td><code>cell_likes</code> · <code>cell_comments</code> · <code>profile_comments</code></td><td><span class="en">Left over from an earlier version of the site (artwork-level likes/comments and a profile guestbook). No current page code reads or writes them; they only appear in the schema and in the account-deletion SQL.</span><span class="ko">예전 버전 사이트의 잔재(작품 단위 좋아요/댓글, 프로필 방명록). 현재 페이지 코드는 읽거나 쓰지 않으며 스키마와 계정 삭제 SQL 에만 남아 있음.</span></td></tr>
+      <tr><td><span class="en">Curation</span><span class="ko">큐레이션</span></td><td><code>mosaic_collections</code> · <code>mosaic_collection_items</code></td><td><span class="en">User-made collections; a published collection appears as an "exhibition".</span><span class="ko">사용자가 만든 컬렉션; 발행하면 "전시"로 노출.</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3><span class="en">Server-side functions (RPCs and triggers)</span><span class="ko">서버 함수 (RPC · 트리거)</span></h3>
+  <ul>
+    <li><code>commit_pool_matches</code> — <span class="en">atomically place pool pieces into open cells (re-validated server-side)</span><span class="ko">풀의 작품을 빈 칸에 원자적으로 배치 (서버 재검증)</span></li>
+    <li><code>reshape_mosaic_project</code> — <span class="en">admin reshape of an existing project's grid</span><span class="ko">관리자의 기존 프로젝트 격자 reshape</span></li>
+    <li><code>submit_mosaic_artwork_rearranged</code> — <span class="en">the former direct-to-project upload path; retired by <code>supabase_mosaic_profile_pool.sql</code> once uploads moved to the profile pool (older SQL files still define it)</span><span class="ko">예전의 프로젝트 직접 업로드 경로; 업로드가 프로필 풀로 옮겨가면서 <code>supabase_mosaic_profile_pool.sql</code> 이 폐기함 (오래된 SQL 파일에는 정의가 남아 있음)</span></li>
+    <li><code>unmatch_submission</code> · <code>unmatch_submissions</code> — <span class="en">return a piece (or many) to the pool; author or admin</span><span class="ko">작품(들)을 풀로 되돌림; 작가 본인 또는 관리자</span></li>
+    <li><code>claim_rematch_slot</code> — <span class="en">6-hour sitewide throttle for the cleanup pass</span><span class="ko">정리 작업의 사이트 전체 6시간 스로틀</span></li>
+    <li><code>enforce_mosaic_submission_rate_limit</code> — <span class="en">per-user upload rate limit</span><span class="ko">사용자별 업로드 속도 제한</span></li>
+    <li><code>reset_pixel_on_submission_delete</code> — <span class="en">frees a cell when its artwork is deleted</span><span class="ko">작품 삭제 시 칸을 다시 비움</span></li>
+    <li><code>delete_mosaic_project</code> · <code>delete_own_account</code> — <span class="en">admin project deletion; self-service account deletion (plus Storage cleanup SQL)</span><span class="ko">관리자 프로젝트 삭제; 사용자 본인 계정 삭제 (Storage 정리 SQL 별도)</span></li>
+    <li><code>notify_follow</code> · <code>notify_submission_like</code> · <code>notify_submission_comment</code> · <code>check_mosaic_comment_parent</code> · <code>set_profiles_updated_at</code> — <span class="en">triggers</span><span class="ko">트리거</span></li>
+  </ul>
+  <div class="warn">
+    <span class="en"><b>No migration runner.</b> Nothing in the repository records which SQL files have been applied to the production database. When code starts depending on a new column or RPC, the SQL file to run first must be called out explicitly (see <code>CLAUDE.md</code> §6).</span>
+    <span class="ko"><b>마이그레이션 도구가 없습니다.</b> 어떤 SQL 파일이 운영 DB 에 적용됐는지 저장소에 기록되지 않습니다. 코드가 새 컬럼이나 RPC 에 의존하게 되면 먼저 실행할 SQL 파일을 명시해야 합니다(<code>CLAUDE.md</code> 6절).</span>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s8"><span class="en">8. Languages &amp; SEO</span><span class="ko">8. 다국어 · SEO</span></h2>
+  <ul>
+    <li><span class="en"><b>Two complete page trees.</b> Static copy is written directly into each <code>/en/*.html</code> and <code>/ko/*.html</code> file; there is no <code>data-i18n</code> layer. Only strings that JS generates at runtime live in <code>js/i18n/en.js</code> / <code>ko.js</code> (<code>tr()</code>, <code>T</code>, <code>CURRENT_LANG</code>). A change to markup or scripts must be made in both trees.</span><span class="ko"><b>페이지 트리가 두 벌입니다.</b> 정적 문구는 <code>/en/*.html</code> 과 <code>/ko/*.html</code> 각 파일에 직접 쓰여 있고 <code>data-i18n</code> 계층은 없습니다. JS 가 런타임에 만드는 문구만 <code>js/i18n/en.js</code> / <code>ko.js</code> 에 있습니다(<code>tr()</code>, <code>T</code>, <code>CURRENT_LANG</code>). 마크업·스크립트 변경은 양쪽 트리에 모두 해야 합니다.</span></li>
+    <li><span class="en"><b>Language choice</b>: the in-page EN/한 toggle stores <code>weavoLang</code> in localStorage and a cookie; the root Function and the static <code>index.html</code> fallback both honor it.</span><span class="ko"><b>언어 선택</b>: 페이지의 EN/한 토글이 <code>weavoLang</code> 을 localStorage 와 쿠키에 저장하고, 루트 Function 과 정적 <code>index.html</code> 폴백이 이를 따릅니다.</span></li>
+    <li><span class="en"><b>Head tags</b>: canonical, <code>hreflang</code> (en / ko / x-default), Open Graph, Twitter cards and JSON-LD (<code>WebSite</code>, <code>Organization</code>, <code>BreadcrumbList</code>, <code>CreativeWork</code> for projects, <code>VisualArtwork</code> for artworks, <code>Person</code> for artists).</span><span class="ko"><b>head 태그</b>: canonical, <code>hreflang</code>(en / ko / x-default), Open Graph, Twitter 카드, JSON-LD(<code>WebSite</code>, <code>Organization</code>, <code>BreadcrumbList</code>, 프로젝트 <code>CreativeWork</code>, 작품 <code>VisualArtwork</code>, 작가 <code>Person</code>).</span></li>
+    <li><span class="en"><b>Sitemaps</b>: <code>sitemap.xml</code> is an index pointing at <code>sitemap-static.xml</code> plus the four dynamic sitemaps. <code>robots.txt</code> disallows the bare template files and the developer files (<code>/DevDocs/</code>, <code>/CLAUDE.md</code>, <code>/README.md</code>).</span><span class="ko"><b>사이트맵</b>: <code>sitemap.xml</code> 은 <code>sitemap-static.xml</code> 과 동적 사이트맵 4개를 가리키는 인덱스입니다. <code>robots.txt</code> 는 템플릿 파일 원주소와 개발용 파일(<code>/DevDocs/</code>, <code>/CLAUDE.md</code>, <code>/README.md</code>)을 색인 제외합니다.</span></li>
+    <li><span class="en"><b>Clean URLs</b> come from Cloudflare Pages itself (extension-less paths served natively, <code>.html</code> addresses 308-redirected); <code>_redirects</code> only carries the historical renames (<code>landing.html</code> → <code>/</code>, old <code>index.html</code> → <code>/projects</code>, <code>/weavo.html</code> → <code>/</code>).</span><span class="ko"><b>깔끔한 URL</b> 은 Cloudflare Pages 기본 동작입니다(확장자 없는 경로를 그대로 서빙, <code>.html</code> 주소는 308). <code>_redirects</code> 에는 과거 이름 변경만 있습니다(<code>landing.html</code> → <code>/</code>, 옛 <code>index.html</code> → <code>/projects</code>, <code>/weavo.html</code> → <code>/</code>).</span></li>
+    <li><span class="en">Manual post-deploy checks (Search Console, Naver, rich-results tests, share previews) are listed in <code>SEO_DEPLOYMENT_CHECKLIST.md</code>.</span><span class="ko">배포 후 수동 점검(Search Console, 네이버, 리치 결과 테스트, 공유 미리보기)은 <code>SEO_DEPLOYMENT_CHECKLIST.md</code> 에 있습니다.</span></li>
+  </ul>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s9"><span class="en">9. Caching &amp; security headers</span><span class="ko">9. 캐시 · 보안 헤더</span></h2>
+  <div class="tbl"><table>
+    <thead><tr><th><span class="en">Path</span><span class="ko">경로</span></th><th>Cache-Control</th><th><span class="en">Why</span><span class="ko">이유</span></th></tr></thead>
+    <tbody>
+      <tr><td><span class="en">HTML pages</span><span class="ko">HTML 페이지</span></td><td><code>no-cache</code></td><td><span class="en">A deploy is visible immediately</span><span class="ko">배포가 즉시 보이도록</span></td></tr>
+      <tr><td><code>/css/*</code> · <code>/js/*</code></td><td><code>public, max-age=3600, must-revalidate</code></td><td><span class="en">File names aren't content-hashed (no build step), so no long-lived <code>immutable</code> cache</span><span class="ko">파일명에 해시가 없어(빌드 없음) 장기 <code>immutable</code> 캐시를 쓸 수 없음</span></td></tr>
+      <tr><td><code>/img/*</code> (Function)</td><td><code>public, max-age=31536000, immutable</code></td><td><span class="en">Storage objects never change in place</span><span class="ko">Storage 객체는 제자리에서 바뀌지 않음</span></td></tr>
+      <tr><td><span class="en">logo files, robots, sitemaps</span><span class="ko">로고, robots, 사이트맵</span></td><td><code>max-age=86400</code> / <code>3600</code></td><td></td></tr>
+      <tr><td><code>/*</code></td><td><span class="en"><code>X-Frame-Options: SAMEORIGIN</code>, HSTS 1 year incl. subdomains</span><span class="ko"><code>X-Frame-Options: SAMEORIGIN</code>, HSTS 1년(서브도메인 포함)</span></td><td><span class="en">No Content-Security-Policy yet — it needs an allowlist for jsdelivr, Google Fonts and Fontshare first</span><span class="ko">Content-Security-Policy 는 아직 없음 — jsdelivr·Google Fonts·Fontshare 허용 목록을 먼저 정해야 함</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s10"><span class="en">10. Local development &amp; deployment</span><span class="ko">10. 로컬 실행 · 배포</span></h2>
+  <p class="en"><b>There is nothing to build.</b> To serve the site locally together with the Pages Functions, <code>_headers</code> and <code>_redirects</code>:</p>
+  <p class="ko"><b>빌드할 것이 없습니다.</b> Pages Functions·<code>_headers</code>·<code>_redirects</code> 까지 포함해 로컬에서 띄우려면:</p>
+<pre><code>npx wrangler pages dev .</code></pre>
+  <p class="en"><code>wrangler</code> is already present under <code>node_modules/</code>. Pages that don't rely on a Function can simply be opened as files. <code>.wrangler/</code> (local account cache) is git-ignored.</p>
+  <p class="ko"><code>wrangler</code> 는 <code>node_modules/</code> 에 이미 들어 있습니다. Function 이 필요 없는 페이지는 파일을 직접 열어도 됩니다. <code>.wrangler/</code>(로컬 계정 캐시)는 git 에서 제외돼 있습니다.</p>
+
+  <h3><span class="en">Deployment</span><span class="ko">배포</span></h3>
+  <div class="note">
+    <span class="en"><b>Pushing to <code>main</code> on GitHub deploys to production.</b> The repository is connected to the Cloudflare Pages project <code>weavo</code> through the Cloudflare GitHub app: each commit gets a "Cloudflare Pages" check, and the production site is updated automatically. Confirmed on 2026-09-08 — the latest commit's CSS change was live on weavo.art, and the commit carried a successful Cloudflare Pages check with a per-deployment preview URL (<code>&lt;id&gt;.weavo-dxs.pages.dev</code>).</span>
+    <span class="ko"><b>GitHub 의 <code>main</code> 에 push 하면 운영 사이트에 배포됩니다.</b> 저장소는 Cloudflare GitHub 앱을 통해 Cloudflare Pages 프로젝트 <code>weavo</code> 에 연결돼 있습니다. 커밋마다 "Cloudflare Pages" 체크가 붙고 운영 사이트가 자동으로 갱신됩니다. 2026-09-08 확인 — 최신 커밋의 CSS 변경이 weavo.art 에 반영돼 있었고, 해당 커밋에 배포별 미리보기 URL(<code>&lt;id&gt;.weavo-dxs.pages.dev</code>)이 붙은 성공 체크가 있었습니다.</span>
+  </div>
+  <ul>
+    <li><span class="en">A push is therefore a release, not a backup. Working rules keep <code>git push</code> a separate, explicit instruction (<code>CLAUDE.md</code> §3).</span><span class="ko">따라서 push 는 백업이 아니라 릴리스입니다. 작업 규칙상 <code>git push</code> 는 별도의 명시적 지시가 있을 때만 합니다(<code>CLAUDE.md</code> 3절).</span></li>
+    <li><span class="en"><b>The repository root is the deploy root.</b> Every committed file is reachable at <code>https://weavo.art/&lt;path&gt;</code> — including <code>.sql</code> files, this document and <code>README.md</code>. Secrets must never be committed; the anon key in <code>js/supabase-client.js</code> is public by design.</span><span class="ko"><b>저장소 루트가 곧 배포 루트입니다.</b> 커밋된 모든 파일이 <code>https://weavo.art/&lt;경로&gt;</code> 로 접근됩니다 — <code>.sql</code> 파일, 이 문서, <code>README.md</code> 도 마찬가지입니다. 비밀값은 절대 커밋하지 않습니다. <code>js/supabase-client.js</code> 의 anon 키는 공개용입니다.</span></li>
+    <li><span class="en">Developer files are kept out of search indexes with <code>robots.txt</code> <code>Disallow</code> rules; they remain reachable by URL.</span><span class="ko">개발용 파일은 <code>robots.txt</code> 의 <code>Disallow</code> 로 검색 색인에서만 제외되며, URL 로는 여전히 접근됩니다.</span></li>
+  </ul>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s11"><span class="en">11. Observations &amp; follow-ups</span><span class="ko">11. 관찰 사항 · 후속 과제</span></h2>
+  <ul>
+    <li><span class="en"><b><code>node_modules/</code> is committed</b> (1,672 of the repository's 1,801 tracked files) and there is no <code>package.json</code>. It exists to run <code>wrangler</code> locally. Adding a <code>package.json</code> and ignoring <code>node_modules/</code> would shrink the repository considerably, but it changes how contributors install tooling — a decision to make deliberately.</span><span class="ko"><b><code>node_modules/</code> 가 커밋돼 있고</b>(추적 파일 1,801개 중 1,672개) <code>package.json</code> 은 없습니다. 로컬에서 <code>wrangler</code> 를 실행하기 위한 것입니다. <code>package.json</code> 을 두고 <code>node_modules/</code> 를 제외하면 저장소가 크게 줄지만, 도구 설치 방식이 바뀌므로 의도적으로 결정할 일입니다.</span></li>
+    <li><span class="en"><b>Manual SQL migrations without an applied-list</b> (§7). A simple <code>DevDocs/</code> table of "file → applied on" would remove the guesswork.</span><span class="ko"><b>수동 SQL 마이그레이션에 적용 기록이 없습니다</b>(7절). <code>DevDocs/</code> 에 "파일 → 적용일" 표 하나만 두어도 추측이 사라집니다.</span></li>
+    <li><span class="en"><b>Everything in the repository is public on the web</b> (§10). The schema files and <code>weavo_review.html</code> contain no secrets, but exposing them is not a deliberate choice either.</span><span class="ko"><b>저장소의 모든 파일이 웹에 공개됩니다</b>(10절). 스키마 파일과 <code>weavo_review.html</code> 에 비밀값은 없지만, 공개가 의도된 선택도 아닙니다.</span></li>
+    <li><span class="en"><b>Commit history</b> so far carries placeholder messages (<code>asdf</code>). <code>CLAUDE.md</code> §9 now asks for concise, meaningful messages.</span><span class="ko"><b>커밋 이력</b>이 지금까지 자리표시 메시지(<code>asdf</code>)로 돼 있습니다. <code>CLAUDE.md</code> 9절이 이제 요점이 담긴 메시지를 요구합니다.</span></li>
+    <li><span class="en"><b>Known SEO follow-ups</b> from the checklist: content-hashed CSS/JS (needs a build step), paginated artwork sitemaps past 1,000 rows, a purpose-made 1200×630 share image, Terms of Service / Community Guidelines pages, and a Content-Security-Policy.</span><span class="ko"><b>체크리스트에 남은 SEO 과제</b>: 해시가 붙은 CSS/JS 파일명(빌드 필요), 1,000행을 넘을 때의 작품 사이트맵 분할, 전용 1200×630 공유 이미지, 이용약관·커뮤니티 가이드라인 페이지, Content-Security-Policy.</span></li>
+    <li><span class="en"><b>Root-level leftovers</b>: <code>profile.js</code>, <code>apple.png</code>, <code>image.png</code> and <code>suggestion.png</code> (none referenced by any page) and <code>weavo_review.html</code> (an earlier review document) sit in the deploy root. The <code>cell_*</code> and <code>profile_comments</code> tables are similar leftovers in the schema (§7).</span><span class="ko"><b>루트의 잔여 파일</b>: <code>profile.js</code>, <code>apple.png</code>, <code>image.png</code>, <code>suggestion.png</code>(어느 페이지도 참조하지 않음)와 <code>weavo_review.html</code>(예전 검토 문서)이 배포 루트에 남아 있습니다. 스키마의 <code>cell_*</code>·<code>profile_comments</code> 테이블도 같은 성격의 잔재입니다(7절).</span></li>
+  </ul>
+
+  <!-- ─────────────────────────────────────────────────────────────── -->
+  <h2 id="s12"><span class="en">12. About this document</span><span class="ko">12. 이 문서에 대해</span></h2>
+  <ul>
+    <li><span class="en">Developer documents live in <code>DevDocs/</code>, are self-contained HTML (no external resources) and carry a <code>_YYYYMMDD</code> suffix.</span><span class="ko">개발 문서는 <code>DevDocs/</code> 에 두며, 외부 리소스 없는 자체 완결형 HTML 이고 파일 이름에 <code>_YYYYMMDD</code> 를 붙입니다.</span></li>
+    <li><span class="en"><b>English is the default; Korean is optional</b> via the EN / 한 toggle in the top bar, which stays visible while scrolling. The choice is remembered in <code>localStorage</code> and can be forced with <code>?lang=ko</code> or <code>?lang=en</code>. Without JavaScript the English text is shown.</span><span class="ko"><b>영어가 기본이고 한국어는 선택</b>입니다. 상단 바의 EN / 한 토글은 스크롤해도 항상 보입니다. 선택은 <code>localStorage</code> 에 기억되고 <code>?lang=ko</code> / <code>?lang=en</code> 으로 강제할 수 있습니다. JavaScript 가 없으면 영어가 보입니다.</span></li>
+    <li><span class="en">To add content, write every translatable element twice — once with class <code>en</code>, once with class <code>ko</code> — side by side. Code, paths and identifiers are written once.</span><span class="ko">내용을 추가할 때는 번역이 필요한 요소를 <code>en</code> 클래스와 <code>ko</code> 클래스로 나란히 두 번 씁니다. 코드·경로·식별자는 한 번만 씁니다.</span></li>
+  </ul>
+</main>
+
+<script>
+  // Language toggle. English is the CSS default; this only flips data-lang
+  // on <html>, remembers the choice, and honors ?lang= in the URL.
+  (function () {
+    var KEY = 'weavoDevDocsLang';
+    var buttons = document.querySelectorAll('.lang-btn');
+    function apply(lang) {
+      document.documentElement.setAttribute('data-lang', lang);
+      document.documentElement.setAttribute('lang', lang);
+      for (var i = 0; i < buttons.length; i++) {
+        var on = buttons[i].getAttribute('data-lang') === lang;
+        buttons[i].classList.toggle('active', on);
+        buttons[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+      try { localStorage.setItem(KEY, lang); } catch (e) { /* storage may be unavailable */ }
+    }
+    var fromQuery = new URLSearchParams(location.search).get('lang');
+    var stored = null;
+    try { stored = localStorage.getItem(KEY); } catch (e) { /* ignore */ }
+    var initial = (fromQuery === 'ko' || fromQuery === 'en') ? fromQuery : (stored === 'ko' ? 'ko' : 'en');
+    apply(initial);
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function () { apply(this.getAttribute('data-lang')); });
+    }
+  })();
+</script>
+</body>
+</html>
