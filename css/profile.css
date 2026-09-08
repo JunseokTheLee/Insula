@@ -3,7 +3,7 @@
 .profile-head-top{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
 .profile-head-actions{display:flex;gap:10px;flex-shrink:0;margin-left:auto;}
 #profileEditBtn{
-  appearance:none;border:1px solid var(--violet-200);cursor:pointer;
+  appearance:none;border:1px solid var(--green-200);cursor:pointer;
   font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;
   padding:9px 18px;border-radius:var(--r-full);background:transparent;color:var(--primary);
   transition:background .12s linear;flex-shrink:0;
@@ -23,7 +23,7 @@
   transition:background .12s linear;flex-shrink:0;
 }
 #profileFollowBtn:hover{background:var(--primary-dark);}
-#profileFollowBtn.following{background:transparent;color:var(--primary);border:1px solid var(--violet-200);}
+#profileFollowBtn.following{background:transparent;color:var(--primary);border:1px solid var(--green-200);}
 #profileFollowBtn.following:hover{background:var(--primary-soft);}
 #profileReportBtn{
   appearance:none;border:1px solid var(--border-strong);cursor:pointer;
@@ -81,7 +81,7 @@
 .collection-status.live{background:var(--primary-soft);color:var(--primary);}
 .profile-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
 .profile-link-chip{
-  display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;border:1px solid var(--violet-200);
+  display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;border:1px solid var(--green-200);
   background:transparent;color:var(--primary);font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;text-decoration:none;
   transition:background .12s linear;
 }
@@ -104,7 +104,7 @@
 .profile-section-head{display:flex;align-items:center;justify-content:space-between;margin:4px 0 14px;}
 .profile-section-head .section-label{margin:0;}
 .section-new-btn{
-  appearance:none;border:1px solid var(--violet-200);cursor:pointer;
+  appearance:none;border:1px solid var(--green-200);cursor:pointer;
   font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;
   padding:6px 14px;border-radius:var(--r-full);background:transparent;color:var(--primary);
   transition:background .12s linear;flex-shrink:0;
@@ -113,7 +113,7 @@
 .profile-collections-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,180px));gap:12px;justify-content:start;}
 .board-add-btn{
   position:absolute;top:5px;right:5px;z-index:2;width:22px;height:22px;border-radius:50%;
-  appearance:none;border:none;cursor:pointer;background:rgba(76,29,149,.72);color:var(--bg);
+  appearance:none;border:none;cursor:pointer;background:rgba(15,36,23,.72);color:var(--bg);
   display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;
   transition:background .12s linear;
 }
@@ -128,7 +128,7 @@
 .profile-art-thumb img{width:100%;height:100%;object-fit:cover;display:block;color:transparent;}
 .pool-badge{
   position:absolute;left:0;right:0;bottom:0;padding:4px 6px;text-align:center;
-  background:rgba(76,29,149,.78);color:var(--bg);
+  background:rgba(15,36,23,.78);color:var(--bg);
   font-family:'Pretendard',sans-serif;font-size:10px;font-weight:600;
   pointer-events:none;
 }

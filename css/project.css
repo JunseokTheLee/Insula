@@ -57,7 +57,7 @@
 .weavo-grid{width:100%;height:100%;display:grid;gap:1px;background:var(--primary-dark);}
 .weavo-cell{background-size:cover;background-position:center;background-color:#3a3a38;transition:transform .12s ease-out,outline-color .12s ease-out;display:block;}
 .weavo-cell.filled{cursor:zoom-in;color:inherit;text-decoration:none;}
-.weavo-cell.filled:hover{outline:2px solid var(--violet-300);outline-offset:-2px;position:relative;z-index:2;transform:scale(1.08);box-shadow:none;}
+.weavo-cell.filled:hover{outline:2px solid var(--mint);outline-offset:-2px;position:relative;z-index:2;transform:scale(1.08);box-shadow:none;}
 
 /* ---------- project detail: list view (all artworks in the project) ---------- */
 .project-list-view{margin:0 32px 32px;animation:fadeIn .3s ease-out;}
@@ -74,14 +74,14 @@
   box-shadow:none;
   transition:width .2s ease-out,border-color .12s linear;
 }
-.reference-preview:hover{border-color:var(--violet-300);}
+.reference-preview:hover{border-color:var(--mint);}
 .reference-preview::after{
   content:'⤢';position:absolute;top:5px;right:5px;width:16px;height:16px;
   display:flex;align-items:center;justify-content:center;
   background:rgba(0,0,0,.5);color:var(--bg);font-size:10px;line-height:1;
   opacity:.75;transition:opacity .12s linear,background .12s linear;pointer-events:none;
 }
-.reference-preview:hover::after{opacity:1;background:var(--violet-300);color:var(--primary-dark);}
+.reference-preview:hover::after{opacity:1;background:var(--mint);color:var(--primary-dark);}
 .reference-preview.enlarged::after{content:'✕';}
 .reference-preview canvas{width:100%;display:block;}
 .reference-preview-label{
