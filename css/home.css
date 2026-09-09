@@ -73,7 +73,7 @@
 .cta{
   display:inline-flex;align-items:center;gap:8px;
   background:var(--gradient-primary);color:#fff;border:none;padding:13px 26px;
-  border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:14px;font-weight:600;cursor:pointer;
+  border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;
   box-shadow:var(--shadow-sm);transition:opacity .12s linear;
 }
 .cta:hover{opacity:.92;}
