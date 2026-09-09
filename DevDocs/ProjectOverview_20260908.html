@@ -243,10 +243,10 @@ robots.txt  sitemap.xml  sitemap-static.xml (dynamic sitemaps come from function
 logo.png  logo-96.png  logo.ico   brand assets served from the root
 apple.png  image.png  suggestion.png   images in the root that no page references
 node_modules/            wrangler + miniflare, committed (no package.json)
-DevDocs/                 developer documentation — this file
+DevDocs/                 developer documentation — this file, plus
+                         WeavoReview_20260901.html (site review &amp; next steps, 2026-09-01)
 README.md  CLAUDE.md     project readme / AI working rules
 SEO_DEPLOYMENT_CHECKLIST.md   manual post-deploy checks
-weavo_review.html        an earlier review document (2026-09-01; root-level, predates DevDocs/)
 profile.js               root-level leftover (not referenced by any page)</code></pre>
 
 <pre class="ko"><code>index.html               언어 선택 정적 폴백 (보통은 functions/index.js 가 먼저 응답)
@@ -264,10 +264,10 @@ robots.txt  sitemap.xml  sitemap-static.xml (동적 사이트맵은 functions/ �
 logo.png  logo-96.png  logo.ico   루트에서 서빙되는 브랜드 자산
 apple.png  image.png  suggestion.png   어느 페이지도 참조하지 않는 루트의 이미지
 node_modules/            wrangler + miniflare, 커밋돼 있음 (package.json 없음)
-DevDocs/                 개발 문서 — 이 파일
+DevDocs/                 개발 문서 — 이 파일과
+                         WeavoReview_20260901.html (사이트 점검 결과와 다음 작업, 2026-09-01)
 README.md  CLAUDE.md     프로젝트 readme / AI 작업 규칙
 SEO_DEPLOYMENT_CHECKLIST.md   배포 후 수동 점검 목록
-weavo_review.html        예전 검토 문서 (2026-09-01; 루트에 있음, DevDocs/ 이전에 만들어짐)
 profile.js               루트에 남아 있는 잔여 파일 (어느 페이지도 참조하지 않음)</code></pre>
 
   <!-- ─────────────────────────────────────────────────────────────── -->
@@ -391,10 +391,10 @@ profile.js               루트에 남아 있는 잔여 파일 (어느 페이지
   <ul>
     <li><span class="en"><b><code>node_modules/</code> is committed</b> (1,672 of the repository's 1,801 tracked files) and there is no <code>package.json</code>. It exists to run <code>wrangler</code> locally. Adding a <code>package.json</code> and ignoring <code>node_modules/</code> would shrink the repository considerably, but it changes how contributors install tooling — a decision to make deliberately.</span><span class="ko"><b><code>node_modules/</code> 가 커밋돼 있고</b>(추적 파일 1,801개 중 1,672개) <code>package.json</code> 은 없습니다. 로컬에서 <code>wrangler</code> 를 실행하기 위한 것입니다. <code>package.json</code> 을 두고 <code>node_modules/</code> 를 제외하면 저장소가 크게 줄지만, 도구 설치 방식이 바뀌므로 의도적으로 결정할 일입니다.</span></li>
     <li><span class="en"><b>Manual SQL migrations without an applied-list</b> (§7). A simple <code>DevDocs/</code> table of "file → applied on" would remove the guesswork.</span><span class="ko"><b>수동 SQL 마이그레이션에 적용 기록이 없습니다</b>(7절). <code>DevDocs/</code> 에 "파일 → 적용일" 표 하나만 두어도 추측이 사라집니다.</span></li>
-    <li><span class="en"><b>Everything in the repository is public on the web</b> (§10). The schema files and <code>weavo_review.html</code> contain no secrets, but exposing them is not a deliberate choice either.</span><span class="ko"><b>저장소의 모든 파일이 웹에 공개됩니다</b>(10절). 스키마 파일과 <code>weavo_review.html</code> 에 비밀값은 없지만, 공개가 의도된 선택도 아닙니다.</span></li>
+    <li><span class="en"><b>Everything in the repository is public on the web</b> (§10). The schema files contain no secrets, but exposing them is not a deliberate choice either.</span><span class="ko"><b>저장소의 모든 파일이 웹에 공개됩니다</b>(10절). 스키마 파일에 비밀값은 없지만, 공개가 의도된 선택도 아닙니다.</span></li>
     <li><span class="en"><b>Commit history</b> so far carries placeholder messages (<code>asdf</code>). <code>CLAUDE.md</code> §9 now asks for concise, meaningful messages.</span><span class="ko"><b>커밋 이력</b>이 지금까지 자리표시 메시지(<code>asdf</code>)로 돼 있습니다. <code>CLAUDE.md</code> 9절이 이제 요점이 담긴 메시지를 요구합니다.</span></li>
     <li><span class="en"><b>Known SEO follow-ups</b> from the checklist: content-hashed CSS/JS (needs a build step), paginated artwork sitemaps past 1,000 rows, a purpose-made 1200×630 share image, Terms of Service / Community Guidelines pages, and a Content-Security-Policy.</span><span class="ko"><b>체크리스트에 남은 SEO 과제</b>: 해시가 붙은 CSS/JS 파일명(빌드 필요), 1,000행을 넘을 때의 작품 사이트맵 분할, 전용 1200×630 공유 이미지, 이용약관·커뮤니티 가이드라인 페이지, Content-Security-Policy.</span></li>
-    <li><span class="en"><b>Root-level leftovers</b>: <code>profile.js</code>, <code>apple.png</code>, <code>image.png</code> and <code>suggestion.png</code> (none referenced by any page) and <code>weavo_review.html</code> (an earlier review document) sit in the deploy root. The <code>cell_*</code> and <code>profile_comments</code> tables are similar leftovers in the schema (§7).</span><span class="ko"><b>루트의 잔여 파일</b>: <code>profile.js</code>, <code>apple.png</code>, <code>image.png</code>, <code>suggestion.png</code>(어느 페이지도 참조하지 않음)와 <code>weavo_review.html</code>(예전 검토 문서)이 배포 루트에 남아 있습니다. 스키마의 <code>cell_*</code>·<code>profile_comments</code> 테이블도 같은 성격의 잔재입니다(7절).</span></li>
+    <li><span class="en"><b>Root-level leftovers</b>: <code>profile.js</code>, <code>apple.png</code>, <code>image.png</code> and <code>suggestion.png</code> (none referenced by any page) sit in the deploy root. The <code>cell_*</code> and <code>profile_comments</code> tables are similar leftovers in the schema (§7).</span><span class="ko"><b>루트의 잔여 파일</b>: <code>profile.js</code>, <code>apple.png</code>, <code>image.png</code>, <code>suggestion.png</code>(어느 페이지도 참조하지 않음)가 배포 루트에 남아 있습니다. 스키마의 <code>cell_*</code>·<code>profile_comments</code> 테이블도 같은 성격의 잔재입니다(7절).</span></li>
   </ul>
 
   <!-- ─────────────────────────────────────────────────────────────── -->
