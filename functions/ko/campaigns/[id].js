@@ -11,7 +11,7 @@ export async function onRequestGet({ params, request, env }) {
 
   const assetResponse = await env.ASSETS.fetch(new Request(new URL('/ko/campaign', request.url), request));
 
-  if (!project) return notFoundResponse(assetResponse, '프로젝트를 찾을 수 없습니다 | Weavo');
+  if (!project) return notFoundResponse(assetResponse, '캠페인을 찾을 수 없습니다 | Weavo');
 
   const canonical = `${SITE}/ko/campaigns/${encodeURIComponent(project.id)}`;
   const title = `${project.title} | Weavo`;

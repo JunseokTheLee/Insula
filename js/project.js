@@ -516,7 +516,9 @@ window.onSubmissionUpdated = () => {
 };
 
 authReady.then(async () => {
-  const id = routeParam('projects', 'id');
+  // Path segment is 'campaigns' since the 2026-09-09 URL rename
+  // (/{lang}/campaigns/{id}); the ?id= fallback still serves legacy links.
+  const id = routeParam('campaigns', 'id');
   if (!id) { toast(tr('projectNotFound')); return; }
   await openProject(id);
 });
