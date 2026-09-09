@@ -65,4 +65,5 @@ async function paintProjectPreview(card, project) {
   if (progEl) progEl.textContent = filledText(filledCount, total);
   const fill = card.querySelector('.progress-fill');
   if (fill) fill.style.width = `${total ? Math.round((filledCount / total) * 100) : 0}%`;
+  return { filledCount, total };
 }

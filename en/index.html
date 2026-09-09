@@ -26,8 +26,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-015758">
-<link rel="stylesheet" href="/css/home.css?v=20260910-015758">
+<link rel="stylesheet" href="/css/base.css?v=20260910-021343">
+<link rel="stylesheet" href="/css/home.css?v=20260910-021343">
 </head>
 <body>
 
@@ -58,19 +58,55 @@
     <section class="snap-panel" id="heroPanel">
       <div class="hero">
         <div class="hero-inner">
-          <div class="hero-left">
-            <h1>Your colors come<br>together into one story.</h1>
-            <p>A collaborative mosaic created by artists with and without disabilities. Every submission's dominant color is automatically matched to the closest open cell in a hidden reference image — so the full picture only comes into focus as more artists add their piece.</p>
-            <div class="hero-cta-row">
-              <a class="cta" href="/en/campaigns">Explore Campaigns <span aria-hidden="true">&rarr;</span></a>
-              <button type="button" class="cta-outline" id="heroUploadBtn">Upload Artwork <span aria-hidden="true">&uarr;</span></button>
+          <div class="hero-copy">
+            <div class="hero-eyebrow">Art that connects tomorrow</div>
+            <h1>Small artworks<br>make a better world.</h1>
+            <p class="hero-lead">Art created together with artists with disabilities becomes one big picture and builds a warmer world.</p>
+          </div>
+
+          <!-- Phone: one white card (partner line, mosaic, progress). Desktop:
+               display:contents, so grid areas place the mosaic on the right. -->
+          <div class="hero-card">
+            <div class="hero-partner-head">
+              <div class="hero-partner-logos"><span class="hero-partner-name">Pledging partner</span><span class="hero-partner-x" aria-hidden="true">×</span><span class="hero-partner-weavo">WEAVO</span></div>
+              <div class="hero-partner-title">A warmer world, seen differently</div>
+            </div>
+            <div class="hero-art">
+              <div class="hero-preview" id="heroPreview">
+                <canvas id="heroPreviewCanvas"></canvas>
+                <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">No campaigns yet — be the first to start one.</div>
+              </div>
+              <div class="hero-art-foot">
+                <div class="hero-art-caption"><b><span id="heroTotalCaption">0</span> stories made together</b><span>Add a piece today.</span></div>
+                <div class="hero-tagline" aria-hidden="true">Different People<br>Brighter Tomorrows</div>
+              </div>
+            </div>
+            <!-- data-pledge: placeholder until campaigns carry their own donor /
+                 pledge fields — the one place to change the amount for now. -->
+            <div class="hero-progress" id="heroProgress" data-pledge="2000000">
+              <div class="hero-pieces">
+                <div class="hero-pieces-count"><b id="heroPieces">0</b> <span class="hero-pieces-total">/ <span id="heroPiecesTotal">0</span> pieces</span></div>
+                <div class="hero-pieces-pct" id="heroPercent">0%</div>
+              </div>
+              <div class="progress-bar hero-bar"><div class="progress-fill" id="heroProgressFill"></div></div>
             </div>
           </div>
-          <div class="hero-right">
-            <div class="hero-preview" id="heroPreview">
-              <canvas id="heroPreviewCanvas"></canvas>
-              <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">No campaigns yet — be the first to start one.</div>
+
+          <div class="hero-donation">
+            <svg class="hero-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.6-9.3-8.6C.9 9.3 2.4 5.5 6 5.1c2-.2 3.6.8 4.5 2.1.9-1.3 2.5-2.3 4.5-2.1 3.6.4 5.1 4.2 3.3 7.3C19 16.4 12 21 12 21z"/></svg>
+            <div>
+              <div class="hero-donation-amount"><b>₩<span id="heroDonation">0</span></b> <span class="hero-donation-of">/ ₩<span id="heroPledge">2,000,000</span></span></div>
+              <div class="hero-donation-note">The more artworks come together, the closer a brighter tomorrow gets for more children.</div>
             </div>
+          </div>
+
+          <div class="hero-partner-body">
+            <p class="hero-partner-desc">When <span id="heroTotalInline">0</span> small artworks come together to complete the mosaic, the pledging partner will donate <strong>₩<span class="hero-pledge-inline">2,000,000</span></strong> to art and rehabilitation programs for children and youth with disabilities.</p>
+            <a class="hero-partner-link" id="heroCampaignLink" href="/en/campaigns">See the campaign <span aria-hidden="true">&rarr;</span></a>
+          </div>
+
+          <div class="hero-cta">
+            <button type="button" class="cta-blue" id="heroUploadBtn">Join with your artwork <span aria-hidden="true">&rarr;</span></button>
           </div>
         </div>
       </div>
@@ -269,15 +305,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-015758"></script>
-<script src="/js/i18n/en.js?v=20260910-015758"></script>
-<script src="/js/common.js?v=20260910-015758"></script>
-<script src="/js/color-engine.js?v=20260910-015758"></script>
-<script src="/js/matching.js?v=20260910-015758"></script>
-<script src="/js/auth.js?v=20260910-015758"></script>
-<script src="/js/notifications.js?v=20260910-015758"></script>
-<script src="/js/project-preview.js?v=20260910-015758"></script>
-<script src="/js/lightbox.js?v=20260910-015758"></script>
-<script src="/js/landing.js?v=20260910-015758"></script>
+<script src="/js/supabase-client.js?v=20260910-021343"></script>
+<script src="/js/i18n/en.js?v=20260910-021343"></script>
+<script src="/js/common.js?v=20260910-021343"></script>
+<script src="/js/color-engine.js?v=20260910-021343"></script>
+<script src="/js/matching.js?v=20260910-021343"></script>
+<script src="/js/auth.js?v=20260910-021343"></script>
+<script src="/js/notifications.js?v=20260910-021343"></script>
+<script src="/js/project-preview.js?v=20260910-021343"></script>
+<script src="/js/lightbox.js?v=20260910-021343"></script>
+<script src="/js/landing.js?v=20260910-021343"></script>
 </body>
 </html>

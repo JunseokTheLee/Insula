@@ -64,13 +64,65 @@
   .recent-list-thumb{width:100%;height:auto;aspect-ratio:1;}
 }
 
-.hero{flex-shrink:0;padding:6vh 32px 48px;animation:fadeIn .4s ease-out;background:var(--gradient-hero);}
-.hero-inner{display:flex;gap:64px;align-items:center;max-width:1400px;margin:0 auto;}
-.hero-left{flex:1 1 460px;min-width:0;max-width:640px;}
-.hero-right{flex:1 1 480px;min-width:0;display:flex;justify-content:center;}
-.hero h1{font-family:'Pretendard',sans-serif;font-weight:700;font-size:clamp(40px,5.2vw,72px);letter-spacing:-.02em;line-height:.95;margin:0 0 20px;color:var(--gray-900);}
-.hero p{font-family:'Pretendard',sans-serif;color:var(--text);font-size:15px;line-height:1.6;margin:0 0 32px;max-width:440px;}
-.hero-cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+/* ---------- landing: hero (2026-09-10 redesign) ----------
+   The DOM is in PHONE order: copy → white card [partner line, mosaic,
+   progress] → donation card → partner text → CTA. On desktop the card
+   dissolves (display:contents) and grid areas rearrange the same elements:
+   text column on the left, the tall mosaic (natural aspect ratio) on the
+   right, and the progress + donation pair as one two-part card that sits at
+   the bottom of the text column, level with the mosaic's bottom edge. */
+.hero{flex-shrink:0;padding:5vh 32px 40px;animation:fadeIn .4s ease-out;background:var(--gradient-hero);
+  --hero-blue:#5B7CFF;--hero-violet:#8B6CFF;--hero-ink:#1A1F36;}
+.hero-inner{max-width:1400px;margin:0 auto;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.5fr);
+  grid-template-rows:auto auto auto 1fr auto;
+  grid-template-areas:"copy copy art" "cta cta art" "phead phead art" "pbody pbody art" "prog don art";
+  column-gap:56px;row-gap:0;align-items:start;}
+.hero-card{display:contents;}
+.hero-copy{grid-area:copy;}
+.hero-eyebrow{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:600;color:var(--hero-blue);margin:0 0 14px;}
+.hero h1{font-family:'Pretendard',sans-serif;font-weight:800;font-size:clamp(34px,4vw,56px);letter-spacing:-.03em;line-height:1.18;margin:0 0 18px;color:var(--hero-ink);word-break:keep-all;}
+.hero-lead{font-family:'Pretendard',sans-serif;color:var(--gray-700);font-size:16px;line-height:1.75;margin:0 0 26px;max-width:480px;word-break:keep-all;}
+.hero-cta{grid-area:cta;margin:0 0 34px;}
+.cta-blue{display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(135deg,var(--hero-blue),var(--hero-violet));color:#fff;border:none;padding:15px 30px;
+  border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;
+  box-shadow:0 10px 24px rgba(91,124,255,.32);transition:opacity .12s linear,transform .12s ease-out;}
+.cta-blue:hover{opacity:.93;transform:translateY(-1px);}
+.cta-blue:active{opacity:.85;transform:none;}
+.hero-partner-head{grid-area:phead;margin:0 0 6px;}
+.hero-partner-logos{display:flex;align-items:center;gap:12px;font-family:'Pretendard',sans-serif;font-weight:800;letter-spacing:.02em;margin:0 0 10px;}
+.hero-partner-name{color:#1F3BB3;font-size:17px;}
+.hero-partner-x{color:var(--muted);font-weight:500;font-size:15px;}
+.hero-partner-weavo{color:var(--hero-ink);font-size:17px;letter-spacing:.18em;}
+.hero-partner-title{font-family:'Pretendard',sans-serif;font-size:18px;font-weight:700;color:var(--hero-ink);margin:0;word-break:keep-all;}
+.hero-partner-body{grid-area:pbody;margin:0 0 26px;}
+.hero-partner-desc{font-family:'Pretendard',sans-serif;font-size:14px;line-height:1.7;color:var(--gray-700);margin:8px 0 10px;max-width:480px;word-break:keep-all;}
+.hero-partner-desc strong{color:var(--hero-ink);font-weight:800;}
+.hero-partner-link{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:600;color:var(--hero-blue);text-decoration:none;}
+.hero-partner-link:hover{text-decoration:underline;}
+.hero-art{grid-area:art;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:0;}
+.hero-preview{display:inline-block;max-width:100%;border-radius:var(--r-lg);overflow:hidden;background:var(--gray-0);position:relative;box-shadow:var(--shadow-lg);}
+/* width/height auto + max-* keeps the campaign's own aspect ratio (a 58×86
+   grid is a tall portrait) — never cropped, never squashed. */
+.hero-preview canvas{display:block;width:auto;height:auto;max-width:100%;max-height:min(78vh,860px);}
+.hero-preview-empty{color:var(--muted);font-family:'Pretendard',sans-serif;font-size:13px;text-align:center;padding:40px 24px;}
+.hero-art-foot{width:100%;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-top:18px;}
+.hero-art-caption{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--gray-700);line-height:1.6;}
+.hero-art-caption b{display:block;color:var(--hero-ink);font-weight:700;}
+.hero-tagline{font-family:'Pretendard',sans-serif;font-style:italic;font-weight:500;font-size:18px;line-height:1.5;color:var(--hero-blue);text-align:right;transform:rotate(-8deg);transform-origin:right bottom;opacity:.9;white-space:nowrap;}
+.hero-progress{grid-area:prog;align-self:stretch;display:flex;flex-direction:column;justify-content:center;background:var(--gray-0);border-radius:var(--r-md) 0 0 var(--r-md);padding:18px 22px;box-shadow:var(--shadow-sm);}
+.hero-pieces{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
+.hero-pieces-count{font-family:'Pretendard',sans-serif;font-size:15px;color:var(--muted);font-weight:600;}
+.hero-pieces-count b{font-size:28px;color:var(--hero-ink);font-weight:800;letter-spacing:-.02em;}
+.hero-pieces-pct{font-family:'Pretendard',sans-serif;font-size:18px;font-weight:800;color:var(--hero-ink);}
+.hero-bar{height:8px;margin-top:10px;background:var(--gray-200);}
+.hero-bar .progress-fill{background:linear-gradient(90deg,var(--hero-blue),var(--hero-violet));}
+.hero-donation{grid-area:don;align-self:stretch;background:var(--gray-0);border-radius:0 var(--r-md) var(--r-md) 0;padding:16px 22px;box-shadow:var(--shadow-sm);border-left:1px solid var(--border);display:flex;align-items:center;gap:14px;}
+.hero-heart{width:34px;height:34px;flex-shrink:0;fill:none;stroke:#FF4D6D;stroke-width:1.8;stroke-linejoin:round;}
+.hero-donation-amount{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--muted);font-weight:600;white-space:nowrap;}
+.hero-donation-amount b{font-size:22px;color:var(--hero-ink);font-weight:800;letter-spacing:-.01em;}
+.hero-donation-note{font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:4px;word-break:keep-all;}
 .cta{
   display:inline-flex;align-items:center;gap:8px;
   background:var(--gradient-primary);color:#fff;border:none;padding:13px 26px;
@@ -92,13 +144,6 @@
   color:var(--muted);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;text-decoration:underline;cursor:pointer;
 }
 .cta-text:hover{color:var(--primary);}
-.hero-preview{
-  width:100%;max-width:480px;aspect-ratio:1.1;border-radius:var(--r-xl);overflow:hidden;
-  background:var(--gray-0);position:relative;box-shadow:var(--shadow-lg);
-  display:flex;align-items:center;justify-content:center;
-}
-.hero-preview canvas{width:100%;height:100%;display:block;object-fit:cover;position:relative;z-index:1;}
-.hero-preview-empty{color:var(--muted);font-family:'Pretendard',sans-serif;font-size:13px;text-align:center;padding:20px;max-width:70%;}
 .stats-bar{
   flex-shrink:0;padding:0 32px 32px;background:transparent;
 }
@@ -117,13 +162,26 @@
 .stat-value{font-family:'Pretendard',sans-serif;font-size:24px;font-weight:700;letter-spacing:-.01em;color:var(--gray-900);}
 .stat-label{font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px;}
 @media (max-width:900px){
-  .hero-inner{flex-direction:column;gap:32px;}
-  .hero-left,.hero-right{flex:none;}
-  .hero-right{width:100%;}
-  .hero-preview{max-width:420px;}
+  /* Phone layout — see the hero comment above: the DOM order IS the layout. */
+  .hero{padding:24px 16px 32px;}
+  .hero-inner{display:flex;flex-direction:column;gap:14px;align-items:stretch;}
+  .hero-card{display:block;background:var(--gray-0);border-radius:20px;padding:16px;box-shadow:var(--shadow-md);}
+  .hero-copy{margin-bottom:4px;}
+  .hero h1{font-size:clamp(30px,8.5vw,40px);margin-bottom:12px;}
+  .hero-lead{font-size:15px;margin:0;}
+  .hero-partner-head{text-align:center;margin:2px 0 14px;}
+  .hero-partner-logos{justify-content:center;margin-bottom:6px;}
+  .hero-art{display:block;}
+  .hero-preview{display:block;border-radius:14px;box-shadow:none;}
+  .hero-preview canvas{width:100%;max-height:none;}
+  .hero-art-foot{display:none;}
+  .hero-progress{display:block;padding:16px 2px 2px;box-shadow:none;border-radius:0;}
+  .hero-donation{border-radius:20px;border-left:none;box-shadow:var(--shadow-md);padding:18px 20px;}
+  .hero-partner-body{margin:2px 4px 0;}
+  .hero-cta{margin:4px 0 0;}
+  .cta-blue{width:100%;padding:17px 24px;font-size:17px;}
 }
 @media (max-width:640px){
-  .hero h1{font-size:32px;}
   /* Keep all four stats on a single row — stack icon/value/label and
      tighten padding/gap/type so they fit a phone width. */
   .stats-bar-inner{grid-template-columns:repeat(4,1fr);gap:8px;}
