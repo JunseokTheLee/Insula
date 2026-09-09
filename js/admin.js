@@ -248,6 +248,62 @@ document.getElementById('aec-cancel').onclick = closeAdminEditCampaign;
 document.getElementById('aec-save').onclick = saveAdminEditCampaign;
 document.getElementById('admin-edit-campaign-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAdminEditCampaign(); });
 
+// ---------- artwork thumbnails (thumb_url / micro_thumb rebuild) ----------
+// Uploads make both derivatives in the browser (common.js
+// makeArtworkDerivatives). Rows missing either — every piece uploaded while
+// the thumb/ upload policy was missing (2026-08 … 2026-09-10), or one whose
+// derivatives failed — are counted here and rebuilt on demand, one at a
+// time: original read through /img/, thumb uploaded under the AUTHOR's
+// thumb/ folder (the storage policy lets admins write there), row updated
+// through the admin_set_submission_thumbs RPC (supabase_mosaic_micro_thumbs.sql).
+let adminThumbRows = [];
+async function loadAdminThumbs() {
+  const btn = document.getElementById('adminThumbsRunBtn');
+  if (!btn) return;
+  const { data, error } = await fetchAllRows(() => sb.from('mosaic_submissions')
+    .select('id,author_id,image_url,thumb_url,micro_thumb', { count: 'exact' })
+    .or('thumb_url.is.null,micro_thumb.is.null'));
+  if (error) {
+    if (!isSchemaMismatchError(error)) console.error('load thumbnail status error:', error);
+    adminShow('adminThumbsUnavailable', true); // SQL not applied yet
+    btn.disabled = true;
+    return;
+  }
+  adminThumbRows = data || [];
+  document.getElementById('adminThumbsMissing').textContent = String(adminThumbRows.filter(r => !r.thumb_url).length);
+  document.getElementById('adminMicroMissing').textContent = String(adminThumbRows.filter(r => !r.micro_thumb).length);
+  btn.disabled = !adminThumbRows.length;
+}
+async function runAdminThumbs() {
+  const btn = document.getElementById('adminThumbsRunBtn');
+  btn.disabled = true;
+  let done = 0, failed = 0;
+  for (const row of adminThumbRows) {
+    toast(tr('adminThumbsWorking', { done: done + failed, total: adminThumbRows.length }));
+    try {
+      // Same origin via /img/, so the canvas stays untainted for toDataURL.
+      const img = await loadImageEl(cdnUrl(row.image_url));
+      const d = await artworkDerivativesFromImage(img);
+      let thumbUrl = row.thumb_url;
+      if (!thumbUrl) {
+        if (!d.thumbNeeded) thumbUrl = row.image_url; // already small: the original is its own thumbnail
+        else if (d.thumbBlob) thumbUrl = await uploadThumbBlob(d.thumbBlob, row.author_id);
+      }
+      if (!thumbUrl) throw new Error('thumbnail could not be made or uploaded');
+      const { error } = await sb.rpc('admin_set_submission_thumbs', { p_id: row.id, p_thumb_url: thumbUrl, p_micro_thumb: row.micro_thumb || d.micro });
+      if (error) throw error;
+      done++;
+    } catch (e) {
+      console.error(`thumbnail rebuild failed for #${row.id}:`, e);
+      failed++;
+    }
+  }
+  toast(failed ? tr('adminThumbsFailed', { done, failed }) : tr('adminThumbsDone', { n: done }));
+  btn.disabled = false;
+  loadAdminThumbs(); loadAdminUsage();
+}
+document.getElementById('adminThumbsRunBtn').onclick = runAdminThumbs;
+
 // ---------- pool: pieces waiting for a campaign ----------
 // Pieces with no campaign — fresh uploads nothing matched yet, or pieces a
 // campaign deletion sent back — wait in the pool until the next matching
@@ -402,7 +458,7 @@ async function loadAdminPage() {
   adminShow('adminNotice', !isAdmin);
   adminShow('adminBody', isAdmin);
   if (!isAdmin) return;
-  await Promise.all([loadAdminUsage(), loadAdminSettings(), loadAdminReports(), loadAdminCampaigns(), loadAdminPool(), loadAdminAdmins()]);
+  await Promise.all([loadAdminUsage(), loadAdminSettings(), loadAdminReports(), loadAdminCampaigns(), loadAdminPool(), loadAdminThumbs(), loadAdminAdmins()]);
 }
 document.getElementById('adminReportsShowAll').onchange = () => loadAdminReports();
 document.addEventListener('weavo:authchange', () => loadAdminPage());

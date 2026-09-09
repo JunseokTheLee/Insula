@@ -7,8 +7,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-031816">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-031816">
+<link rel="stylesheet" href="/css/base.css?v=20260910-083030">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-083030">
 </head>
 <body>
 
@@ -93,6 +93,19 @@
           <p class="admin-help">Artwork not yet in any campaign (fresh uploads, or pieces a campaign deletion returned). Matching only runs on events — upload, campaign creation, reshape, piece removal, campaign deletion — so <strong>Place now</strong> runs a pass immediately. Pieces whose color matches no open cell in an active campaign stay listed here.</p>
           <div id="adminPoolList" class="admin-list"></div>
           <p class="empty-note admin-empty" id="adminPoolEmpty" style="display:none;">Nothing is waiting in the pool.</p>
+        </section>
+
+        <section class="admin-section" id="adminThumbsSection">
+          <div class="admin-section-head">
+            <h2>Artwork thumbnails</h2>
+            <button type="button" class="admin-btn primary" id="adminThumbsRunBtn" disabled>Rebuild thumbnails</button>
+          </div>
+          <p class="admin-help">When a piece is uploaded the browser makes a thumbnail (longest side 480px; an original that small is used as is) and a micro thumbnail (16×16, for the campaign grid). This shows how many pieces are missing either one; <strong>Rebuild thumbnails</strong> reads those originals and makes what is missing, one piece at a time. The artwork itself is never changed.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminThumbsUnavailable" style="display:none;">Not available yet — run <code>supabase_mosaic_micro_thumbs.sql</code> in the Supabase SQL editor first.</p>
+          <div class="admin-usage">
+            <div class="admin-usage-tile"><div class="admin-usage-k">Missing thumbnail</div><div class="admin-usage-v" id="adminThumbsMissing">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Missing micro thumbnail</div><div class="admin-usage-v" id="adminMicroMissing">—</div></div>
+          </div>
         </section>
 
         <section class="admin-section">
@@ -233,13 +246,13 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-031816"></script>
-<script src="/js/i18n/en.js?v=20260910-031816"></script>
-<script src="/js/common.js?v=20260910-031816"></script>
-<script src="/js/auth.js?v=20260910-031816"></script>
-<script src="/js/notifications.js?v=20260910-031816"></script>
-<script src="/js/color-engine.js?v=20260910-031816"></script>
-<script src="/js/matching.js?v=20260910-031816"></script>
-<script src="/js/admin.js?v=20260910-031816"></script>
+<script src="/js/supabase-client.js?v=20260910-083030"></script>
+<script src="/js/i18n/en.js?v=20260910-083030"></script>
+<script src="/js/common.js?v=20260910-083030"></script>
+<script src="/js/auth.js?v=20260910-083030"></script>
+<script src="/js/notifications.js?v=20260910-083030"></script>
+<script src="/js/color-engine.js?v=20260910-083030"></script>
+<script src="/js/matching.js?v=20260910-083030"></script>
+<script src="/js/admin.js?v=20260910-083030"></script>
 </body>
 </html>

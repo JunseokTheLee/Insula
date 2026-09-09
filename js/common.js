@@ -507,38 +507,61 @@ async function uploadImage(file) {
   return sb.storage.from('artwork').getPublicUrl(path).data.publicUrl;
 }
 
-// Downscaled copy of an uploaded artwork file, for every place it's shown
-// small (weavo grid cells, list/profile thumbnails, project preview
-// canvases) so those views don't each pull the full-resolution original
-// just to shrink it back down. Resolves null (not rejects) on any failure —
-// callers treat a missing thumbnail as "fall back to the full image".
+// Downscaled copies of an uploaded artwork, both made in the browser from a
+// single decode of the file:
+//  • thumb — longer side ≤ THUMB_MAX_DIM px, JPEG — for every place a piece
+//    shows small (grid cells once zoomed in, lists, profile, previews). An
+//    original that is already that small needs none: its own URL is used.
+//  • micro — a MICRO_THUMB_PX-square, centre-cropped JPEG as a data URI
+//    (~0.5 KB), stored in mosaic_submissions.micro_thumb, so the campaign
+//    canvas can paint every filled cell as a tiny picture at any zoom with
+//    no image request per piece (supabase_mosaic_micro_thumbs.sql).
+// Any failure yields nulls — an upload is never blocked by its derivatives.
 const THUMB_MAX_DIM = 480;
-function makeThumbnailBlob(file) {
+const MICRO_THUMB_PX = 16;
+function artworkDerivativesFromImage(img) {
+  const w0 = img.naturalWidth, h0 = img.naturalHeight;
+  const out = { thumbBlob: null, thumbNeeded: Math.max(w0, h0) > THUMB_MAX_DIM, micro: null };
+  const micro = document.createElement('canvas');
+  micro.width = MICRO_THUMB_PX; micro.height = MICRO_THUMB_PX;
+  const side = Math.min(w0, h0); // centre square crop, like background-size: cover
+  micro.getContext('2d').drawImage(img, (w0 - side) / 2, (h0 - side) / 2, side, side, 0, 0, MICRO_THUMB_PX, MICRO_THUMB_PX);
+  out.micro = micro.toDataURL('image/jpeg', 0.65);
+  if (!out.thumbNeeded) return Promise.resolve(out);
+  const scale = THUMB_MAX_DIM / Math.max(w0, h0);
+  const w = Math.max(1, Math.round(w0 * scale)), h = Math.max(1, Math.round(h0 * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+  return new Promise(resolve => canvas.toBlob(blob => { out.thumbBlob = blob; resolve(out); }, 'image/jpeg', 0.82));
+}
+function makeArtworkDerivatives(file) {
   const objectUrl = URL.createObjectURL(file);
-  return loadImageEl(objectUrl).then(img => {
-    const scale = Math.min(1, THUMB_MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight));
-    const w = Math.max(1, Math.round(img.naturalWidth * scale));
-    const h = Math.max(1, Math.round(img.naturalHeight * scale));
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-    return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.82));
-  }).catch(() => null).finally(() => URL.revokeObjectURL(objectUrl));
+  return loadImageEl(objectUrl).then(artworkDerivativesFromImage)
+    .catch(() => ({ thumbBlob: null, thumbNeeded: true, micro: null }))
+    .finally(() => URL.revokeObjectURL(objectUrl));
+}
+// Thumbnails live in the same `artwork` bucket under thumb/<owner>/ — the
+// owner's folder, so account deletion cleans them up with the originals.
+async function uploadThumbBlob(blob, ownerId) {
+  const path = `thumb/${ownerId}/${Date.now()}.jpg`;
+  const { error } = await sb.storage.from('artwork').upload(path, blob, { cacheControl: '31536000', contentType: 'image/jpeg' });
+  if (error) { console.error('thumbnail upload error:', error); return null; }
+  return sb.storage.from('artwork').getPublicUrl(path).data.publicUrl;
 }
 
-// Uploads both the full-resolution artwork file (image_url) and a
-// downscaled thumbnail (thumb_url) alongside it in the same `artwork`
-// bucket, under a `thumb/` prefix. A thumbnail upload failure still returns
-// the full-res url — the artwork itself shouldn't be blocked by it.
+// Uploads the full-resolution artwork file (image_url) plus its derivatives:
+// thumb_url (the original's own URL when it is already ≤ THUMB_MAX_DIM, a
+// separate upload otherwise) and the micro thumbnail data URI. A derivative
+// failure still returns the full-res url — the artwork itself shouldn't be
+// blocked by it; the admin page lists such pieces and can rebuild them.
 async function uploadArtworkImage(file) {
   const url = await uploadImage(file);
-  if (!url) return { url: null, thumbUrl: null };
-  const thumbBlob = await makeThumbnailBlob(file);
-  if (!thumbBlob) return { url, thumbUrl: null };
-  const path = `thumb/${me.id}/${Date.now()}.jpg`;
-  const { error } = await sb.storage.from('artwork').upload(path, thumbBlob, { cacheControl: '31536000', contentType: 'image/jpeg' });
-  if (error) { console.error('uploadArtworkImage thumb error:', error); return { url, thumbUrl: null }; }
-  return { url, thumbUrl: sb.storage.from('artwork').getPublicUrl(path).data.publicUrl };
+  if (!url) return { url: null, thumbUrl: null, microThumb: null };
+  const d = await makeArtworkDerivatives(file);
+  if (!d.thumbNeeded) return { url, thumbUrl: url, microThumb: d.micro };
+  if (!d.thumbBlob) return { url, thumbUrl: null, microThumb: d.micro };
+  return { url, thumbUrl: await uploadThumbBlob(d.thumbBlob, me.id), microThumb: d.micro };
 }
 
 // ---------- liked artwork pool (mosaic_submission_likes) ----------

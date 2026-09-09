@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-031816">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-031816">
+<link rel="stylesheet" href="/css/base.css?v=20260910-083030">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-083030">
 </head>
 
 <body>
@@ -98,6 +98,19 @@
           <p class="admin-help">아직 어느 캠페인에도 들어가지 못한 작품입니다(새로 올라온 작품, 캠페인 삭제로 돌아온 작품). 매칭은 업로드·캠페인 생성·reshape·작품 제거·캠페인 삭제 때만 돌기 때문에 <strong>지금 배치</strong>로 바로 돌릴 수 있습니다. 진행 중인 캠페인의 빈 칸과 색이 맞지 않는 작품은 여기 그대로 남습니다.</p>
           <div id="adminPoolList" class="admin-list"></div>
           <p class="empty-note admin-empty" id="adminPoolEmpty" style="display:none;">풀에 대기 중인 작품이 없습니다.</p>
+        </section>
+
+        <section class="admin-section" id="adminThumbsSection">
+          <div class="admin-section-head">
+            <h2>작품 썸네일</h2>
+            <button type="button" class="admin-btn primary" id="adminThumbsRunBtn" disabled>썸네일 생성</button>
+          </div>
+          <p class="admin-help">작품을 올릴 때 브라우저가 썸네일(긴 변 480px, 원본이 그보다 작으면 원본 그대로)과 초소형 썸네일(16×16, 캠페인 격자용)을 만듭니다. 둘 중 하나라도 없는 작품 수를 보여주며, <strong>썸네일 생성</strong>은 그 작품들의 원본을 읽어 빠진 것을 한 건씩 다시 만듭니다. 작품 자체는 바뀌지 않습니다.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminThumbsUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_mosaic_micro_thumbs.sql</code> 을 먼저 실행하세요.</p>
+          <div class="admin-usage">
+            <div class="admin-usage-tile"><div class="admin-usage-k">썸네일 없는 작품</div><div class="admin-usage-v" id="adminThumbsMissing">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">초소형 썸네일 없는 작품</div><div class="admin-usage-v" id="adminMicroMissing">—</div></div>
+          </div>
         </section>
 
         <section class="admin-section">
@@ -339,14 +352,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-031816"></script>
-<script src="/js/i18n/ko.js?v=20260910-031816"></script>
-<script src="/js/common.js?v=20260910-031816"></script>
-<script src="/js/auth.js?v=20260910-031816"></script>
-<script src="/js/notifications.js?v=20260910-031816"></script>
-<script src="/js/color-engine.js?v=20260910-031816"></script>
-<script src="/js/matching.js?v=20260910-031816"></script>
-<script src="/js/admin.js?v=20260910-031816"></script>
+<script src="/js/supabase-client.js?v=20260910-083030"></script>
+<script src="/js/i18n/ko.js?v=20260910-083030"></script>
+<script src="/js/common.js?v=20260910-083030"></script>
+<script src="/js/auth.js?v=20260910-083030"></script>
+<script src="/js/notifications.js?v=20260910-083030"></script>
+<script src="/js/color-engine.js?v=20260910-083030"></script>
+<script src="/js/matching.js?v=20260910-083030"></script>
+<script src="/js/admin.js?v=20260910-083030"></script>
 
 </body>
 </html>

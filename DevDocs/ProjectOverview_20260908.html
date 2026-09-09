@@ -339,6 +339,7 @@ profile.js               루트에 남아 있는 잔여 파일 (어느 페이지
     <li><code>reset_pixel_on_submission_delete</code> — <span class="en">frees a cell when its artwork is deleted</span><span class="ko">작품 삭제 시 칸을 다시 비움</span></li>
     <li><code>delete_mosaic_project</code> · <code>delete_own_account</code> — <span class="en">admin project deletion; self-service account deletion (plus Storage cleanup SQL)</span><span class="ko">관리자 프로젝트 삭제; 사용자 본인 계정 삭제 (Storage 정리 SQL 별도)</span></li>
     <li><code>admin_set_site_settings</code> · <code>admin_usage_stats</code> — <span class="en">admin-only: merge site options into the <code>site_settings</code> row; DB/Storage usage figures for the admin page</span><span class="ko">관리자 전용: 사이트 옵션을 <code>site_settings</code> 행에 병합; 관리자 페이지용 DB·Storage 사용량</span></li>
+    <li><code>admin_set_submission_thumbs</code> — <span class="en">admin-only: writes a piece's rebuilt thumb_url / micro_thumb (thumbnail backfill)</span><span class="ko">관리자 전용: 재생성한 작품의 thumb_url / micro_thumb 기록 (썸네일 백필)</span></li>
     <li><code>notify_follow</code> · <code>notify_submission_like</code> · <code>notify_submission_comment</code> · <code>check_mosaic_comment_parent</code> · <code>set_profiles_updated_at</code> — <span class="en">triggers</span><span class="ko">트리거</span></li>
   </ul>
   <div class="warn">

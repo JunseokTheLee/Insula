@@ -751,13 +751,19 @@ document.getElementById('ua-submit').onclick = async () => {
     const uploaded = await uploadArtworkImage(file);
     if (!uploaded.url) return;
 
-    const { data: inserted, error: insErr } = await sb.from('mosaic_submissions').insert({
+    const row = {
       author_id: me.id, author_name: me.username || tr('anonymous'), author_avatar_url: me.avatar || null,
       image_url: uploaded.url, thumb_url: uploaded.thumbUrl,
       avg_r: avg.r, avg_g: avg.g, avg_b: avg.b,
       art_title: meta.title || null, art_material: meta.material || null, art_completed_date: meta.completedDate,
       art_description: meta.description || null, art_link: meta.link || null
-    }).select('id').single();
+    };
+    let { data: inserted, error: insErr } = await sb.from('mosaic_submissions')
+      .insert(uploaded.microThumb ? { ...row, micro_thumb: uploaded.microThumb } : row).select('id').single();
+    if (insErr && uploaded.microThumb && isSchemaMismatchError(insErr)) {
+      // supabase_mosaic_micro_thumbs.sql not applied yet — insert without it.
+      ({ data: inserted, error: insErr } = await sb.from('mosaic_submissions').insert(row).select('id').single());
+    }
     if (insErr || !inserted) {
       console.error('profile artwork insert error:', insErr);
       toast(insErr && insErr.code === 'RATE1' ? tr('uploadRateLimited') : tr('couldNotSubmitRetry'));

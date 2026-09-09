@@ -180,7 +180,7 @@ async function renderWeavoGrid(project) {
     loadProjectCells(project),
     fetchAllRows(
       () => sb.from('mosaic_pixels')
-        .select('id,x,y,target_r,target_g,target_b,filled,submission_id,mosaic_submissions!mosaic_pixels_submission_id_fkey(id,image_url,thumb_url,author_id,author_name,author_avatar_url,art_title,art_material,art_completed_date,art_description,art_link,created_at)')
+        .select('id,x,y,target_r,target_g,target_b,filled,submission_id,mosaic_submissions!mosaic_pixels_submission_id_fkey(*)')
         .eq('project_id', project.id).eq('filled', true).not('submission_id', 'is', null),
       { expected: project.width * project.height }
     ),
@@ -214,6 +214,7 @@ async function renderWeavoGrid(project) {
     ctx.fillRect(c.x * cellPx, c.y * cellPx, cellPx - 1, cellPx - 1);
   }
   grid.appendChild(base);
+  paintMicroThumbs(ctx, filledRows, cellPx, project);
 
   const filledSubs = [];
   for (const px of filledRows) {
@@ -326,6 +327,18 @@ function clampMsPan() {
   const maxY = Math.max(0, (msBaseH * msScale - weavoWrap.clientHeight) / 2);
   msX = Math.min(maxX, Math.max(-maxX, msX));
   msY = Math.min(maxY, Math.max(-maxY, msY));
+}
+// Paints each filled cell's micro thumbnail (a ~16 px JPEG data URI carried
+// in the row — see common.js artworkDerivativesFromImage) over its
+// average-colour square, so pieces read as tiny pictures at any zoom with
+// no request per piece. Decoding is async; older rows without one simply
+// keep the average colour until the admin page rebuilds their thumbnails.
+async function paintMicroThumbs(ctx, rows, cellPx, project) {
+  const withMicro = rows.filter(px => px.mosaic_submissions && px.mosaic_submissions.micro_thumb);
+  await Promise.all(withMicro.map(px => loadImageEl(px.mosaic_submissions.micro_thumb).then(img => {
+    if (currentProject !== project) return; // the page has moved on to another campaign
+    ctx.drawImage(img, px.x * cellPx, px.y * cellPx, cellPx - 1, cellPx - 1);
+  }).catch(() => { /* a bad data URI just leaves the average colour */ })));
 }
 // Thumbnails are only loaded for filled cells that are on screen AND at
 // least THUMB_MIN_PX wide — smaller than that, the average-color canvas
