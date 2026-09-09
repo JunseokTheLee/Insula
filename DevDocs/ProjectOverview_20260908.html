@@ -277,7 +277,7 @@ profile.js               루트에 남아 있는 잔여 파일 (어느 페이지
   <div class="tbl"><table>
     <thead><tr><th>URL</th><th><span class="en">Purpose</span><span class="ko">역할</span></th><th><span class="en">Page scripts</span><span class="ko">페이지 스크립트</span></th></tr></thead>
     <tbody>
-      <tr><td><code>/{lang}/</code></td><td><span class="en">Landing page: latest artworks/exhibitions, hero preview of a live project, stats, how-it-works</span><span class="ko">랜딩: 최신 작품·전시, 진행 중 프로젝트 미리보기, 통계, 작동 방식</span></td><td>color-engine, matching, project-preview, lightbox, landing</td></tr>
+      <tr><td><code>/{lang}/</code></td><td><span class="en">Landing page: latest artworks/exhibitions, hero preview of a live campaign, stats</span><span class="ko">랜딩: 최신 작품·전시, 진행 중 캠페인 미리보기, 통계</span></td><td>color-engine, matching, project-preview, lightbox, landing</td></tr>
       <tr><td><code>/{lang}/campaigns</code></td><td><span class="en">Project list; admins create new projects here (reference image → grid)</span><span class="ko">프로젝트 목록; 관리자는 여기서 새 프로젝트 생성 (기준 이미지 → 격자)</span></td><td>color-engine, matching, project-preview, home</td></tr>
       <tr><td><code>/{lang}/campaigns/{id}</code></td><td><span class="en">Project detail: mosaic grid with pan/zoom, list view, admin reshape</span><span class="ko">프로젝트 상세: 팬/줌 되는 모자이크 격자, 목록 보기, 관리자 reshape</span></td><td>color-engine, matching, lightbox, project</td></tr>
       <tr><td><code>/{lang}/artworks</code></td><td><span class="en">Browse every submitted artwork, newest first</span><span class="ko">제출된 모든 작품 탐색 (최신순)</span></td><td>artworks</td></tr>
@@ -287,7 +287,7 @@ profile.js               루트에 남아 있는 잔여 파일 (어느 페이지
       <tr><td><code>/{lang}/exhibitions</code></td><td><span class="en">Published collections ("exhibitions")</span><span class="ko">발행된 컬렉션("전시") 목록</span></td><td>exhibitions</td></tr>
       <tr><td><code>/{lang}/collections/{id}</code></td><td><span class="en">One collection and its items</span><span class="ko">컬렉션 하나와 그 안의 작품</span></td><td>color-engine, matching, lightbox, collection</td></tr>
       <tr><td><code>/{lang}/network</code></td><td><span class="en">Sitewide "save" (follow) relationship graph, d3-force</span><span class="ko">사이트 전체 "저장"(팔로우) 관계 그래프, d3-force</span></td><td>graph-common, network</td></tr>
-      <tr><td><code>/{lang}/about</code> · <code>privacy</code> · <code>disclaimer</code> · <code>delete-account</code></td><td><span class="en">Static information pages; delete-account calls <code>delete_own_account</code></span><span class="ko">정적 안내 페이지; delete-account 는 <code>delete_own_account</code> 호출</span></td><td>—</td></tr>
+      <tr><td><code>/{lang}/about</code> · <code>privacy</code> · <code>disclaimer</code> · <code>delete-account</code></td><td><span class="en">Static information pages — About carries the "how a mosaic comes together" step card (moved off the landing page 2026-09-09); delete-account calls <code>delete_own_account</code></span><span class="ko">정적 안내 페이지 — 소개에 "모자이크가 완성되어 가는 방식" 단계 카드가 있음(2026-09-09 랜딩에서 이전); delete-account 는 <code>delete_own_account</code> 호출</span></td><td>—</td></tr>
       <tr><td><code>/{lang}/404</code></td><td><span class="en">Not-found page, served with a real 404 status</span><span class="ko">찾을 수 없음 페이지 (실제 404 상태 코드)</span></td><td>—</td></tr>
     </tbody>
   </table></div>

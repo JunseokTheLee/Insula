@@ -142,63 +142,6 @@
 .scroll-hint.hidden{display:none;}
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
 
-/* ---------- landing "How It Works": the Mosaic explainer ----------
-   Network and Exhibitions used to sit alongside this as two more columns;
-   they now live as "What is this?" popups on /network and /exhibitions
-   (the .feature-diagram / .fd-* marks moved to base.css so those pages can
-   reuse them without pulling in all of home.css). */
-.features3{flex-shrink:0;width:100%;max-width:1400px;margin:0 auto;padding:64px 32px 64px;}
-.hiw-header{max-width:640px;margin:0 0 40px;}
-.hiw-header .section-label{margin:4px 0 14px;}
-.hiw-title{font-family:'Pretendard',sans-serif;font-weight:700;font-size:clamp(28px,3.4vw,40px);letter-spacing:-.02em;line-height:1.05;margin:0 0 14px;color:var(--primary);}
-.hiw-intro{font-family:'Pretendard',sans-serif;color:var(--muted);font-size:15px;line-height:1.6;margin:0;}
-
-.features3-cols{display:flex;gap:24px;align-items:flex-start;border-top:none;}
-.feature-col{
-  flex:1 1 0;min-width:0;max-width:760px;padding:32px;
-  background:var(--surface);border-radius:var(--r-lg);
-}
-.feature-tag{display:block;font-family:'Pretendard',sans-serif;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
-.feature-col h3{font-family:'Pretendard',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.01em;margin:0 0 12px;color:var(--primary);}
-.feature-col > p{font-family:'Pretendard',sans-serif;font-size:14.5px;line-height:1.65;color:var(--text);margin:0 0 20px;}
-
-/* compact step list — the Mosaic column's condensed "how it works" */
-.hiw-steps-compact{list-style:none;margin:0 0 20px;padding:0;}
-.hiw-steps-compact li{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);}
-.hiw-steps-compact li:first-child{padding-top:0;}
-.hiw-steps-compact li:last-child{border-bottom:none;}
-.hiw-num-sm{flex:0 0 auto;font-family:'Pretendard',sans-serif;font-weight:700;font-size:20px;color:var(--border-strong);width:30px;line-height:1.35;}
-.hiw-steps-compact h4{font-family:'Pretendard',sans-serif;font-weight:700;font-size:14.5px;margin:0 0 4px;color:var(--primary);}
-.hiw-steps-compact p{font-family:'Pretendard',sans-serif;font-size:13px;line-height:1.55;color:var(--muted);margin:0;}
-
-/* dots sit under the feature columns — only shown once they become a
-   swipe carousel below 900px (see media query). */
-.features3-dots{display:none;}
-
-@media (max-width:900px){
-  /* The three columns turn into a horizontal swipe carousel: each card is
-     centred in view with an equal sliver of its neighbours peeking on both
-     sides, position dots below. The track bleeds to the screen edges (the
-     negative margin cancels .features3's gutter); its own inline padding
-     is the peek gutter, and cards fill the content box so they sit
-     symmetrically within it and snap dead-centre. */
-  .features3-cols{
-    flex-direction:row;gap:16px;
-    margin:0 -32px;padding:0 40px;
-    overflow-x:auto;scroll-snap-type:x mandatory;
-    -webkit-overflow-scrolling:touch;scrollbar-width:none;
-  }
-  .features3-cols::-webkit-scrollbar{display:none;}
-  .feature-col{
-    flex:0 0 100%;scroll-snap-align:center;
-  }
-  .features3-dots{display:flex;gap:10px;justify-content:center;margin-top:24px;}
-}
-@media (max-width:640px){
-  .features3{padding:40px 16px 48px;}
-  .features3-cols{margin:0 -16px;padding:0 32px;}
-}
-
 /* ---------- carousel ---------- */
 .carousel-section{flex-shrink:0;padding:20px 0 0;}
 .carousel-section.empty{display:none;}

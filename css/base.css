@@ -200,6 +200,9 @@ body.no-scroll-lock{overflow:hidden;}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
 .field label{font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;color:var(--text);}
 .field .field-hint{font-weight:400;color:var(--muted);}
+/* Live username availability hint: it sits inside the label right after the
+   label text, so give it breathing room and enough weight to read at a glance. */
+#ep-username-hint{margin-left:10px;font-weight:600;font-size:12.5px;}
 .field input[type="text"],.field textarea,.field select{
   width:100%;padding:10px 12px;border:1px solid var(--border-strong);border-radius:var(--r-sm);
   font-size:13px;font-family:'Pretendard',sans-serif;color:var(--text);background:#fff;outline:none;transition:border-color .12s linear;
@@ -784,3 +787,20 @@ html[lang="ko"] * {
   }
   .notif-list{max-height:60vh;}
 }
+
+/* ---------- "how a mosaic comes together" step card ----------
+   Moved here from home.css when the How-It-Works panel left the landing
+   page for /about (2026-09-09): the about pages only load base.css. */
+.feature-col{max-width:760px;padding:32px;background:var(--surface);border-radius:var(--r-lg);}
+.about-hiw{margin:20px 0 24px;}
+.feature-tag{display:block;font-family:'Pretendard',sans-serif;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.feature-col h3{font-family:'Pretendard',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.01em;margin:0 0 12px;color:var(--primary);}
+.hiw-intro{font-family:'Pretendard',sans-serif;color:var(--muted);font-size:15px;line-height:1.6;margin:0 0 6px;}
+.hiw-steps-compact{list-style:none;margin:0;padding:0;}
+.hiw-steps-compact li{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);}
+.hiw-steps-compact li:first-child{padding-top:0;}
+.hiw-steps-compact li:last-child{border-bottom:none;padding-bottom:0;}
+.hiw-num-sm{flex:0 0 auto;font-family:'Pretendard',sans-serif;font-weight:700;font-size:20px;color:var(--border-strong);width:30px;line-height:1.35;}
+.hiw-steps-compact h4{font-family:'Pretendard',sans-serif;font-weight:700;font-size:14.5px;margin:0 0 4px;color:var(--primary);}
+.hiw-steps-compact p{font-family:'Pretendard',sans-serif;font-size:13px;line-height:1.55;color:var(--muted);margin:0;}
+@media (max-width:640px){ .feature-col{padding:22px 18px;} }
