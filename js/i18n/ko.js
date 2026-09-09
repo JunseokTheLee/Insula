@@ -34,6 +34,8 @@ const T = {
   usernameRequired: '계속하려면 사용자 이름이 필요합니다.', pleaseSelectCountry: '국가를 선택해주세요.',
   invalidLinkUrl: '{label} 링크가 올바른 URL 형식이 아닙니다.',
   usernameTaken: '이미 사용 중인 사용자 이름입니다.', couldNotSaveTryAgain: '저장할 수 없습니다. 다시 시도해주세요.',
+  usernameChecking: '확인 중…', usernameAvailable: '사용 가능', usernameTakenShort: '이미 사용 중',
+  usernameTooShort: '2~30자로 입력해주세요.', usernameInvalidChars: "'/' 또는 '\\' 는 사용할 수 없습니다.", usernameReserved: '사용할 수 없는 이름입니다.',
   welcomeToast: '환영합니다!', profileSavedToast: '프로필이 저장되었습니다',
   deleteAccountTitle: '계정을 삭제할까요?', deleteAccountConfirmLabel: '계정 삭제하기',
   deleteAccountMessage: '계정, 프로필, 작품, 댓글, 전시, 팔로우 정보가 모두 영구적으로 삭제됩니다. 되돌릴 수 없습니다. 확인하려면 아래에 사용자 이름 {username}을(를) 입력하세요.',

@@ -244,6 +244,66 @@ async function renderBlockedUsersSection(forced) {
     list.appendChild(row);
   }
 }
+// ---------- username rules (shared by first-login onboarding and profile edit) ----------
+// Kept in sync with the profiles_username_format CHECK constraint
+// (supabase_profiles_username_rules.sql): 2–30 chars, trimmed, no slash or
+// backslash (those break the /artists/<handle> route), and a few reserved
+// handles. Deliberately still permissive about spaces and non-Latin scripts,
+// so names already in use ("Seojin Oh", "박건우", …) stay valid.
+const USERNAME_RESERVED = ['me', 'admin', 'null', 'undefined', 'anonymous', 'weavo'];
+function usernameFormatError(name) {
+  const v = (name || '').trim();
+  if (v.length < 2 || v.length > 30) return 'usernameTooShort';
+  if (v.indexOf('/') >= 0 || v.indexOf('\\') >= 0) return 'usernameInvalidChars';
+  if (USERNAME_RESERVED.includes(v.toLowerCase())) return 'usernameReserved';
+  return null; // valid
+}
+// Case-insensitive existence check, excluding the signed-in user's own row so
+// re-saving your current name never reads as "taken". Fetches a few ilike
+// candidates and confirms an exact (lowercased) hit in JS, so a literal '_'
+// in a name isn't mistaken for the LIKE wildcard.
+async function usernameIsTaken(name) {
+  const { data, error } = await sb.from('profiles').select('id,username').ilike('username', name).limit(5);
+  if (error) { console.error('username availability check error:', error); return false; }
+  return (data || []).some(r => (r.username || '').toLowerCase() === name.trim().toLowerCase() && r.id !== me.id);
+}
+// Live hint shown under the username field so people learn a name is taken or
+// malformed while typing, instead of only after submitting.
+let epUsernameCheckTimer = null;
+let epUsernameCheckSeq = 0;
+function setUsernameHint(text, color) {
+  const hint = document.getElementById('ep-username-hint');
+  if (!hint) return;
+  if (!text) { hint.style.display = 'none'; hint.textContent = ''; return; }
+  hint.textContent = text;
+  hint.style.color = color || '';
+  hint.style.display = '';
+}
+async function refreshUsernameHint() {
+  const raw = document.getElementById('ep-username').value.trim();
+  if (!raw) { setUsernameHint('', ''); return; }
+  const fmtErr = usernameFormatError(raw);
+  if (fmtErr) { setUsernameHint(tr(fmtErr), 'var(--accent-warm)'); return; }
+  const seq = ++epUsernameCheckSeq;
+  setUsernameHint(tr('usernameChecking'), 'var(--muted)');
+  const taken = await usernameIsTaken(raw);
+  if (seq !== epUsernameCheckSeq) return; // a newer keystroke already superseded this check
+  setUsernameHint(taken ? tr('usernameTakenShort') : tr('usernameAvailable'), taken ? 'var(--accent-warm)' : '#3E9B63');
+}
+// Propose a starter handle from the account name so first-login onboarding
+// doesn't open on an empty required field. ASCII-folded for a clean URL; if the
+// base is taken, append the smallest free number. Returns '' if nothing fits.
+async function suggestUsername() {
+  let base = (me.name || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '');
+  if (base.length < 2) base = 'artist';
+  base = base.slice(0, 24);
+  for (let i = 0; i < 6; i++) {
+    const candidate = i === 0 ? base : `${base}${i + 1}`;
+    if (!usernameFormatError(candidate) && !(await usernameIsTaken(candidate))) return candidate;
+  }
+  return '';
+}
+
 function openEditProfileModal(profile, forced) {
   // Supabase's client re-fires onAuthStateChange (e.g. on a token refresh
   // triggered by the tab regaining focus after switching away and back)
@@ -285,7 +345,23 @@ function openEditProfileModal(profile, forced) {
   requiredNote.textContent = profile.username
     ? tr('requiredNoteCountryOnly')
     : tr('requiredNoteFull');
-  document.getElementById('ep-username-hint').style.display = 'none';
+  // Reset the live availability hint, then either validate the value that's
+  // already there (edit / country-only re-onboarding) or, on a brand-new
+  // first login with an empty required field, propose a starter handle.
+  setUsernameHint('', '');
+  const unameEl = document.getElementById('ep-username');
+  if (forced && !unameEl.value.trim()) {
+    suggestUsername().then(s => {
+      // Only fill if the person hasn't started typing while we were checking,
+      // and the modal is still the same open onboarding session.
+      if (s && !unameEl.value.trim() && document.getElementById('edit-profile-modal').classList.contains('open')) {
+        unameEl.value = s;
+        refreshUsernameHint();
+      }
+    });
+  } else if (unameEl.value.trim()) {
+    refreshUsernameHint();
+  }
   document.getElementById('ep-cancel').style.display = forced ? 'none' : '';
   document.getElementById('ep-danger-zone').style.display = forced ? 'none' : '';
   document.getElementById('edit-profile-modal').classList.add('open');
@@ -297,12 +373,19 @@ function closeEditProfileModal() {
 const epAvatarPicker = setupPicker('ep-avatar-picker');
 document.getElementById('ep-cancel').onclick = closeEditProfileModal;
 document.getElementById('edit-profile-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditProfileModal(); });
+// Debounced live username check while typing (see refreshUsernameHint).
+document.getElementById('ep-username').addEventListener('input', () => {
+  clearTimeout(epUsernameCheckTimer);
+  epUsernameCheckTimer = setTimeout(refreshUsernameHint, 400);
+});
 document.getElementById('ep-submit').onclick = async () => {
   const errorEl = document.getElementById('ep-error');
   const username = document.getElementById('ep-username').value.trim();
   const bio = document.getElementById('ep-bio').value.trim();
   const countryId = document.getElementById('ep-country').value ? parseInt(document.getElementById('ep-country').value, 10) : null;
   if (!username) { errorEl.textContent = tr('usernameRequired'); return; }
+  const usernameErr = usernameFormatError(username);
+  if (usernameErr) { errorEl.textContent = tr(usernameErr); return; }
   if (!countryId) { errorEl.textContent = tr('pleaseSelectCountry'); return; }
   const links = {};
   for (const { key, label } of LINK_PLATFORMS) {

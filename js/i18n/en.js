@@ -34,6 +34,8 @@ const T = {
   usernameRequired: 'Username is required to continue.', pleaseSelectCountry: 'Please select your country.',
   invalidLinkUrl: "That {label} link doesn't look like a valid URL.",
   usernameTaken: 'That username is taken.', couldNotSaveTryAgain: 'Could not save. Try again.',
+  usernameChecking: 'Checking…', usernameAvailable: 'Available', usernameTakenShort: 'Already taken',
+  usernameTooShort: 'Use 2–30 characters.', usernameInvalidChars: 'Cannot contain / or \\.', usernameReserved: 'That name is not available.',
   welcomeToast: 'Welcome!', profileSavedToast: 'Profile saved',
   deleteAccountTitle: 'Delete your account?', deleteAccountConfirmLabel: 'Delete my account',
   deleteAccountMessage: "This permanently deletes your account, profile, artwork, comments, exhibitions, and follows. This can't be undone. Type your username, {username}, below to confirm.",
