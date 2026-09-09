@@ -53,7 +53,7 @@ without distinction — every piece is an equal part of the whole.
 index.html              static language-chooser fallback (the Function above normally answers first)
 en/, ko/                one HTML page per feature, per language (index = landing, campaigns, campaign,
                         artworks, artwork, artists, profile, collection, exhibitions, network,
-                        about, privacy, disclaimer, delete-account, 404)
+                        about, privacy, disclaimer, delete-account, 404, admin [is_admin only])
 css/                    base.css + one stylesheet per page
 js/                     common.js, auth.js, color-engine.js, matching.js, lightbox.js,
                         project.js, profile-view.js, network.js, notifications.js, …

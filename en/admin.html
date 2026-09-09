@@ -4,26 +4,11 @@
 <link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Disclaimer | Weavo</title>
-<meta name="description" content="Ownership, self-reported bios, and other important notes about community-submitted content on Weavo.">
-<link rel="canonical" href="https://weavo.art/en/disclaimer">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/disclaimer">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/disclaimer">
-<link rel="alternate" hreflang="x-default" href="https://weavo.art/">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Disclaimer | Weavo">
-<meta property="og:description" content="Ownership, self-reported bios, and other important notes about community-submitted content on Weavo.">
-<meta property="og:url" content="https://weavo.art/en/disclaimer">
-<meta property="og:image" content="https://weavo.art/logo.png">
-<meta property="og:locale" content="en_US">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Disclaimer | Weavo">
-<meta name="twitter:description" content="Ownership, self-reported bios, and other important notes about community-submitted content on Weavo.">
-<meta name="twitter:image" content="https://weavo.art/logo.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Disclaimer","item":"https://weavo.art/en/disclaimer"}]}</script>
+<title>Admin | Weavo</title>
+<meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="/css/base.css?v=20260909-230055">
+<link rel="stylesheet" href="/css/admin.css?v=20260909-230055">
 </head>
 <body>
 
@@ -54,20 +39,38 @@
     <div class="backnav">
       <a class="back" href="/en/campaigns">&larr; Back</a>
     </div>
-    <div class="legal-page">
-      <h1>Disclaimer</h1>
-      <p class="legal-updated">Last updated July 2026</p>
-      <div class="legal-body">
-        <h2>Community-submitted content</h2>
-        <p>Artwork, bios, and comments are submitted by individual users, who retain full ownership and rights to their own work. Submitting a piece here doesn't transfer ownership to Weavo — it places a copy into the shared weavo and public gallery.</p>
-        <h2>Self-reported, not clinical</h2>
-        <p>Bios are self-reported by users for community context only. They are not medical or diagnostic information, are not verified, and shouldn't be relied on as such. Weavo is not a medical, therapeutic, or diagnostic service, and isn't affiliated with any clinical or advocacy organization.</p>
-        <h2>User opinions</h2>
-        <p>Comments and profile content reflect the views of the individual users who posted them, not the views of Weavo.</p>
-        <h2>No warranty</h2>
-        <p>The site and its content are provided "as is," without warranties of any kind. We do our best to keep things running smoothly but can't guarantee uninterrupted or error-free access.</p>
-        <h2>Changes</h2>
-        <p>This disclaimer and the Privacy Policy may be updated as the campaign evolves. Continued use of the site means you accept the current version.</p>
+    <div class="legal-page admin-page">
+      <h1>Admin</h1>
+      <p class="admin-notice" id="adminNotice" style="display:none;">This page is for admins only. Please sign in with an admin account.</p>
+      <div id="adminBody" style="display:none;">
+
+        <section class="admin-section">
+          <div class="admin-section-head">
+            <h2>Reports</h2>
+            <label class="admin-filter"><input type="checkbox" id="adminReportsShowAll"> Show handled reports too</label>
+          </div>
+          <p class="admin-help">Open each reported artwork, comment or account from its link and review it <strong>one at a time</strong>; delete it from that screen if needed. This page only changes a report's status.</p>
+          <div id="adminReports" class="admin-list"></div>
+          <p class="empty-note admin-empty" id="adminReportsEmpty" style="display:none;">No open reports.</p>
+        </section>
+
+        <section class="admin-section">
+          <div class="admin-section-head">
+            <h2>Campaigns</h2>
+            <a href="/en/campaigns" class="cta-text" style="margin-top:0;">Create a new one from the campaign list</a>
+          </div>
+          <p class="admin-help">Deleting a campaign never deletes artwork — every piece returns to its artist's pool. Archived versions are removed together with their live campaign.</p>
+          <div id="adminCampaigns" class="admin-list"></div>
+          <p class="empty-note admin-empty" id="adminCampaignsEmpty" style="display:none;">No campaigns.</p>
+        </section>
+
+        <section class="admin-section">
+          <h2>Admins</h2>
+          <div id="adminAdmins" class="admin-list"></div>
+          <p class="admin-help">Admins can't be granted or revoked from the site (by design). Run this in the Supabase SQL editor:</p>
+          <pre class="admin-code">update public.profiles set is_admin = true where lower(username) = lower('username');</pre>
+        </section>
+
       </div>
     </div>
   </main>
@@ -182,5 +185,6 @@
 <script src="/js/common.js?v=20260909-230055"></script>
 <script src="/js/auth.js?v=20260909-230055"></script>
 <script src="/js/notifications.js?v=20260909-230055"></script>
+<script src="/js/admin.js?v=20260909-230055"></script>
 </body>
 </html>

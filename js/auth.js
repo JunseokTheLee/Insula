@@ -66,6 +66,21 @@ function updateIdentityUI() {
   if (me.avatar) { av.src = cdnUrl(me.avatar); av.alt = tr('artistAvatarAlt', { name: me.username || me.name }); av.style.display = 'inline-block'; } else { av.style.display = 'none'; }
   document.getElementById('loginBtn').style.display = me.id ? 'none' : '';
   document.getElementById('logoutBtn').style.display = me.id ? '' : 'none';
+  // Admin-only shortcut to /{lang}/admin. Created on demand so none of the
+  // page headers need a hidden element for it; hidden again on sign-out.
+  let adminLink = document.getElementById('adminLink');
+  if (me.isAdmin) {
+    if (!adminLink) {
+      adminLink = document.createElement('a');
+      adminLink.id = 'adminLink'; adminLink.className = 'id-btn admin-link';
+      adminLink.href = `/${CURRENT_LANG}/admin`;
+      adminLink.textContent = tr('adminLink');
+      document.getElementById('identity').insertBefore(adminLink, document.getElementById('logoutBtn'));
+    }
+    adminLink.style.display = '';
+  } else if (adminLink) {
+    adminLink.style.display = 'none';
+  }
   const newProjectBtn = document.getElementById('newProjectBtn');
   if (newProjectBtn) newProjectBtn.style.display = me.isAdmin ? '' : 'none';
   const deleteAcctCta = document.getElementById('deleteAcctCta');

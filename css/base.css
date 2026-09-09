@@ -108,6 +108,9 @@ body.no-scroll-lock{overflow:hidden;}
 #loginBtn:hover{opacity:.92;}
 #logoutBtn{background:var(--bg);color:var(--text);border:1px solid var(--border-strong);}
 #logoutBtn:hover{background:var(--surface);}
+/* Admin-only header link (js/auth.js injects it for is_admin accounts). */
+.admin-link{background:var(--primary-soft);color:var(--primary);text-decoration:none;display:inline-block;}
+.admin-link:hover{background:var(--green-200);}
 .lang-toggle{display:inline-flex;border:none;border-radius:var(--r-full);overflow:hidden;flex-shrink:0;background:var(--gray-100);}
 .lang-btn{
   appearance:none;border:none;background:transparent;cursor:pointer;

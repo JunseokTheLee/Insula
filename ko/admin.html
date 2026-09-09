@@ -4,57 +4,12 @@
 <link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weavo 소개</title>
-<meta name="description" content="Weavo가 무엇인지, 왜 만들어졌는지, 그리고 각자의 작품이 모여 하나의 공동 모자이크를 완성해 가는 과정을 소개합니다.">
-<link rel="canonical" href="https://weavo.art/ko/about">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/about">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/about">
-<link rel="alternate" hreflang="x-default" href="https://weavo.art/">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Weavo 소개">
-<meta property="og:description" content="Weavo가 무엇인지, 왜 만들어졌는지, 그리고 각자의 작품이 모여 하나의 공동 모자이크를 완성해 가는 과정을 소개합니다.">
-<meta property="og:url" content="https://weavo.art/ko/about">
-<meta property="og:image" content="https://weavo.art/logo.png">
-<meta property="og:locale" content="ko_KR">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Weavo 소개">
-<meta name="twitter:description" content="Weavo가 무엇인지, 왜 만들어졌는지, 그리고 각자의 작품이 모여 하나의 공동 모자이크를 완성해 가는 과정을 소개합니다.">
-<meta name="twitter:image" content="https://weavo.art/logo.png">
-
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@type":"Organization",
-  "name":"Weavo",
-  "url":"https://weavo.art/ko/",
-  "logo":"https://weavo.art/logo.png"
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@type":"BreadcrumbList",
-  "itemListElement":[
-    {
-      "@type":"ListItem",
-      "position":1,
-      "name":"Weavo",
-      "item":"https://weavo.art/ko/"
-    },
-    {
-      "@type":"ListItem",
-      "position":2,
-      "name":"소개",
-      "item":"https://weavo.art/ko/about"
-    }
-  ]
-}
-</script>
+<title>관리자 | Weavo</title>
+<meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="/css/base.css?v=20260909-230055">
+<link rel="stylesheet" href="/css/admin.css?v=20260909-230055">
 </head>
 
 <body>
@@ -69,7 +24,7 @@
       <a href="/ko/artworks" class="nav-link">작품 탐색</a>
       <a href="/ko/artists" class="nav-link">아티스트</a>
       <a href="/ko/exhibitions" class="nav-link">전시</a>
-      <a href="/ko/about" class="nav-link active">소개</a>
+      <a href="/ko/about" class="nav-link">소개</a>
     </nav>
 
     <div id="identity">
@@ -89,81 +44,37 @@
     <div class="backnav">
       <a class="back" href="/ko/campaigns">&larr; 돌아가기</a>
     </div>
+    <div class="legal-page admin-page">
+      <h1>관리자</h1>
+      <p class="admin-notice" id="adminNotice" style="display:none;">관리자만 볼 수 있는 페이지입니다. 관리자 계정으로 로그인해 주세요.</p>
+      <div id="adminBody" style="display:none;">
 
-    <div class="legal-page">
-      <h1>소개</h1>
+        <section class="admin-section">
+          <div class="admin-section-head">
+            <h2>신고</h2>
+            <label class="admin-filter"><input type="checkbox" id="adminReportsShowAll"> 처리된 신고도 보기</label>
+          </div>
+          <p class="admin-help">신고된 작품·댓글·계정은 링크로 열어 <strong>한 건씩</strong> 확인하고, 필요하면 그 화면에서 삭제합니다. 여기서는 처리 상태만 바꿉니다.</p>
+          <div id="adminReports" class="admin-list"></div>
+          <p class="empty-note admin-empty" id="adminReportsEmpty" style="display:none;">열린 신고가 없습니다.</p>
+        </section>
 
-      <div class="legal-body">
+        <section class="admin-section">
+          <div class="admin-section-head">
+            <h2>캠페인</h2>
+            <a href="/ko/campaigns" class="cta-text" style="margin-top:0;">캠페인 목록에서 새로 만들기</a>
+          </div>
+          <p class="admin-help">캠페인을 삭제해도 작품은 지워지지 않고 작가의 풀로 돌아갑니다. 보관본(이전 버전)은 원본 캠페인과 함께 삭제됩니다.</p>
+          <div id="adminCampaigns" class="admin-list"></div>
+          <p class="empty-note admin-empty" id="adminCampaignsEmpty" style="display:none;">캠페인이 없습니다.</p>
+        </section>
 
-        <h2>Weavo란?</h2>
-        <p>
-          Weavo는 함께 만들어가는 협업 예술 캠페인입니다.
-          누구나 자신의 작품을 제출하고, 그 작품이 더 큰 하나의 작품을 이루는 일부가 되는 과정을 볼 수 있습니다.
-          제출된 모든 작품은 작품의 대표 색상을 기준으로 공동 Weavo 안에 배치됩니다.
-          그렇게 한 사람 한 사람의 작품이 모여, 모두가 하나씩 기여했기에 비로소 완성될 수 있는 하나의 이미지를 만들어 갑니다.
-        </p>
-
-        <h2>왜 만들었나요?</h2>
-        <p>
-          이 캠페인은 장애인 아티스트와 비장애인 아티스트가 서로 구분되지 않은 채 나란히 작품으로 연결되는 공간을 지향합니다.
-          누가 만들었는지, 또는 어떤 방식으로 만들었는지와 관계없이 모든 작품은 전체를 완성하는 데 동등한 하나의 조각으로 참여합니다.
-        </p>
-
-        <h2>모자이크가 완성되어 가는 방식</h2>
-        <p class="hiw-intro">작품을 제출하면 대표 색상이 자동으로 분석되어, 진행 중인 모든 캠페인의 빈 칸 가운데 가장 잘 어울리는 위치에 배치됩니다 — 더 많은 아티스트가 작품을 더할수록 전체 그림이 서서히 또렷해지고, 각 작품은 원래 크기로 아티스트의 이름과 함께 남습니다.</p>
-        <div class="feature-col about-hiw">
-          <span class="feature-tag">모자이크</span>
-          <h3>하나의 작품이 전체의 한 자리를 찾아가기까지.</h3>
-          <ol class="hiw-steps-compact">
-            <li>
-              <span class="hiw-num-sm">01</span>
-              <div>
-                <h4>작품 제출하기</h4>
-                <p>프로필에서 어떤 형식의 작품이든 업로드하고, 원한다면 제목과 설명을 추가하세요. 캠페인을 직접 선택할 필요는 없습니다.</p>
-              </div>
-            </li>
-            <li>
-              <span class="hiw-num-sm">02</span>
-              <div>
-                <h4>Weavo가 색상을 분석합니다</h4>
-                <p>작품을 제출하는 순간 대표 색상이 자동으로 분석됩니다. 별도의 태그를 입력할 필요가 없습니다.</p>
-              </div>
-            </li>
-            <li>
-              <span class="hiw-num-sm">03</span>
-              <div>
-                <h4>가장 잘 어울리는 캠페인에 배치됩니다</h4>
-                <p>현재 진행 중인 모든 캠페인의 빈 칸 가운데 색상이 가장 잘 어울리는 위치에 배치됩니다. 사람이 직접 작품의 위치나 소속 캠페인을 정하지 않습니다.</p>
-              </div>
-            </li>
-            <li>
-              <span class="hiw-num-sm">04</span>
-              <div>
-                <h4>하나의 이미지가 완성되어 갑니다</h4>
-                <p>작품이 하나씩 더해질 때마다 전체 이미지가 스스로 만들어지고, 충분히 모인 뒤에야 완전한 모습이 드러납니다. 모든 작품은 원래 크기로, 아티스트의 이름과 함께 영구히 남습니다.</p>
-              </div>
-            </li>
-          </ol>
-        </div>
-
-        <p>
-          이것은 어떻게 보면 거꾸로 만들어지는 모자이크입니다.
-          일반적인 모자이크는 먼저 완성할 이미지를 정한 뒤 그 이미지에 맞도록 각각의 조각을 만들어 배치합니다.
-          하지만 Weavo는 색상의 규칙 외에는 아무것도 정하지 않은 채 시작합니다.
-          서로의 작품을 한 번도 본 적 없는 사람들이 먼저 각자의 작품을 만들고,
-          그 작품들이 모인 뒤에야 비로소 전체 이미지가 모습을 드러냅니다.
-          멀리서 바라보면 하나의 모자이크처럼 보이지만,
-          가까이 다가가면 각각의 '타일'이 사실 누군가가 완성한 하나의 독립된 작품이라는 것을 발견할 수 있습니다.
-        </p>
-
-        <h2>누가 만들고 있나요?</h2>
-        <p>
-          Weavo는 <a href="https://abst.space/" target="_blank" rel="noopener">ABST</a>가 만든 이니셔티브입니다.
-          ABST는 제주도에 기반한 단체로, 고등학교 미술 전공 학생들과 지역의 자폐·장애 청년 예술가들이
-          실질적인 협업을 통해 전시를 만들어갑니다.
-          질문이나 의견, 새로운 아이디어가 있다면
-          <a href="mailto:jadyenthelee@gmail.com">jadyenthelee@gmail.com</a>으로 연락해 주세요.
-        </p>
+        <section class="admin-section">
+          <h2>관리자</h2>
+          <div id="adminAdmins" class="admin-list"></div>
+          <p class="admin-help">관리자 지정·해제는 화면에서 할 수 없습니다(의도된 보호). Supabase SQL 에디터에서 실행합니다:</p>
+          <pre class="admin-code">update public.profiles set is_admin = true where lower(username) = lower('사용자이름');</pre>
+        </section>
 
       </div>
     </div>
@@ -380,6 +291,7 @@
 <script src="/js/common.js?v=20260909-230055"></script>
 <script src="/js/auth.js?v=20260909-230055"></script>
 <script src="/js/notifications.js?v=20260909-230055"></script>
+<script src="/js/admin.js?v=20260909-230055"></script>
 
 </body>
 </html>

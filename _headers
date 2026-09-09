@@ -23,6 +23,8 @@
   Cache-Control: no-cache
 /en/campaigns
   Cache-Control: no-cache
+/en/admin
+  Cache-Control: no-cache
 /ko/about
   Cache-Control: no-cache
 /ko/network
@@ -32,6 +34,8 @@
 /ko/disclaimer
   Cache-Control: no-cache
 /ko/campaigns
+  Cache-Control: no-cache
+/ko/admin
   Cache-Control: no-cache
 
 # CSS/JS are safe to cache for a year: every page links them with a

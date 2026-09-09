@@ -19,4 +19,8 @@ Disallow: /CLAUDE.md
 Disallow: /README.md
 Disallow: /tools/
 
+# Admin-only page — gated to is_admin accounts client- and DB-side; never a public page.
+Disallow: /en/admin
+Disallow: /ko/admin
+
 Sitemap: https://weavo.art/sitemap.xml

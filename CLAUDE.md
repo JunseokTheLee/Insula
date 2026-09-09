@@ -171,6 +171,15 @@ git config core.hooksPath tools/git-hooks
 - 이 규칙과 충돌하는 요청을 받으면 구현 전에 이 절을 근거로 사용자에게 먼저 확인한다.
 
 ---
+
+## 14. 관리자 페이지 `/{lang}/admin` (2026.9.9)
+
+- 파일: `en/admin.html`·`ko/admin.html`(about.html 셸 복제), `js/admin.js`, `css/admin.css`. 헤더의 "관리" 링크는 `auth.js` 의 `updateIdentityUI()` 가 `is_admin` 계정에만 동적으로 만든다(30개 헤더에 숨은 요소를 두지 않기 위해).
+- 접근 제어는 이중이다: 화면은 `me.isAdmin` 이 아니면 안내문만 보이고, 데이터는 DB 정책(`reports` 관리자 전용, `delete_mosaic_project` 관리자 검사)이 막는다. 화면 가림만 믿고 정책을 느슨하게 하지 않는다.
+- 기능: 신고 목록(대상 링크로 열어 한 건씩 검토, 상태 변경만), 캠페인 목록·개별 삭제(작품은 풀로 복귀), 관리자 목록(지정·해제는 SQL 안내만). **13절에 따라 작품 삭제 기능은 여기에 넣지 않는다.**
+- `robots.txt` 색인 제외, `sitemap-static.xml` 미등재, `<meta name="robots" content="noindex,nofollow">`. 새 관리자 기능도 같은 원칙으로 이 페이지에 모은다.
+
+---
 ---
 
 # 아래는 공통 개발 규칙 사본 (`D:\O___GIT\CLAUDE.md`, 2026.9.8 기준)
