@@ -1,0 +1,25 @@
+Weavo 개발 기록 (DevDocs/DevLog.txt)
+
+- 코드나 문서를 수정할 때마다 여기에 기록한다. 날짜별로 구분하고 최신 날짜가 위.
+- 이슈마다 한 줄, 80자 이내, 한 가지 내용만. 같은 날짜 안에서는 최근 작업이 위.
+- 접두어: feat(새 기능) / fix(수정) / chore(정리·문서·설정)
+
+========== 2026-09-09 ==========
+chore: 개발 기록 파일 DevDocs/DevLog.txt 신설, CLAUDE.md 9절에 기록 규칙 반영
+feat: 관리자 전용 페이지 /admin 추가 (신고 처리·캠페인 개별 삭제·관리자 목록)
+chore: CLAUDE.md 13절 — 작품 일괄 삭제 기능 금지, 개별 삭제만 허용 원칙 기록
+fix: 캠페인 상세가 비어 보이던 회귀 수정 (id 를 새 경로 campaigns 에서 읽도록)
+fix: 옛 주소 /project?id= 가 404 되던 문제 — /campaigns/{id} 로 301
+feat: JS/CSS 캐시 무력화 — ?v= 자산 버전 쿼리와 pre-commit 훅, 캐시 1년으로
+feat: 홈 '모자이크가 완성되어 가는 방식' 섹션을 소개 페이지로 이전(중복 정리)
+chore: 홈의 '모든 캠페인 보기' 링크와 스크롤 힌트 버튼 제거
+fix: 사용자 이름 힌트 간격·굵기 조정, 문구를 ✓/✕ 와 쉬운 말로 (en/ko)
+feat: 제품 용어 '프로젝트'→'캠페인' 변경, URL /projects→/campaigns (옛 주소 301)
+feat: 사용자 이름 실시간 중복·형식 검사, 첫 로그인 자동 제안, DB CHECK 제약 SQL
+fix: 실명(profiles.name) 노출 1단계 — 저장 중단·조회 제거, 표시는 사용자 이름
+fix: .cta 둥근 버튼의 앵커 기본 밑줄 제거
+feat: 홈 '이용 방법' 카드의 둘러보기 링크를 둥근 버튼으로 변경
+chore: weavo_review.html 을 DevDocs/WeavoReview_20260901.html 로 이동
+
+========== 2026-09-08 ==========
+feat: README·CLAUDE.md·DevDocs 프로젝트 개요 문서 추가, robots 에 개발 파일 색인 제외

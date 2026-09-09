@@ -113,6 +113,7 @@ applied is tracked outside the repository.
 ## Further reading
 
 - `DevDocs/ProjectOverview_20260908.html` — full project overview (English, Korean toggle).
+- `DevDocs/DevLog.txt` — running change log, one line per issue, newest date first.
 - `SEO_DEPLOYMENT_CHECKLIST.md` — manual post-deploy SEO checks and known follow-ups.
 - `CLAUDE.md` — working rules for this repository.
 
