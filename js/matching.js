@@ -8,8 +8,10 @@
 // + Supabase), so matching isn't run on a schedule. Instead runPoolMatching()
 // is called right after anything that changes either side of the match —
 // a new upload, a new project's cells coming online, a reshape changing
-// which cells are open, or a piece being removed from a project — from
-// profile-view.js, home.js, project.js and lightbox.js respectively.
+// which cells are open, a piece being removed from a project, or a campaign
+// being deleted (its pieces return to the pool) — from profile-view.js,
+// home.js, project.js, lightbox.js and admin.js respectively; admin.js also
+// has a "place now" button for a manual pass.
 //
 // Since 2026-09-10 the pass itself runs INSIDE the database
 // (match_pool_artworks / release_poor_matches in

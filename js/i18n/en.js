@@ -162,6 +162,7 @@ const T = {
   adminEditLabel: 'Edit', adminCampaignUpdated: 'Campaign updated', adminCouldNotUpdateCampaign: 'Could not update the campaign',
   adminGridImageBtn: 'Create grid image', adminGridImageWorking: 'Creating the grid image…', adminGridImageDone: 'Grid image created — campaign pages now read it from the cache', adminGridImageFailed: 'Could not create the grid image (nothing was changed)',
   adminGridImageYes: 'grid image ✓', adminGridImageNo: 'no grid image yet',
+  adminPoolRunning: 'Placing pooled artworks…', adminPoolPlaced: '{n} artwork(s) placed into campaigns', adminPoolNonePlaced: 'Nothing placed — no open cell in an active campaign matches these colors', adminPoolFailed: 'Could not run the placement',
   mfsClose: 'Close',
   mfsExpand: 'View fullscreen',
   editArtworkBtn: 'Edit',

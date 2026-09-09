@@ -157,6 +157,9 @@ async function deleteAdminCampaign(p) {
   if (error) { console.error('delete campaign error:', error); toast(tr('adminCouldNotDeleteCampaign')); return; }
   toast(tr('adminCampaignDeleted'));
   loadAdminCampaigns();
+  // The freed pieces are back in the pool — place them right away, the same
+  // trigger every other pool-changing event has — then refresh what changed.
+  placePooledPieces(false).then(() => { loadAdminCampaigns(); loadAdminPool(); loadAdminUsage(); });
 }
 
 // ---------- campaigns: one-off grid image for older campaigns ----------
@@ -244,6 +247,65 @@ async function saveAdminEditCampaign() {
 document.getElementById('aec-cancel').onclick = closeAdminEditCampaign;
 document.getElementById('aec-save').onclick = saveAdminEditCampaign;
 document.getElementById('admin-edit-campaign-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAdminEditCampaign(); });
+
+// ---------- pool: pieces waiting for a campaign ----------
+// Pieces with no campaign — fresh uploads nothing matched yet, or pieces a
+// campaign deletion sent back — wait in the pool until the next matching
+// pass, and passes only run on events (upload, campaign creation, reshape,
+// piece removal, campaign deletion). This section lists what is waiting and
+// lets an admin run a pass right now; pieces whose color is too far from
+// every open cell (POOR_MATCH_DISTANCE) simply stay listed.
+async function loadAdminPool() {
+  const list = document.getElementById('adminPoolList');
+  if (!list) return;
+  const { data, error, count } = await sb.from('mosaic_submissions')
+    .select('id,art_title,author_name,thumb_url,image_url,created_at', { count: 'exact' })
+    .is('project_id', null)
+    .order('created_at', { ascending: true })
+    .limit(50);
+  if (error) { console.error('load pool error:', error); toast(tr('adminLoadError')); return; }
+  document.getElementById('adminPoolCount').textContent = String(count ?? (data || []).length);
+  list.innerHTML = '';
+  adminShow('adminPoolEmpty', !(data && data.length));
+  for (const s of data || []) {
+    const row = document.createElement('div'); row.className = 'admin-row';
+    const target = document.createElement('div'); target.className = 'admin-target';
+    const img = document.createElement('img'); img.className = 'admin-thumb'; img.alt = ''; img.loading = 'lazy';
+    img.src = cdnUrl(s.thumb_url || s.image_url);
+    const a = document.createElement('a'); a.className = 'admin-target-label'; a.href = artworkUrl(s.id);
+    a.textContent = s.art_title || tr('untitledArtwork');
+    target.append(img, a);
+    const meta = document.createElement('div'); meta.className = 'admin-meta';
+    const sub = document.createElement('div'); sub.className = 'admin-sub';
+    sub.textContent = `${s.author_name || tr('anonymous')} · ${adminDate(s.created_at)}`;
+    meta.appendChild(sub);
+    row.append(target, meta);
+    list.appendChild(row);
+  }
+}
+// Runs a matching pass (js/matching.js — server RPC, client fallback) and
+// reports how many pooled pieces landed in a campaign.
+async function placePooledPieces(sayWhenNone) {
+  try {
+    const assignments = await runPoolMatching();
+    if (assignments.length) toast(tr('adminPoolPlaced', { n: assignments.length }));
+    else if (sayWhenNone) toast(tr('adminPoolNonePlaced'));
+    return assignments.length;
+  } catch (err) {
+    console.error('admin pool matching error:', err);
+    toast(tr('adminPoolFailed'));
+    return 0;
+  }
+}
+async function runAdminPoolMatching() {
+  const btn = document.getElementById('adminPoolRunBtn');
+  btn.disabled = true;
+  toast(tr('adminPoolRunning'));
+  await placePooledPieces(true);
+  btn.disabled = false;
+  loadAdminPool(); loadAdminCampaigns(); loadAdminUsage();
+}
+document.getElementById('adminPoolRunBtn').onclick = runAdminPoolMatching;
 
 // ---------- admins ----------
 async function loadAdminAdmins() {
@@ -340,7 +402,7 @@ async function loadAdminPage() {
   adminShow('adminNotice', !isAdmin);
   adminShow('adminBody', isAdmin);
   if (!isAdmin) return;
-  await Promise.all([loadAdminUsage(), loadAdminSettings(), loadAdminReports(), loadAdminCampaigns(), loadAdminAdmins()]);
+  await Promise.all([loadAdminUsage(), loadAdminSettings(), loadAdminReports(), loadAdminCampaigns(), loadAdminPool(), loadAdminAdmins()]);
 }
 document.getElementById('adminReportsShowAll').onchange = () => loadAdminReports();
 document.addEventListener('weavo:authchange', () => loadAdminPage());

@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-023454">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-023454">
+<link rel="stylesheet" href="/css/base.css?v=20260910-031816">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-031816">
 </head>
 
 <body>
@@ -88,6 +88,16 @@
           <p class="admin-help"><strong>수정</strong>은 캠페인의 제목·설명을 바꿉니다. 크기와 기준 이미지는 캠페인 페이지의 Reshape 로 바꿉니다. <strong>격자 이미지 생성</strong>은 격자 이미지 캐시가 생기기 전에 만든 캠페인에만 보입니다. 칸 색을 작은 PNG 로 한 번 만들어 두면 그 캠페인 페이지가 더 이상 모든 칸을 DB 에서 읽지 않습니다. 캠페인을 삭제해도 작품은 지워지지 않고 작가의 풀로 돌아갑니다. 보관본(이전 버전)은 원본 캠페인과 함께 삭제됩니다.</p>
           <div id="adminCampaigns" class="admin-list"></div>
           <p class="empty-note admin-empty" id="adminCampaignsEmpty" style="display:none;">캠페인이 없습니다.</p>
+        </section>
+
+        <section class="admin-section">
+          <div class="admin-section-head">
+            <h2>풀 대기 작품 <span class="admin-badge" id="adminPoolCount">0</span></h2>
+            <button type="button" class="admin-btn primary" id="adminPoolRunBtn">지금 배치</button>
+          </div>
+          <p class="admin-help">아직 어느 캠페인에도 들어가지 못한 작품입니다(새로 올라온 작품, 캠페인 삭제로 돌아온 작품). 매칭은 업로드·캠페인 생성·reshape·작품 제거·캠페인 삭제 때만 돌기 때문에 <strong>지금 배치</strong>로 바로 돌릴 수 있습니다. 진행 중인 캠페인의 빈 칸과 색이 맞지 않는 작품은 여기 그대로 남습니다.</p>
+          <div id="adminPoolList" class="admin-list"></div>
+          <p class="empty-note admin-empty" id="adminPoolEmpty" style="display:none;">풀에 대기 중인 작품이 없습니다.</p>
         </section>
 
         <section class="admin-section">
@@ -329,12 +339,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-023454"></script>
-<script src="/js/i18n/ko.js?v=20260910-023454"></script>
-<script src="/js/common.js?v=20260910-023454"></script>
-<script src="/js/auth.js?v=20260910-023454"></script>
-<script src="/js/notifications.js?v=20260910-023454"></script>
-<script src="/js/admin.js?v=20260910-023454"></script>
+<script src="/js/supabase-client.js?v=20260910-031816"></script>
+<script src="/js/i18n/ko.js?v=20260910-031816"></script>
+<script src="/js/common.js?v=20260910-031816"></script>
+<script src="/js/auth.js?v=20260910-031816"></script>
+<script src="/js/notifications.js?v=20260910-031816"></script>
+<script src="/js/color-engine.js?v=20260910-031816"></script>
+<script src="/js/matching.js?v=20260910-031816"></script>
+<script src="/js/admin.js?v=20260910-031816"></script>
 
 </body>
 </html>

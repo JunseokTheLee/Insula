@@ -145,8 +145,16 @@
 .hero-pieces-sub{display:flex;gap:8px;flex-wrap:wrap;font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);margin-top:10px;}
 .hero-pieces-sub b{color:var(--gray-700);font-weight:700;}
 .hero-donation{grid-area:don;align-self:stretch;background:var(--gray-0);border-radius:0 var(--r-md) var(--r-md) 0;padding:16px 22px;box-shadow:var(--shadow-sm);border-left:1px solid var(--border);display:flex;align-items:center;gap:14px;}
-.hero-heart{width:34px;height:34px;flex-shrink:0;fill:none;stroke:#FF4D6D;stroke-width:1.8;stroke-linejoin:round;}
-.hero-donation-amount{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--muted);font-weight:600;white-space:nowrap;}
+/* The heart's viewBox carries a 2-unit margin and overflow stays visible,
+   so neither the stroke nor the beat below can ever be cut off at the box
+   edge (it showed clipped on the right for one visitor on 2026-09-10). */
+.hero-heart{width:36px;height:36px;flex:0 0 36px;min-width:36px;overflow:visible;fill:none;stroke:#FF4D6D;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;transform-origin:50% 55%;animation:heroHeartbeat 2.2s ease-in-out infinite;}
+/* A quiet "lub-dub": two small swells, then rest. */
+@keyframes heroHeartbeat{0%,100%{transform:scale(1);}12%{transform:scale(1.1);}24%{transform:scale(1);}36%{transform:scale(1.06);}60%{transform:scale(1);}}
+@media (prefers-reduced-motion:reduce){.hero-heart{animation:none;}}
+.hero-donation > div{min-width:0;}
+.hero-donation-amount{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--muted);font-weight:600;}
+.hero-donation-of{white-space:nowrap;}
 .hero-donation-amount b{font-size:22px;color:var(--hero-ink);font-weight:800;letter-spacing:-.01em;}
 .hero-donation-note{font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:4px;word-break:keep-all;}
 .cta{

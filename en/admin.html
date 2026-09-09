@@ -7,8 +7,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-023454">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-023454">
+<link rel="stylesheet" href="/css/base.css?v=20260910-031816">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-031816">
 </head>
 <body>
 
@@ -83,6 +83,16 @@
           <p class="admin-help"><strong>Edit</strong> changes a campaign's title and description; its size and reference image are changed with Reshape on the campaign page. <strong>Create grid image</strong> appears only on campaigns made before the grid-image cache existed: it renders the cell colors into a small PNG once, so their pages stop reading every cell from the database. Deleting a campaign never deletes artwork — every piece returns to its artist's pool. Archived versions are removed together with their live campaign.</p>
           <div id="adminCampaigns" class="admin-list"></div>
           <p class="empty-note admin-empty" id="adminCampaignsEmpty" style="display:none;">No campaigns.</p>
+        </section>
+
+        <section class="admin-section">
+          <div class="admin-section-head">
+            <h2>Waiting in the pool <span class="admin-badge" id="adminPoolCount">0</span></h2>
+            <button type="button" class="admin-btn primary" id="adminPoolRunBtn">Place now</button>
+          </div>
+          <p class="admin-help">Artwork not yet in any campaign (fresh uploads, or pieces a campaign deletion returned). Matching only runs on events — upload, campaign creation, reshape, piece removal, campaign deletion — so <strong>Place now</strong> runs a pass immediately. Pieces whose color matches no open cell in an active campaign stay listed here.</p>
+          <div id="adminPoolList" class="admin-list"></div>
+          <p class="empty-note admin-empty" id="adminPoolEmpty" style="display:none;">Nothing is waiting in the pool.</p>
         </section>
 
         <section class="admin-section">
@@ -223,11 +233,13 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-023454"></script>
-<script src="/js/i18n/en.js?v=20260910-023454"></script>
-<script src="/js/common.js?v=20260910-023454"></script>
-<script src="/js/auth.js?v=20260910-023454"></script>
-<script src="/js/notifications.js?v=20260910-023454"></script>
-<script src="/js/admin.js?v=20260910-023454"></script>
+<script src="/js/supabase-client.js?v=20260910-031816"></script>
+<script src="/js/i18n/en.js?v=20260910-031816"></script>
+<script src="/js/common.js?v=20260910-031816"></script>
+<script src="/js/auth.js?v=20260910-031816"></script>
+<script src="/js/notifications.js?v=20260910-031816"></script>
+<script src="/js/color-engine.js?v=20260910-031816"></script>
+<script src="/js/matching.js?v=20260910-031816"></script>
+<script src="/js/admin.js?v=20260910-031816"></script>
 </body>
 </html>
