@@ -8,8 +8,8 @@ export async function onRequestGet({ params, request, env }) {
   // Accepts either a username (the canonical, shareable form) or a raw user
   // id (links built from a submission/comment's author_id before a username
   // existed) — try username first, case-insensitively, then fall back to id.
-  let profile = await pgFetchOne(`profiles?username=ilike.${encodeURIComponent(handle)}&select=id,name,username,avatar_url,bio`);
-  if (!profile) profile = await pgFetchOne(`profiles?id=eq.${encodeURIComponent(handle)}&select=id,name,username,avatar_url,bio`);
+  let profile = await pgFetchOne(`profiles?username=ilike.${encodeURIComponent(handle)}&select=id,username,avatar_url,bio`);
+  if (!profile) profile = await pgFetchOne(`profiles?id=eq.${encodeURIComponent(handle)}&select=id,username,avatar_url,bio`);
 
   const assetResponse = await env.ASSETS.fetch(new Request(new URL('/en/profile', request.url), request));
 
@@ -25,7 +25,7 @@ export async function onRequestGet({ params, request, env }) {
     return Response.redirect(`${new URL(request.url).origin}/en/artists/${encodeURIComponent(profile.username)}`, 301);
   }
 
-  const displayName = profile.username || profile.name || 'Anonymous';
+  const displayName = profile.username || 'Anonymous';
   const canonical = `${SITE}/en/artists/${encodeURIComponent(profile.username || profile.id)}`;
   const title = `${displayName} | Weavo`;
   const description = profile.bio ? profile.bio.slice(0, 300) : `${displayName}'s artist profile on Weavo.`;

@@ -326,7 +326,7 @@ async function fetchUserFollowList(userId, direction) {
   const ids = [...new Set((rows || []).map(r => r[otherCol]))];
   if (!ids.length) return [];
   const { data: profiles, error: profErr } = await sb.from('profiles')
-    .select('id,name,username,avatar_url').in('id', ids);
+    .select('id,username,avatar_url').in('id', ids);
   if (profErr) { console.error('load follow list profiles error:', profErr); return []; }
   return profiles || [];
 }
@@ -334,7 +334,7 @@ function followListRowEl(p) {
   const row = document.createElement('a');
   row.className = 'list-row';
   row.href = profileUrl(p.username || p.id);
-  const name = p.username || p.name || tr('anonymous');
+  const name = p.username || tr('anonymous');
   if (p.avatar_url) {
     const img = document.createElement('img');
     img.className = 'list-avatar'; img.src = cdnUrl(p.avatar_url);
@@ -410,7 +410,7 @@ async function fetchGraphNeighbors(userId) {
   if (!ids.size) return [];
 
   const { data: profiles, error: profErr } = await sb.from('profiles')
-    .select('id,name,username,avatar_url').in('id', [...ids]);
+    .select('id,username,avatar_url').in('id', [...ids]);
   if (profErr) console.error('load graph profiles error:', profErr);
   const profileById = new Map((profiles || []).map(p => [p.id, p]));
 
@@ -419,7 +419,7 @@ async function fetchGraphNeighbors(userId) {
     const out = outIds.has(id), inn = inIds.has(id);
     return {
       id,
-      label: p.username || p.name || tr('anonymous'),
+      label: p.username || tr('anonymous'),
       avatar_url: p.avatar_url || '',
       direction: out && inn ? 'mutual' : (out ? 'out' : 'in'),
     };
@@ -436,12 +436,12 @@ async function renderProfileGraphFor(centerId, isRoot) {
   svgEl.innerHTML = '';
 
   const [{ data: centerProfile }, neighbors] = await Promise.all([
-    sb.from('profiles').select('id,name,username,avatar_url').eq('id', centerId).maybeSingle(),
+    sb.from('profiles').select('id,username,avatar_url').eq('id', centerId).maybeSingle(),
     fetchGraphNeighbors(centerId),
   ]);
   if (!centerProfile) return;
 
-  const centerLabel = centerProfile.username || centerProfile.name || tr('anonymous');
+  const centerLabel = centerProfile.username || tr('anonymous');
   crumb.style.display = isRoot ? 'none' : 'flex';
   if (!isRoot) {
     crumbLabel.textContent = tr('viewingNetwork', { name: centerLabel });
@@ -588,7 +588,7 @@ async function loadProfileView(userId) {
 
   const isOwner = me.id && me.id === userId;
   const [{ data: profile }, artwork, liked, collections, followCounts, isFollowing] = await Promise.all([
-    sb.from('profiles').select('id,name,username,avatar_url,bio,links,country_id,disabilities,created_at').eq('id', userId).maybeSingle(),
+    sb.from('profiles').select('id,username,avatar_url,bio,links,country_id,disabilities,created_at').eq('id', userId).maybeSingle(),
     fetchUserArtwork(userId),
     fetchLikedWeavoArt(userId),
     fetchUserCollections(userId),
@@ -603,7 +603,7 @@ async function loadProfileView(userId) {
   if (profile.username) history.replaceState(null, '', profileUrl(profile.username));
   const participatedProjects = await fetchParticipatedProjects(artwork, userId);
 
-  const displayName = profile.username || profile.name || tr('anonymous');
+  const displayName = profile.username || tr('anonymous');
   document.getElementById('profileName').textContent = displayName;
   updateProfileMeta(profile, displayName);
   renderProfileJsonLd(profile, displayName);
@@ -752,7 +752,7 @@ document.getElementById('ua-submit').onclick = async () => {
     if (!uploaded.url) return;
 
     const { data: inserted, error: insErr } = await sb.from('mosaic_submissions').insert({
-      author_id: me.id, author_name: me.username || me.name || null, author_avatar_url: me.avatar || null,
+      author_id: me.id, author_name: me.username || tr('anonymous'), author_avatar_url: me.avatar || null,
       image_url: uploaded.url, thumb_url: uploaded.thumbUrl,
       avg_r: avg.r, avg_g: avg.g, avg_b: avg.b,
       art_title: meta.title || null, art_material: meta.material || null, art_completed_date: meta.completedDate,

@@ -744,7 +744,7 @@ async function postWeavoComment(submissionId, body, parentId) {
   if (!me.id) { openAuthModal(); return null; }
   const { data, error } = await sb.from('mosaic_submission_comments').insert({
     submission_id: submissionId, parent_id: parentId || null,
-    author_id: me.id, author_name: me.username || me.name, author_avatar_url: me.avatar || null, body
+    author_id: me.id, author_name: me.username || tr('anonymous'), author_avatar_url: me.avatar || null, body
   }).select().single();
   if (error) { console.error('post weavo comment error:', error); toast(tr('couldNotPostComment')); return null; }
   return data;

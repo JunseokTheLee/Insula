@@ -142,8 +142,8 @@ async function openCollection(id) {
   currentCollection = collection;
   const isOwner = isCollectionOwner();
 
-  const { data: owner } = await sb.from('profiles').select('id,name,username,avatar_url').eq('id', collection.owner_id).maybeSingle();
-  const ownerName = (owner && (owner.username || owner.name)) || tr('anonymous');
+  const { data: owner } = await sb.from('profiles').select('id,username,avatar_url').eq('id', collection.owner_id).maybeSingle();
+  const ownerName = (owner && owner.username) || tr('anonymous');
 
   document.getElementById('collectionTitle').textContent = collection.title;
   updateCollectionMeta(collection, ownerName);

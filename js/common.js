@@ -74,7 +74,7 @@ function collectionCoverUrl(collection) {
 // (js/exhibitions.js). `owner` may be null (profile lookup still pending
 // or missing) and falls back to an "Anonymous" initial avatar.
 function exhibitionCardEl(collection, owner, i) {
-  const name = (owner && (owner.username || owner.name)) || tr('anonymous');
+  const name = (owner && owner.username) || tr('anonymous');
   const card = document.createElement('a');
   card.className = 'artwork-card';
   card.href = collectionUrl(collection.id);
@@ -125,7 +125,7 @@ async function fetchExhibitionOwners(collections) {
   const owners = {};
   if (!ownerIds.length) return owners;
   const { data: profiles, error } = await sb.from('profiles')
-    .select('id,name,username,avatar_url').in('id', ownerIds);
+    .select('id,username,avatar_url').in('id', ownerIds);
   if (error) console.error('load exhibition owners error:', error);
   else for (const p of profiles || []) owners[p.id] = p;
   return owners;

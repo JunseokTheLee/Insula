@@ -13,8 +13,8 @@ export async function onRequestGet({ params, request, env }) {
 
   if (!collection) return notFoundResponse(assetResponse, '전시를 찾을 수 없습니다 | Weavo');
 
-  const owner = await pgFetchOne(`profiles?id=eq.${encodeURIComponent(collection.owner_id)}&select=name,username&limit=1`);
-  const ownerName = (owner && (owner.username || owner.name)) || '익명';
+  const owner = await pgFetchOne(`profiles?id=eq.${encodeURIComponent(collection.owner_id)}&select=username&limit=1`);
+  const ownerName = (owner && owner.username) || '익명';
 
   const canonical = `${SITE}/ko/collections/${encodeURIComponent(collection.id)}`;
   const title = `${collection.title} | Weavo`;

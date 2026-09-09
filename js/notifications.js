@@ -84,7 +84,7 @@
     const actors = {};
     if (actorIds.length) {
       const { data: profiles, error: pErr } = await sb.from('profiles')
-        .select('id,username,name,avatar_url').in('id', actorIds);
+        .select('id,username,avatar_url').in('id', actorIds);
       if (pErr) console.error('notif actor lookup error:', pErr);
       else for (const p of profiles || []) actors[p.id] = p;
     }
@@ -138,7 +138,7 @@
   }
 
   function rowEl(row, actor) {
-    const name = (actor && (actor.username || actor.name)) || tr('anonymous');
+    const name = (actor && actor.username) || tr('anonymous');
     const a = document.createElement('a');
     a.className = 'notif-item' + (row.read_at ? '' : ' unread');
     a.href = rowHref(row);
@@ -172,7 +172,7 @@
     let actor = null;
     if (row.actor_id) {
       const { data } = await sb.from('profiles')
-        .select('id,username,name,avatar_url').eq('id', row.actor_id).maybeSingle();
+        .select('id,username,avatar_url').eq('id', row.actor_id).maybeSingle();
       actor = data || null;
     }
     emptyEl.classList.remove('show');

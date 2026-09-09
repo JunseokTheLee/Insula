@@ -77,7 +77,7 @@ async function loadRecentArtworks() {
 // published, public, not-(yet-)expired exhibitions are queried, so a draft
 // or an expired one never leaks onto the landing page.
 function exhibitionListRowEl(collection, owner) {
-  const name = (owner && (owner.username || owner.name)) || tr('anonymous');
+  const name = (owner && owner.username) || tr('anonymous');
   return recentListRowEl({
     href: collectionUrl(collection.id),
     thumbUrl: collectionCoverUrl(collection),

@@ -46,17 +46,24 @@ function maybeRequireProfileSetup() {
     openEditProfileModal({ username: me.username, bio: me.bio, links: me.links, avatar_url: me.avatar, country_id: me.countryId, disabilities: me.disabilities }, true);
   }
 }
+// Deliberately does NOT store the OAuth account name (me.name) any more: the
+// site identifies people by their chosen username everywhere, and profiles is
+// publicly readable, so persisting the Google/Apple real name only ever leaked
+// it through the API. Only the avatar is kept in sync here.
 async function upsertBaseProfile() {
   if (!me.id) return;
-  const { error } = await sb.from('profiles').upsert({ id: me.id, name: me.name, avatar_url: me.avatar || null });
+  const { error } = await sb.from('profiles').upsert({ id: me.id, avatar_url: me.avatar || null });
   if (error) console.error('upsertBaseProfile error:', error);
 }
 function updateIdentityUI() {
   const nameEl = document.getElementById('myName');
-  nameEl.textContent = me.id ? me.name : tr('guest');
+  // Same rule as every other place a person is named (artist page, artwork
+  // credits): the chosen username, falling back to the account name only
+  // during onboarding before one has been set.
+  nameEl.textContent = me.id ? (me.username || me.name) : tr('guest');
   nameEl.classList.toggle('guest', !me.id);
   const av = document.getElementById('myAvatar');
-  if (me.avatar) { av.src = cdnUrl(me.avatar); av.alt = tr('artistAvatarAlt', { name: me.name }); av.style.display = 'inline-block'; } else { av.style.display = 'none'; }
+  if (me.avatar) { av.src = cdnUrl(me.avatar); av.alt = tr('artistAvatarAlt', { name: me.username || me.name }); av.style.display = 'inline-block'; } else { av.style.display = 'none'; }
   document.getElementById('loginBtn').style.display = me.id ? 'none' : '';
   document.getElementById('logoutBtn').style.display = me.id ? '' : 'none';
   const newProjectBtn = document.getElementById('newProjectBtn');
@@ -222,13 +229,13 @@ async function renderBlockedUsersSection(forced) {
   section.style.display = '';
   list.innerHTML = `<div class="ep-blocked-loading">${tr('loading')}</div>`;
   const ids = [...myBlockedIds];
-  const { data: profiles, error } = await sb.from('profiles').select('id,name,username,avatar_url').in('id', ids);
+  const { data: profiles, error } = await sb.from('profiles').select('id,username,avatar_url').in('id', ids);
   if (error) { console.error('load blocked users error:', error); list.innerHTML = ''; return; }
   list.innerHTML = '';
   for (const p of (profiles || [])) {
     const row = document.createElement('div'); row.className = 'list-row ep-blocked-row';
-    row.appendChild(miniAvatarEl(p.username || p.name, p.avatar_url, p.id));
-    const name = document.createElement('span'); name.className = 'list-name'; name.textContent = p.username || p.name || tr('anonymous');
+    row.appendChild(miniAvatarEl(p.username || tr('anonymous'), p.avatar_url, p.id));
+    const name = document.createElement('span'); name.className = 'list-name'; name.textContent = p.username || tr('anonymous');
     row.appendChild(name);
     const unblockBtn = document.createElement('button');
     unblockBtn.type = 'button'; unblockBtn.className = 'ep-blocked-unblock'; unblockBtn.textContent = tr('unblockLabel');
@@ -327,7 +334,8 @@ document.getElementById('ep-submit').onclick = async () => {
   me.username = username || '';
   me.countryId = countryId;
   me.disabilities = disabilities;
-  if (avatarUrl !== undefined) { me.avatar = avatarUrl || ''; updateIdentityUI(); }
+  if (avatarUrl !== undefined) me.avatar = avatarUrl || '';
+  updateIdentityUI(); // the header shows the username now, so refresh it on every save, not just avatar changes
   const wasRequired = profileEditRequired;
   profileEditRequired = false;
   document.getElementById('ep-cancel').style.display = '';

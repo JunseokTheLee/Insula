@@ -37,7 +37,7 @@ function globalNodeRadius(d) { return Math.max(9, Math.min(24, 9 + Math.sqrt(d.d
 async function fetchGlobalGraphData() {
   const [{ data: rows, error }, { data: profiles, error: profErr }] = await Promise.all([
     sb.from('user_saves').select('saver_id,saved_id'),
-    sb.from('profiles').select('id,name,username,avatar_url'),
+    sb.from('profiles').select('id,username,avatar_url'),
   ]);
   if (error) { console.error('load global network error:', error); return { nodes: [], links: [] }; }
   if (profErr) { console.error('load global network profiles error:', profErr); return { nodes: [], links: [] }; }
@@ -66,7 +66,7 @@ async function fetchGlobalGraphData() {
   // just render as isolated, unconnected nodes — since this is the sitewide
   // "every user" view, not just the users who happen to be connected.
   const nodes = visibleProfiles.map(p => ({
-    id: p.id, label: p.username || p.name || tr('anonymous'), avatar_url: p.avatar_url || '', degree: degree.get(p.id) || 0,
+    id: p.id, label: p.username || tr('anonymous'), avatar_url: p.avatar_url || '', degree: degree.get(p.id) || 0,
   }));
   const links = [...pairs.values()].map(p => ({
     source: p.aToB ? p.a : p.b,

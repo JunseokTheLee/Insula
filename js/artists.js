@@ -4,7 +4,7 @@
 
 let allArtists = [];
 
-function artistDisplayName(p) { return p.username || p.name || tr('anonymous'); }
+function artistDisplayName(p) { return p.username || tr('anonymous'); }
 
 function artistCardHtml(p) {
   const name = artistDisplayName(p);
@@ -29,8 +29,7 @@ function filterArtists(query) {
   if (!q) return allArtists;
   return allArtists.filter(p => {
     const username = (p.username || '').toLowerCase();
-    const name = (p.name || '').toLowerCase();
-    return username.includes(q) || name.includes(q);
+    return username.includes(q);
   });
 }
 
@@ -40,7 +39,7 @@ async function loadArtists() {
   // up here, same filter the [handle].js Function relies on to treat
   // username as a real, canonical handle.
   const { data, error } = await sb.from('profiles')
-    .select('id,name,username,avatar_url,bio')
+    .select('id,username,avatar_url,bio')
     .not('username', 'is', null)
     .order('username', { ascending: true });
   if (error) { console.error('load artists error:', error); toast(tr('couldNotLoadArtists')); return; }

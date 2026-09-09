@@ -5,8 +5,8 @@ const SITE = 'https://weavo.art';
 
 export async function onRequestGet({ params, request, env }) {
   const handle = params.handle;
-  let profile = await pgFetchOne(`profiles?username=ilike.${encodeURIComponent(handle)}&select=id,name,username,avatar_url,bio`);
-  if (!profile) profile = await pgFetchOne(`profiles?id=eq.${encodeURIComponent(handle)}&select=id,name,username,avatar_url,bio`);
+  let profile = await pgFetchOne(`profiles?username=ilike.${encodeURIComponent(handle)}&select=id,username,avatar_url,bio`);
+  if (!profile) profile = await pgFetchOne(`profiles?id=eq.${encodeURIComponent(handle)}&select=id,username,avatar_url,bio`);
 
   const assetResponse = await env.ASSETS.fetch(new Request(new URL('/ko/profile', request.url), request));
 
@@ -19,7 +19,7 @@ export async function onRequestGet({ params, request, env }) {
     return Response.redirect(`${new URL(request.url).origin}/ko/artists/${encodeURIComponent(profile.username)}`, 301);
   }
 
-  const displayName = profile.username || profile.name || '익명';
+  const displayName = profile.username || '익명';
   const canonical = `${SITE}/ko/artists/${encodeURIComponent(profile.username || profile.id)}`;
   const title = `${displayName} | Weavo`;
   const description = profile.bio ? profile.bio.slice(0, 300) : `Weavo의 작가 ${displayName}님의 프로필입니다.`;
