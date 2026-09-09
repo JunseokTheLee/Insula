@@ -114,7 +114,7 @@ async function setAdminReportStatus(id, status) {
 // ---------- campaigns ----------
 async function loadAdminCampaigns() {
   const [{ data: projects, error }, { data: placed }] = await Promise.all([
-    sb.from('mosaic_projects').select('id,title,width,height,created_at,is_archived,version_number').order('created_at', { ascending: false }),
+    sb.from('mosaic_projects').select('id,title,description,width,height,created_at,is_archived,version_number').order('created_at', { ascending: false }),
     sb.from('mosaic_submissions').select('project_id').not('project_id', 'is', null),
   ]);
   if (error) { console.error('load campaigns error:', error); toast(tr('adminLoadError')); return; }
@@ -135,7 +135,10 @@ async function loadAdminCampaigns() {
     const actions = document.createElement('div'); actions.className = 'admin-actions';
     // Archived iterations can't be deleted on their own (the RPC refuses) —
     // they go away with their live campaign.
-    if (!p.is_archived) actions.appendChild(adminActionBtn(tr('deleteLabel'), () => deleteAdminCampaign(p), 'danger'));
+    if (!p.is_archived) {
+      actions.appendChild(adminActionBtn(tr('adminEditLabel'), () => openAdminEditCampaign(p)));
+      actions.appendChild(adminActionBtn(tr('deleteLabel'), () => deleteAdminCampaign(p), 'danger'));
+    }
     row.append(main, actions);
     list.appendChild(row);
   }
@@ -152,6 +155,52 @@ async function deleteAdminCampaign(p) {
   toast(tr('adminCampaignDeleted'));
   loadAdminCampaigns();
 }
+
+// ---------- campaigns: edit title / description ----------
+// Size and reference image are NOT edited here — that's the reshape flow on
+// the campaign page (js/project.js), which re-places the artwork. Title and
+// description are plain columns an admin may update directly (RLS "Admins
+// can update mosaic projects" in supabase_mosaic.sql).
+let adminEditingCampaign = null;
+function openAdminEditCampaign(p) {
+  adminEditingCampaign = p;
+  document.getElementById('aec-title').value = p.title || '';
+  document.getElementById('aec-desc').value = p.description || '';
+  document.getElementById('aec-error').textContent = '';
+  document.getElementById('admin-edit-campaign-modal').classList.add('open');
+  document.getElementById('aec-title').focus();
+}
+function closeAdminEditCampaign() {
+  adminEditingCampaign = null;
+  document.getElementById('admin-edit-campaign-modal').classList.remove('open');
+}
+async function saveAdminEditCampaign() {
+  const p = adminEditingCampaign;
+  if (!p) return;
+  const title = document.getElementById('aec-title').value.trim();
+  const description = document.getElementById('aec-desc').value.trim();
+  const errorEl = document.getElementById('aec-error');
+  if (!title) { errorEl.textContent = tr('titleRequired'); return; }
+  errorEl.textContent = '';
+  const btn = document.getElementById('aec-save');
+  btn.disabled = true;
+  const { data: updated, error } = await sb.from('mosaic_projects')
+    .update({ title, description: description || null }).eq('id', p.id).select('id');
+  btn.disabled = false;
+  if (error || !updated || !updated.length) {
+    // No row back = RLS let nothing through (session expired, admin flag
+    // gone) — report it rather than pretend the save worked.
+    console.error('update campaign error:', error || 'no row updated');
+    toast(tr('adminCouldNotUpdateCampaign'));
+    return;
+  }
+  closeAdminEditCampaign();
+  toast(tr('adminCampaignUpdated'));
+  loadAdminCampaigns();
+}
+document.getElementById('aec-cancel').onclick = closeAdminEditCampaign;
+document.getElementById('aec-save').onclick = saveAdminEditCampaign;
+document.getElementById('admin-edit-campaign-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAdminEditCampaign(); });
 
 // ---------- admins ----------
 async function loadAdminAdmins() {
@@ -201,13 +250,54 @@ async function loadAdminUsage() {
   set('adminCountProfiles', String(data.profiles ?? '—'));
 }
 
+// ---------- site options (site_settings) ----------
+// The checkboxes are static HTML (en/ko admin.html) tagged
+// data-setting="<key>"; this binds each one to the site_settings row
+// (supabase_site_settings.sql; pages read it via common.js
+// getSiteSettings). A change saves just that key through the
+// admin_set_site_settings RPC and writes the result into this tab's cached
+// copy, so the admin sees the effect on the next page they open.
+async function loadAdminSettings() {
+  const inputs = document.querySelectorAll('#adminSettings input[data-setting]');
+  if (!inputs.length) return;
+  // Read the row directly (not getSiteSettings): this page must show what
+  // is stored, not a cached copy.
+  const { data, error } = await sb.from('site_settings').select('settings').eq('id', true).maybeSingle();
+  if (error) {
+    if (error.code !== 'PGRST205' && error.code !== '42P01') console.error('load site_settings error:', error);
+    adminShow('adminSettingsUnavailable', true); // inputs stay disabled
+    return;
+  }
+  const settings = { ...SITE_SETTING_DEFAULTS, ...((data && data.settings) || {}) };
+  inputs.forEach(input => {
+    input.checked = !!settings[input.dataset.setting];
+    input.disabled = false;
+    input.onchange = () => saveAdminSetting(input);
+  });
+}
+async function saveAdminSetting(input) {
+  const key = input.dataset.setting;
+  const value = input.checked;
+  input.disabled = true;
+  const { data, error } = await sb.rpc('admin_set_site_settings', { p_patch: { [key]: value } });
+  input.disabled = false;
+  if (error) {
+    console.error('admin_set_site_settings error:', error);
+    input.checked = !value; // back to what is actually stored
+    toast(tr('adminSettingSaveFailed'));
+    return;
+  }
+  setSiteSettingsCache(data);
+  toast(tr('adminSettingSaved'));
+}
+
 // ---------- boot ----------
 async function loadAdminPage() {
   const isAdmin = !!(me.id && me.isAdmin);
   adminShow('adminNotice', !isAdmin);
   adminShow('adminBody', isAdmin);
   if (!isAdmin) return;
-  await Promise.all([loadAdminUsage(), loadAdminReports(), loadAdminCampaigns(), loadAdminAdmins()]);
+  await Promise.all([loadAdminUsage(), loadAdminSettings(), loadAdminReports(), loadAdminCampaigns(), loadAdminAdmins()]);
 }
 document.getElementById('adminReportsShowAll').onchange = () => loadAdminReports();
 document.addEventListener('weavo:authchange', () => loadAdminPage());

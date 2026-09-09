@@ -7,8 +7,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-011018">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-011018">
+<link rel="stylesheet" href="/css/base.css?v=20260910-013859">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-013859">
 </head>
 <body>
 
@@ -56,6 +56,15 @@
           </div>
         </section>
 
+        <section class="admin-section" id="adminSettingsSection">
+          <h2>Site options</h2>
+          <p class="admin-help">Apply to every visitor from their next page load (within about a minute). Stored in the single <code>site_settings</code> row (<code>supabase_site_settings.sql</code>); every site option is set here and only here.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminSettingsUnavailable" style="display:none;">Not available yet — run <code>supabase_site_settings.sql</code> in the Supabase SQL editor first. Until then every option uses its default.</p>
+          <div class="admin-settings" id="adminSettings">
+            <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>Show the "Preview" thumbnail (the reference colors) in the corner of campaign pages <em>(default: off)</em></span></label>
+          </div>
+        </section>
+
         <section class="admin-section">
           <div class="admin-section-head">
             <h2>Reports</h2>
@@ -71,7 +80,7 @@
             <h2>Campaigns</h2>
             <a href="/en/campaigns" class="cta-text" style="margin-top:0;">Create a new one from the campaign list</a>
           </div>
-          <p class="admin-help">Deleting a campaign never deletes artwork — every piece returns to its artist's pool. Archived versions are removed together with their live campaign.</p>
+          <p class="admin-help"><strong>Edit</strong> changes a campaign's title and description; its size and reference image are changed with Reshape on the campaign page. Deleting a campaign never deletes artwork — every piece returns to its artist's pool. Archived versions are removed together with their live campaign.</p>
           <div id="adminCampaigns" class="admin-list"></div>
           <p class="empty-note admin-empty" id="adminCampaignsEmpty" style="display:none;">No campaigns.</p>
         </section>
@@ -190,13 +199,35 @@
   </div>
 </div>
 
+<!-- Edit campaign modal: title / description only. Size and reference image
+     are changed with Reshape on the campaign page (it re-places artwork). -->
+<div id="admin-edit-campaign-modal" class="modal-overlay">
+  <div class="modal-panel" role="dialog" aria-labelledby="aec-heading">
+    <h3 id="aec-heading">Edit campaign</h3>
+    <div class="field">
+      <label for="aec-title">Title</label>
+      <input type="text" id="aec-title" placeholder="Campaign title" maxlength="60">
+    </div>
+    <div class="field">
+      <label for="aec-desc">Description <span class="field-hint">(optional)</span></label>
+      <textarea id="aec-desc" placeholder="What's this weavo about?" maxlength="300"></textarea>
+    </div>
+    <p class="admin-help">Size and reference image are changed with <strong>Reshape</strong> on the campaign page itself, because that re-places the artwork.</p>
+    <div class="field-error" id="aec-error"></div>
+    <div class="modal-actions">
+      <button id="aec-cancel" class="btn-cancel">Cancel</button>
+      <button id="aec-save" class="btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-011018"></script>
-<script src="/js/i18n/en.js?v=20260910-011018"></script>
-<script src="/js/common.js?v=20260910-011018"></script>
-<script src="/js/auth.js?v=20260910-011018"></script>
-<script src="/js/notifications.js?v=20260910-011018"></script>
-<script src="/js/admin.js?v=20260910-011018"></script>
+<script src="/js/supabase-client.js?v=20260910-013859"></script>
+<script src="/js/i18n/en.js?v=20260910-013859"></script>
+<script src="/js/common.js?v=20260910-013859"></script>
+<script src="/js/auth.js?v=20260910-013859"></script>
+<script src="/js/notifications.js?v=20260910-013859"></script>
+<script src="/js/admin.js?v=20260910-013859"></script>
 </body>
 </html>

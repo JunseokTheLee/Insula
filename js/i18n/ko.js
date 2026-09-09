@@ -158,6 +158,8 @@ const T = {
   adminDeleteCampaignTitle: '이 캠페인을 삭제할까요?',
   adminDeleteCampaignMessage: '작품은 삭제되지 않고 작가의 풀로 돌아갑니다. 되돌릴 수 없습니다. 확인하려면 캠페인 제목 {title} 을(를) 입력하세요.',
   adminCampaignDeleted: '캠페인을 삭제했습니다 — 작품은 작가의 풀로 돌아갔습니다', adminCouldNotDeleteCampaign: '캠페인을 삭제할 수 없습니다',
+  adminSettingSaved: '옵션을 저장했습니다', adminSettingSaveFailed: '옵션을 저장할 수 없습니다',
+  adminEditLabel: '수정', adminCampaignUpdated: '캠페인을 수정했습니다', adminCouldNotUpdateCampaign: '캠페인을 수정할 수 없습니다',
   mfsClose: '닫기',
   mfsExpand: '전체 화면으로 보기',
   editArtworkBtn: '편집',

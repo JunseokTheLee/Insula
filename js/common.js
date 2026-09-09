@@ -431,6 +431,64 @@ function isSchemaMismatchError(error) {
   return !!error && (error.code === '42703' || error.code === 'PGRST204' || error.code === 'PGRST202' || error.code === '42883');
 }
 
+// ---------- site options (site_settings) ----------
+// One jsonb row that admins edit on /admin ("Site options") and any page can
+// read — see supabase_site_settings.sql. The row holds only the keys an
+// admin has changed; everything else takes SITE_SETTING_DEFAULTS, so adding
+// an option is: a default here, a data-setting="<key>" checkbox in en/ko
+// admin.html, and a getSiteSettings() read where it applies. Fetched lazily
+// (pages that never ask pay nothing), one request per page, remembered in
+// sessionStorage for SITE_SETTINGS_TTL_MS so moving between pages doesn't
+// re-fetch; an admin's own save writes through that copy immediately.
+const SITE_SETTING_DEFAULTS = Object.freeze({
+  // Corner "Preview" thumbnail (the reference colors) on the campaign page.
+  showCampaignPreview: false,
+});
+const SITE_SETTINGS_TTL_MS = 60 * 1000;
+const SITE_SETTINGS_CACHE_KEY = 'weavo.siteSettings';
+let siteSettingsPromise = null;
+
+function readSiteSettingsCache() {
+  try {
+    const raw = sessionStorage.getItem(SITE_SETTINGS_CACHE_KEY);
+    if (!raw) return null;
+    const { at, settings } = JSON.parse(raw);
+    if (!settings || typeof settings !== 'object' || Date.now() - at > SITE_SETTINGS_TTL_MS) return null;
+    return settings;
+  } catch (e) { return null; }
+}
+function writeSiteSettingsCache(stored) {
+  try { sessionStorage.setItem(SITE_SETTINGS_CACHE_KEY, JSON.stringify({ at: Date.now(), settings: stored })); } catch (e) { /* private mode etc. — just no cache */ }
+}
+// Make this tab answer getSiteSettings() from `settings` (the stored,
+// non-default keys) right away — admin.js calls this after a save.
+function setSiteSettingsCache(settings) {
+  const stored = (settings && typeof settings === 'object') ? settings : {};
+  writeSiteSettingsCache(stored);
+  siteSettingsPromise = Promise.resolve({ ...SITE_SETTING_DEFAULTS, ...stored });
+}
+// Resolves to { ...SITE_SETTING_DEFAULTS, ...stored }. Never rejects: if the
+// table doesn't exist yet (SQL not applied — PGRST205 / 42P01) or the request
+// fails, the defaults apply and the next call tries again.
+function getSiteSettings() {
+  if (!siteSettingsPromise) {
+    siteSettingsPromise = (async () => {
+      const cached = readSiteSettingsCache();
+      if (cached) return { ...SITE_SETTING_DEFAULTS, ...cached };
+      const { data, error } = await sb.from('site_settings').select('settings').eq('id', true).maybeSingle();
+      if (error) {
+        if (error.code !== 'PGRST205' && error.code !== '42P01') console.error('load site_settings error:', error);
+        siteSettingsPromise = null;
+        return { ...SITE_SETTING_DEFAULTS };
+      }
+      const stored = (data && data.settings && typeof data.settings === 'object') ? data.settings : {};
+      writeSiteSettingsCache(stored);
+      return { ...SITE_SETTING_DEFAULTS, ...stored };
+    })();
+  }
+  return siteSettingsPromise;
+}
+
 function routeParam(prefix, legacyQueryKey) {
   const parts = location.pathname.split('/').filter(Boolean);
   const idx = parts.indexOf(prefix);

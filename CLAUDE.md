@@ -86,7 +86,7 @@
   - 코드가 새 컬럼·RPC 에 의존하면 **어떤 SQL 파일을 먼저 실행해야 하는지 보고에 반드시 적는다.** 적용 여부는 저장소에 기록되지 않으므로 사용자에게 확인한다.
 - 권한은 RLS 정책과 컬럼 단위 grant 로 건다. `is_admin` 은 클라이언트가 바꿀 수 없어야 한다 (`supabase_mosaic.sql` 1절 참고). 정책을 느슨하게 푸는 변경은 사용자에게 먼저 확인한다.
 - 셀 점유는 `claim → attach → stale sweep(10분)` 상태 머신이다. `mosaic_pixels` 의 update 정책을 고칠 때는 이 세 단계가 모두 유지되는지 확인한다.
-- **2026.9.10 추가 SQL 2개 (실행 순서)**: ① `supabase_mosaic_grid_image.sql`(`grid_image_url` 컬럼, 7인자 reshape RPC) → ② `supabase_mosaic_server_matching.sql`(Lab 컬럼·트리거·백필, `match_pool_artworks`·`release_poor_matches`·`admin_usage_stats`). 코드는 둘 다 **미적용 상태에서도 옛 경로로 동작**하도록 폴백을 두었으므로 push 순서와 무관하지만, 적용 전까지는 격자 이미지·서버 매칭·관리자 사용량 표시가 비활성이다.
+- **2026.9.10 추가 SQL 2개 (실행 순서)**: ① `supabase_mosaic_grid_image.sql`(`grid_image_url` 컬럼, 7인자 reshape RPC) → ② `supabase_mosaic_server_matching.sql`(Lab 컬럼·트리거·백필, `match_pool_artworks`·`release_poor_matches`·`admin_usage_stats`). 코드는 둘 다 **미적용 상태에서도 옛 경로로 동작**하도록 폴백을 두었으므로 push 순서와 무관하지만, 적용 전까지는 격자 이미지·서버 매칭·관리자 사용량 표시가 비활성이다. ③ `supabase_site_settings.sql`(사이트 옵션 테이블·RPC, 다른 둘과 독립)은 적용 전까지 모든 옵션이 기본값으로 동작하고 관리자 페이지의 옵션 섹션이 비활성이다 (16절).
 
 ---
 
@@ -151,6 +151,7 @@
 - [ ] 작품을 여러 건 한꺼번에 삭제하는 코드·SQL 이 들어가지 않았는가? (13절)
 - [ ] `DevDocs/DevLog.txt` 오늘 날짜 아래에 이슈별 한 줄(80자 이내)을 추가했는가? (9절)
 - [ ] DB 전송량·요청 수·월 한도 영향을 코드 수정 전에 계산해 보고에 적었는가? (15절)
+- [ ] 새 옵션·동작 토글을 만들었다면 관리자 페이지 "사이트 옵션" 에서 설정할 수 있는가? (16절)
 - [ ] push 를 지시받지 않았다면 push 하지 않았는가?
 
 ---
@@ -185,7 +186,7 @@ git config core.hooksPath tools/git-hooks
 
 - 파일: `en/admin.html`·`ko/admin.html`(about.html 셸 복제), `js/admin.js`, `css/admin.css`. 헤더의 "관리" 링크는 `auth.js` 의 `updateIdentityUI()` 가 `is_admin` 계정에만 동적으로 만든다(30개 헤더에 숨은 요소를 두지 않기 위해).
 - 접근 제어는 이중이다: 화면은 `me.isAdmin` 이 아니면 안내문만 보이고, 데이터는 DB 정책(`reports` 관리자 전용, `delete_mosaic_project` 관리자 검사)이 막는다. 화면 가림만 믿고 정책을 느슨하게 하지 않는다.
-- 기능: 신고 목록(대상 링크로 열어 한 건씩 검토, 상태 변경만), 캠페인 목록·개별 삭제(작품은 풀로 복귀), 관리자 목록(지정·해제는 SQL 안내만). **13절에 따라 작품 삭제 기능은 여기에 넣지 않는다.**
+- 기능: 신고 목록(대상 링크로 열어 한 건씩 검토, 상태 변경만), 캠페인 목록·제목/설명 수정·개별 삭제(작품은 풀로 복귀; 크기·이미지 변경은 캠페인 페이지의 reshape), 관리자 목록(지정·해제는 SQL 안내만), DB·Storage 사용량, 사이트 옵션 체크박스(16절). **13절에 따라 작품 삭제 기능은 여기에 넣지 않는다.**
 - `robots.txt` 색인 제외, `sitemap-static.xml` 미등재, `<meta name="robots" content="noindex,nofollow">`. 새 관리자 기능도 같은 원칙으로 이 페이지에 모은다.
 
 ---
@@ -201,6 +202,19 @@ git config core.hooksPath tools/git-hooks
   5. 자주 읽고 잘 안 바뀌는 데이터(기준 격자, 썸네일)는 DB 조회 대신 **Storage + `/img/` 프록시(엣지 캐시)** 로 내보낼 수 있는지.
 - 기준 수치(2026.9.9 실측): 4,988칸 캠페인 상세 1회 ≈ 0.7MB·16요청. 30,000칸이면 ≈ 5MB — 하루 1,000뷰에 5GB 로 Free 한도를 하루에 소진하는 규모.
 - 캠페인 크기 제한(칸 ≤ 10,000)·Max rows 같은 상한을 풀 때는 이 절의 계산을 먼저 한다.
+
+## 16. 사이트 옵션 — 모든 옵션은 관리자 화면에서 설정 (필수 · 2026.9.10 확정)
+
+- **화면 표시나 기능 동작을 켜고 끄는 옵션은 예외 없이 관리자 페이지 `/{lang}/admin` 의 "사이트 옵션" 섹션에서 설정할 수 있게 만든다.** JS 상수·하드코딩 플래그·환경변수처럼 배포해야만 바뀌는 옵션은 만들지 않는다. (사용자 지시 2026.9.10)
+- 저장소: Postgres 단일 행 테이블 `site_settings`(`id=true` 한 행, `settings jsonb`) — `supabase_site_settings.sql`. 누구나 읽고(anon 포함) 쓰기는 `admin_set_site_settings(p_patch jsonb)` RPC(관리자 검사, 키 병합, 값이 `null` 이면 키 삭제 = 기본값 복귀)로만 한다. 직접 update grant 는 없다.
+- 기본값은 **`js/common.js` 의 `SITE_SETTING_DEFAULTS` 한 곳**에만 둔다. DB 행에는 관리자가 바꾼 키만 저장되므로 옵션을 추가해도 SQL 을 다시 실행할 필요가 없다.
+- 옵션 하나를 추가하는 절차 (세 곳):
+  1. `SITE_SETTING_DEFAULTS` 에 키와 기본값 (camelCase, 예: `showCampaignPreview: false`).
+  2. `en/admin.html`·`ko/admin.html` 의 `#adminSettings` 에 `<input type="checkbox" data-setting="키" disabled>` 체크박스 한 줄씩 (문구는 HTML 에 언어별로 직접 — 4절). `admin.js` 가 `data-setting` 을 자동으로 묶어 읽고 저장한다.
+  3. 기능 코드에서 `getSiteSettings().then(s => …)` 로 읽는다. 절대 거부(reject)하지 않고 테이블이 없거나 오프라인이면 기본값을 준다. 페이지당 1회 조회, `sessionStorage` 60초 캐시, 관리자 자신의 저장은 캐시를 즉시 갱신한다.
+- 서버에서도 강제해야 하는 옵션(예: 업로드 잠금)은 RLS 정책·RPC 안에서 같은 `site_settings` 행을 읽어 검사한다. 화면 가림만으로 끝내지 않는다.
+- 현재 옵션: `showCampaignPreview` — 캠페인 페이지 오른쪽 "미리보기" 썸네일 표시, 기본 꺼짐.
+- DB 사용량(15절): 옵션을 읽는 페이지 뷰당 요청 1개·약 0.3KB(캠페인 상세 기준 요청 +6%), 옵션을 읽지 않는 페이지는 영향 없음.
 
 ---
 ---

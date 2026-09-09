@@ -158,6 +158,8 @@ const T = {
   adminDeleteCampaignTitle: 'Delete this campaign?',
   adminDeleteCampaignMessage: "Its artworks are not deleted — they return to their artists' pools. This cannot be undone. Type the campaign title {title} to confirm.",
   adminCampaignDeleted: "Campaign deleted — its artworks are back in their artists' pools", adminCouldNotDeleteCampaign: 'Could not delete the campaign',
+  adminSettingSaved: 'Option saved', adminSettingSaveFailed: 'Could not save the option',
+  adminEditLabel: 'Edit', adminCampaignUpdated: 'Campaign updated', adminCouldNotUpdateCampaign: 'Could not update the campaign',
   mfsClose: 'Close',
   mfsExpand: 'View fullscreen',
   editArtworkBtn: 'Edit',

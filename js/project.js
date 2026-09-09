@@ -58,8 +58,13 @@ async function openProject(id) {
   const refPreview = document.getElementById('referencePreview');
   refPreview.classList.remove('enlarged');
   refPreview.setAttribute('aria-label', tr('enlargePreview'));
-  refPreview.style.display = '';
-  renderReferencePreview(project);
+  // The corner preview is a site option (admin page → "Site options"),
+  // off unless an admin turned it on; the element starts hidden in the HTML.
+  getSiteSettings().then(settings => {
+    const on = !!settings.showCampaignPreview;
+    refPreview.style.display = on ? '' : 'none';
+    if (on) renderReferencePreview(project);
+  });
   setProjectViewMode('weavo');
   if (!project.is_archived) await sweepStaleClaims(project.id);
   await renderWeavoGrid(project);
