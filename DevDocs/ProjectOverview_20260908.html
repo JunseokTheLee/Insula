@@ -340,6 +340,7 @@ profile.js               루트에 남아 있는 잔여 파일 (어느 페이지
     <li><code>delete_mosaic_project</code> · <code>delete_own_account</code> — <span class="en">admin project deletion; self-service account deletion (plus Storage cleanup SQL)</span><span class="ko">관리자 프로젝트 삭제; 사용자 본인 계정 삭제 (Storage 정리 SQL 별도)</span></li>
     <li><code>admin_set_site_settings</code> · <code>admin_usage_stats</code> — <span class="en">admin-only: merge site options into the <code>site_settings</code> row; DB/Storage usage figures for the admin page</span><span class="ko">관리자 전용: 사이트 옵션을 <code>site_settings</code> 행에 병합; 관리자 페이지용 DB·Storage 사용량</span></li>
     <li><code>admin_set_submission_thumbs</code> — <span class="en">admin-only: writes a piece's rebuilt thumb_url / micro_thumb (thumbnail backfill)</span><span class="ko">관리자 전용: 재생성한 작품의 thumb_url / micro_thumb 기록 (썸네일 백필)</span></li>
+    <li><code>mosaic_submission_likes_count</code> · <code>mosaic_submissions_guard_like_count</code> — <span class="en">triggers keeping <code>mosaic_submissions.like_count</code> current (and read-only to clients) for the Browse Artworks page's server-side "Most liked" sort</span><span class="ko">작품 탐색의 서버 인기순 정렬을 위해 <code>mosaic_submissions.like_count</code> 를 최신으로 유지(클라이언트는 수정 불가)하는 트리거</span></li>
     <li><code>notify_follow</code> · <code>notify_submission_like</code> · <code>notify_submission_comment</code> · <code>check_mosaic_comment_parent</code> · <code>set_profiles_updated_at</code> — <span class="en">triggers</span><span class="ko">트리거</span></li>
   </ul>
   <div class="warn">

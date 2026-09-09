@@ -18,3 +18,7 @@
 @media (max-width:640px){
   .artworks-page{padding:16px 16px 12px;}
 }
+
+/* "Load more" under the grid — also the IntersectionObserver sentinel that
+   fetches the next page as it scrolls into view (js/artworks.js). */
+.artworks-more{display:flex;justify-content:center;padding:4px 32px 40px;}

@@ -1,13 +1,25 @@
 // Browse Artworks page (/{lang}/artworks) — every submitted artwork across
-// the whole site, newest first by default, with a client-side name/title
-// search and a Newest/Most Liked sort toggle. Modeled on js/artists.js's
-// allArtists/filterArtists/renderArtists shape. No category/medium filter:
-// submissions only carry a free-text art_material field, not a real
-// category enum, so there's no reliable data to filter pills against.
+// the site, ARTWORKS_PAGE at a time from the server: newest first, or by
+// like_count for "Most liked", with a server-side title/author search. The
+// first version loaded every row in one query and searched/sorted in the
+// browser, which would have stopped silently at Supabase's 1,000-row cap
+// and broken the like-count lookup (an `in(...)` over every id). Like
+// counts now come from mosaic_submissions.like_count, kept by a trigger on
+// mosaic_submission_likes (supabase_mosaic_like_count.sql); until that SQL
+// is applied the page falls back to newest-first without counts.
+// Needs common.js (sb, cdnUrl, artworkUrl, fmtShortDate, isUserBlocked,
+// isSchemaMismatchError) and auth.js (authReady) loaded first.
 "use strict";
 
-let allArtworks = [];
+const ARTWORKS_PAGE = 60;
 let artworksSort = 'newest';
+let artworksQuery = '';
+let artworksOffset = 0;   // rows fetched so far for the current search + sort
+let artworksShown = 0;    // cards on the page (blocked authors are skipped)
+let artworksDone = false; // the server sent a short page: nothing more to load
+let artworksLoading = false;
+let artworksRun = 0;      // bumped on every new search/sort so a stale page is ignored
+let artworksHasLikeCount = true; // false once the column turns out to be missing
 
 function artworkCardEl(sub, i) {
   const name = sub.author_name || tr('anonymous');
@@ -48,54 +60,91 @@ function artworkCardEl(sub, i) {
   return card;
 }
 
-function renderArtworks(list) {
+// ---------- paging ----------
+// PostgREST filter value: double-quoted so commas / parentheses in the
+// search text can't break the `or=(…)` syntax; `*` is its wildcard.
+function artworksSearchValue() {
+  return `"*${artworksQuery.replace(/"/g, '').split(String.fromCharCode(92)).join('')}*"`;
+}
+function artworksPageQuery() {
+  const cols = 'id,image_url,thumb_url,art_title,author_id,author_name,author_avatar_url,created_at'
+    + (artworksHasLikeCount ? ',like_count' : '');
+  let q = sb.from('mosaic_submissions').select(cols);
+  if (artworksQuery) {
+    const v = artworksSearchValue();
+    q = q.or(`art_title.ilike.${v},author_name.ilike.${v}`);
+  }
+  if (artworksSort === 'liked' && artworksHasLikeCount) q = q.order('like_count', { ascending: false });
+  return q.order('created_at', { ascending: false }).order('id', { ascending: false })
+    .range(artworksOffset, artworksOffset + ARTWORKS_PAGE - 1);
+}
+async function loadMoreArtworks() {
+  if (artworksLoading || artworksDone) return;
+  artworksLoading = true;
+  const run = artworksRun;
+  updateArtworksMore();
+  let { data, error } = await artworksPageQuery();
+  if (error && artworksHasLikeCount && isSchemaMismatchError(error)) {
+    // supabase_mosaic_like_count.sql not applied yet — plain newest-first.
+    artworksHasLikeCount = false;
+    if (run === artworksRun) ({ data, error } = await artworksPageQuery());
+  }
+  if (run !== artworksRun) return; // the visitor changed the search/sort meanwhile
+  artworksLoading = false;
+  if (error) {
+    console.error('load artworks error:', error);
+    toast(tr('couldNotLoadArtworks'));
+    artworksDone = true;
+    updateArtworksMore();
+    return;
+  }
+  const rows = data || [];
+  artworksOffset += rows.length;
+  if (rows.length < ARTWORKS_PAGE) artworksDone = true;
   const grid = document.getElementById('artworksGrid');
-  grid.innerHTML = '';
-  list.forEach((sub, i) => grid.appendChild(artworkCardEl(sub, i)));
-  document.getElementById('artworksEmpty').style.display = list.length ? 'none' : 'block';
+  const visible = rows.filter(sub => !isUserBlocked(sub.author_id));
+  visible.forEach((sub, i) => grid.appendChild(artworkCardEl(sub, i)));
+  artworksShown += visible.length;
+  document.getElementById('artworksEmpty').style.display = artworksShown ? 'none' : 'block';
+  updateArtworksMore();
+  // A page made only of blocked authors would leave the grid looking stuck.
+  if (!visible.length && !artworksDone) loadMoreArtworks();
+}
+function updateArtworksMore() {
+  document.getElementById('artworksMore').style.display = artworksDone ? 'none' : '';
+  document.getElementById('artworksMoreBtn').disabled = artworksLoading;
+}
+function resetArtworks() {
+  artworksRun++;
+  artworksOffset = 0; artworksShown = 0; artworksDone = false; artworksLoading = false;
+  document.getElementById('artworksGrid').innerHTML = '';
+  document.getElementById('artworksEmpty').style.display = 'none';
+  loadMoreArtworks();
 }
 
-function filterAndSortArtworks(query) {
-  const q = query.trim().toLowerCase();
-  let list = !q ? allArtworks : allArtworks.filter(sub => {
-    const title = (sub.art_title || '').toLowerCase();
-    const name = (sub.author_name || '').toLowerCase();
-    return title.includes(q) || name.includes(q);
-  });
-  if (artworksSort === 'liked') list = [...list].sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
-  return list;
-}
-function applyArtworksFilters() {
-  renderArtworks(filterAndSortArtworks(document.getElementById('artworkSearchInput').value));
-}
-document.getElementById('artworkSearchInput').oninput = () => applyArtworksFilters();
+// ---------- controls ----------
+let artworksSearchTimer = null;
+document.getElementById('artworkSearchInput').oninput = e => {
+  clearTimeout(artworksSearchTimer);
+  artworksSearchTimer = setTimeout(() => {
+    const next = e.target.value.trim();
+    if (next === artworksQuery) return;
+    artworksQuery = next;
+    resetArtworks();
+  }, 300);
+};
 document.getElementById('artworkSortSelect').onchange = e => {
   artworksSort = e.target.value;
-  applyArtworksFilters();
+  resetArtworks();
 };
-
-// Like counts aren't embedded on mosaic_submissions — one extra query over
-// just the ids already on the page, counted client-side (same shape as
-// js/lightbox.js's per-submission like fetch, just batched).
-async function fetchLikeCounts(submissionIds) {
-  const counts = {};
-  if (!submissionIds.length) return counts;
-  const { data, error } = await sb.from('mosaic_submission_likes')
-    .select('submission_id').in('submission_id', submissionIds);
-  if (error) { console.error('load artwork like counts error:', error); return counts; }
-  for (const row of data || []) counts[row.submission_id] = (counts[row.submission_id] || 0) + 1;
-  return counts;
+document.getElementById('artworksMoreBtn').onclick = () => loadMoreArtworks();
+// The next page also loads on its own as the visitor nears the bottom; the
+// button stays as the visible affordance (and the fallback without
+// IntersectionObserver).
+if ('IntersectionObserver' in window) {
+  new IntersectionObserver(entries => {
+    if (entries.some(en => en.isIntersecting)) loadMoreArtworks();
+  }, { rootMargin: '600px 0px' }).observe(document.getElementById('artworksMore'));
 }
 
-async function loadArtworks() {
-  const { data, error } = await sb.from('mosaic_submissions')
-    .select('id,image_url,thumb_url,art_title,author_id,author_name,author_avatar_url,created_at')
-    .order('created_at', { ascending: false });
-  if (error) { console.error('load artworks error:', error); toast(tr('couldNotLoadArtworks')); return; }
-  allArtworks = (data || []).filter(sub => !isUserBlocked(sub.author_id));
-  const counts = await fetchLikeCounts(allArtworks.map(sub => sub.id));
-  for (const sub of allArtworks) sub.likeCount = counts[sub.id] || 0;
-  applyArtworksFilters();
-}
-
-authReady.then(() => loadArtworks());
+authReady.then(() => resetArtworks());
