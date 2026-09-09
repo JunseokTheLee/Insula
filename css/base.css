@@ -50,12 +50,12 @@ body.no-scroll-lock{overflow:hidden;}
 }
 .topnav{
   display:flex;align-items:center;flex-shrink:0;
-  margin:16px 24px 0;padding:10px 24px;gap:28px;flex-wrap:wrap;
-  background:var(--gray-0);border-radius:var(--r-full);box-shadow:var(--shadow-md);
+  margin:0;padding:16px 32px;gap:28px;flex-wrap:wrap;
+  background:var(--gray-0);
 }
 .logo{
   font-family:'Pretendard',sans-serif;font-weight:700;font-size:24px;letter-spacing:-.01em;
-  color:var(--primary);cursor:pointer;flex-shrink:0;transition:opacity .12s ease-out;
+  color:var(--gray-900);cursor:pointer;flex-shrink:0;transition:opacity .12s ease-out;
   display:flex;align-items:center;gap:8px;background:none;border:none;padding:0;text-decoration:none;
 }
 .logo::before{
@@ -73,8 +73,8 @@ body.no-scroll-lock{overflow:hidden;}
   color:var(--text);background:none;border:none;padding:8px 14px;border-radius:var(--r-full);
   transition:color .12s linear,background .12s linear;
 }
-.nav-link:hover{color:var(--primary);background:var(--primary-soft);}
-.nav-link.active{color:var(--primary);font-weight:600;background:var(--primary-soft);}
+.nav-link:hover{color:var(--primary);background:none;}
+.nav-link.active{color:var(--primary);font-weight:600;background:none;}
 
 #identity{
   display:inline-flex;align-items:center;gap:14px;font-size:14px;flex-shrink:0;
@@ -652,7 +652,7 @@ html[lang="ko"] * {
 
 @media (max-width:640px){
   .topnav,.backnav{padding-left:16px;padding-right:16px;}
-  .topnav{gap:14px 16px;margin:12px 12px 0;}
+  .topnav{gap:14px 16px;margin:0;padding-top:12px;padding-bottom:12px;}
   /* Five nav links no longer reliably fit one row at phone widths — let
      them wrap onto a second line instead of overflowing the viewport. */
   .nav-links{gap:6px 10px;flex-wrap:wrap;justify-content:center;}

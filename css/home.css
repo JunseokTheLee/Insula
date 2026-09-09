@@ -1,3 +1,6 @@
+/* Handwritten tagline on the landing hero ("Different People / Brighter
+   Tomorrows"). Same Google Fonts origin the site already uses. */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap');
 /* ============ HOME: hero / stats / carousel / projects grid ============ */
 .main-scroll.home-scroll{scroll-snap-type:y proximity;scroll-behavior:smooth;}
 .snap-panel{min-height:100%;scroll-snap-align:start;display:flex;flex-direction:column;}
@@ -68,19 +71,26 @@
    The DOM is in PHONE order: copy → white card [partner line, mosaic,
    progress] → donation card → partner text → CTA. On desktop the card
    dissolves (display:contents) and grid areas rearrange the same elements:
-   text column on the left, the tall mosaic (natural aspect ratio) on the
-   right, and the progress + donation pair as one two-part card that sits at
-   the bottom of the text column, level with the mosaic's bottom edge. */
-.hero{flex-shrink:0;padding:5vh 32px 40px;animation:fadeIn .4s ease-out;background:var(--gradient-hero);
-  --hero-blue:#5B7CFF;--hero-violet:#8B6CFF;--hero-ink:#1A1F36;}
+   text column on the left; the mosaic (natural aspect ratio, a link to the
+   campaign) with the handwritten tagline beside it and the campaign
+   switcher under it on the right; and the progress + donation pair as one
+   two-part card at the bottom-left, level with the mosaic's bottom edge. */
+.hero{flex-shrink:0;padding:5vh 32px 40px;animation:fadeIn .4s ease-out;
+  --hero-blue:#5B7CFF;--hero-violet:#8B6CFF;--hero-ink:#1A1F36;
+  /* White, plus a few faint watercolor-like washes (the mockup's brush strokes). */
+  background:
+    radial-gradient(55% 45% at 90% 10%,rgba(122,152,255,.16),transparent 70%),
+    radial-gradient(40% 38% at 72% 92%,rgba(255,186,150,.18),transparent 70%),
+    radial-gradient(34% 34% at 6% 88%,rgba(255,170,205,.14),transparent 70%),
+    #fff;}
 .hero-inner{max-width:1400px;margin:0 auto;display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.5fr);
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.9fr);
   grid-template-rows:auto auto auto 1fr auto;
   grid-template-areas:"copy copy art" "cta cta art" "phead phead art" "pbody pbody art" "prog don art";
-  column-gap:56px;row-gap:0;align-items:start;}
+  column-gap:40px;row-gap:0;align-items:start;}
 .hero-card{display:contents;}
 .hero-copy{grid-area:copy;}
-.hero-eyebrow{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:600;color:var(--hero-blue);margin:0 0 14px;}
+.hero-eyebrow{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:600;color:#5F6B9E;margin:0 0 14px;}
 .hero h1{font-family:'Pretendard',sans-serif;font-weight:800;font-size:clamp(34px,4vw,56px);letter-spacing:-.03em;line-height:1.18;margin:0 0 18px;color:var(--hero-ink);word-break:keep-all;}
 .hero-lead{font-family:'Pretendard',sans-serif;color:var(--gray-700);font-size:16px;line-height:1.75;margin:0 0 26px;max-width:480px;word-break:keep-all;}
 .hero-cta{grid-area:cta;margin:0 0 34px;}
@@ -101,23 +111,39 @@
 .hero-partner-desc strong{color:var(--hero-ink);font-weight:800;}
 .hero-partner-link{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:600;color:var(--hero-blue);text-decoration:none;}
 .hero-partner-link:hover{text-decoration:underline;}
-.hero-art{grid-area:art;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-height:0;}
-.hero-preview{display:inline-block;max-width:100%;border-radius:var(--r-lg);overflow:hidden;background:var(--gray-0);position:relative;box-shadow:var(--shadow-lg);}
-/* width/height auto + max-* keeps the campaign's own aspect ratio (a 58×86
-   grid is a tall portrait) — never cropped, never squashed. */
-.hero-preview canvas{display:block;width:auto;height:auto;max-width:100%;max-height:min(78vh,860px);}
+.hero-art{grid-area:art;align-self:stretch;display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;min-height:0;}
+.hero-art-main{display:flex;align-items:center;justify-content:center;gap:18px;min-height:0;}
+/* The mosaic is a link to its campaign. width/height auto + max-* keeps the
+   campaign's own aspect ratio (a 58×86 grid is a tall portrait) — never
+   cropped, never squashed. */
+.hero-preview{display:block;flex:0 1 auto;min-width:0;border-radius:var(--r-md);overflow:hidden;background:var(--gray-0);position:relative;box-shadow:var(--shadow-lg);cursor:pointer;transition:transform .15s ease-out,box-shadow .15s ease-out;}
+.hero-preview:hover{transform:translateY(-2px);box-shadow:0 22px 56px rgba(15,36,23,.18);}
+.hero-preview canvas{display:block;width:auto;height:auto;max-width:100%;max-height:min(76vh,840px);}
 .hero-preview-empty{color:var(--muted);font-family:'Pretendard',sans-serif;font-size:13px;text-align:center;padding:40px 24px;}
-.hero-art-foot{width:100%;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-top:18px;}
-.hero-art-caption{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--gray-700);line-height:1.6;}
+/* !important: base.css forces Pretendard on every element of the Korean
+   page (html[lang="ko"] * { … !important }); this rule is more specific so
+   it wins for the handwritten tagline only. */
+.hero-art .hero-tagline{flex:0 0 auto;display:flex;flex-direction:column;font-family:'Caveat','Segoe Script','Brush Script MT',cursive !important;font-weight:600;font-size:32px;line-height:1.05;color:#3A4A86;transform:rotate(-9deg);opacity:.9;user-select:none;}
+.hero-tagline span:nth-child(even){padding-left:22px;}
+/* The same base.css rule hits the <span>s directly, so they need it too. */
+.hero-art .hero-tagline span{font-family:'Caveat','Segoe Script','Brush Script MT',cursive !important;}
+.hero-art-foot{display:flex;flex-direction:column;align-items:flex-end;gap:12px;margin-top:16px;}
+.hero-art-nav{display:flex;gap:10px;}
+.hero-arrow{width:40px;height:40px;border-radius:50%;border:1px solid var(--border-strong);background:var(--gray-0);color:var(--gray-700);font-family:'Pretendard',sans-serif;font-size:22px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0 0 3px;transition:background .12s linear,transform .12s ease-out;}
+.hero-arrow.dark{background:var(--hero-ink);color:#fff;border-color:var(--hero-ink);}
+.hero-arrow:hover{transform:translateY(-1px);}
+.hero-arrow:disabled{opacity:.35;cursor:default;transform:none;}
+.hero-art-caption{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--gray-700);line-height:1.6;text-align:left;}
 .hero-art-caption b{display:block;color:var(--hero-ink);font-weight:700;}
-.hero-tagline{font-family:'Pretendard',sans-serif;font-style:italic;font-weight:500;font-size:18px;line-height:1.5;color:var(--hero-blue);text-align:right;transform:rotate(-8deg);transform-origin:right bottom;opacity:.9;white-space:nowrap;}
-.hero-progress{grid-area:prog;align-self:stretch;display:flex;flex-direction:column;justify-content:center;background:var(--gray-0);border-radius:var(--r-md) 0 0 var(--r-md);padding:18px 22px;box-shadow:var(--shadow-sm);}
+.hero-progress{grid-area:prog;align-self:stretch;display:flex;flex-direction:column;justify-content:center;background:var(--gray-0);border-radius:var(--r-md) 0 0 var(--r-md);padding:18px 22px 16px;box-shadow:var(--shadow-sm);}
 .hero-pieces{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
 .hero-pieces-count{font-family:'Pretendard',sans-serif;font-size:15px;color:var(--muted);font-weight:600;}
 .hero-pieces-count b{font-size:28px;color:var(--hero-ink);font-weight:800;letter-spacing:-.02em;}
 .hero-pieces-pct{font-family:'Pretendard',sans-serif;font-size:18px;font-weight:800;color:var(--hero-ink);}
 .hero-bar{height:8px;margin-top:10px;background:var(--gray-200);}
 .hero-bar .progress-fill{background:linear-gradient(90deg,var(--hero-blue),var(--hero-violet));}
+.hero-pieces-sub{display:flex;gap:8px;flex-wrap:wrap;font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);margin-top:10px;}
+.hero-pieces-sub b{color:var(--gray-700);font-weight:700;}
 .hero-donation{grid-area:don;align-self:stretch;background:var(--gray-0);border-radius:0 var(--r-md) var(--r-md) 0;padding:16px 22px;box-shadow:var(--shadow-sm);border-left:1px solid var(--border);display:flex;align-items:center;gap:14px;}
 .hero-heart{width:34px;height:34px;flex-shrink:0;fill:none;stroke:#FF4D6D;stroke-width:1.8;stroke-linejoin:round;}
 .hero-donation-amount{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--muted);font-weight:600;white-space:nowrap;}
@@ -144,8 +170,10 @@
   color:var(--muted);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;text-decoration:underline;cursor:pointer;
 }
 .cta-text:hover{color:var(--primary);}
+/* Site-wide counters — a separate band under the campaign hero (rule line +
+   tinted background) so they read as their own thing, not part of it. */
 .stats-bar{
-  flex-shrink:0;padding:0 32px 32px;background:transparent;
+  flex-shrink:0;margin-top:36px;padding:28px 32px 32px;background:var(--gray-50);border-top:1px solid var(--border);
 }
 .stats-bar-inner{
   display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
@@ -172,10 +200,15 @@
   .hero-partner-head{text-align:center;margin:2px 0 14px;}
   .hero-partner-logos{justify-content:center;margin-bottom:6px;}
   .hero-art{display:block;}
+  .hero-art-main{display:block;}
   .hero-preview{display:block;border-radius:14px;box-shadow:none;}
+  .hero-preview:hover{transform:none;box-shadow:none;}
   .hero-preview canvas{width:100%;max-height:none;}
-  .hero-art-foot{display:none;}
-  .hero-progress{display:block;padding:16px 2px 2px;box-shadow:none;border-radius:0;}
+  .hero-tagline{display:none;}
+  .hero-art-foot{flex-direction:row;justify-content:flex-end;margin-top:12px;}
+  .hero-art-caption{display:none;}
+  .hero-arrow{width:34px;height:34px;font-size:19px;}
+  .hero-progress{display:block;padding:12px 2px 2px;box-shadow:none;border-radius:0;}
   .hero-donation{border-radius:20px;border-left:none;box-shadow:var(--shadow-md);padding:18px 20px;}
   .hero-partner-body{margin:2px 4px 0;}
   .hero-cta{margin:4px 0 0;}

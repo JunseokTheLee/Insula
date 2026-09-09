@@ -26,8 +26,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-021343">
-<link rel="stylesheet" href="/css/home.css?v=20260910-021343">
+<link rel="stylesheet" href="/css/base.css?v=20260910-023454">
+<link rel="stylesheet" href="/css/home.css?v=20260910-023454">
 </head>
 <body>
 
@@ -72,13 +72,19 @@
               <div class="hero-partner-title">다른 시선이 만드는 더 따뜻한 세상</div>
             </div>
             <div class="hero-art">
-              <div class="hero-preview" id="heroPreview">
-                <canvas id="heroPreviewCanvas"></canvas>
-                <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">아직 캠페인이 없습니다 — 첫 번째 캠페인을 시작해 보세요.</div>
+              <div class="hero-art-main">
+                <a class="hero-preview" id="heroPreview" href="/ko/campaigns" aria-label="캠페인 보기">
+                  <canvas id="heroPreviewCanvas"></canvas>
+                  <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">아직 캠페인이 없습니다 — 첫 번째 캠페인을 시작해 보세요.</div>
+                </a>
+                <div class="hero-tagline" aria-hidden="true"><span>Different</span><span>People</span><span>Brighter</span><span>Tomorrows</span></div>
               </div>
               <div class="hero-art-foot">
+                <div class="hero-art-nav" id="heroArtNav">
+                  <button type="button" class="hero-arrow" id="heroPrev" aria-label="이전 캠페인">&lsaquo;</button>
+                  <button type="button" class="hero-arrow dark" id="heroNext" aria-label="다음 캠페인">&rsaquo;</button>
+                </div>
                 <div class="hero-art-caption"><b>함께 만든 <span id="heroTotalCaption">0</span>개의 이야기</b><span>지금, 한 조각을 더해보세요.</span></div>
-                <div class="hero-tagline" aria-hidden="true">Different People<br>Brighter Tomorrows</div>
               </div>
             </div>
             <!-- data-pledge: placeholder until campaigns carry their own donor /
@@ -89,6 +95,7 @@
                 <div class="hero-pieces-pct" id="heroPercent">0%</div>
               </div>
               <div class="progress-bar hero-bar"><div class="progress-fill" id="heroProgressFill"></div></div>
+              <div class="hero-pieces-sub"><span>추가된 조각 <b id="heroAdded">0</b></span><span aria-hidden="true">·</span><span>남은 작품 <b id="heroRemaining">0</b></span></div>
             </div>
           </div>
 
@@ -328,15 +335,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-021343"></script>
-<script src="/js/i18n/ko.js?v=20260910-021343"></script>
-<script src="/js/common.js?v=20260910-021343"></script>
-<script src="/js/color-engine.js?v=20260910-021343"></script>
-<script src="/js/matching.js?v=20260910-021343"></script>
-<script src="/js/auth.js?v=20260910-021343"></script>
-<script src="/js/notifications.js?v=20260910-021343"></script>
-<script src="/js/project-preview.js?v=20260910-021343"></script>
-<script src="/js/lightbox.js?v=20260910-021343"></script>
-<script src="/js/landing.js?v=20260910-021343"></script>
+<script src="/js/supabase-client.js?v=20260910-023454"></script>
+<script src="/js/i18n/ko.js?v=20260910-023454"></script>
+<script src="/js/common.js?v=20260910-023454"></script>
+<script src="/js/color-engine.js?v=20260910-023454"></script>
+<script src="/js/matching.js?v=20260910-023454"></script>
+<script src="/js/auth.js?v=20260910-023454"></script>
+<script src="/js/notifications.js?v=20260910-023454"></script>
+<script src="/js/project-preview.js?v=20260910-023454"></script>
+<script src="/js/lightbox.js?v=20260910-023454"></script>
+<script src="/js/landing.js?v=20260910-023454"></script>
 </body>
 </html>

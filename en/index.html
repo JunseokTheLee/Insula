@@ -26,8 +26,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-021343">
-<link rel="stylesheet" href="/css/home.css?v=20260910-021343">
+<link rel="stylesheet" href="/css/base.css?v=20260910-023454">
+<link rel="stylesheet" href="/css/home.css?v=20260910-023454">
 </head>
 <body>
 
@@ -72,13 +72,19 @@
               <div class="hero-partner-title">A warmer world, seen differently</div>
             </div>
             <div class="hero-art">
-              <div class="hero-preview" id="heroPreview">
-                <canvas id="heroPreviewCanvas"></canvas>
-                <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">No campaigns yet — be the first to start one.</div>
+              <div class="hero-art-main">
+                <a class="hero-preview" id="heroPreview" href="/en/campaigns" aria-label="Open the campaign">
+                  <canvas id="heroPreviewCanvas"></canvas>
+                  <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">No campaigns yet — be the first to start one.</div>
+                </a>
+                <div class="hero-tagline" aria-hidden="true"><span>Different</span><span>People</span><span>Brighter</span><span>Tomorrows</span></div>
               </div>
               <div class="hero-art-foot">
+                <div class="hero-art-nav" id="heroArtNav">
+                  <button type="button" class="hero-arrow" id="heroPrev" aria-label="Previous campaign">&lsaquo;</button>
+                  <button type="button" class="hero-arrow dark" id="heroNext" aria-label="Next campaign">&rsaquo;</button>
+                </div>
                 <div class="hero-art-caption"><b><span id="heroTotalCaption">0</span> stories made together</b><span>Add a piece today.</span></div>
-                <div class="hero-tagline" aria-hidden="true">Different People<br>Brighter Tomorrows</div>
               </div>
             </div>
             <!-- data-pledge: placeholder until campaigns carry their own donor /
@@ -89,6 +95,7 @@
                 <div class="hero-pieces-pct" id="heroPercent">0%</div>
               </div>
               <div class="progress-bar hero-bar"><div class="progress-fill" id="heroProgressFill"></div></div>
+              <div class="hero-pieces-sub"><span>Pieces added <b id="heroAdded">0</b></span><span aria-hidden="true">·</span><span>Artworks still needed <b id="heroRemaining">0</b></span></div>
             </div>
           </div>
 
@@ -305,15 +312,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-021343"></script>
-<script src="/js/i18n/en.js?v=20260910-021343"></script>
-<script src="/js/common.js?v=20260910-021343"></script>
-<script src="/js/color-engine.js?v=20260910-021343"></script>
-<script src="/js/matching.js?v=20260910-021343"></script>
-<script src="/js/auth.js?v=20260910-021343"></script>
-<script src="/js/notifications.js?v=20260910-021343"></script>
-<script src="/js/project-preview.js?v=20260910-021343"></script>
-<script src="/js/lightbox.js?v=20260910-021343"></script>
-<script src="/js/landing.js?v=20260910-021343"></script>
+<script src="/js/supabase-client.js?v=20260910-023454"></script>
+<script src="/js/i18n/en.js?v=20260910-023454"></script>
+<script src="/js/common.js?v=20260910-023454"></script>
+<script src="/js/color-engine.js?v=20260910-023454"></script>
+<script src="/js/matching.js?v=20260910-023454"></script>
+<script src="/js/auth.js?v=20260910-023454"></script>
+<script src="/js/notifications.js?v=20260910-023454"></script>
+<script src="/js/project-preview.js?v=20260910-023454"></script>
+<script src="/js/lightbox.js?v=20260910-023454"></script>
+<script src="/js/landing.js?v=20260910-023454"></script>
 </body>
 </html>

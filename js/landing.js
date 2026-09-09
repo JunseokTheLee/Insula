@@ -3,22 +3,27 @@
 // Needs js/project-preview.js (paintProjectPreview) loaded first.
 "use strict";
 
+// The hero shows one active campaign at a time — the newest first — and the
+// ‹ › buttons step through the others; every number on the page (pieces,
+// percent, pledge progress, the caption) follows the campaign on screen.
+let heroProjects = [];
+let heroIndex = 0;
 async function loadHeroPreview() {
   const { data: projects, error } = await sb.from('mosaic_projects')
     .select('*')
     .eq('is_archived', false)
     .order('created_at', { ascending: false });
   if (error) { console.error('load projects error:', error); return; }
-  renderHeroPreview(projects || []);
+  heroProjects = projects || [];
+  heroIndex = 0;
+  renderHeroPreview();
 }
-// Reuses paintProjectPreview against a minimal stand-in for a project
-// card — that function only ever looks up '.p-progress'/'.progress-fill'
-// conditionally, so a plain canvas with no surrounding card markup works
-// fine as the hero's "what people are building" preview.
-async function renderHeroPreview(projects) {
+async function renderHeroPreview() {
   const canvas = document.getElementById('heroPreviewCanvas');
   const emptyEl = document.getElementById('heroPreviewEmpty');
-  const featured = projects[0];
+  const link = document.getElementById('heroPreview');
+  const featured = heroProjects[heroIndex];
+  document.getElementById('heroArtNav').style.display = heroProjects.length > 1 ? '' : 'none';
   if (!featured) {
     canvas.style.display = 'none';
     emptyEl.style.display = '';
@@ -27,14 +32,41 @@ async function renderHeroPreview(projects) {
   }
   canvas.style.display = '';
   emptyEl.style.display = 'none';
+  link.href = projectUrl(featured.id);
   document.getElementById('heroCampaignLink').href = projectUrl(featured.id);
-  const { filledCount, total } = await paintProjectPreview({ querySelector: sel => (sel === 'canvas' ? canvas : null) }, featured);
-  renderHeroProgress(filledCount, total);
+  try {
+    // Painted off-screen first (paintProjectPreview is shared with the
+    // campaign cards) so a slow load can't overwrite the canvas after the
+    // visitor has already stepped on to another campaign.
+    const off = document.createElement('canvas');
+    await paintProjectPreview({ querySelector: sel => (sel === 'canvas' ? off : null) }, featured);
+    // The counts come straight from the shared grid cache rather than from
+    // paintProjectPreview's return value: a browser that kept a stale copy
+    // of project-preview.js (without that return) showed every number as 0
+    // on 2026-09-10, while the mosaic itself painted fine.
+    const { cells, filled } = await getCachedProjectGrid(featured);
+    if (heroProjects[heroIndex] !== featured) return;
+    canvas.width = off.width;
+    canvas.height = off.height;
+    canvas.getContext('2d').drawImage(off, 0, 0);
+    let filledCount = 0;
+    for (const c of cells) if (filled.has(`${c.x},${c.y}`)) filledCount++;
+    renderHeroProgress(filledCount, cells.length);
+  } catch (e) {
+    console.error('hero preview error:', e);
+  }
 }
-// Pieces / percent / "donated so far" for the featured campaign. The pledge
+function heroStep(delta) {
+  if (heroProjects.length < 2) return;
+  heroIndex = (heroIndex + delta + heroProjects.length) % heroProjects.length;
+  renderHeroPreview();
+}
+document.getElementById('heroPrev').onclick = () => heroStep(-1);
+document.getElementById('heroNext').onclick = () => heroStep(1);
+// Pieces / percent / "donated so far" for the campaign on screen. The pledge
 // amount is a placeholder read from data-pledge on #heroProgress until
-// campaigns carry their own donor and pledge fields; donated-so-far is
-// pledge × filled/total, rounded to the nearest ₩1,000.
+// campaigns carry their own donor and pledge fields; donated-so-far is the
+// pledge × the exact filled share (so 71.5% of ₩2,000,000 is ₩1,430,000).
 function renderHeroProgress(filled, total) {
   const wrap = document.getElementById('heroProgress');
   const pledge = parseInt(wrap.dataset.pledge, 10) || 0;
@@ -43,11 +75,13 @@ function renderHeroProgress(filled, total) {
   const set = (id, v) => { document.getElementById(id).textContent = v; };
   set('heroPieces', fmt(filled));
   set('heroPiecesTotal', fmt(total));
+  set('heroAdded', fmt(filled));
+  set('heroRemaining', fmt(Math.max(0, total - filled)));
   set('heroTotalInline', fmt(total));
   set('heroTotalCaption', fmt(total));
-  set('heroPercent', `${Math.round(share * 100)}%`);
+  set('heroPercent', `${(share * 100).toFixed(1)}%`);
   document.getElementById('heroProgressFill').style.width = `${Math.round(share * 1000) / 10}%`;
-  set('heroDonation', fmt(Math.round(pledge * share / 1000) * 1000));
+  set('heroDonation', fmt(Math.round(pledge * share)));
   set('heroPledge', fmt(pledge));
   document.querySelectorAll('.hero-pledge-inline').forEach(el => { el.textContent = fmt(pledge); });
 }
