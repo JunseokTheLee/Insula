@@ -36,7 +36,7 @@
 **서버 로직은 `functions/` 에만 있다.**
 - `functions/index.js` — 루트 `/` 언어 판별 302 (쿠키 → Accept-Language → en)
 - `functions/_lib/render.js` — 상세 페이지 `<head>` 메타(title/description/canonical/hreflang/OG/JSON-LD)를 HTMLRewriter 로 서버에서 채움
-- `functions/{en,ko}/{projects,artworks,artists,collections}/[…].js` — 위 렌더러를 쓰는 상세 페이지 라우트
+- `functions/{en,ko}/{campaigns,artworks,artists,collections}/[…].js` — 위 렌더러를 쓰는 상세 페이지 라우트
 - `functions/img/[[path]].js` — Supabase Storage 이미지를 같은 도메인으로 프록시해 엣지 캐시 (`js/common.js` 의 `cdnUrl()` 이 `/img/` 로 바꿔 보냄)
 - `functions/sitemap-*.xml.js` — 동적 사이트맵
 - `functions/{en,ko}/{profile,project}.html.js` — 옛 `?id=`/`?user=` 주소 301

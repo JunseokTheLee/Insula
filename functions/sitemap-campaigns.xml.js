@@ -10,8 +10,8 @@ export async function onRequestGet() {
   const projects = await pgFetchMany('mosaic_projects?is_archived=eq.false&select=id,created_at&order=created_at.desc&limit=1000');
 
   const urls = projects.flatMap(p => {
-    const en = `${SITE}/en/projects/${encodeURIComponent(p.id)}`;
-    const ko = `${SITE}/ko/projects/${encodeURIComponent(p.id)}`;
+    const en = `${SITE}/en/campaigns/${encodeURIComponent(p.id)}`;
+    const ko = `${SITE}/ko/campaigns/${encodeURIComponent(p.id)}`;
     const lastmod = p.created_at ? `<lastmod>${new Date(p.created_at).toISOString()}</lastmod>` : '';
     return [en, ko].map(loc => `  <url>
     <loc>${loc}</loc>

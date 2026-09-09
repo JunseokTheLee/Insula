@@ -1,17 +1,30 @@
 /weavo.html / 301
 
 # landing.html was renamed to index.html (served at the language directory
-# root); the old project-list index.html was renamed to projects.html.
+# root); the old project-list index.html was renamed to projects.html (now campaigns.html).
 /ko/landing.html   /ko/          301
 /en/landing.html   /en/          301
-/ko/index.html     /ko/projects  301
-/en/index.html     /en/projects  301
+/ko/index.html     /ko/campaigns  301
+/en/index.html     /en/campaigns  301
 
-# Deliberately no /en/projects, /en/about, /en/network, /en/privacy,
-# /en/disclaimer rewrite/redirect rules (and no /ko equivalents) beyond the
+# Deliberately no /en/about, /en/network, /en/privacy, /en/disclaimer
+# rewrite/redirect rules (and no /ko equivalents) beyond the
 # renames above: Cloudflare Pages already serves each *.html file's content
 # at its extension-less path natively (200), and already 308-redirects the
 # literal *.html address to that same clean URL — adding an explicit 200
 # rewrite rule on top of that double-processes the request and comes back
 # as a stray 308 instead of the intended content. Confirmed against
 # `wrangler pages dev` before settling on leaving this to the platform default.
+
+# 2026-09-09: the product term "project" became "campaign", URLs included.
+# The list page file is now {lang}/campaigns.html and the detail route is
+# functions/{lang}/campaigns/[id].js, so every old /projects address gets a
+# permanent redirect (search engines and shared links consolidate onto the
+# new URLs instead of hitting a 404).
+/en/projects        /en/campaigns         301
+/ko/projects        /ko/campaigns         301
+/en/projects.html   /en/campaigns         301
+/ko/projects.html   /ko/campaigns         301
+/en/projects/*      /en/campaigns/:splat  301
+/ko/projects/*      /ko/campaigns/:splat  301
+/sitemap-projects.xml  /sitemap-campaigns.xml  301

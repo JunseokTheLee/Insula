@@ -35,7 +35,7 @@
   <header class="topnav">
     <a class="logo" id="logoHome" href="/en/">Weavo</a>
     <nav class="nav-links">
-      <a href="/en/projects" class="nav-link">Projects</a>
+      <a href="/en/campaigns" class="nav-link">Campaigns</a>
       <a href="/en/network" class="nav-link">Network</a>
       <a href="/en/artworks" class="nav-link">Explore</a>
       <a href="/en/artists" class="nav-link">Artists</a>
@@ -60,7 +60,7 @@
         <div class="recent-list-col">
           <div class="recent-list-header">
             <h2 class="section-label">Latest Artworks</h2>
-            <a href="/en/projects" class="cta-text">View All Projects</a>
+            <a href="/en/campaigns" class="cta-text">View All Campaigns</a>
           </div>
           <div class="recent-list" id="recentArtworksList"></div>
           <div class="empty-note" id="recentArtworksEmpty" style="display:none;">No artworks yet — be the first to submit one.</div>
@@ -83,14 +83,14 @@
             <h1>Your colors come<br>together into one story.</h1>
             <p>A collaborative mosaic created by artists with and without disabilities. Every submission's dominant color is automatically matched to the closest open cell in a hidden reference image — so the full picture only comes into focus as more artists add their piece.</p>
             <div class="hero-cta-row">
-              <a class="cta" href="/en/projects">Explore Projects <span aria-hidden="true">&rarr;</span></a>
+              <a class="cta" href="/en/campaigns">Explore Campaigns <span aria-hidden="true">&rarr;</span></a>
               <button type="button" class="cta-outline" id="heroUploadBtn">Upload Artwork <span aria-hidden="true">&uarr;</span></button>
             </div>
           </div>
           <div class="hero-right">
             <div class="hero-preview" id="heroPreview">
               <canvas id="heroPreviewCanvas"></canvas>
-              <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">No projects yet — be the first to start one.</div>
+              <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">No campaigns yet — be the first to start one.</div>
             </div>
           </div>
         </div>
@@ -100,7 +100,7 @@
         <div class="stats-bar-inner">
           <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🎨</span><div><div class="stat-value" id="statArtists">0</div><div class="stat-label">Artists</div></div></div>
           <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🖼️</span><div><div class="stat-value" id="statArtworks">0</div><div class="stat-label">Artworks Submitted</div></div></div>
-          <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🧩</span><div><div class="stat-value" id="statProjects">0</div><div class="stat-label">Active Projects</div></div></div>
+          <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🧩</span><div><div class="stat-value" id="statProjects">0</div><div class="stat-label">Active Campaigns</div></div></div>
           <div class="stat-tile"><span class="stat-icon" aria-hidden="true">✨</span><div><div class="stat-value" id="statFill">0%</div><div class="stat-label">Cells Filled</div></div></div>
         </div>
       </div>
@@ -115,7 +115,7 @@
         <div class="hiw-header">
           <h2 class="section-label">How It Works</h2>
           <h3 class="hiw-title">How a mosaic comes together.</h3>
-          <p class="hiw-intro">Every submission's dominant color is read automatically and matched to the closest open cell across every active project — so the full picture only comes into focus as more artists add their piece, each one staying visible at full size and credited to its artist.</p>
+          <p class="hiw-intro">Every submission's dominant color is read automatically and matched to the closest open cell across every active campaign — so the full picture only comes into focus as more artists add their piece, each one staying visible at full size and credited to its artist.</p>
         </div>
 
         <div class="features3-cols">
@@ -140,7 +140,7 @@
               <li>
                 <span class="hiw-num-sm">03</span>
                 <div>
-                  <h4>It's matched to a project</h4>
+                  <h4>It's matched to a campaign</h4>
                   <p>It's placed into whichever open cell, across every active mosaic, its color fits best.</p>
                 </div>
               </li>
@@ -152,7 +152,7 @@
                 </div>
               </li>
             </ol>
-            <a href="/en/projects" class="cta">Explore Projects <span aria-hidden="true">&rarr;</span></a>
+            <a href="/en/campaigns" class="cta">Explore Campaigns <span aria-hidden="true">&rarr;</span></a>
           </div>
         </div>
       </div>
@@ -205,8 +205,8 @@
       <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="Delete this artwork" style="display:none;">
         <span class="icon"></span><span>Delete</span>
       </button>
-      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="Remove from project" style="display:none;">
-        <span class="icon"></span><span>Remove from project</span>
+      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="Remove from campaign" style="display:none;">
+        <span class="icon"></span><span>Remove from campaign</span>
       </button>
     </div>
     <div id="lightbox-comments" class="lightbox-comments open">

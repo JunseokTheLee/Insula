@@ -4,27 +4,29 @@
 <link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>프로젝트 | Weavo</title>
-<meta name="description" content="Weavo의 모든 공동 모자이크 프로젝트를 둘러보고 각 커뮤니티 캔버스가 어떻게 완성되어 가는지 확인하세요.">
-<link rel="canonical" href="https://weavo.art/ko/projects">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/projects">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/projects">
+<title>Weavo — 캠페인</title>
+<meta name="description" content="Weavo에서 진행 중인 공동 모자이크 캠페인입니다. 제출된 작품들이 모여 하나의 그림을 완성합니다.">
+<link rel="canonical" href="https://weavo.art/ko/campaigns">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/campaigns">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/campaigns">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="프로젝트 | Weavo">
-<meta property="og:description" content="Weavo의 모든 공동 모자이크 프로젝트를 둘러보고 각 커뮤니티 캔버스가 어떻게 완성되어 가는지 확인하세요.">
-<meta property="og:url" content="https://weavo.art/ko/projects">
+<meta property="og:title" content="Weavo — 캠페인">
+<meta property="og:description" content="Weavo에서 진행 중인 공동 모자이크 캠페인입니다. 제출된 작품들이 모여 하나의 그림을 완성합니다.">
+<meta property="og:url" content="https://weavo.art/ko/campaigns">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="프로젝트 | Weavo">
-<meta name="twitter:description" content="Weavo의 모든 공동 모자이크 프로젝트를 둘러보고 각 커뮤니티 캔버스가 어떻게 완성되어 가는지 확인하세요.">
+<meta name="twitter:title" content="Weavo — 캠페인">
+<meta name="twitter:description" content="Weavo에서 진행 중인 공동 모자이크 캠페인입니다. 제출된 작품들이 모여 하나의 그림을 완성합니다.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/ko/"},{"@type":"ListItem","position":2,"name":"프로젝트","item":"https://weavo.art/ko/projects"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/home.css">
+<link rel="stylesheet" href="/css/project.css">
 </head>
 <body data-mobile-fs>
 
@@ -32,7 +34,7 @@
   <header class="topnav">
     <a class="logo" id="logoHome" href="/ko/">Weavo</a>
     <nav class="nav-links">
-      <a href="/ko/projects" class="nav-link active">프로젝트</a>
+      <a href="/ko/campaigns" class="nav-link active">캠페인</a>
       <a href="/ko/network" class="nav-link">네트워크</a>
       <a href="/ko/artworks" class="nav-link">작품 탐색</a>
       <a href="/ko/artists" class="nav-link">작가</a>
@@ -51,36 +53,63 @@
       </div>
   </header>
 
-  <main class="main-scroll home-scroll">
-    <h1 class="sr-only">프로젝트</h1>
-    <section class="snap-panel" id="currentProjectsPanel">
-      <div class="carousel-section" id="carouselSection">
-        <div class="carousel-header">
-          <h2 class="section-label">진행 중인 프로젝트</h2>
-          <div class="carousel-nav">
-            <button class="car-arrow" id="carPrev" aria-label="이전 프로젝트">&#8249;</button>
-            <button class="car-arrow" id="carNext" aria-label="다음 프로젝트">&#8250;</button>
-          </div>
-        </div>
-        <div class="carousel-track-wrap">
-          <div class="carousel-track" id="carouselTrack"></div>
-        </div>
-        <div class="carousel-dots" id="carouselDots"></div>
+  <main class="main main-scroll">
+    <div class="backnav">
+      <a class="back" href="/ko/campaigns">&larr; 뒤로</a>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn-cancel" id="reshapeProjectBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+          그리드 재구성
+        </button>
       </div>
-
-      <button type="button" class="scroll-hint" id="scrollHint" aria-label="전체 프로젝트로 스크롤">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-      </button>
-    </section>
-
-    <section class="snap-panel" id="projectsPanel">
-      <div class="carousel-header" style="margin-top:32px;">
-        <h2 class="section-label">전체 프로젝트</h2>
-        <button class="cta-text" id="newProjectBtn" style="display:none;margin-top:0;">+ 새 프로젝트</button>
+    </div>
+    <div class="project-head">
+      <h1 id="projectTitle">제목 없음</h1>
+      <p id="projectDesc" style="display:none;"></p>
+      <div class="archived-banner" id="archivedBanner" style="display:none;">
+        <span id="archivedBannerText"></span>
+        <a id="archivedBannerLink">현재 버전 보기 &rarr;</a>
       </div>
-      <div class="projects-grid" id="projectsGrid"></div>
-      <div class="empty-note" id="projectsEmpty" style="display:none;">아직 프로젝트가 없습니다.</div>
-    </section>
+      <div class="project-progress" id="projectProgress"></div>
+      <div class="project-stats-row" id="projectStatsRow">
+        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🧩</span><div><div class="stat-value" id="statCellsFilled">0</div><div class="stat-label">채워진 칸</div></div></div>
+        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🎨</span><div><div class="stat-value" id="statContributors">0</div><div class="stat-label">참여 아티스트</div></div></div>
+        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">⬜</span><div><div class="stat-value" id="statCellsRemaining">0</div><div class="stat-label">남은 칸</div></div></div>
+      </div>
+      <div class="project-actions-row">
+        <button type="button" class="cta" id="projectParticipateBtn">참여하기 <span aria-hidden="true">&uarr;</span></button>
+        <button type="button" class="cta-outline" id="projectShareBtn">공유하기</button>
+      </div>
+      <div class="contributor-avatars" id="contributorAvatars"></div>
+      <div class="colors-needed" id="colorsNeeded" style="display:none;">
+        <div class="colors-needed-label"><span>아직 필요한 색상</span> <span class="field-hint">— 프로필에 이 색조의 작품을 업로드하면 자동으로 매칭돼요</span></div>
+        <div class="color-swatches" id="colorSwatches"></div>
+      </div>
+      <div class="project-head-controls">
+        <div class="project-view-tabs" id="projectViewTabs">
+          <button type="button" class="pv-tab active" id="pvTabWeavo">Weavo</button>
+          <button type="button" class="pv-tab" id="pvTabList">목록</button>
+        </div>
+        <button type="button" class="reference-preview" id="referencePreview" aria-label="미리보기 확대" style="display:none;">
+          <canvas id="referencePreviewCanvas"></canvas>
+          <span class="reference-preview-label">미리보기</span>
+        </button>
+      </div>
+    </div>
+    <div class="weavo-grid-wrap" id="weavoGridWrap">
+      <div class="zoom-toolbar">
+        <button type="button" class="zoom-btn" id="weavo-zoom-out" aria-label="축소">&minus;</button>
+        <span class="zoom-level" id="weavo-zoom-level">100%</span>
+        <button type="button" class="zoom-btn" id="weavo-zoom-in" aria-label="확대">+</button>
+        <button type="button" class="zoom-btn" id="weavo-zoom-reset" aria-label="보기 초기화">&#8634;</button>
+      </div>
+      <div class="weavo-stage" id="weavoStage">
+        <div class="weavo-grid" id="weavoGrid"></div>
+      </div>
+    </div>
+    <div class="project-list-view" id="projectListView" style="display:none;">
+      <div class="project-list-grid" id="projectListGrid"></div>
+      <div class="empty-note" id="projectListEmpty" style="display:none;">아직 제출된 작품이 없습니다.</div>
+    </div>
   </main>
   <footer id="legal-footer">
     <a href="/ko/privacy">개인정보처리방침</a>
@@ -91,41 +120,89 @@
   </footer>
 </div>
 
-<!-- New project modal (admin only) -->
-<div id="new-project-modal" class="modal-overlay">
-  <div id="new-project-dialog" class="modal-panel">
-    <h3>새 Weavo 프로젝트</h3>
-    <div class="field">
-      <label for="np-title">제목</label>
-      <input type="text" id="np-title" placeholder="프로젝트 제목" maxlength="60">
-    </div>
-    <div class="field">
-      <label for="np-desc">설명 <span class="field-hint">(선택)</span></label>
-      <textarea id="np-desc" placeholder="이 Weavo는 무엇에 관한 건가요?" maxlength="300"></textarea>
-    </div>
+<!-- Reshape project modal (admin only) -->
+<div id="reshape-project-modal" class="modal-overlay">
+  <div id="reshape-project-dialog" class="modal-panel">
+    <h3>Weavo 그리드 재구성</h3>
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">그리드 크기와 참조 이미지를 새로 바꿉니다. 이미 제출된 모든 작품은 새 그리드에서 색상이 가장 잘 맞는 칸으로 자동 재배치됩니다.</p>
     <div style="display:flex;gap:10px;">
       <div class="field" style="flex:1;">
-        <label for="np-width">너비 (칸 수)</label>
-        <input type="text" inputmode="numeric" id="np-width" placeholder="예: 40">
+        <label for="rs-width">너비 (칸 수)</label>
+        <input type="text" inputmode="numeric" id="rs-width" placeholder="예: 40">
       </div>
       <div class="field" style="flex:1;">
-        <label for="np-height">높이 (칸 수)</label>
-        <input type="text" inputmode="numeric" id="np-height" placeholder="예: 30">
+        <label for="rs-height">높이 (칸 수)</label>
+        <input type="text" inputmode="numeric" id="rs-height" placeholder="예: 30">
       </div>
     </div>
     <div class="field">
-      <label>참조 이미지</label>
-      <div class="img-upload-area" id="ref-picker">
+      <label>새 참조 이미지</label>
+      <div class="img-upload-area" id="reshape-ref-picker">
         <div class="img-placeholder"><span class="up-icon">🖼</span><span>클릭하거나 이미지를 끌어다 놓으세요</span></div>
         <img class="img-preview" alt="">
         <button type="button" class="img-remove" aria-label="이미지 제거">✕</button>
         <input type="file" class="img-input" accept="image/*">
       </div>
     </div>
-    <div class="field-error" id="np-error"></div>
+    <div class="field-error" id="rs-error"></div>
     <div class="modal-actions">
-      <button id="np-cancel" class="btn-cancel">취소</button>
-      <button id="np-submit" class="btn-primary">만들기</button>
+      <button id="rs-cancel" class="btn-cancel">취소</button>
+      <button id="rs-submit" class="btn-primary">재구성</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox-modal" class="modal-overlay lightbox-overlay">
+  <div class="lightbox-stage" id="lightboxStage">
+    <div class="zoom-toolbar">
+      <button type="button" class="zoom-btn" id="lightbox-zoom-out" aria-label="축소">&minus;</button>
+      <span class="zoom-level" id="lightbox-zoom-level">100%</span>
+      <button type="button" class="zoom-btn" id="lightbox-zoom-in" aria-label="확대">+</button>
+      <button type="button" class="zoom-btn" id="lightbox-close" aria-label="닫기">&#10005;</button>
+    </div>
+    <img id="lightbox-img" src="" alt="">
+  </div>
+  <div id="lightbox-caption">
+    <div id="lightbox-cap-title"></div>
+    <div id="lightbox-cap-meta"></div>
+    <div id="lightbox-artist-card">
+      <div id="lightbox-artist-avatar-wrap"></div>
+      <div class="lb-artist-info">
+        <a id="lightbox-artist-name" class="lb-artist-name"></a>
+      </div>
+    <button type="button" id="lightbox-artist-follow-btn" class="lb-artist-follow-btn" style="display:none;">팔로우</button>
+    </div>
+    <div id="lightbox-artist-about">
+      <div class="lb-artist-about-label">작가 소개</div>
+      <div id="lightbox-artist-bio" class="lb-artist-bio"></div>
+    </div>
+    <div id="lightbox-cap-desc"></div>
+    <a id="lightbox-cap-link" target="_blank" rel="ugc nofollow noopener noreferrer"></a>
+    <div class="lightbox-actions">
+      <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="이 작품 좋아요">
+        <span class="icon"></span><span id="lb-like-count">0</span>
+      </button>
+      <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="댓글 보기" aria-expanded="true">
+        <span class="icon"></span><span id="lb-comments-count">0</span>
+      </button>
+      <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="이 작품 삭제" style="display:none;">
+        <span class="icon"></span><span>삭제</span>
+      </button>
+      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="캠페인에서 제외" style="display:none;">
+        <span class="icon"></span><span>캠페인에서 제외</span>
+      </button>
+    </div>
+    <div id="lightbox-comments" class="lightbox-comments open">
+      <div id="lightbox-comments-list"></div>
+      <div id="lightbox-comment-form">
+        <textarea id="lightbox-comment-input" placeholder="댓글을 입력하세요…" maxlength="1000"></textarea>
+        <button type="button" id="lightbox-comment-post">게시</button>
+      </div>
+    </div>
+    <div id="lightbox-country-map">
+      <div class="lb-country-map-label" id="lb-country-map-label"></div>
+      <svg id="lb-country-map-svg" viewBox="0 0 280 150" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
   </div>
 </div>
@@ -234,7 +311,7 @@
 <script src="/js/matching.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/notifications.js"></script>
-<script src="/js/project-preview.js"></script>
-<script src="/js/home.js"></script>
+<script src="/js/lightbox.js"></script>
+<script src="/js/project.js"></script>
 </body>
 </html>

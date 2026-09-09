@@ -44,7 +44,7 @@ document.getElementById('profileBackBtn').addEventListener('click', e => {
     try { return new URL(document.referrer).origin === location.origin; } catch { return false; }
   })();
   if (sameOriginReferrer) history.back();
-  else location.href = `/${CURRENT_LANG}/projects`;
+  else location.href = `/${CURRENT_LANG}/campaigns`;
 });
 
 // Every piece this profile's owner has posted, whether or not it's made it

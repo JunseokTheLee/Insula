@@ -61,7 +61,7 @@ async function loadArtworkPage(id) {
     return;
   }
   const backBtn = document.getElementById('artworkBackBtn');
-  backBtn.href = sub.project_id ? projectUrl(sub.project_id) : `/${CURRENT_LANG}/projects`;
+  backBtn.href = sub.project_id ? projectUrl(sub.project_id) : `/${CURRENT_LANG}/campaigns`;
   renderArtworkBreadcrumb(sub);
   populateLightboxContent(sub);
   updateArtworkMeta(sub);
@@ -77,7 +77,7 @@ async function loadArtworkPage(id) {
 
 // After a delete, there's nothing left on this page to show — leave for
 // the artwork's project if it still exists, else the projects list.
-window.onSubmissionDeleted = sub => { location.href = sub && sub.project_id ? projectUrl(sub.project_id) : `/${CURRENT_LANG}/projects`; };
+window.onSubmissionDeleted = sub => { location.href = sub && sub.project_id ? projectUrl(sub.project_id) : `/${CURRENT_LANG}/campaigns`; };
 
 // The lightbox already re-rendered the visible caption in place — just
 // refresh the <title>/meta tags and JSON-LD off the edited details.

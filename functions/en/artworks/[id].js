@@ -33,7 +33,7 @@ export async function onRequestGet({ params, request, env }) {
     name: sub.art_title || 'Untitled artwork', url: canonical, image: sub.image_url,
     creator: { '@type': 'Person', name, url: `${SITE}/en/artists/${encodeURIComponent(authorHandle)}` },
     ...(sub.art_description ? { description: sub.art_description } : {}),
-    ...(project ? { isPartOf: { '@type': 'CreativeWork', name: project.title, url: `${SITE}/en/projects/${encodeURIComponent(project.id)}` } } : {}),
+    ...(project ? { isPartOf: { '@type': 'CreativeWork', name: project.title, url: `${SITE}/en/campaigns/${encodeURIComponent(project.id)}` } } : {}),
   }];
 
   return renderEntityPage(assetResponse, {

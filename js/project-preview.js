@@ -2,7 +2,7 @@
 // shown as their average color, not the actual artwork (indistinguishable at
 // this size, and loading a real thumbnail per filled cell for every project
 // on every page view was the single biggest driver of Supabase storage
-// egress). Used by home.js (project cards + carousel, on projects.html) and
+// egress). Used by home.js (project cards + carousel, on campaigns.html) and
 // landing.js (hero preview, on index.html) — split out here so neither page
 // duplicates it.
 // Needs sb (supabase-client.js) and luminance (color-engine.js) already loaded.

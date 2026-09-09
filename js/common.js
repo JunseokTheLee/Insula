@@ -225,14 +225,14 @@ function loadImageEl(src) {
 // functions/[lang]/artists/[handle].js Pages Function) rendered with a
 // server-fetched username/id lookup. Root-relative (not relative to the
 // current document) so it resolves the same regardless of how deep the
-// current URL's path is (e.g. from /en/projects/abc, a bare "artists/x"
-// would resolve to /en/projects/artists/x — wrong).
+// current URL's path is (e.g. from /en/campaigns/abc, a bare "artists/x"
+// would resolve to /en/campaigns/artists/x — wrong).
 function profileUrl(userId) {
   return `/${CURRENT_LANG}/artists/${encodeURIComponent(userId)}`;
 }
-// Real path to a project's detail page (functions/[lang]/projects/[id].js).
+// Real path to a project's detail page (functions/[lang]/campaigns/[id].js).
 function projectUrl(id) {
-  return `/${CURRENT_LANG}/projects/${encodeURIComponent(id)}`;
+  return `/${CURRENT_LANG}/campaigns/${encodeURIComponent(id)}`;
 }
 // Real path to a single artwork's own page (functions/[lang]/artworks/[id].js) —
 // the same piece a lightbox shows inline, but at a shareable, indexable URL.
@@ -246,7 +246,7 @@ function collectionUrl(id) {
 
 // Reads an entity id/handle out of the current URL: the path segment right
 // after /{lang}/{prefix}/ when this page was reached through its clean,
-// Pages-Function-rendered route (e.g. /en/projects/abc -> "abc"), falling
+// Pages-Function-rendered route (e.g. /en/campaigns/abc -> "abc"), falling
 // back to the legacy ?id=/?user= query form for direct, unrewritten access
 // to the underlying template file (project.html, profile.html) — which is
 // also how the Pages Function itself fetches the static asset it rewrites.

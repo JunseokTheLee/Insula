@@ -9,20 +9,20 @@ export async function onRequestGet({ params, request, env }) {
     `mosaic_projects?id=eq.${encodeURIComponent(id)}&select=id,title,description,reference_image_url&limit=1`
   );
 
-  const assetResponse = await env.ASSETS.fetch(new Request(new URL('/ko/project', request.url), request));
+  const assetResponse = await env.ASSETS.fetch(new Request(new URL('/en/campaign', request.url), request));
 
-  if (!project) return notFoundResponse(assetResponse, '프로젝트를 찾을 수 없습니다 | Weavo');
+  if (!project) return notFoundResponse(assetResponse, 'Campaign not found | Weavo');
 
-  const canonical = `${SITE}/ko/projects/${encodeURIComponent(project.id)}`;
+  const canonical = `${SITE}/en/campaigns/${encodeURIComponent(project.id)}`;
   const title = `${project.title} | Weavo`;
   const description = project.description
     ? project.description.slice(0, 300)
-    : `Weavo의 공동 모자이크 프로젝트: ${project.title}.`;
+    : `A collaborative mosaic campaign on Weavo: ${project.title}.`;
 
   return renderEntityPage(assetResponse, {
     title, description, canonical,
-    hreflangEn: `${SITE}/en/projects/${encodeURIComponent(project.id)}`,
-    hreflangKo: canonical,
+    hreflangEn: canonical,
+    hreflangKo: `${SITE}/ko/campaigns/${encodeURIComponent(project.id)}`,
     image: project.reference_image_url,
     jsonld: [
       {
@@ -33,8 +33,8 @@ export async function onRequestGet({ params, request, env }) {
       {
         '@context': 'https://schema.org', '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Weavo', item: `${SITE}/ko/` },
-          { '@type': 'ListItem', position: 2, name: '프로젝트', item: `${SITE}/ko/projects` },
+          { '@type': 'ListItem', position: 1, name: 'Weavo', item: `${SITE}/en/` },
+          { '@type': 'ListItem', position: 2, name: 'Campaigns', item: `${SITE}/en/campaigns` },
           { '@type': 'ListItem', position: 3, name: project.title, item: canonical },
         ],
       },

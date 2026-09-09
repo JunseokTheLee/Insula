@@ -35,7 +35,7 @@
   <header class="topnav">
     <a class="logo" id="logoHome" href="/ko/">Weavo</a>
     <nav class="nav-links">
-      <a href="/ko/projects" class="nav-link">프로젝트</a>
+      <a href="/ko/campaigns" class="nav-link">캠페인</a>
       <a href="/ko/network" class="nav-link">네트워크</a>
       <a href="/ko/artworks" class="nav-link">작품 탐색</a>
       <a href="/ko/artists" class="nav-link">아티스트</a>
@@ -60,7 +60,7 @@
         <div class="recent-list-col">
           <div class="recent-list-header">
             <h2 class="section-label">최근 작품</h2>
-            <a href="/ko/projects" class="cta-text">모든 프로젝트 보기</a>
+            <a href="/ko/campaigns" class="cta-text">모든 캠페인 보기</a>
           </div>
           <div class="recent-list" id="recentArtworksList"></div>
           <div class="empty-note" id="recentArtworksEmpty" style="display:none;">아직 등록된 작품이 없습니다 — 첫 번째 작품을 제출해 보세요.</div>
@@ -83,14 +83,14 @@
             <h1>당신의 색이 모여<br>하나의 이야기가 됩니다.</h1>
             <p>장애인 아티스트와 비장애인 아티스트가 함께 만들어가는 공동 모자이크입니다. 제출된 작품의 대표 색상은 숨겨진 기준 이미지 속에서 가장 잘 어울리는 빈 칸에 자동으로 매칭되며, 더 많은 아티스트가 참여할수록 전체 그림이 서서히 모습을 드러냅니다.</p>
             <div class="hero-cta-row">
-              <a class="cta" href="/ko/projects">프로젝트 둘러보기 <span aria-hidden="true">&rarr;</span></a>
+              <a class="cta" href="/ko/campaigns">캠페인 둘러보기 <span aria-hidden="true">&rarr;</span></a>
               <button type="button" class="cta-outline" id="heroUploadBtn">작품 업로드 <span aria-hidden="true">&uarr;</span></button>
             </div>
           </div>
           <div class="hero-right">
             <div class="hero-preview" id="heroPreview">
               <canvas id="heroPreviewCanvas"></canvas>
-              <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">아직 프로젝트가 없습니다 — 첫 번째 프로젝트를 시작해 보세요.</div>
+              <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">아직 캠페인이 없습니다 — 첫 번째 캠페인을 시작해 보세요.</div>
             </div>
           </div>
         </div>
@@ -100,7 +100,7 @@
         <div class="stats-bar-inner">
           <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🎨</span><div><div class="stat-value" id="statArtists">0</div><div class="stat-label">아티스트</div></div></div>
           <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🖼️</span><div><div class="stat-value" id="statArtworks">0</div><div class="stat-label">제출된 작품</div></div></div>
-          <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🧩</span><div><div class="stat-value" id="statProjects">0</div><div class="stat-label">진행 중인 프로젝트</div></div></div>
+          <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🧩</span><div><div class="stat-value" id="statProjects">0</div><div class="stat-label">진행 중인 캠페인</div></div></div>
           <div class="stat-tile"><span class="stat-icon" aria-hidden="true">✨</span><div><div class="stat-value" id="statFill">0%</div><div class="stat-label">채워진 칸</div></div></div>
         </div>
       </div>
@@ -115,7 +115,7 @@
         <div class="hiw-header">
           <h2 class="section-label">이용 방법</h2>
           <h3 class="hiw-title">모자이크가 완성되어 가는 방식.</h3>
-          <p class="hiw-intro">작품을 제출하면 대표 색상이 자동으로 분석되어, 진행 중인 모든 프로젝트의 빈 칸 가운데 가장 잘 어울리는 위치에 배치됩니다 — 더 많은 아티스트가 작품을 더할수록 전체 그림이 서서히 또렷해지고, 각 작품은 원래 크기로 아티스트의 이름과 함께 남습니다.</p>
+          <p class="hiw-intro">작품을 제출하면 대표 색상이 자동으로 분석되어, 진행 중인 모든 캠페인의 빈 칸 가운데 가장 잘 어울리는 위치에 배치됩니다 — 더 많은 아티스트가 작품을 더할수록 전체 그림이 서서히 또렷해지고, 각 작품은 원래 크기로 아티스트의 이름과 함께 남습니다.</p>
         </div>
 
         <div class="features3-cols">
@@ -140,7 +140,7 @@
               <li>
                 <span class="hiw-num-sm">03</span>
                 <div>
-                  <h4>가장 잘 어울리는 프로젝트에 배치됩니다</h4>
+                  <h4>가장 잘 어울리는 캠페인에 배치됩니다</h4>
                   <p>현재 진행 중인 모든 모자이크의 빈 칸 가운데 색상이 가장 잘 어울리는 위치에 배치됩니다.</p>
                 </div>
               </li>
@@ -152,7 +152,7 @@
                 </div>
               </li>
             </ol>
-            <a href="/ko/projects" class="cta">프로젝트 둘러보기 <span aria-hidden="true">&rarr;</span></a>
+            <a href="/ko/campaigns" class="cta">캠페인 둘러보기 <span aria-hidden="true">&rarr;</span></a>
           </div>
         </div>
       </div>
@@ -214,8 +214,8 @@
         <span class="icon"></span><span>삭제</span>
       </button>
 
-      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="프로젝트에서 제거" style="display:none;">
-        <span class="icon"></span><span>프로젝트에서 제거</span>
+      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="캠페인에서 제거" style="display:none;">
+        <span class="icon"></span><span>캠페인에서 제거</span>
       </button>
     </div>
 

@@ -21,7 +21,7 @@
   Cache-Control: no-cache
 /en/disclaimer
   Cache-Control: no-cache
-/en/projects
+/en/campaigns
   Cache-Control: no-cache
 /ko/about
   Cache-Control: no-cache
@@ -31,7 +31,7 @@
   Cache-Control: no-cache
 /ko/disclaimer
   Cache-Control: no-cache
-/ko/projects
+/ko/campaigns
   Cache-Control: no-cache
 
 # CSS/JS filenames aren't content-hashed (no build step in this project —

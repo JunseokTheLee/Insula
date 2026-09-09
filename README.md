@@ -38,7 +38,7 @@ without distinction — every piece is an equal part of the whole.
 ### Cloudflare Pages Functions (`functions/`)
 
 - `index.js` — root `/` picks a language (cookie → `Accept-Language` → `en`) and 302-redirects.
-- `_lib/render.js` + `{en,ko}/{projects,artworks,artists,collections}/[…].js` — server-side
+- `_lib/render.js` + `{en,ko}/{campaigns,artworks,artists,collections}/[…].js` — server-side
   pre-rendering of `<head>` meta (title, description, canonical, hreflang, OG/Twitter, JSON-LD) for
   detail pages via `HTMLRewriter`. Same HTML to bots and browsers; client JS fills the tags again as
   a fallback.
@@ -51,7 +51,7 @@ without distinction — every piece is an equal part of the whole.
 
 ```
 index.html              static language-chooser fallback (the Function above normally answers first)
-en/, ko/                one HTML page per feature, per language (index = landing, projects, project,
+en/, ko/                one HTML page per feature, per language (index = landing, campaigns, campaign,
                         artworks, artwork, artists, profile, collection, exhibitions, network,
                         about, privacy, disclaimer, delete-account, 404)
 css/                    base.css + one stylesheet per page

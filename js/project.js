@@ -6,7 +6,7 @@ let currentProject = null;
 
 // Client-side fallback for the tab title/social-preview tags, in case this
 // page is reached without going through the Pages Function that pre-renders
-// them server-side (see functions/[lang]/projects/[id].js).
+// them server-side (see functions/[lang]/campaigns/[id].js).
 function updateProjectMeta(project) {
   const title = `${project.title} | Weavo`;
   const description = project.description
@@ -25,7 +25,7 @@ function renderProjectJsonLd(project) {
     '@context': 'https://schema.org', '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Weavo', item: `${location.origin}/${CURRENT_LANG}/` },
-      { '@type': 'ListItem', position: 2, name: tr('projectsCrumb'), item: `${location.origin}/${CURRENT_LANG}/projects` },
+      { '@type': 'ListItem', position: 2, name: tr('projectsCrumb'), item: `${location.origin}/${CURRENT_LANG}/campaigns` },
       { '@type': 'ListItem', position: 3, name: project.title, item: url },
     ],
   };

@@ -4,37 +4,35 @@
 <link rel="icon" href="/logo.ico" type="image/x-icon">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weavo — Project</title>
-<meta name="description" content="A collaborative mosaic project on Weavo, built one submitted artwork at a time.">
-<link rel="canonical" href="https://weavo.art/en/projects">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/projects">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/projects">
+<title>Campaigns | Weavo</title>
+<meta name="description" content="Browse every collaborative mosaic campaign on Weavo and see how each community canvas is coming together.">
+<link rel="canonical" href="https://weavo.art/en/campaigns">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/campaigns">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/campaigns">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Weavo — Project">
-<meta property="og:description" content="A collaborative mosaic project on Weavo, built one submitted artwork at a time.">
-<meta property="og:url" content="https://weavo.art/en/projects">
+<meta property="og:title" content="Campaigns | Weavo">
+<meta property="og:description" content="Browse every collaborative mosaic campaign on Weavo and see how each community canvas is coming together.">
+<meta property="og:url" content="https://weavo.art/en/campaigns">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Weavo — Project">
-<meta name="twitter:description" content="A collaborative mosaic project on Weavo, built one submitted artwork at a time.">
+<meta name="twitter:title" content="Campaigns | Weavo">
+<meta name="twitter:description" content="Browse every collaborative mosaic campaign on Weavo and see how each community canvas is coming together.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Campaigns","item":"https://weavo.art/en/campaigns"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/home.css">
-<link rel="stylesheet" href="/css/project.css">
 </head>
 <body data-mobile-fs>
 
 <div class="app">
   <header class="topnav">
-   <a class="logo" id="logoHome" href="/en/">Weavo</a>
+    <a class="logo" id="logoHome" href="/en/">Weavo</a>
     <nav class="nav-links">
-      <a href="/en/projects" class="nav-link active">Projects</a>
+      <a href="/en/campaigns" class="nav-link active">Campaigns</a>
       <a href="/en/network" class="nav-link">Network</a>
       <a href="/en/artworks" class="nav-link">Explore</a>
       <a href="/en/artists" class="nav-link">Artists</a>
@@ -53,63 +51,36 @@
       </div>
   </header>
 
-  <main class="main main-scroll">
-    <div class="backnav">
-      <a class="back" href="/en/projects">&larr; Back</a>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <button class="btn-cancel" id="reshapeProjectBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-          Reshape Grid
-        </button>
-      </div>
-    </div>
-    <div class="project-head">
-      <h1 id="projectTitle">Untitled</h1>
-      <p id="projectDesc" style="display:none;"></p>
-      <div class="archived-banner" id="archivedBanner" style="display:none;">
-        <span id="archivedBannerText"></span>
-        <a id="archivedBannerLink">View current version &rarr;</a>
-      </div>
-      <div class="project-progress" id="projectProgress"></div>
-      <div class="project-stats-row" id="projectStatsRow">
-        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🧩</span><div><div class="stat-value" id="statCellsFilled">0</div><div class="stat-label">Cells filled</div></div></div>
-        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🎨</span><div><div class="stat-value" id="statContributors">0</div><div class="stat-label">Contributors</div></div></div>
-        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">⬜</span><div><div class="stat-value" id="statCellsRemaining">0</div><div class="stat-label">Cells remaining</div></div></div>
-      </div>
-      <div class="project-actions-row">
-        <button type="button" class="cta" id="projectParticipateBtn">Participate <span aria-hidden="true">&uarr;</span></button>
-        <button type="button" class="cta-outline" id="projectShareBtn">Share</button>
-      </div>
-      <div class="contributor-avatars" id="contributorAvatars"></div>
-      <div class="colors-needed" id="colorsNeeded" style="display:none;">
-        <div class="colors-needed-label"><span>Colors still needed</span> <span class="field-hint">— artwork with these tones uploaded to a profile will automatically be matched in</span></div>
-        <div class="color-swatches" id="colorSwatches"></div>
-      </div>
-      <div class="project-head-controls">
-        <div class="project-view-tabs" id="projectViewTabs">
-          <button type="button" class="pv-tab active" id="pvTabWeavo">Weavo</button>
-          <button type="button" class="pv-tab" id="pvTabList">List</button>
+  <main class="main-scroll home-scroll">
+    <h1 class="sr-only">Campaigns</h1>
+    <section class="snap-panel" id="currentProjectsPanel">
+      <div class="carousel-section" id="carouselSection">
+        <div class="carousel-header">
+          <h2 class="section-label">Current Campaigns</h2>
+          <div class="carousel-nav">
+            <button class="car-arrow" id="carPrev" aria-label="Previous campaign">&#8249;</button>
+            <button class="car-arrow" id="carNext" aria-label="Next campaign">&#8250;</button>
+          </div>
         </div>
-        <button type="button" class="reference-preview" id="referencePreview" aria-label="Enlarge reference preview" style="display:none;">
-          <canvas id="referencePreviewCanvas"></canvas>
-          <span class="reference-preview-label">Preview</span>
-        </button>
+        <div class="carousel-track-wrap">
+          <div class="carousel-track" id="carouselTrack"></div>
+        </div>
+        <div class="carousel-dots" id="carouselDots"></div>
       </div>
-    </div>
-    <div class="weavo-grid-wrap" id="weavoGridWrap">
-      <div class="zoom-toolbar">
-        <button type="button" class="zoom-btn" id="weavo-zoom-out" aria-label="Zoom out">&minus;</button>
-        <span class="zoom-level" id="weavo-zoom-level">100%</span>
-        <button type="button" class="zoom-btn" id="weavo-zoom-in" aria-label="Zoom in">+</button>
-        <button type="button" class="zoom-btn" id="weavo-zoom-reset" aria-label="Reset view">&#8634;</button>
+
+      <button type="button" class="scroll-hint" id="scrollHint" aria-label="Scroll to all campaigns">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </section>
+
+    <section class="snap-panel" id="projectsPanel">
+      <div class="carousel-header" style="margin-top:32px;">
+        <h2 class="section-label">All Campaigns</h2>
+        <button class="cta-text" id="newProjectBtn" style="display:none;margin-top:0;">+ New Campaign</button>
       </div>
-      <div class="weavo-stage" id="weavoStage">
-        <div class="weavo-grid" id="weavoGrid"></div>
-      </div>
-    </div>
-    <div class="project-list-view" id="projectListView" style="display:none;">
-      <div class="project-list-grid" id="projectListGrid"></div>
-      <div class="empty-note" id="projectListEmpty" style="display:none;">No artwork submitted yet.</div>
-    </div>
+      <div class="projects-grid" id="projectsGrid"></div>
+      <div class="empty-note" id="projectsEmpty" style="display:none;">No campaigns yet.</div>
+    </section>
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>
@@ -120,89 +91,41 @@
   </footer>
 </div>
 
-<!-- Reshape project modal (admin only) -->
-<div id="reshape-project-modal" class="modal-overlay">
-  <div id="reshape-project-dialog" class="modal-panel">
-    <h3>Reshape Weavo Grid</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">This replaces the grid dimensions and reference image. Every already-submitted piece of art is automatically redistributed to the closest-matching cell in the new grid.</p>
+<!-- New project modal (admin only) -->
+<div id="new-project-modal" class="modal-overlay">
+  <div id="new-project-dialog" class="modal-panel">
+    <h3>New Weavo Campaign</h3>
+    <div class="field">
+      <label for="np-title">Title</label>
+      <input type="text" id="np-title" placeholder="Campaign title" maxlength="60">
+    </div>
+    <div class="field">
+      <label for="np-desc">Description <span class="field-hint">(optional)</span></label>
+      <textarea id="np-desc" placeholder="What's this weavo about?" maxlength="300"></textarea>
+    </div>
     <div style="display:flex;gap:10px;">
       <div class="field" style="flex:1;">
-        <label for="rs-width">Width (cells)</label>
-        <input type="text" inputmode="numeric" id="rs-width" placeholder="e.g. 40">
+        <label for="np-width">Width (cells)</label>
+        <input type="text" inputmode="numeric" id="np-width" placeholder="e.g. 40">
       </div>
       <div class="field" style="flex:1;">
-        <label for="rs-height">Height (cells)</label>
-        <input type="text" inputmode="numeric" id="rs-height" placeholder="e.g. 30">
+        <label for="np-height">Height (cells)</label>
+        <input type="text" inputmode="numeric" id="np-height" placeholder="e.g. 30">
       </div>
     </div>
     <div class="field">
-      <label>New Reference Image</label>
-      <div class="img-upload-area" id="reshape-ref-picker">
+      <label>Reference Image</label>
+      <div class="img-upload-area" id="ref-picker">
         <div class="img-placeholder"><span class="up-icon">🖼</span><span>Click or drag an image here</span></div>
         <img class="img-preview" alt="">
         <button type="button" class="img-remove" aria-label="Remove image">✕</button>
         <input type="file" class="img-input" accept="image/*">
       </div>
     </div>
-    <div class="field-error" id="rs-error"></div>
+    <div class="field-error" id="np-error"></div>
     <div class="modal-actions">
-      <button id="rs-cancel" class="btn-cancel">Cancel</button>
-      <button id="rs-submit" class="btn-primary">Reshape</button>
-    </div>
-  </div>
-</div>
-
-<!-- Lightbox -->
-<div id="lightbox-modal" class="modal-overlay lightbox-overlay">
-  <div class="lightbox-stage" id="lightboxStage">
-    <div class="zoom-toolbar">
-      <button type="button" class="zoom-btn" id="lightbox-zoom-out" aria-label="Zoom out">&minus;</button>
-      <span class="zoom-level" id="lightbox-zoom-level">100%</span>
-      <button type="button" class="zoom-btn" id="lightbox-zoom-in" aria-label="Zoom in">+</button>
-      <button type="button" class="zoom-btn" id="lightbox-close" aria-label="Close">&#10005;</button>
-    </div>
-    <img id="lightbox-img" src="" alt="">
-  </div>
-  <div id="lightbox-caption">
-    <div id="lightbox-cap-title"></div>
-    <div id="lightbox-cap-meta"></div>
-    <div id="lightbox-artist-card">
-      <div id="lightbox-artist-avatar-wrap"></div>
-      <div class="lb-artist-info">
-        <a id="lightbox-artist-name" class="lb-artist-name"></a>
-      </div>
-    <button type="button" id="lightbox-artist-follow-btn" class="lb-artist-follow-btn" style="display:none;">Follow</button>
-    </div>
-    <div id="lightbox-artist-about">
-      <div class="lb-artist-about-label">About the artist</div>
-      <div id="lightbox-artist-bio" class="lb-artist-bio"></div>
-    </div>
-    <div id="lightbox-cap-desc"></div>
-    <a id="lightbox-cap-link" target="_blank" rel="ugc nofollow noopener noreferrer"></a>
-    <div class="lightbox-actions">
-      <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="Like this artwork">
-        <span class="icon"></span><span id="lb-like-count">0</span>
-      </button>
-      <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="View comments" aria-expanded="true">
-        <span class="icon"></span><span id="lb-comments-count">0</span>
-      </button>
-      <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="Delete this artwork" style="display:none;">
-        <span class="icon"></span><span>Delete</span>
-      </button>
-      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="Remove from project" style="display:none;">
-        <span class="icon"></span><span>Remove from project</span>
-      </button>
-    </div>
-    <div id="lightbox-comments" class="lightbox-comments open">
-      <div id="lightbox-comments-list"></div>
-      <div id="lightbox-comment-form">
-        <textarea id="lightbox-comment-input" placeholder="Add a comment…" maxlength="1000"></textarea>
-        <button type="button" id="lightbox-comment-post">Post</button>
-      </div>
-    </div>
-    <div id="lightbox-country-map">
-      <div class="lb-country-map-label" id="lb-country-map-label"></div>
-      <svg id="lb-country-map-svg" viewBox="0 0 280 150" preserveAspectRatio="xMidYMid meet"></svg>
+      <button id="np-cancel" class="btn-cancel">Cancel</button>
+      <button id="np-submit" class="btn-primary">Create</button>
     </div>
   </div>
 </div>
@@ -311,7 +234,7 @@
 <script src="/js/matching.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/notifications.js"></script>
-<script src="/js/lightbox.js"></script>
-<script src="/js/project.js"></script>
+<script src="/js/project-preview.js"></script>
+<script src="/js/home.js"></script>
 </body>
 </html>

@@ -3,6 +3,6 @@
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const id = url.searchParams.get('id');
-  if (id) return Response.redirect(`${url.origin}/ko/projects/${encodeURIComponent(id)}`, 301);
-  return env.ASSETS.fetch(request);
+  if (id) return Response.redirect(`${url.origin}/ko/campaigns/${encodeURIComponent(id)}`, 301);
+  return Response.redirect(`${url.origin}/ko/campaigns`, 301); // template renamed to campaign.html — bare hits go to the list
 }

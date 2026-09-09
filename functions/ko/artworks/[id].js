@@ -30,7 +30,7 @@ export async function onRequestGet({ params, request, env }) {
     name: sub.art_title || '제목 없는 작품', url: canonical, image: sub.image_url,
     creator: { '@type': 'Person', name, url: `${SITE}/ko/artists/${encodeURIComponent(authorHandle)}` },
     ...(sub.art_description ? { description: sub.art_description } : {}),
-    ...(project ? { isPartOf: { '@type': 'CreativeWork', name: project.title, url: `${SITE}/ko/projects/${encodeURIComponent(project.id)}` } } : {}),
+    ...(project ? { isPartOf: { '@type': 'CreativeWork', name: project.title, url: `${SITE}/ko/campaigns/${encodeURIComponent(project.id)}` } } : {}),
   }];
 
   return renderEntityPage(assetResponse, {

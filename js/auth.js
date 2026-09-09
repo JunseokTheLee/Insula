@@ -472,7 +472,7 @@ document.getElementById('ep-delete-account').onclick = async () => {
   closeEditProfileModal();
   await signOut();
   toast(tr('accountDeleted'));
-  location.href = `/${CURRENT_LANG}/projects`;
+  location.href = `/${CURRENT_LANG}/campaigns`;
 };
 
 wireLangToggle();
