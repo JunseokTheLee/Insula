@@ -17,5 +17,6 @@ Disallow: /ko/artwork.html
 Disallow: /DevDocs/
 Disallow: /CLAUDE.md
 Disallow: /README.md
+Disallow: /tools/
 
 Sitemap: https://weavo.art/sitemap.xml

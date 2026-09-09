@@ -62,6 +62,7 @@ functions/              Cloudflare Pages Functions (see above)
 supabase_*.sql          database schema, RLS policies, RPCs — run manually in the Supabase SQL editor
 _headers, _redirects    Cloudflare Pages cache / security headers and redirects
 robots.txt, sitemap*.xml
+tools/                  bump-asset-version.js (stamps ?v= on script/style links) + versioned git hooks
 DevDocs/                developer documentation (not part of the product)
 CLAUDE.md               rules for AI-assisted work in this repository
 ```
@@ -76,6 +77,19 @@ npx wrangler pages dev .
 
 (`wrangler` is present under `node_modules/`.) Opening the HTML files directly also works for pages
 that don't depend on a Function.
+
+**After changing any JS or CSS**, the `?v=` version on every page's script/stylesheet links must be
+bumped so caches fetch the new files (they are cached for a year, see `_headers`):
+
+```bash
+node tools/bump-asset-version.js
+```
+
+The versioned pre-commit hook does this automatically once you enable it in your clone:
+
+```bash
+git config core.hooksPath tools/git-hooks
+```
 
 ## Deployment
 

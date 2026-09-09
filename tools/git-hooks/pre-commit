@@ -1,0 +1,12 @@
+#!/bin/sh
+# Versioned pre-commit hook. Enable once per clone:
+#   git config core.hooksPath tools/git-hooks
+#
+# Whenever a JS or CSS file is part of the commit, stamp a fresh ?v= asset
+# version into every HTML page and stage those pages as well, so the deploy
+# that follows busts browser/edge caches (see tools/bump-asset-version.js).
+# Commits that touch no JS/CSS are left alone — HTML is served no-cache anyway.
+if git diff --cached --name-only --diff-filter=ACMR | grep -qE '^(js|css)/'; then
+  node tools/bump-asset-version.js || exit 1
+  git add en/*.html ko/*.html
+fi

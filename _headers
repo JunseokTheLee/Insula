@@ -34,15 +34,17 @@
 /ko/campaigns
   Cache-Control: no-cache
 
-# CSS/JS filenames aren't content-hashed (no build step in this project —
-# see the checklist for the tradeoff), so these intentionally stop short of
-# `immutable`/a year-long max-age: a moderate, revalidated cache means a
-# deploy is picked up within the hour instead of indefinitely serving a
-# stale script/stylesheet paired with newer HTML.
+# CSS/JS are safe to cache for a year: every page links them with a
+# ?v=<timestamp> query that tools/bump-asset-version.js re-stamps whenever a
+# JS/CSS file changes (the pre-commit hook in tools/git-hooks does it). A new
+# deploy therefore uses new URLs, so caches fetch the new files immediately
+# and never mix an old script with a new one. (Before 2026-09-09 this was a
+# 1-hour revalidated cache, and the custom domain's Cloudflare setting
+# stretched it to 4 hours — every JS deploy took that long to show up.)
 /css/*
-  Cache-Control: public, max-age=3600, must-revalidate
+  Cache-Control: public, max-age=31536000, immutable
 /js/*
-  Cache-Control: public, max-age=3600, must-revalidate
+  Cache-Control: public, max-age=31536000, immutable
 
 /logo.png
   Cache-Control: public, max-age=86400

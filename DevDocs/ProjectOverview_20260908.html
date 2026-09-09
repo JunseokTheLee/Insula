@@ -360,7 +360,7 @@ profile.js               루트에 남아 있는 잔여 파일 (어느 페이지
     <thead><tr><th><span class="en">Path</span><span class="ko">경로</span></th><th>Cache-Control</th><th><span class="en">Why</span><span class="ko">이유</span></th></tr></thead>
     <tbody>
       <tr><td><span class="en">HTML pages</span><span class="ko">HTML 페이지</span></td><td><code>no-cache</code></td><td><span class="en">A deploy is visible immediately</span><span class="ko">배포가 즉시 보이도록</span></td></tr>
-      <tr><td><code>/css/*</code> · <code>/js/*</code></td><td><code>public, max-age=3600, must-revalidate</code></td><td><span class="en">File names aren't content-hashed (no build step), so no long-lived <code>immutable</code> cache</span><span class="ko">파일명에 해시가 없어(빌드 없음) 장기 <code>immutable</code> 캐시를 쓸 수 없음</span></td></tr>
+      <tr><td><code>/css/*</code> · <code>/js/*</code></td><td><code>public, max-age=31536000, immutable</code></td><td><span class="en">Safe because every page links them with <code>?v=&lt;timestamp&gt;</code>, re-stamped by <code>tools/bump-asset-version.js</code> (pre-commit hook) whenever JS/CSS changes — a deploy uses new URLs, so caches fetch the new set at once (since 2026-09-09; before that a 1-hour cache that the custom domain stretched to 4 hours)</span><span class="ko">모든 페이지가 <code>?v=&lt;타임스탬프&gt;</code> 를 붙여 링크하고 JS/CSS 가 바뀔 때마다 <code>tools/bump-asset-version.js</code>(pre-commit 훅)가 다시 찍으므로 안전 — 배포마다 URL 이 바뀌어 캐시가 새 파일을 즉시 받음 (2026-09-09부터; 이전엔 1시간 캐시가 커스텀 도메인에서 4시간으로 늘어나 있었음)</span></td></tr>
       <tr><td><code>/img/*</code> (Function)</td><td><code>public, max-age=31536000, immutable</code></td><td><span class="en">Storage objects never change in place</span><span class="ko">Storage 객체는 제자리에서 바뀌지 않음</span></td></tr>
       <tr><td><span class="en">logo files, robots, sitemaps</span><span class="ko">로고, robots, 사이트맵</span></td><td><code>max-age=86400</code> / <code>3600</code></td><td></td></tr>
       <tr><td><code>/*</code></td><td><span class="en"><code>X-Frame-Options: SAMEORIGIN</code>, HSTS 1 year incl. subdomains</span><span class="ko"><code>X-Frame-Options: SAMEORIGIN</code>, HSTS 1년(서브도메인 포함)</span></td><td><span class="en">No Content-Security-Policy yet — it needs an allowlist for jsdelivr, Google Fonts and Fontshare first</span><span class="ko">Content-Security-Policy 는 아직 없음 — jsdelivr·Google Fonts·Fontshare 허용 목록을 먼저 정해야 함</span></td></tr>
@@ -374,6 +374,10 @@ profile.js               루트에 남아 있는 잔여 파일 (어느 페이지
 <pre><code>npx wrangler pages dev .</code></pre>
   <p class="en"><code>wrangler</code> is already present under <code>node_modules/</code>. Pages that don't rely on a Function can simply be opened as files. <code>.wrangler/</code> (local account cache) is git-ignored.</p>
   <p class="ko"><code>wrangler</code> 는 <code>node_modules/</code> 에 이미 들어 있습니다. Function 이 필요 없는 페이지는 파일을 직접 열어도 됩니다. <code>.wrangler/</code>(로컬 계정 캐시)는 git 에서 제외돼 있습니다.</p>
+  <div class="note">
+    <span class="en"><b>After changing JS or CSS, bump the asset version.</b> Every page links scripts and stylesheets as <code>/js/x.js?v=YYYYMMDD-HHMMSS</code>; <code>node tools/bump-asset-version.js</code> re-stamps all of them with one new second-resolution value, so a deploy uses new URLs and the year-long cache never serves stale or mixed files. The versioned pre-commit hook runs it automatically once a clone has enabled it with <code>git config core.hooksPath tools/git-hooks</code>.</span>
+    <span class="ko"><b>JS 나 CSS 를 고치면 자산 버전을 올립니다.</b> 모든 페이지가 스크립트·스타일을 <code>/js/x.js?v=YYYYMMDD-HHMMSS</code> 형태로 링크하며, <code>node tools/bump-asset-version.js</code> 가 전부를 초 단위의 새 값 하나로 다시 찍습니다. 배포마다 URL 이 바뀌므로 1년 캐시가 옛 파일이나 섞인 파일을 내주지 않습니다. 버전 관리되는 pre-commit 훅이 자동으로 실행하며, clone 마다 한 번 <code>git config core.hooksPath tools/git-hooks</code> 로 켭니다.</span>
+  </div>
 
   <h3><span class="en">Deployment</span><span class="ko">배포</span></h3>
   <div class="note">
