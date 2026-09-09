@@ -160,6 +160,8 @@ const T = {
   adminCampaignDeleted: '캠페인을 삭제했습니다 — 작품은 작가의 풀로 돌아갔습니다', adminCouldNotDeleteCampaign: '캠페인을 삭제할 수 없습니다',
   adminSettingSaved: '옵션을 저장했습니다', adminSettingSaveFailed: '옵션을 저장할 수 없습니다',
   adminEditLabel: '수정', adminCampaignUpdated: '캠페인을 수정했습니다', adminCouldNotUpdateCampaign: '캠페인을 수정할 수 없습니다',
+  adminGridImageBtn: '격자 이미지 생성', adminGridImageWorking: '격자 이미지를 만드는 중…', adminGridImageDone: '격자 이미지를 만들었습니다 — 캠페인 페이지가 캐시에서 읽습니다', adminGridImageFailed: '격자 이미지를 만들 수 없습니다 (변경된 것 없음)',
+  adminGridImageYes: '격자 이미지 ✓', adminGridImageNo: '격자 이미지 없음',
   mfsClose: '닫기',
   mfsExpand: '전체 화면으로 보기',
   editArtworkBtn: '편집',

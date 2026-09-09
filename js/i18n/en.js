@@ -160,6 +160,8 @@ const T = {
   adminCampaignDeleted: "Campaign deleted — its artworks are back in their artists' pools", adminCouldNotDeleteCampaign: 'Could not delete the campaign',
   adminSettingSaved: 'Option saved', adminSettingSaveFailed: 'Could not save the option',
   adminEditLabel: 'Edit', adminCampaignUpdated: 'Campaign updated', adminCouldNotUpdateCampaign: 'Could not update the campaign',
+  adminGridImageBtn: 'Create grid image', adminGridImageWorking: 'Creating the grid image…', adminGridImageDone: 'Grid image created — campaign pages now read it from the cache', adminGridImageFailed: 'Could not create the grid image (nothing was changed)',
+  adminGridImageYes: 'grid image ✓', adminGridImageNo: 'no grid image yet',
   mfsClose: 'Close',
   mfsExpand: 'View fullscreen',
   editArtworkBtn: 'Edit',

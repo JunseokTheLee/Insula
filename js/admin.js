@@ -114,7 +114,7 @@ async function setAdminReportStatus(id, status) {
 // ---------- campaigns ----------
 async function loadAdminCampaigns() {
   const [{ data: projects, error }, { data: placed }] = await Promise.all([
-    sb.from('mosaic_projects').select('id,title,description,width,height,created_at,is_archived,version_number').order('created_at', { ascending: false }),
+    sb.from('mosaic_projects').select('id,title,description,width,height,created_at,is_archived,version_number,grid_image_url').order('created_at', { ascending: false }),
     sb.from('mosaic_submissions').select('project_id').not('project_id', 'is', null),
   ]);
   if (error) { console.error('load campaigns error:', error); toast(tr('adminLoadError')); return; }
@@ -130,9 +130,12 @@ async function loadAdminCampaigns() {
     const title = document.createElement('a'); title.className = 'admin-target-label'; title.href = projectUrl(p.id); title.textContent = p.title;
     if (p.is_archived) { const b = document.createElement('span'); b.className = 'admin-badge'; b.textContent = `${tr('archivedBadge')} v${p.version_number}`; title.appendChild(document.createTextNode(' ')); title.appendChild(b); }
     const sub = document.createElement('div'); sub.className = 'admin-sub';
-    sub.textContent = `${tr('adminCells', { w: p.width, h: p.height, filled: filledBy.get(p.id) || 0 })} · ${tr('adminCreatedOn', { date: adminDate(p.created_at) })}`;
+    sub.textContent = `${tr('adminCells', { w: p.width, h: p.height, filled: filledBy.get(p.id) || 0 })} · ${tr('adminCreatedOn', { date: adminDate(p.created_at) })} · ${p.grid_image_url ? tr('adminGridImageYes') : tr('adminGridImageNo')}`;
     main.append(title, sub);
     const actions = document.createElement('div'); actions.className = 'admin-actions';
+    // Older campaigns (pre grid-image cache) get a one-off "create" button;
+    // new and reshaped ones already have theirs.
+    if (!p.grid_image_url) actions.appendChild(adminActionBtn(tr('adminGridImageBtn'), e => createAdminGridImage(p, e.currentTarget)));
     // Archived iterations can't be deleted on their own (the RPC refuses) —
     // they go away with their live campaign.
     if (!p.is_archived) {
@@ -154,6 +157,46 @@ async function deleteAdminCampaign(p) {
   if (error) { console.error('delete campaign error:', error); toast(tr('adminCouldNotDeleteCampaign')); return; }
   toast(tr('adminCampaignDeleted'));
   loadAdminCampaigns();
+}
+
+// ---------- campaigns: one-off grid image for older campaigns ----------
+// Campaigns created before 2026-09-10 (or whose image upload failed) have
+// no grid_image_url, so every view of them still pulls every mosaic_pixels
+// row. This renders the same PNG the create/reshape paths make (common.js
+// uploadGridImage), re-reads it through /img/ to prove it decodes back to
+// exactly the same cells, and only then points the campaign at it. The
+// update is guarded so a reshape that happened meanwhile (version_number
+// changed, or an image appeared) is never overwritten with a stale picture.
+async function createAdminGridImage(p, btn) {
+  btn.disabled = true;
+  toast(tr('adminGridImageWorking'));
+  try {
+    const { cells, error } = await loadProjectCells(p);
+    if (error) throw error;
+    if (!cells.length) throw new Error('campaign has no cells');
+    const url = await uploadGridImage(cells, p.width, p.height);
+    if (!url) throw new Error('grid image upload failed');
+    const back = await loadGridImageCells({ ...p, grid_image_url: url });
+    if (!back || back.length !== cells.length) throw new Error('grid image did not decode back to the same cells');
+    const byKey = new Map(cells.map(c => [`${c.x},${c.y}`, c]));
+    for (const c of back) {
+      const o = byKey.get(`${c.x},${c.y}`);
+      if (!o || o.target_r !== c.target_r || o.target_g !== c.target_g || o.target_b !== c.target_b) {
+        throw new Error('grid image did not decode back to the same colors');
+      }
+    }
+    let q = sb.from('mosaic_projects').update({ grid_image_url: url }).eq('id', p.id).is('grid_image_url', null);
+    q = p.version_number == null ? q.is('version_number', null) : q.eq('version_number', p.version_number);
+    const { data: updated, error: updErr } = await q.select('id');
+    if (updErr) throw updErr;
+    if (!updated || !updated.length) throw new Error('campaign changed meanwhile — not updated');
+    toast(tr('adminGridImageDone'));
+    loadAdminCampaigns();
+  } catch (e) {
+    console.error('create grid image error:', e);
+    toast(tr('adminGridImageFailed'));
+    btn.disabled = false;
+  }
 }
 
 // ---------- campaigns: edit title / description ----------
