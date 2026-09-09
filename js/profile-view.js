@@ -91,10 +91,10 @@ async function fetchParticipatedProjects(artwork, userId) {
     }
   }
   {
-    const { data: archived, error: archivedErr } = await sb.from('mosaic_pixels')
-      .select('project_id,mosaic_submissions!mosaic_pixels_submission_id_fkey!inner(author_id),mosaic_projects!inner(id,title,reference_image_url,is_archived,version_number)')
+    const { data: archived, error: archivedErr } = await fetchAllRows(() => sb.from('mosaic_pixels')
+      .select('project_id,mosaic_submissions!mosaic_pixels_submission_id_fkey!inner(author_id),mosaic_projects!inner(id,title,reference_image_url,is_archived,version_number)', { count: 'exact' })
       .eq('mosaic_submissions.author_id', userId)
-      .eq('mosaic_projects.is_archived', true);
+      .eq('mosaic_projects.is_archived', true));
     if (archivedErr) console.error('load participated (archived) projects error:', archivedErr);
     if (archived) {
       const byProject = new Map();

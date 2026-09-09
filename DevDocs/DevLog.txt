@@ -5,6 +5,7 @@ Weavo 개발 기록 (DevDocs/DevLog.txt)
 - 접두어: feat(새 기능) / fix(수정) / chore(정리·문서·설정)
 
 ========== 2026-09-09 ==========
+fix: 1,000칸 넘는 캠페인이 상단만 그려지고 개수·매칭이 어긋남 — 칸 조회 페이지네이션
 chore: 개발 기록 파일 DevDocs/DevLog.txt 신설, CLAUDE.md 9절에 기록 규칙 반영
 feat: 관리자 전용 페이지 /admin 추가 (신고 처리·캠페인 개별 삭제·관리자 목록)
 chore: CLAUDE.md 13절 — 작품 일괄 삭제 기능 금지, 개별 삭제만 허용 원칙 기록

@@ -82,9 +82,10 @@ document.getElementById('pvTabList').onclick   = () => setProjectViewMode('list'
 const REF_PREVIEW_CELL_PX = 6;
 async function renderReferencePreview(project) {
   const canvas = document.getElementById('referencePreviewCanvas');
-  const { data: pixels, error } = await sb.from('mosaic_pixels')
-    .select('x,y,target_r,target_g,target_b')
-    .eq('project_id', project.id);
+  const { data: pixels, error } = await fetchAllRows(
+    () => sb.from('mosaic_pixels').select('x,y,target_r,target_g,target_b').eq('project_id', project.id),
+    { expected: project.width * project.height }
+  );
   if (error) { console.error('load reference preview colors error:', error); return; }
   canvas.width = project.width * REF_PREVIEW_CELL_PX;
   canvas.height = project.height * REF_PREVIEW_CELL_PX;
@@ -107,9 +108,10 @@ const MAX_COLOR_SWATCHES = 10;
 async function renderColorsNeeded(project) {
   const wrap = document.getElementById('colorsNeeded');
   const swatchesEl = document.getElementById('colorSwatches');
-  const { data: openPixels, error } = await sb.from('mosaic_pixels')
-    .select('target_r,target_g,target_b')
-    .eq('project_id', project.id).eq('filled', false);
+  const { data: openPixels, error } = await fetchAllRows(
+    () => sb.from('mosaic_pixels').select('target_r,target_g,target_b').eq('project_id', project.id).eq('filled', false),
+    { expected: project.width * project.height }
+  );
   if (error) { console.error('load open pixel colors error:', error); wrap.style.display = 'none'; return; }
   if (!openPixels || !openPixels.length) { wrap.style.display = 'none'; return; }
 
@@ -169,11 +171,14 @@ async function renderWeavoGrid(project) {
   grid.innerHTML = '';
   fitWeavoStage(project);
   resetMsZoom();
-  const { data: pixels, error } = await sb.from('mosaic_pixels')
-    .select('id,x,y,target_r,target_g,target_b,filled,submission_id,mosaic_submissions!mosaic_pixels_submission_id_fkey(id,image_url,thumb_url,author_id,author_name,author_avatar_url,art_title,art_material,art_completed_date,art_description,art_link,created_at)')
-    .eq('project_id', project.id)
-    .order('y', { ascending: true })
-    .order('x', { ascending: true });
+  const { data: pixels, error } = await fetchAllRows(
+    () => sb.from('mosaic_pixels')
+      .select('id,x,y,target_r,target_g,target_b,filled,submission_id,mosaic_submissions!mosaic_pixels_submission_id_fkey(id,image_url,thumb_url,author_id,author_name,author_avatar_url,art_title,art_material,art_completed_date,art_description,art_link,created_at)')
+      .eq('project_id', project.id)
+      .order('y', { ascending: true })
+      .order('x', { ascending: true }),
+    { expected: project.width * project.height }
+  );
   if (error) { console.error('load pixels error:', error); toast(tr('couldNotLoadWeavo')); return; }
   let filledCount = 0;
   const filledSubs = [];

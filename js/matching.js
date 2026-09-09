@@ -47,11 +47,11 @@ async function releasePoorlyMatchedPieces() {
     if (slotErr) { console.error('claim_rematch_slot error:', slotErr); return; }
     if (!won) return; // another visitor ran it recently
 
-    const { data: filled, error } = await sb.from('mosaic_pixels')
-      .select('submission_id,target_r,target_g,target_b,mosaic_submissions!mosaic_pixels_submission_id_fkey(avg_r,avg_g,avg_b),mosaic_projects!inner(is_archived)')
+    const { data: filled, error } = await fetchAllRows(() => sb.from('mosaic_pixels')
+      .select('submission_id,target_r,target_g,target_b,mosaic_submissions!mosaic_pixels_submission_id_fkey(avg_r,avg_g,avg_b),mosaic_projects!inner(is_archived)', { count: 'exact' })
       .eq('filled', true)
       .not('submission_id', 'is', null)
-      .eq('mosaic_projects.is_archived', false);
+      .eq('mosaic_projects.is_archived', false));
     if (error) { console.error('rematch scan error:', error); return; }
 
     const stale = [];
@@ -84,10 +84,10 @@ async function runPoolMatchingOnce() {
   if (poolErr) { console.error('fetch pool artwork error:', poolErr); return []; }
   if (!pool || !pool.length) return [];
 
-  const { data: cells, error: cellErr } = await sb.from('mosaic_pixels')
-    .select('id,target_r,target_g,target_b,mosaic_projects!inner(is_archived)')
+  const { data: cells, error: cellErr } = await fetchAllRows(() => sb.from('mosaic_pixels')
+    .select('id,target_r,target_g,target_b,mosaic_projects!inner(is_archived)', { count: 'exact' })
     .eq('filled', false)
-    .eq('mosaic_projects.is_archived', false);
+    .eq('mosaic_projects.is_archived', false));
   if (cellErr) { console.error('fetch open cells error:', cellErr); return []; }
   if (!cells || !cells.length) return [];
 

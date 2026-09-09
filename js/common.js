@@ -304,6 +304,45 @@ function injectJsonLd(objects) {
   }
 }
 
+// Supabase/PostgREST caps every response at 1,000 rows (the project's
+// default "Max rows"), silently — a 58×86 campaign (4,988 cells) came back
+// as its first 1,000 cells, so the grid drew only the top rows, "x / total"
+// showed 1000, and matching only ever saw those rows. Any query that can
+// exceed 1,000 rows must go through this instead of awaiting the builder.
+//
+// `build` returns a FRESH query builder each time (a builder can't be reused
+// once .range() has been applied). Pages are ordered by `orderBy` (default
+// the row id; extra .order() calls inside `build` are kept as primary keys)
+// so consecutive ranges never overlap or skip. Page count comes from
+// `expected` (e.g. width × height — an upper bound is fine, spare pages just
+// come back empty) or from the first page's count when `build` selected with
+// { count: 'exact' }; those pages are then fetched in parallel. Without
+// either it pages sequentially until a short page.
+const PAGE_ROWS = 1000;
+async function fetchAllRows(build, { orderBy = 'id', expected = null } = {}) {
+  const page = i => build().order(orderBy, { ascending: true }).range(i * PAGE_ROWS, (i + 1) * PAGE_ROWS - 1);
+  const first = await page(0);
+  if (first.error) return { data: null, error: first.error };
+  const rows = first.data || [];
+  const total = expected != null ? expected : (typeof first.count === 'number' ? first.count : null);
+  if (total != null) {
+    const pages = Math.ceil(total / PAGE_ROWS);
+    if (pages <= 1 || rows.length < PAGE_ROWS) return { data: rows, error: null };
+    const rest = await Promise.all(Array.from({ length: pages - 1 }, (_, i) => page(i + 1)));
+    const failed = rest.find(r => r.error);
+    if (failed) return { data: null, error: failed.error };
+    return { data: rows.concat(...rest.map(r => r.data || [])), error: null };
+  }
+  const all = rows.slice();
+  for (let i = 1; rows.length >= PAGE_ROWS; i++) {
+    const { data, error } = await page(i);
+    if (error) return { data: null, error };
+    all.push(...(data || []));
+    if (!data || data.length < PAGE_ROWS) break;
+  }
+  return { data: all, error: null };
+}
+
 function routeParam(prefix, legacyQueryKey) {
   const parts = location.pathname.split('/').filter(Boolean);
   const idx = parts.indexOf(prefix);

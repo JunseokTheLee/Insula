@@ -19,11 +19,11 @@
 const DRY_RUN = false;
 
 (async () => {
-  const { data: rows, error } = await sb.from('mosaic_pixels')
-    .select('id,target_r,target_g,target_b,project_id,mosaic_projects!inner(is_archived),mosaic_submissions!mosaic_pixels_submission_id_fkey(id,avg_r,avg_g,avg_b,project_id)')
+  const { data: rows, error } = await fetchAllRows(() => sb.from('mosaic_pixels')
+    .select('id,target_r,target_g,target_b,project_id,mosaic_projects!inner(is_archived),mosaic_submissions!mosaic_pixels_submission_id_fkey(id,avg_r,avg_g,avg_b,project_id)', { count: 'exact' })
     .eq('filled', true)
     .not('submission_id', 'is', null)
-    .eq('mosaic_projects.is_archived', false);
+    .eq('mosaic_projects.is_archived', false));
   if (error) { console.error('fetch error:', error); return; }
 
   const bad = [];

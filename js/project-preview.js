@@ -14,12 +14,12 @@ const PREVIEW_CELL_PX = 24;
 // this cache means that only issues one mosaic_pixels query per project per
 // page load instead of two.
 const previewPixelsCache = new Map();
-function getCachedProjectPixels(projectId) {
+function getCachedProjectPixels(projectId, expectedCells) {
   if (!previewPixelsCache.has(projectId)) {
-    previewPixelsCache.set(projectId, sb.from('mosaic_pixels')
-      .select('x,y,target_r,target_g,target_b,filled,mosaic_submissions!mosaic_pixels_submission_id_fkey(avg_r,avg_g,avg_b)')
-      .eq('project_id', projectId)
-      .then(({ data, error }) => {
+    previewPixelsCache.set(projectId, fetchAllRows(
+      () => sb.from('mosaic_pixels').select('x,y,target_r,target_g,target_b,filled,mosaic_submissions!mosaic_pixels_submission_id_fkey(avg_r,avg_g,avg_b)').eq('project_id', projectId),
+      { expected: expectedCells }
+    ).then(({ data, error }) => {
         if (error) console.error('load preview pixels error:', error);
         return data || [];
       }));
@@ -30,7 +30,7 @@ function getCachedProjectPixels(projectId) {
 async function paintProjectPreview(card, project) {
   const canvas = card.querySelector('canvas');
   canvas.classList.add('loading');
-  const pixels = await getCachedProjectPixels(project.id);
+  const pixels = await getCachedProjectPixels(project.id, project.width * project.height);
   canvas.width = project.width * PREVIEW_CELL_PX;
   canvas.height = project.height * PREVIEW_CELL_PX;
   canvas.style.aspectRatio = `${project.width} / ${project.height}`;

@@ -96,6 +96,7 @@
 - 전역 함수·`const` 를 파일 간에 공유하는 구조다 (모듈 시스템 없음). 로드 순서가 곧 의존 순서이므로 각 파일 머리 주석의 "Needs … loaded first" 를 지키고, 새 파일도 같은 형식의 머리 주석을 단다.
 - 사용자 입력으로 만든 링크는 `safeHref()`, HTML 삽입은 `escapeHtml()` 을 거친다.
 - Supabase Storage URL 은 `cdnUrl()` 로 감싸 `/img/` 프록시를 타게 한다.
+- **1,000행을 넘을 수 있는 조회는 반드시 `fetchAllRows()`(common.js)로 받는다.** Supabase 는 응답을 기본 1,000행에서 조용히 잘라낸다 — 캠페인 칸(`mosaic_pixels`, 최대 10,000)이 대표적. 2026.9.9 에 58×86 캠페인이 상단 1,000칸만 그려지고 개수·매칭이 어긋난 원인이었다. 페이지 수를 알면 `expected`(예: `width*height`)를, 모르면 `select(cols, { count: 'exact' })` 를 넘겨 병렬로 받는다.
 - UI 디자인 작업에는 `.claude/skills/superdesign` 스킬이 있다. 이 스킬은 외부(GitHub raw) 지침을 가져오므로, 디자인 작업을 명시적으로 요청받았을 때만 쓴다.
 
 ---
