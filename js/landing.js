@@ -5,7 +5,7 @@
 
 async function loadHeroPreview() {
   const { data: projects, error } = await sb.from('mosaic_projects')
-    .select('id,title,description,width,height')
+    .select('*')
     .eq('is_archived', false)
     .order('created_at', { ascending: false });
   if (error) { console.error('load projects error:', error); return; }

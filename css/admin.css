@@ -28,6 +28,11 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
 .admin-btn.danger{color:#C0522F;border-color:#F0B9A8;}
 .admin-btn.danger:hover{background:#FFF1EA;}
 .admin-admin{align-items:center;}
+.admin-usage{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:8px;}
+.admin-usage-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;}
+.admin-usage-k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.admin-usage-v{font-family:'Pretendard',sans-serif;font-weight:700;font-size:20px;color:var(--primary);margin-top:2px;}
+.admin-usage-s{font-size:12px;color:var(--muted);margin-top:2px;}
 .admin-code{background:var(--gray-100);padding:10px 12px;border-radius:var(--r-xs);font-size:12.5px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;}
 .admin-empty{padding:28px 16px;}
 @media (max-width:640px){

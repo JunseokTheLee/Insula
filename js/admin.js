@@ -170,13 +170,44 @@ async function loadAdminAdmins() {
   }
 }
 
+// ---------- usage (DB / Storage) ----------
+// admin_usage_stats() (supabase_mosaic_server_matching.sql §5) reads the
+// database size and sums storage.objects. Monthly egress is a platform
+// metric that only the Supabase dashboard has — the page says so instead of
+// pretending. Section stays hidden until that SQL has been applied.
+function adminBytes(n) {
+  if (n == null) return '—';
+  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(2)} GB`;
+  if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(1)} MB`;
+  return `${Math.round(n / 1024)} KB`;
+}
+async function loadAdminUsage() {
+  const section = document.getElementById('adminUsageSection');
+  if (!section) return;
+  const { data, error } = await sb.rpc('admin_usage_stats');
+  if (error) {
+    if (error.code !== 'PGRST202' && error.code !== '42883') console.error('admin_usage_stats error:', error);
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('adminDbSize', adminBytes(data.db_bytes));
+  set('adminStorageSize', adminBytes(data.storage_bytes));
+  set('adminStorageFiles', String(data.storage_files ?? '—'));
+  set('adminCountSubmissions', `${data.submissions ?? '—'} (${data.pooled ?? 0})`);
+  set('adminCountPixels', String(data.pixels ?? '—'));
+  set('adminCountProjects', String(data.projects ?? '—'));
+  set('adminCountProfiles', String(data.profiles ?? '—'));
+}
+
 // ---------- boot ----------
 async function loadAdminPage() {
   const isAdmin = !!(me.id && me.isAdmin);
   adminShow('adminNotice', !isAdmin);
   adminShow('adminBody', isAdmin);
   if (!isAdmin) return;
-  await Promise.all([loadAdminReports(), loadAdminCampaigns(), loadAdminAdmins()]);
+  await Promise.all([loadAdminUsage(), loadAdminReports(), loadAdminCampaigns(), loadAdminAdmins()]);
 }
 document.getElementById('adminReportsShowAll').onchange = () => loadAdminReports();
 document.addEventListener('weavo:authchange', () => loadAdminPage());

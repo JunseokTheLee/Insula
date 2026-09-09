@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260909-235224">
-<link rel="stylesheet" href="/css/admin.css?v=20260909-235224">
+<link rel="stylesheet" href="/css/base.css?v=20260910-011018">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-011018">
 </head>
 
 <body>
@@ -48,6 +48,18 @@
       <h1>관리자</h1>
       <p class="admin-notice" id="adminNotice" style="display:none;">관리자만 볼 수 있는 페이지입니다. 관리자 계정으로 로그인해 주세요.</p>
       <div id="adminBody" style="display:none;">
+
+        <section class="admin-section" id="adminUsageSection" style="display:none;">
+          <h2>사용량</h2>
+          <p class="admin-help">DB 용량과 Storage(파일) 사용량입니다. <strong>월 전송량(egress)은 DB 에서 알 수 없어</strong> Supabase 대시보드 → Reports → Usage 에서 확인합니다. 참고 한도 — Free: DB 500MB · Storage 1GB · 전송량 5GB/월, Pro: DB 8GB · Storage 100GB · 전송량 250GB/월.</p>
+          <div class="admin-usage">
+            <div class="admin-usage-tile"><div class="admin-usage-k">DB 용량</div><div class="admin-usage-v" id="adminDbSize">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Storage 사용량</div><div class="admin-usage-v" id="adminStorageSize">—</div><div class="admin-usage-s">파일 <span id="adminStorageFiles">—</span>개</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">작품 (풀 대기)</div><div class="admin-usage-v" id="adminCountSubmissions">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">캠페인 칸 합계</div><div class="admin-usage-v" id="adminCountPixels">—</div><div class="admin-usage-s">진행 중 캠페인 <span id="adminCountProjects">—</span>개</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">회원</div><div class="admin-usage-v" id="adminCountProfiles">—</div></div>
+          </div>
+        </section>
 
         <section class="admin-section">
           <div class="admin-section-head">
@@ -286,12 +298,12 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260909-235224"></script>
-<script src="/js/i18n/ko.js?v=20260909-235224"></script>
-<script src="/js/common.js?v=20260909-235224"></script>
-<script src="/js/auth.js?v=20260909-235224"></script>
-<script src="/js/notifications.js?v=20260909-235224"></script>
-<script src="/js/admin.js?v=20260909-235224"></script>
+<script src="/js/supabase-client.js?v=20260910-011018"></script>
+<script src="/js/i18n/ko.js?v=20260910-011018"></script>
+<script src="/js/common.js?v=20260910-011018"></script>
+<script src="/js/auth.js?v=20260910-011018"></script>
+<script src="/js/notifications.js?v=20260910-011018"></script>
+<script src="/js/admin.js?v=20260910-011018"></script>
 
 </body>
 </html>

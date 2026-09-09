@@ -7,8 +7,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260909-235224">
-<link rel="stylesheet" href="/css/admin.css?v=20260909-235224">
+<link rel="stylesheet" href="/css/base.css?v=20260910-011018">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-011018">
 </head>
 <body>
 
@@ -43,6 +43,18 @@
       <h1>Admin</h1>
       <p class="admin-notice" id="adminNotice" style="display:none;">This page is for admins only. Please sign in with an admin account.</p>
       <div id="adminBody" style="display:none;">
+
+        <section class="admin-section" id="adminUsageSection" style="display:none;">
+          <h2>Usage</h2>
+          <p class="admin-help">Database size and Storage (file) usage. <strong>Monthly egress can't be read from the database</strong> — see the Supabase dashboard → Reports → Usage. Reference limits — Free: DB 500 MB · Storage 1 GB · egress 5 GB/mo; Pro: DB 8 GB · Storage 100 GB · egress 250 GB/mo.</p>
+          <div class="admin-usage">
+            <div class="admin-usage-tile"><div class="admin-usage-k">Database</div><div class="admin-usage-v" id="adminDbSize">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Storage</div><div class="admin-usage-v" id="adminStorageSize">—</div><div class="admin-usage-s"><span id="adminStorageFiles">—</span> files</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Artworks (pooled)</div><div class="admin-usage-v" id="adminCountSubmissions">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Campaign cells</div><div class="admin-usage-v" id="adminCountPixels">—</div><div class="admin-usage-s"><span id="adminCountProjects">—</span> active campaigns</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Members</div><div class="admin-usage-v" id="adminCountProfiles">—</div></div>
+          </div>
+        </section>
 
         <section class="admin-section">
           <div class="admin-section-head">
@@ -180,11 +192,11 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260909-235224"></script>
-<script src="/js/i18n/en.js?v=20260909-235224"></script>
-<script src="/js/common.js?v=20260909-235224"></script>
-<script src="/js/auth.js?v=20260909-235224"></script>
-<script src="/js/notifications.js?v=20260909-235224"></script>
-<script src="/js/admin.js?v=20260909-235224"></script>
+<script src="/js/supabase-client.js?v=20260910-011018"></script>
+<script src="/js/i18n/en.js?v=20260910-011018"></script>
+<script src="/js/common.js?v=20260910-011018"></script>
+<script src="/js/auth.js?v=20260910-011018"></script>
+<script src="/js/notifications.js?v=20260910-011018"></script>
+<script src="/js/admin.js?v=20260910-011018"></script>
 </body>
 </html>

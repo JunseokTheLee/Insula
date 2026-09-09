@@ -86,6 +86,7 @@
   - 코드가 새 컬럼·RPC 에 의존하면 **어떤 SQL 파일을 먼저 실행해야 하는지 보고에 반드시 적는다.** 적용 여부는 저장소에 기록되지 않으므로 사용자에게 확인한다.
 - 권한은 RLS 정책과 컬럼 단위 grant 로 건다. `is_admin` 은 클라이언트가 바꿀 수 없어야 한다 (`supabase_mosaic.sql` 1절 참고). 정책을 느슨하게 푸는 변경은 사용자에게 먼저 확인한다.
 - 셀 점유는 `claim → attach → stale sweep(10분)` 상태 머신이다. `mosaic_pixels` 의 update 정책을 고칠 때는 이 세 단계가 모두 유지되는지 확인한다.
+- **2026.9.10 추가 SQL 2개 (실행 순서)**: ① `supabase_mosaic_grid_image.sql`(`grid_image_url` 컬럼, 7인자 reshape RPC) → ② `supabase_mosaic_server_matching.sql`(Lab 컬럼·트리거·백필, `match_pool_artworks`·`release_poor_matches`·`admin_usage_stats`). 코드는 둘 다 **미적용 상태에서도 옛 경로로 동작**하도록 폴백을 두었으므로 push 순서와 무관하지만, 적용 전까지는 격자 이미지·서버 매칭·관리자 사용량 표시가 비활성이다.
 
 ---
 
@@ -96,6 +97,8 @@
 - 전역 함수·`const` 를 파일 간에 공유하는 구조다 (모듈 시스템 없음). 로드 순서가 곧 의존 순서이므로 각 파일 머리 주석의 "Needs … loaded first" 를 지키고, 새 파일도 같은 형식의 머리 주석을 단다.
 - 사용자 입력으로 만든 링크는 `safeHref()`, HTML 삽입은 `escapeHtml()` 을 거친다.
 - Supabase Storage URL 은 `cdnUrl()` 로 감싸 `/img/` 프록시를 타게 한다.
+- **캠페인 칸의 색은 `loadProjectCells(project)`(common.js)로 읽는다.** 프로젝트에 `grid_image_url`(정적 PNG, `/img/` 캐시)이 있으면 그 이미지에서, 없거나 못 읽으면 `mosaic_pixels` 조회로 자동 폴백한다. 격자·미리보기·필요한 색상이 모두 이 경로를 쓰므로 `mosaic_pixels` 를 직접 전체 조회하지 않는다 (2026.9.10, `supabase_mosaic_grid_image.sql`).
+- **매칭은 서버 RPC(`match_pool_artworks`·`release_poor_matches`)가 한다.** `matching.js` 는 RPC 를 먼저 부르고, 함수가 없을 때(PGRST202)만 옛 클라이언트 계산으로 폴백한다. 매칭 규칙(Lab 거리·가중치 0.2·한계 30)을 바꾸면 **SQL 과 color-engine.js 를 함께** 고친다.
 - **1,000행을 넘을 수 있는 조회는 반드시 `fetchAllRows()`(common.js)로 받는다.** Supabase 는 응답을 기본 1,000행에서 조용히 잘라낸다 — 캠페인 칸(`mosaic_pixels`, 최대 10,000)이 대표적. 2026.9.9 에 58×86 캠페인이 상단 1,000칸만 그려지고 개수·매칭이 어긋난 원인이었다. 페이지 수를 알면 `expected`(예: `width*height`)를, 모르면 `select(cols, { count: 'exact' })` 를 넘겨 병렬로 받는다.
 - UI 디자인 작업에는 `.claude/skills/superdesign` 스킬이 있다. 이 스킬은 외부(GitHub raw) 지침을 가져오므로, 디자인 작업을 명시적으로 요청받았을 때만 쓴다.
 

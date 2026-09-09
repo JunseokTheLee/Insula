@@ -5,6 +5,10 @@ Weavo 개발 기록 (DevDocs/DevLog.txt)
 - 접두어: feat(새 기능) / fix(수정) / chore(정리·문서·설정)
 
 ========== 2026-09-10 ==========
+feat: 관리자 페이지에 DB 용량·Storage 사용량·행 수 표시 (admin_usage_stats RPC)
+feat: 매칭을 서버 RPC 로 이전 — 업로드 때 빈 칸 전체 다운로드 제거 (Lab 컬럼·트리거)
+feat: 격자 뷰를 캔버스 + 채워진 칸만 DOM 으로, 썸네일은 보일 때만 로드
+feat: 캠페인 칸 색을 정적 PNG 로 저장·읽기 (grid_image_url), 없으면 DB 조회로 폴백
 chore: CLAUDE.md 15절 — 개발 전 DB 전송량·월 한도 사전 검토 규칙, 요금제 기록란
 
 ========== 2026-09-09 ==========

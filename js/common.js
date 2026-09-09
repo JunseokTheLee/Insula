@@ -343,6 +343,94 @@ async function fetchAllRows(build, { orderBy = 'id', expected = null } = {}) {
   return { data: all, error: null };
 }
 
+// ---------- project grid image (static cell colors) ----------
+// A campaign's cell target colors are a fixed picture until the next
+// reshape, so they're kept as a width×height PNG in Storage (one pixel per
+// cell, alpha 0 where the reference image had no cell) and read through the
+// /img/ edge cache — instead of every visitor pulling every mosaic_pixels
+// row (0.7 MB / 16 requests for a 4,988-cell campaign, ~5 MB at 30,000).
+// See supabase_mosaic_grid_image.sql. The pixel rows stay the source of
+// truth for claims; if a project has no image yet (created before this
+// existed, or the upload failed) or it doesn't load / doesn't match the
+// project's dimensions, loadProjectCells() silently falls back to the rows.
+
+// Encode a cells array (imageToColorGrid output) as a PNG Blob.
+function gridImageBlob(cells, width, height) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(width, height);
+  for (const c of cells) {
+    const i = (c.y * width + c.x) * 4;
+    img.data[i] = c.target_r; img.data[i + 1] = c.target_g; img.data[i + 2] = c.target_b; img.data[i + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+// Renders + uploads the grid image; resolves to its public URL, or null on
+// any failure (the caller then just stores no image and the fallback runs).
+async function uploadGridImage(cells, width, height) {
+  try {
+    const blob = await gridImageBlob(cells, width, height);
+    if (!blob) return null;
+    return await uploadImage(new File([blob], `grid-${width}x${height}.png`, { type: 'image/png' }));
+  } catch (e) {
+    console.error('uploadGridImage failed:', e);
+    return null;
+  }
+}
+// Decode a project's grid image back into cells; null if unavailable.
+async function loadGridImageCells(project) {
+  if (!project || !project.grid_image_url) return null;
+  try {
+    const img = await loadImageEl(cdnUrl(project.grid_image_url));
+    if (img.naturalWidth !== project.width || img.naturalHeight !== project.height) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = project.width; canvas.height = project.height;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, 0, 0);
+    const d = ctx.getImageData(0, 0, project.width, project.height).data;
+    const cells = [];
+    for (let y = 0; y < project.height; y++) {
+      for (let x = 0; x < project.width; x++) {
+        const i = (y * project.width + x) * 4;
+        if (d[i + 3] < 128) continue; // transparent = no cell there
+        cells.push({ x, y, target_r: d[i], target_g: d[i + 1], target_b: d[i + 2] });
+      }
+    }
+    return cells.length ? cells : null;
+  } catch (e) {
+    console.warn('grid image unavailable, falling back to pixel rows:', e);
+    return null;
+  }
+}
+// { cells, source: 'image' | 'db' } — memoized per project id + version so
+// the several renderers on one page share a single load.
+const projectCellsCache = new Map();
+function loadProjectCells(project) {
+  const key = `${project.id}:${project.version_number || 0}:${project.grid_image_url || ''}`;
+  if (!projectCellsCache.has(key)) {
+    projectCellsCache.set(key, (async () => {
+      const fromImage = await loadGridImageCells(project);
+      if (fromImage) return { cells: fromImage, source: 'image' };
+      const { data, error } = await fetchAllRows(
+        () => sb.from('mosaic_pixels').select('x,y,target_r,target_g,target_b').eq('project_id', project.id),
+        { expected: project.width * project.height }
+      );
+      if (error) { console.error('load project cells error:', error); projectCellsCache.delete(key); return { cells: [], source: 'db', error }; }
+      return { cells: data || [], source: 'db' };
+    })());
+  }
+  return projectCellsCache.get(key);
+}
+// PostgREST's "unknown column" / "unknown function" errors — used by the
+// creation/reshape paths to retry without the new grid-image argument while
+// supabase_mosaic_grid_image.sql hasn't been applied yet.
+function isSchemaMismatchError(error) {
+  return !!error && (error.code === '42703' || error.code === 'PGRST204' || error.code === 'PGRST202' || error.code === '42883');
+}
+
 function routeParam(prefix, legacyQueryKey) {
   const parts = location.pathname.split('/').filter(Boolean);
   const idx = parts.indexOf(prefix);

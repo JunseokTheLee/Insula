@@ -9,37 +9,50 @@
 // is called right after anything that changes either side of the match —
 // a new upload, a new project's cells coming online, a reshape changing
 // which cells are open, or a piece being removed from a project — from
-// profile-view.js, home.js, project.js and lightbox.js respectively. Needs
-// sb and color-engine.js's colorDistanceSq/POOR_MATCH_DISTANCE loaded first.
+// profile-view.js, home.js, project.js and lightbox.js respectively.
+//
+// Since 2026-09-10 the pass itself runs INSIDE the database
+// (match_pool_artworks / release_poor_matches in
+// supabase_mosaic_server_matching.sql): the browser no longer downloads
+// every open cell of every campaign to pick the closest one — that was
+// 0.6 MB per upload at 5,000 cells and would be ~2 MB at 30,000. The
+// original client-side pass is kept below as a fallback for the window
+// before that SQL has been applied (the RPC is missing → PGRST202).
+// Needs sb and color-engine.js's colorDistanceSq/POOR_MATCH_DISTANCE loaded first.
 "use strict";
 
-// Greedy, not a full assignment-problem solve: each pool piece (oldest
-// upload first, so the queue is fair) claims whatever still-open cell is
-// closest to it, one at a time, same approach as the old per-project
-// assignToClosestCells. A true global optimum would need re-solving (and
-// potentially reshuffling) every open project's existing placements too,
-// which conflicts with pieces only ever moving via an explicit
-// reshape/removal — greedy keeps each match final and cheap to compute.
-
 // A placed piece this far (color-engine.js's Lab metric) from its own cell
-// gets pulled back into the pool by releasePoorlyMatchedPieces() so the
-// next match can re-place it. Deliberately a hair above POOR_MATCH_DISTANCE
-// (the bar a *new* match has to clear): a piece placed under the current
-// rules sits at <= POOR_MATCH_DISTANCE and is never churned — only ones
-// placed before that threshold was tightened, or forced in by a reshape
-// (which applies no quality floor at all), get released.
+// gets pulled back into the pool by the cleanup pass so the next match can
+// re-place it. Deliberately a hair above POOR_MATCH_DISTANCE (the bar a *new*
+// match has to clear): a piece placed under the current rules sits at
+// <= POOR_MATCH_DISTANCE and is never churned — only ones placed before that
+// threshold was tightened, or forced in by a reshape (which applies no
+// quality floor at all), get released.
 const REMATCH_RELEASE_DISTANCE = POOR_MATCH_DISTANCE + 2;
 // The cleanup scan runs on at most one visitor's trigger per this window;
 // claim_rematch_slot (supabase_mosaic_rematch.sql) enforces it atomically
 // DB-side so concurrent tabs/visitors can't all run it at once.
 const REMATCH_MIN_INTERVAL = '6 hours';
 
-// Throttled pre-pass for runPoolMatchingOnce: release placed pieces whose
-// color no longer (or never did) reasonably fit their cell, so the match
-// below can try them again. Self-limiting — a released piece only re-places
-// at <= POOR_MATCH_DISTANCE, which is below REMATCH_RELEASE_DISTANCE, so it
-// won't bounce straight back out; if nothing fits it stays pooled. Never
-// throws (the caller's result shouldn't hinge on an opportunistic cleanup).
+// PostgREST answers a call to a function that doesn't exist (yet) with
+// PGRST202; Postgres itself would say 42883. Either means "SQL not applied".
+function isMissingFunctionError(error) {
+  return !!error && (error.code === 'PGRST202' || error.code === '42883');
+}
+
+// ---------- server-side pass (preferred) ----------
+async function runPoolMatchingServer() {
+  // Cleanup first so anything it releases is re-placed by the match below,
+  // same order as the client pass. Throttled DB-side; never fatal.
+  const { error: relErr } = await sb.rpc('release_poor_matches', { p_min_interval: REMATCH_MIN_INTERVAL });
+  if (relErr && !isMissingFunctionError(relErr)) console.error('release_poor_matches error:', relErr);
+
+  const { data, error } = await sb.rpc('match_pool_artworks');
+  if (error) return { error };
+  return { assignments: Array.isArray(data) ? data : [] };
+}
+
+// ---------- client-side pass (fallback) ----------
 async function releasePoorlyMatchedPieces() {
   try {
     if (typeof me === 'undefined' || !me.id) return; // release needs an authed caller
@@ -74,7 +87,10 @@ async function releasePoorlyMatchedPieces() {
   }
 }
 
-async function runPoolMatchingOnce() {
+// Greedy, not a full assignment-problem solve: each pool piece (oldest
+// upload first, so the queue is fair) claims whatever still-open cell is
+// closest to it, one at a time. Keeps each match final and cheap to compute.
+async function runPoolMatchingClient() {
   await releasePoorlyMatchedPieces();
 
   const { data: pool, error: poolErr } = await sb.from('mosaic_submissions')
@@ -114,16 +130,24 @@ async function runPoolMatchingOnce() {
   return assignments;
 }
 
+async function runPoolMatchingOnce() {
+  if (typeof me === 'undefined' || !me.id) return []; // both paths need a signed-in caller
+  const server = await runPoolMatchingServer();
+  if (!server.error) return server.assignments;
+  if (!isMissingFunctionError(server.error)) {
+    console.error('match_pool_artworks error:', server.error);
+    return [];
+  }
+  return runPoolMatchingClient();
+}
+
 // Four call sites (profile-view.js, home.js, project.js, lightbox.js) can
 // all trigger this within moments of each other — e.g. an admin reshaping
-// right after someone uploads. Without coalescing, each call independently
-// re-fetches the entire pool and every open cell across every active
-// project, so overlapping triggers multiply that read cost instead of
-// sharing it. `currentRun` collapses concurrent calls onto whichever pass
-// is already in flight; `queuedRun`, if a call arrives mid-pass, chains
-// exactly one follow-up pass after it (so a change made *during* the
-// in-flight fetch still gets picked up) rather than starting a fresh pass
-// per caller.
+// right after someone uploads. `currentRun` collapses concurrent calls onto
+// whichever pass is already in flight; `queuedRun`, if a call arrives
+// mid-pass, chains exactly one follow-up pass after it (so a change made
+// *during* the in-flight pass still gets picked up) rather than starting a
+// fresh pass per caller.
 let currentRun = null;
 let queuedRun = null;
 function runPoolMatching() {

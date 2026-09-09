@@ -9,7 +9,7 @@ async function renderProjectsGrid() {
   const empty = document.getElementById('projectsEmpty');
   grid.innerHTML = '';
   const { data: projects, error } = await sb.from('mosaic_projects')
-    .select('id,title,description,width,height')
+    .select('*')
     .eq('is_archived', false)
     .order('created_at', { ascending: false });
   if (error) { console.error('load projects error:', error); toast(tr('couldNotLoadProjects')); return; }
@@ -150,10 +150,16 @@ document.getElementById('np-submit').onclick = async () => {
     }
     const referenceUrl = await uploadImage(file);
     if (!referenceUrl) return;
-    const { data: project, error: projErr } = await sb.from('mosaic_projects').insert({
-      title, description: description || null, width, height,
-      reference_image_url: referenceUrl, created_by: me.id
-    }).select().single();
+    // Static cell-color image for the new grid (see common.js) — uploaded
+    // before the row so the project is created already pointing at it.
+    const gridImageUrl = await uploadGridImage(cells, width, height);
+    const baseRow = { title, description: description || null, width, height, reference_image_url: referenceUrl, created_by: me.id };
+    let { data: project, error: projErr } = await sb.from('mosaic_projects')
+      .insert(gridImageUrl ? { ...baseRow, grid_image_url: gridImageUrl } : baseRow).select().single();
+    if (projErr && gridImageUrl && isSchemaMismatchError(projErr)) {
+      // supabase_mosaic_grid_image.sql not applied yet — create without the image.
+      ({ data: project, error: projErr } = await sb.from('mosaic_projects').insert(baseRow).select().single());
+    }
     if (projErr || !project) {
       console.error('weavo project insert error:', projErr);
       toast(tr('couldNotCreateProjectMsg', { msg: projErr ? projErr.message : 'unknown error' }));

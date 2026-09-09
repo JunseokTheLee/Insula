@@ -3,6 +3,8 @@
 "use strict";
 
 let currentProject = null;
+// (x,y) keys of the cells renderWeavoGrid() last found filled — renderColorsNeeded() subtracts them.
+let currentFilledKeys = new Set();
 
 // Client-side fallback for the tab title/social-preview tags, in case this
 // page is reached without going through the Pages Function that pre-renders
@@ -82,10 +84,7 @@ document.getElementById('pvTabList').onclick   = () => setProjectViewMode('list'
 const REF_PREVIEW_CELL_PX = 6;
 async function renderReferencePreview(project) {
   const canvas = document.getElementById('referencePreviewCanvas');
-  const { data: pixels, error } = await fetchAllRows(
-    () => sb.from('mosaic_pixels').select('x,y,target_r,target_g,target_b').eq('project_id', project.id),
-    { expected: project.width * project.height }
-  );
+  const { cells: pixels, error } = await loadProjectCells(project);
   if (error) { console.error('load reference preview colors error:', error); return; }
   canvas.width = project.width * REF_PREVIEW_CELL_PX;
   canvas.height = project.height * REF_PREVIEW_CELL_PX;
@@ -108,11 +107,11 @@ const MAX_COLOR_SWATCHES = 10;
 async function renderColorsNeeded(project) {
   const wrap = document.getElementById('colorsNeeded');
   const swatchesEl = document.getElementById('colorSwatches');
-  const { data: openPixels, error } = await fetchAllRows(
-    () => sb.from('mosaic_pixels').select('target_r,target_g,target_b').eq('project_id', project.id).eq('filled', false),
-    { expected: project.width * project.height }
-  );
+  // Open cells = every cell minus the ones renderWeavoGrid() found filled
+  // (it runs first in openProject() and leaves their keys in currentFilledKeys).
+  const { cells, error } = await loadProjectCells(project);
   if (error) { console.error('load open pixel colors error:', error); wrap.style.display = 'none'; return; }
+  const openPixels = cells.filter(c => !currentFilledKeys.has(`${c.x},${c.y}`));
   if (!openPixels || !openPixels.length) { wrap.style.display = 'none'; return; }
 
   // Collapse exact-duplicate colors first — cheap, and shrinks the input
@@ -166,48 +165,75 @@ async function renderColorsNeeded(project) {
 }
 async function renderWeavoGrid(project) {
   const grid = document.getElementById('weavoGrid');
-  grid.style.gridTemplateColumns = `repeat(${project.width}, 1fr)`;
-  grid.style.gridTemplateRows = `repeat(${project.height}, 1fr)`;
   grid.innerHTML = '';
   fitWeavoStage(project);
   resetMsZoom();
-  const { data: pixels, error } = await fetchAllRows(
-    () => sb.from('mosaic_pixels')
-      .select('id,x,y,target_r,target_g,target_b,filled,submission_id,mosaic_submissions!mosaic_pixels_submission_id_fkey(id,image_url,thumb_url,author_id,author_name,author_avatar_url,art_title,art_material,art_completed_date,art_description,art_link,created_at)')
-      .eq('project_id', project.id)
-      .order('y', { ascending: true })
-      .order('x', { ascending: true }),
-    { expected: project.width * project.height }
-  );
+  // Cell colors come from the static grid image (or the pixel rows as a
+  // fallback — see common.js loadProjectCells); only the FILLED cells are
+  // read from the database.
+  const [{ cells, error: cellsErr }, filledRes] = await Promise.all([
+    loadProjectCells(project),
+    fetchAllRows(
+      () => sb.from('mosaic_pixels')
+        .select('id,x,y,target_r,target_g,target_b,filled,submission_id,mosaic_submissions!mosaic_pixels_submission_id_fkey(id,image_url,thumb_url,author_id,author_name,author_avatar_url,art_title,art_material,art_completed_date,art_description,art_link,created_at)')
+        .eq('project_id', project.id).eq('filled', true).not('submission_id', 'is', null),
+      { expected: project.width * project.height }
+    ),
+  ]);
+  const error = cellsErr || filledRes.error;
   if (error) { console.error('load pixels error:', error); toast(tr('couldNotLoadWeavo')); return; }
-  let filledCount = 0;
-  const filledSubs = [];
-  for (const px of pixels || []) {
-    const isFilled = !!(px.filled && px.submission_id && px.mosaic_submissions);
-    // Filled cells are real links to the artwork's own page (crawlable,
-    // shareable, ctrl/cmd-clickable into a new tab); still-open cells have
-    // nothing to link to yet, so those stay plain divs.
-    const cell = document.createElement(isFilled ? 'a' : 'div');
-    cell.className = 'weavo-cell';
-    cell.dataset.pixelId = px.id;
-    // Explicit placement, not DOM order — cells excluded from the grid
-    // (e.g. transparent regions of the reference image) leave real gaps
-    // instead of shifting every following cell out of position.
-    cell.style.gridColumn = String(px.x + 1);
-    cell.style.gridRow = String(px.y + 1);
-    applyCellVisual(cell, px);
-    if (isFilled) {
-      filledCount++;
-      cell.classList.add('filled');
-      const sub = { ...px.mosaic_submissions, pixel_id: px.id };
-      cell.href = artworkUrl(sub.id);
-      interceptClick(cell, () => { if (!weavoSuppressClick) openLightbox(sub); });
-      filledSubs.push(sub);
+  const filledRows = (filledRes.data || []).filter(px => px.mosaic_submissions);
+  const filledByKey = new Map(filledRows.map(px => [`${px.x},${px.y}`, px]));
+  currentFilledKeys = new Set(filledByKey.keys());
+
+  // One canvas holds every cell — open cells in the reference's grey, filled
+  // cells in the artwork's average color (what shows before/without a
+  // thumbnail) — then one <a> per FILLED cell on top for hover/click/links.
+  // The DOM therefore scales with the number of artworks, not cells.
+  const cellPx = Math.max(4, Math.min(12, Math.floor(4000 / Math.max(project.width, project.height))));
+  const base = document.createElement('canvas');
+  base.className = 'weavo-base';
+  base.width = project.width * cellPx;
+  base.height = project.height * cellPx;
+  const ctx = base.getContext('2d');
+  for (const c of cells) {
+    const hit = filledByKey.get(`${c.x},${c.y}`);
+    if (hit) {
+      const sub = hit.mosaic_submissions;
+      ctx.fillStyle = `rgb(${sub.avg_r},${sub.avg_g},${sub.avg_b})`;
+    } else {
+      const l = Math.round(luminance(c.target_r, c.target_g, c.target_b));
+      ctx.fillStyle = `rgb(${l},${l},${l})`;
     }
+    // One canvas pixel of gap between cells, like the old CSS grid's 1px gap.
+    ctx.fillRect(c.x * cellPx, c.y * cellPx, cellPx - 1, cellPx - 1);
+  }
+  grid.appendChild(base);
+
+  const filledSubs = [];
+  for (const px of filledRows) {
+    // Filled cells are real links to the artwork's own page (crawlable,
+    // shareable, ctrl/cmd-clickable into a new tab). The thumbnail itself
+    // is applied lazily by refreshThumbLod() once the cell is on screen and
+    // big enough to show one.
+    const cell = document.createElement('a');
+    cell.className = 'weavo-cell filled';
+    cell.dataset.pixelId = px.id;
+    cell.style.left = `${(px.x / project.width) * 100}%`;
+    cell.style.top = `${(px.y / project.height) * 100}%`;
+    cell.style.width = `${100 / project.width}%`;
+    cell.style.height = `${100 / project.height}%`;
+    const sub = { ...px.mosaic_submissions, pixel_id: px.id };
+    cell.dataset.thumb = cdnUrl(sub.thumb_url || sub.image_url);
+    cell.href = artworkUrl(sub.id);
+    interceptClick(cell, () => { if (!weavoSuppressClick) openLightbox(sub); });
+    filledSubs.push(sub);
     grid.appendChild(cell);
   }
-  document.getElementById('projectProgress').textContent = filledText(filledCount, (pixels || []).length);
-  renderProjectStats(filledSubs, (pixels || []).length);
+  scheduleThumbLod(true);
+  const filledCount = filledSubs.length;
+  document.getElementById('projectProgress').textContent = filledText(filledCount, cells.length);
+  renderProjectStats(filledSubs, cells.length);
   renderProjectList(filledSubs);
 }
 // Icon-stat row + contributor avatar stack — every number here comes from
@@ -260,15 +286,6 @@ function projectListCardEl(sub) {
   card.appendChild(info);
   return card;
 }
-function applyCellVisual(cell, px) {
-  if (px.filled && px.submission_id && px.mosaic_submissions) {
-    cell.style.backgroundImage = `url("${cdnUrl(px.mosaic_submissions.thumb_url || px.mosaic_submissions.image_url)}")`;
-  } else {
-    const l = Math.round(luminance(px.target_r, px.target_g, px.target_b));
-    cell.style.backgroundImage = '';
-    cell.style.backgroundColor = `rgb(${l},${l},${l})`;
-  }
-}
 async function sweepStaleClaims(projectId) {
   const staleBefore = new Date(Date.now() - 10 * 60 * 1000).toISOString();
   await sb.from('mosaic_pixels')
@@ -305,8 +322,29 @@ function clampMsPan() {
   msX = Math.min(maxX, Math.max(-maxX, msX));
   msY = Math.min(maxY, Math.max(-maxY, msY));
 }
+// Thumbnails are only loaded for filled cells that are on screen AND at
+// least THUMB_MIN_PX wide — smaller than that, the average-color canvas
+// underneath is all anyone can see anyway. Re-checked (debounced) after
+// every zoom/pan, so zooming into a region pulls in just that region's art.
+const THUMB_MIN_PX = 22;
+let thumbLodTimer = null;
+function scheduleThumbLod(immediate) {
+  clearTimeout(thumbLodTimer);
+  thumbLodTimer = setTimeout(refreshThumbLod, immediate ? 0 : 120);
+}
+function refreshThumbLod() {
+  const wrapRect = weavoWrap.getBoundingClientRect();
+  for (const cell of document.querySelectorAll('.weavo-cell.filled')) {
+    if (cell.style.backgroundImage) continue; // already showing its thumbnail
+    const r = cell.getBoundingClientRect();
+    if (r.width < THUMB_MIN_PX) return; // every cell is the same size — none qualify yet
+    if (r.right < wrapRect.left || r.left > wrapRect.right || r.bottom < wrapRect.top || r.top > wrapRect.bottom) continue;
+    cell.style.backgroundImage = `url("${cell.dataset.thumb}")`;
+  }
+}
 function applyMsTransform() {
   msStage.style.transform = `translate(${msX}px, ${msY}px) scale(${msScale})`;
+  scheduleThumbLod();
   msZoomLevelEl.textContent = `${Math.round(msScale * 100)}%`;
   msZoomOutBtn.disabled = msScale <= MS_MIN_ZOOM;
   msZoomInBtn.disabled = msScale >= MS_MAX_ZOOM;
@@ -469,6 +507,9 @@ document.getElementById('rs-submit').onclick = async () => {
     toast(tr('reshapingProject'));
     const referenceUrl = await uploadImage(file);
     if (!referenceUrl) return;
+    // Static cell-color image for the new grid (common.js); null on failure,
+    // in which case the project simply falls back to its pixel rows.
+    const gridImageUrl = await uploadGridImage(cells, width, height);
 
     // Each surviving submission claims the closest-matching cell in the
     // new grid; the rest of the new grid is left open for pool matching.
@@ -479,14 +520,19 @@ document.getElementById('rs-submit').onclick = async () => {
     const assignments = matched.map(({ item, cell }) => ({ submission_id: item.id, x: cell.x, y: cell.y }));
     const rpcCells = cells.map(c => ({ x: c.x, y: c.y, r: c.target_r, g: c.target_g, b: c.target_b }));
 
-    const { error: rpcErr } = await sb.rpc('reshape_mosaic_project', {
+    const rpcArgs = {
       p_project_id: project.id,
       p_new_width: width,
       p_new_height: height,
       p_new_reference_url: referenceUrl,
       p_cells: rpcCells,
       p_assignments: assignments
-    });
+    };
+    let { error: rpcErr } = await sb.rpc('reshape_mosaic_project', { ...rpcArgs, p_grid_image_url: gridImageUrl });
+    if (rpcErr && isSchemaMismatchError(rpcErr)) {
+      // supabase_mosaic_grid_image.sql not applied yet — the older 6-argument RPC.
+      ({ error: rpcErr } = await sb.rpc('reshape_mosaic_project', rpcArgs));
+    }
     if (rpcErr) {
       console.error('reshape_mosaic_project error:', rpcErr);
       toast(tr('couldNotReshapeProjectMsg', { msg: rpcErr.message }));
@@ -513,7 +559,12 @@ document.getElementById('rs-submit').onclick = async () => {
 // creation, reshape, and removal-from-project.
 
 window.onSubmissionDeleted = () => {
-  if (currentProject) { renderWeavoGrid(currentProject); renderColorsNeeded(currentProject); }
+  if (!currentProject) return;
+  // Sequential on purpose: renderColorsNeeded() subtracts the filled cells
+  // renderWeavoGrid() has just found (currentFilledKeys).
+  renderWeavoGrid(currentProject)
+    .then(() => renderColorsNeeded(currentProject))
+    .catch(err => console.error('re-render after delete error:', err));
 };
 // An edited title feeds the grid cells' alt text / list-view titles.
 window.onSubmissionUpdated = () => {
