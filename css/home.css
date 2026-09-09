@@ -3,9 +3,10 @@
 .snap-panel{min-height:100%;scroll-snap-align:start;display:flex;flex-direction:column;}
 
 /* ---------- landing: recent activity (latest artworks + exhibitions lists) ----------
-   Deliberately not a .snap-panel — it's a short, glanceable strip meant to
-   sit above the hero, not a full-viewport section of its own. */
-.recent-activity{flex-shrink:0;width:100%;max-width:1400px;margin:0 auto;padding:28px 32px 8px;}
+   Deliberately not a .snap-panel — it's a short, glanceable strip below the
+   hero (since 2026-09-10 the hero with the campaign preview comes first),
+   not a full-viewport section of its own. */
+.recent-activity{flex-shrink:0;width:100%;max-width:1400px;margin:0 auto;padding:28px 32px 40px;}
 .recent-activity-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;}
 .recent-list-col{min-width:0;}
 .recent-list-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;min-width:0;}
@@ -50,7 +51,7 @@
   .recent-activity-inner{grid-template-columns:1fr;gap:8px;}
 }
 @media (max-width:640px){
-  .recent-activity{padding:18px 16px 4px;}
+  .recent-activity{padding:18px 16px 28px;}
   .recent-activity-inner{gap:22px;}
   /* Latest Artworks / Latest Exhibitions collapse to a single row of cover
      thumbnails on phones — title, byline and arrow drop away so all five
