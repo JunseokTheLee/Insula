@@ -8,7 +8,11 @@
 let me = { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: [] };
 
 async function signIn(provider = 'google') {
-  const options = { redirectTo: location.origin + location.pathname };
+  // Land on the home page of the current language after the OAuth round
+  // trip (2026-09-10; it used to return to whichever page the button was
+  // on). Supabase only honours this when the address matches its Redirect
+  // URL allow-list — otherwise it falls back to the dashboard's Site URL.
+  const options = { redirectTo: `${location.origin}/${CURRENT_LANG}/` };
   // Always show Google's account chooser: without it Google silently reuses
   // the account of its current browser session, so someone who signed out
   // to switch accounts (or to leave onboarding — see renderSetupExits)
@@ -537,7 +541,7 @@ async function deleteMyAccount(btn, { signup = false } = {}) {
   closeEditProfileModal();
   await signOut();
   toast(tr(signup ? 'signupCancelled' : 'accountDeleted'));
-  location.href = `/${CURRENT_LANG}/campaigns`;
+  location.href = `/${CURRENT_LANG}/`; // home, as a guest again
 }
 document.getElementById('ep-delete-account').onclick = e => deleteMyAccount(e.currentTarget);
 
