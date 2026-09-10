@@ -259,7 +259,7 @@
   .hero-partner-logo{height:26px;max-width:130px;}
   .hero-art{display:block;}
   .hero-art-main{display:block;}
-  .hero-preview{display:block;border-radius:14px;box-shadow:none;}
+  .hero-preview{display:block;margin:0 auto;border-radius:14px;box-shadow:none;} /* block + max-width:80% would sit left; centre it (2026-09-10) */
   .hero-preview:hover{transform:none;box-shadow:none;}
   .hero-preview canvas{width:100%;max-height:none;}
   .hero-art .hero-tagline{display:none;}
