@@ -5,6 +5,7 @@ Weavo 개발 기록 (DevDocs/DevLog.txt)
 - 접두어: feat(새 기능) / fix(수정) / chore(정리·문서·설정)
 
 ========== 2026-09-10 ==========
+chore: Supabase 요금제(Pro Plan)·월 한도·Spend Cap 확인 — CLAUDE.md 15절에 기록
 feat: 홈 새싹 아이콘이 다시 자라기 전 0.8초 동안 흙으로 가라앉는 전환 (순간 전환 제거)
 chore: 방문 통계 SQL(supabase_visit_stats.sql) 운영 DB 적용 확인 — CLAUDE.md 6절 갱신
 fix: 로그인·가입 취소·계정 삭제 뒤 캠페인 목록 대신 현재 언어의 홈으로 이동
