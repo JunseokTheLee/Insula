@@ -200,7 +200,8 @@ git config core.hooksPath tools/git-hooks
 ## 15. DB 사용량·전송량 사전 검토 (필수 · 2026.9.10 확정)
 
 - **Supabase 요금제: Pro Plan** (2026.9.10 대시보드 Organization → Usage 화면으로 확인 — 사용자 제공). 청구 주기는 매월 5일 시작(예: 2026.9.5 ~ 10.5). **월 한도**: Egress(DB·Auth·API 응답 전송량) 250GB · Cached Egress(Storage CDN 을 거친 이미지 전송량 — `/img/` 프록시가 엣지 캐시 미스 때 받아오는 양) 250GB · Storage 100GB · MAU 100,000 · Realtime 동시 접속 500 / 메시지 500만 · Edge Function 호출 200만 · 이미지 변환 100회 · Compute 크레딧 $10(Micro 프로젝트 1개분). **Spend Cap 켜짐** — 한도를 넘으면 추가 과금 대신 기능 제한이 걸린다(Usage 화면 문구 "you are currently not billed for overages"). DB 디스크 용량은 Usage 화면에 없어 미확인(공식 요금표상 Pro 기본 8GB/프로젝트 — 프로젝트 Settings → Compute and Disk 에서 확인). **이 절의 30% 기준은 전송량 월 75GB** 다.
-- 사용량 실측(2026.9.5~9.10, 5일): Cached Egress 1.69GB · Egress 0.27GB · Storage 0.35GB · MAU 21 · Realtime 동시 접속 최대 6 — 모두 한도의 1% 미만. Compute 248시간(하루 48시간 = Micro 프로젝트 2개가 동시에 켜져 있는 수치로 추정 — 크레딧은 1개분이라 두 번째 프로젝트는 월 약 $10 과금; 불필요한 프로젝트면 일시 정지·삭제 검토, 사용자 확인 필요).
+- 사용량 실측(2026.9.5~9.10, 5일): Cached Egress 1.69GB · Egress 0.27GB · Storage 0.35GB · MAU 21 · Realtime 동시 접속 최대 6 — 모두 한도의 1% 미만. Compute 248시간(하루 48시간 = 프로젝트 2개 × 24시간).
+- **조직에 프로젝트가 2개다** (2026.9.10 사용자 확인): Weavo 가 쓰는 `kzvheplmtzjmzcxjkxub` 와, Weavo 사이트가 쓰지 않는 `plants`(`zvrbajyulwguzboilnkj`, Nano, Tokyo, 하루 20여 요청). 공식 문서상 유료 조직의 Nano 는 Micro 와 같은 값($0.01344/h ≈ 월 $10)으로 과금되고, $10 크레딧은 프로젝트 1개분이며, Compute 는 Spend Cap 적용 대상이 아니다 → `plants` 를 켜 두는 동안 월 약 $10 이 추가 청구된다. 줄이는 방법은 일시 정지(정지 중엔 과금 없음)·Free 조직으로 이전(무료 2개 한도, 1~2분 중단)·삭제이며 사용자 결정 사항. Weavo 코드·DB 와는 관계없다.
 - **개발 지시를 받으면 코드를 고치기 전에 아래를 먼저 계산해 보고한다** (표준 처리 순서 1~2단계에 포함). 보고에 "DB 사용량 영향" 항목을 반드시 둔다.
   1. **페이지 뷰 1회당** DB 에서 받는 행 수·바이트·요청 수 — 현재값 → 변경 후.
   2. **사용자 동작 1회당**(업로드·매칭·reshape·삭제·알림) 전송량과 요청 수. 특히 다른 사용자의 동작마다 반복되는 다운로드(예: 업로드 때 빈 칸 전체 조회)에 주의.
