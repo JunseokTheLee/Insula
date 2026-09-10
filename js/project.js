@@ -188,6 +188,10 @@ async function renderWeavoGrid(project) {
   const error = cellsErr || filledRes.error;
   if (error) { console.error('load pixels error:', error); toast(tr('couldNotLoadWeavo')); return; }
   const filledRows = (filledRes.data || []).filter(px => px.mosaic_submissions);
+  // Pieces point at their artwork (supabase_mosaic_pieces.sql): one fetch
+  // of the distinct artworks, so a cell shows its piece but opens the
+  // artwork (lightbox, link, list view).
+  const parents = await fetchPieceParents(filledRows.map(px => px.mosaic_submissions));
   const filledByKey = new Map(filledRows.map(px => [`${px.x},${px.y}`, px]));
   currentFilledKeys = new Set(filledByKey.keys());
 
@@ -236,8 +240,14 @@ async function renderWeavoGrid(project) {
     cell.style.top = `${(px.y / project.height) * 100}%`;
     cell.style.width = `${100 / project.width}%`;
     cell.style.height = `${100 / project.height}%`;
-    const sub = { ...px.mosaic_submissions, pixel_id: px.id };
+    const sub = cellSubjectOf(px, parents);
     cell.dataset.thumb = cdnUrl(sub.thumb_url || sub.image_url);
+    if (sub.piece && sub.piece.n > 1) {
+      // The piece's own region of the artwork thumbnail, applied by
+      // refreshThumbLod along with the image once the cell is big enough.
+      cell.dataset.cropSize = `${sub.piece.n * 100}% ${sub.piece.n * 100}%`;
+      cell.dataset.cropPos = `${(sub.piece.col / (sub.piece.n - 1)) * 100}% ${(sub.piece.row / (sub.piece.n - 1)) * 100}%`;
+    }
     cell.href = artworkUrl(sub.id);
     interceptClick(cell, () => { if (!weavoSuppressClick) openLightbox(sub); });
     filledSubs.push(sub);
@@ -248,6 +258,25 @@ async function renderWeavoGrid(project) {
   document.getElementById('projectProgress').textContent = filledText(filledCount, cells.length);
   renderProjectStats(filledSubs, cells.length);
   renderProjectList(filledSubs);
+}
+// The distinct artworks behind the pieces in the filled cells, by id.
+async function fetchPieceParents(subs) {
+  const ids = [...new Set(subs.map(s => s.parent_id).filter(id => id != null))];
+  const map = new Map();
+  for (let i = 0; i < ids.length; i += 200) {
+    const { data, error } = await sb.from('mosaic_submissions').select('*').in('id', ids.slice(i, i + 200));
+    if (error) { console.error('load piece parents error:', error); break; }
+    for (const p of data || []) map.set(p.id, p);
+  }
+  return map;
+}
+// What a filled cell stands for: the artwork itself, or — for a piece —
+// its parent artwork with the piece's place noted (lightbox shows it).
+function cellSubjectOf(px, parents) {
+  const s = px.mosaic_submissions;
+  const parent = s.parent_id != null ? parents.get(s.parent_id) : null;
+  if (parent) return { ...parent, pixel_id: px.id, piece: { id: s.id, row: s.piece_row, col: s.piece_col, n: s.piece_n } };
+  return { ...s, pixel_id: px.id };
 }
 // Icon-stat row + contributor avatar stack — every number here comes from
 // the pixels/submissions already fetched above, no extra query.
@@ -271,7 +300,14 @@ function renderProjectList(subs) {
   const grid = document.getElementById('projectListGrid');
   const empty = document.getElementById('projectListEmpty');
   grid.innerHTML = '';
-  const sorted = [...subs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  // One card per ARTWORK: a cut artwork sits in many cells but is one work.
+  const byId = new Map();
+  for (const sub of subs) {
+    const seen = byId.get(sub.id);
+    if (seen) seen.pieceCount++;
+    else byId.set(sub.id, { ...sub, pieceCount: 1 });
+  }
+  const sorted = [...byId.values()].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   empty.style.display = sorted.length ? 'none' : 'block';
   for (const sub of sorted) grid.appendChild(projectListCardEl(sub));
 }
@@ -294,7 +330,8 @@ function projectListCardEl(sub) {
   const title = document.createElement('div');
   title.className = 'pv-card-title'; title.textContent = sub.art_title || '';
   const author = document.createElement('div');
-  author.className = 'pv-card-author'; author.textContent = sub.author_name || tr('anonymous');
+  author.className = 'pv-card-author';
+  author.textContent = (sub.author_name || tr('anonymous')) + (sub.pieceCount > 1 ? ` · ${tr('piecesInCampaign', { n: sub.pieceCount })}` : '');
   info.append(title, author);
   card.appendChild(info);
   return card;
@@ -365,6 +402,7 @@ function refreshThumbLod() {
     if (r.width < THUMB_MIN_PX) return; // every cell is the same size — none qualify yet
     if (r.right < wrapRect.left || r.left > wrapRect.right || r.bottom < wrapRect.top || r.top > wrapRect.bottom) continue;
     cell.style.backgroundImage = `url("${cell.dataset.thumb}")`;
+    if (cell.dataset.cropSize) { cell.style.backgroundSize = cell.dataset.cropSize; cell.style.backgroundPosition = cell.dataset.cropPos; }
   }
 }
 function applyMsTransform() {

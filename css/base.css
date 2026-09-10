@@ -404,6 +404,16 @@ body.lb-img-fs-lock{overflow:hidden;}
 #lightbox-cap-title:empty,#lightbox-cap-desc:empty,#lightbox-cap-meta:empty{display:none;}
 #lightbox-cap-meta{color:rgba(247,247,245,.55);font-family:'Pretendard',sans-serif;font-size:11.5px;font-weight:600;}
 #lightbox-cap-desc{color:rgba(247,247,245,.7);font-size:12.5px;line-height:1.5;margin-top:4px;}
+/* "Row r, column c of the n×n cut" under the title when a mosaic cell opened
+   this artwork (lightbox.js renderLightboxPieceNote): a mini grid marks the piece. */
+#lightbox-cap-piece{display:flex;align-items:center;gap:8px;margin-top:6px;color:rgba(247,247,245,.7);font-family:'Pretendard',sans-serif;font-size:11.5px;font-weight:600;}
+.lb-piece-grid{display:grid;gap:1px;width:28px;height:28px;flex-shrink:0;}
+.lb-piece-grid i{display:block;background:rgba(247,247,245,.22);border-radius:1px;}
+.lb-piece-grid i.on{background:var(--mint);}
+/* Artwork page only: "12/49 pieces in the campaign mosaic" with a small bar (artwork.js renderArtworkPieceUsage). */
+.piece-usage{display:flex;align-items:center;gap:10px;margin:6px 0 2px;font-family:'Pretendard',sans-serif;font-size:12.5px;color:rgba(247,247,245,.75);}
+.piece-usage-bar{flex:0 0 120px;height:6px;border-radius:3px;background:rgba(247,247,245,.18);overflow:hidden;}
+.piece-usage-bar span{display:block;height:100%;background:var(--mint);}
 #lightbox-artist-card{display:flex;align-items:center;gap:10px;margin:8px 0 4px;}
 .lb-artist-info{min-width:0;flex:1;text-align:left;}
 .lb-artist-name{

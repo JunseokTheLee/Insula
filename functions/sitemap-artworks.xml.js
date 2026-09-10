@@ -7,7 +7,11 @@ const SITE = 'https://weavo.art';
 // sitemap-artworks-N.xml files listed from sitemap.xml's index, same
 // pattern as splitting by content type already does.
 export async function onRequestGet() {
-  const subs = await pgFetchMany('mosaic_submissions?select=id,created_at&order=created_at.desc&limit=1000');
+  // Pieces (supabase_mosaic_pieces.sql) have no page of their own. While
+  // that file isn't applied the filter is an unknown column (400 → []),
+  // so an empty answer is asked again without it.
+  let subs = await pgFetchMany('mosaic_submissions?select=id,created_at&parent_id=is.null&order=created_at.desc&limit=1000');
+  if (!subs.length) subs = await pgFetchMany('mosaic_submissions?select=id,created_at&order=created_at.desc&limit=1000');
 
   const urls = subs.flatMap(s => {
     const en = `${SITE}/en/artworks/${encodeURIComponent(s.id)}`;

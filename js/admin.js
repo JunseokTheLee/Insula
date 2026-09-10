@@ -336,9 +336,15 @@ let adminThumbRows = [];
 async function loadAdminThumbs() {
   const btn = document.getElementById('adminThumbsRunBtn');
   if (!btn) return;
-  const { data, error } = await fetchAllRows(() => sb.from('mosaic_submissions')
-    .select('id,author_id,image_url,thumb_url,micro_thumb', { count: 'exact' })
-    .or('thumb_url.is.null,micro_thumb.is.null'));
+  // Artworks only — a piece copies its artwork's thumb_url and always has
+  // its own micro_thumb; asked again without the filter while
+  // supabase_mosaic_pieces.sql isn't applied.
+  const q = artworksOnly => fetchAllRows(() => {
+    const b = sb.from('mosaic_submissions').select('id,author_id,image_url,thumb_url,micro_thumb', { count: 'exact' }).or('thumb_url.is.null,micro_thumb.is.null');
+    return artworksOnly ? b.is('parent_id', null) : b;
+  });
+  let { data, error } = await q(true);
+  if (error && isSchemaMismatchError(error)) ({ data, error } = await q(false));
   if (error) {
     if (!isSchemaMismatchError(error)) console.error('load thumbnail status error:', error);
     adminShow('adminThumbsUnavailable', true); // SQL not applied yet
@@ -380,6 +386,63 @@ async function runAdminThumbs() {
 }
 document.getElementById('adminThumbsRunBtn').onclick = runAdminThumbs;
 
+// ---------- artwork pieces (supabase_mosaic_pieces.sql) ----------
+// Artworks are cut into pieceGrid × pieceGrid pieces in the browser when
+// uploaded (common.js makeArtworkPieces). Artworks from before that — or
+// whose cut failed — are counted here and cut on demand; "recut all" redoes
+// every artwork at the current pieceGrid (placed pieces are released and
+// matched again). Same shape as the thumbnail rebuild above: original read
+// through /img/, one artwork at a time, a matching pass at the end.
+let adminPieceRows = [];
+async function loadAdminPieces() {
+  const btn = document.getElementById('adminPiecesRunBtn');
+  const regenBtn = document.getElementById('adminPiecesRegenBtn');
+  if (!btn || !regenBtn) return;
+  const { data, error } = await fetchAllRows(() => sb.from('mosaic_submissions')
+    .select('id,image_url,piece_n', { count: 'exact' }).is('parent_id', null));
+  if (error) {
+    if (!isSchemaMismatchError(error)) console.error('load pieces status error:', error);
+    adminShow('adminPiecesUnavailable', true); // SQL not applied yet
+    btn.disabled = true; regenBtn.disabled = true;
+    return;
+  }
+  adminPieceRows = data || [];
+  const missing = adminPieceRows.filter(r => !r.piece_n).length;
+  document.getElementById('adminPiecesMissing').textContent = String(missing);
+  document.getElementById('adminPiecesDoneCount').textContent = String(adminPieceRows.length - missing);
+  btn.disabled = !missing;
+  regenBtn.disabled = !adminPieceRows.length;
+}
+async function runAdminPieces(all) {
+  if (all) {
+    const proceed = await confirmDialog(tr('adminPiecesRegenConfirm'), { title: tr('adminPiecesRegenTitle'), okLabel: tr('adminPiecesRegenLabel') });
+    if (!proceed) return;
+  }
+  const rows = all ? adminPieceRows : adminPieceRows.filter(r => !r.piece_n);
+  const btns = [document.getElementById('adminPiecesRunBtn'), document.getElementById('adminPiecesRegenBtn')];
+  btns.forEach(b => { b.disabled = true; });
+  let done = 0, failed = 0;
+  for (const row of rows) {
+    toast(tr('adminPiecesWorking', { done: done + failed, total: rows.length }));
+    try {
+      // Same origin via /img/, so the canvas stays readable.
+      const img = await loadImageEl(cdnUrl(row.image_url));
+      const res = typeof makeArtworkPieces === 'function' ? await makeArtworkPieces(row.id, img) : { missing: true };
+      if (res.missing || res.error) throw res.error || new Error('set_submission_pieces unavailable');
+      done++;
+    } catch (e) {
+      console.error(`piece cut failed for #${row.id}:`, e);
+      failed++;
+    }
+  }
+  toast(failed ? tr('adminPiecesFailed', { done, failed }) : tr('adminPiecesDone', { n: done }));
+  // The new pieces wait in the pool — place them now.
+  if (done) await placePooledPieces(false);
+  loadAdminPieces(); loadAdminPool(); loadAdminUsage(); loadAdminCampaigns();
+}
+document.getElementById('adminPiecesRunBtn').onclick = () => runAdminPieces(false);
+document.getElementById('adminPiecesRegenBtn').onclick = () => runAdminPieces(true);
+
 // ---------- pool: pieces waiting for a campaign ----------
 // Pieces with no campaign — fresh uploads nothing matched yet, or pieces a
 // campaign deletion sent back — wait in the pool until the next matching
@@ -390,12 +453,21 @@ document.getElementById('adminThumbsRunBtn').onclick = runAdminThumbs;
 async function loadAdminPool() {
   const list = document.getElementById('adminPoolList');
   if (!list) return;
-  const { data, error, count } = await sb.from('mosaic_submissions')
-    .select('id,art_title,author_name,thumb_url,image_url,created_at', { count: 'exact' })
-    .is('project_id', null)
-    .order('created_at', { ascending: true })
-    .limit(50);
+  // Whole artworks still waiting (none once every artwork is cut), plus
+  // how many PIECES wait — those are what a matching pass places now.
+  const q = withPieces => {
+    let b = sb.from('mosaic_submissions').select('id,art_title,author_name,thumb_url,image_url,created_at', { count: 'exact' }).is('project_id', null);
+    if (withPieces) b = b.is('parent_id', null).is('piece_n', null);
+    return b.order('created_at', { ascending: true }).limit(50);
+  };
+  let { data, error, count } = await q(true);
+  if (error && isSchemaMismatchError(error)) ({ data, error, count } = await q(false));
   if (error) { console.error('load pool error:', error); toast(tr('adminLoadError')); return; }
+  const piecesEl = document.getElementById('adminPoolPieces');
+  if (piecesEl) {
+    const { count: waiting, error: pErr } = await sb.from('mosaic_submissions').select('id', { count: 'exact', head: true }).not('parent_id', 'is', null).is('project_id', null);
+    piecesEl.textContent = pErr ? '—' : String(waiting ?? 0);
+  }
   document.getElementById('adminPoolCount').textContent = String(count ?? (data || []).length);
   list.innerHTML = '';
   adminShow('adminPoolEmpty', !(data && data.length));
@@ -698,7 +770,7 @@ async function loadAdminPage() {
   adminShow('adminNotice', !isAdmin);
   adminShow('adminBody', isAdmin);
   if (!isAdmin) return;
-  await Promise.all([loadAdminUsage(), loadAdminVisits(), loadAdminSettings(), loadAdminReports(), loadAdminCampaigns(), loadAdminPool(), loadAdminThumbs(), loadAdminAdmins()]);
+  await Promise.all([loadAdminUsage(), loadAdminVisits(), loadAdminSettings(), loadAdminReports(), loadAdminCampaigns(), loadAdminPool(), loadAdminThumbs(), loadAdminPieces(), loadAdminAdmins()]);
 }
 document.getElementById('adminReportsShowAll').onchange = () => loadAdminReports();
 document.addEventListener('weavo:authchange', () => loadAdminPage());

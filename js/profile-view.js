@@ -52,62 +52,38 @@ document.getElementById('profileBackBtn').addEventListener('click', e => {
 // profileArtThumbEl's `pending` flag (driven by a null project_id) is what
 // marks the ones still waiting for a match.
 async function fetchUserArtwork(userId) {
-  const { data, error } = await sb.from('mosaic_submissions')
-    .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at')
-    .eq('author_id', userId)
-    .order('created_at', { ascending: false });
+  // Pieces (supabase_mosaic_pieces.sql) are left out — common.js
+  // fetchOwnArtworkRows; the plain query is the stale-common.js fallback
+  // (CLAUDE.md §12).
+  const { data, error } = typeof fetchOwnArtworkRows === 'function'
+    ? await fetchOwnArtworkRows(userId)
+    : await sb.from('mosaic_submissions')
+        .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at')
+        .eq('author_id', userId)
+        .order('created_at', { ascending: false });
   if (error) { console.error('load user artwork error:', error); return []; }
   return data || [];
 }
-// Distinct projects this profile's owner has contributed artwork to, with
-// how many pieces they submitted to each.
-//
-// A project can be reshaped (admin swaps its grid + reference image),
-// which freezes the pre-reshape grid as its own archived project row
-// (supabase_mosaic_reshape.sql) instead of deleting it. `artwork` always
-// carries each submission's *live* project_id (reshape repoints pixel_id,
-// never project_id), so that alone only ever surfaces the current project.
-// This additionally looks up, via mosaic_pixels, every archived project
-// whose frozen grid still shows one of this user's pieces — one card per
-// iteration they were actually part of.
+// Distinct projects this profile's owner has contributed to, with how many
+// cells of each hold something of theirs. One query over mosaic_pixels
+// covers whole artworks and pieces alike (a cut artwork's own row is never
+// placed — supabase_mosaic_pieces.sql — only its pieces are), and live and
+// archived campaigns alike: a reshape freezes the pre-reshape grid as its
+// own archived project row (supabase_mosaic_reshape.sql), whose cells
+// still point at this user's rows — one card per iteration they were in.
 async function fetchParticipatedProjects(artwork, userId) {
-  const result = [];
-  const placedIds = [...new Set(artwork.map(s => s.project_id).filter(id => id != null))];
-  if (placedIds.length) {
-    const { data, error } = await sb.from('mosaic_projects')
-      .select('*') // the preview renderer needs width/height/grid_image_url too
-      .in('id', placedIds);
-    if (error) console.error('load participated (live) projects error:', error);
-    if (data) {
-      const projectById = new Map(data.map(p => [p.id, p]));
-      const byProject = new Map();
-      for (const sub of artwork) {
-        const p = projectById.get(sub.project_id);
-        if (!p) continue;
-        if (!byProject.has(p.id)) byProject.set(p.id, { ...p, count: 0, archived: false });
-        byProject.get(p.id).count++;
-      }
-      result.push(...byProject.values());
-    }
+  const { data: rows, error } = await fetchAllRows(() => sb.from('mosaic_pixels')
+    .select('project_id,mosaic_submissions!mosaic_pixels_submission_id_fkey!inner(author_id),mosaic_projects!inner(*)', { count: 'exact' })
+    .eq('mosaic_submissions.author_id', userId));
+  if (error) console.error('load participated projects error:', error);
+  const byProject = new Map();
+  for (const row of rows || []) {
+    const p = row.mosaic_projects;
+    if (!p) continue;
+    if (!byProject.has(p.id)) byProject.set(p.id, { ...p, count: 0, archived: !!p.is_archived });
+    byProject.get(p.id).count++;
   }
-  {
-    const { data: archived, error: archivedErr } = await fetchAllRows(() => sb.from('mosaic_pixels')
-      .select('project_id,mosaic_submissions!mosaic_pixels_submission_id_fkey!inner(author_id),mosaic_projects!inner(*)', { count: 'exact' })
-      .eq('mosaic_submissions.author_id', userId)
-      .eq('mosaic_projects.is_archived', true));
-    if (archivedErr) console.error('load participated (archived) projects error:', archivedErr);
-    if (archived) {
-      const byProject = new Map();
-      for (const row of archived) {
-        const p = row.mosaic_projects;
-        if (!p) continue;
-        if (!byProject.has(p.id)) byProject.set(p.id, { ...p, count: 0, archived: true });
-        byProject.get(p.id).count++;
-      }
-      result.push(...byProject.values());
-    }
-  }
-  return result;
+  return [...byProject.values()];
 }
 function profileProjectCardEl(project) {
   const card = document.createElement('a');
@@ -651,7 +627,9 @@ async function loadProfileView(userId) {
   if (!artwork.length) document.getElementById('profileSubmittedEmpty').style.display = '';
   // showBoardBtn here too (not just the Liked grid below) so an owner's own
   // artwork is always addable to a collection, whether or not they've liked it.
-  else for (const sub of artwork) submittedGrid.appendChild(profileArtThumbEl(sub, !sub.project_id, isOwner));
+  // "Waiting" only means a WHOLE artwork the pool has not placed; a cut
+  // artwork's own row never gets a project — its pieces do.
+  else for (const sub of artwork) submittedGrid.appendChild(profileArtThumbEl(sub, !sub.project_id && !sub.piece_n, isOwner));
 
   const likedGrid = document.getElementById('profileLikedGrid');
   if (!liked.length) document.getElementById('profileLikedEmpty').style.display = '';
@@ -776,9 +754,19 @@ document.getElementById('ua-submit').onclick = async () => {
 
     closeUploadArtModal();
     toast(tr('findingBestSpot'));
+    // Cut into pieces first (supabase_mosaic_pieces.sql) — the pieces are
+    // what the pass below places. Only while that file is missing is the
+    // artwork itself matched, whole, as before.
+    const pieces = typeof makeArtworkPieces === 'function' ? await makeArtworkPieces(inserted.id, previewImg) : { missing: true };
+    if (pieces.error) toast(tr('piecesFailed'));
     const assignments = await runPoolMatching();
-    const matched = assignments.some(a => a.submission_id === inserted.id);
-    toast(matched ? tr('artworkMatchedToast') : tr('artworkPooledToast'));
+    if (pieces.count) {
+      const placed = assignments.filter(a => a.parent_id === inserted.id).length;
+      toast(placed ? tr('artworkPiecesPlacedToast', { placed, total: pieces.count }) : tr('artworkPiecesPooledToast'));
+    } else {
+      const matched = assignments.some(a => a.submission_id === inserted.id);
+      toast(matched ? tr('artworkMatchedToast') : tr('artworkPooledToast'));
+    }
   } finally {
     btn.disabled = false;
     if (profileUserId) loadProfileView(profileUserId);

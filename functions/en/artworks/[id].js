@@ -7,12 +7,14 @@ export async function onRequestGet({ params, request, env }) {
   const id = params.id;
   const sub = await pgFetchOne(
     `mosaic_submissions?id=eq.${encodeURIComponent(id)}` +
-    `&select=id,art_title,art_description,image_url,author_id,author_name,project_id,mosaic_projects(id,title)&limit=1`
+    `&select=*,mosaic_projects(id,title)&limit=1` // `*`: the piece columns of supabase_mosaic_pieces.sql may or may not exist yet
   );
 
   const assetResponse = await env.ASSETS.fetch(new Request(new URL('/en/artwork', request.url), request));
 
   if (!sub) return notFoundResponse(assetResponse, 'Artwork not found | Weavo');
+  // A piece has no page of its own — its artwork does.
+  if (sub.parent_id) return Response.redirect(`${SITE}/en/artworks/${encodeURIComponent(sub.parent_id)}`, 302);
 
   // Prefer the artist's username for the creator link, same as the client's
   // own canonicalization in profile-view.js — falls back to the raw id if
@@ -27,7 +29,9 @@ export async function onRequestGet({ params, request, env }) {
     ? sub.art_description.slice(0, 300)
     : `Artwork submitted to Weavo by ${name}.`;
 
-  const project = sub.mosaic_projects;
+  // A cut artwork's own project_id stays null — its campaign is its home campaign.
+  let project = sub.mosaic_projects;
+  if (!project && sub.home_project_id) project = await pgFetchOne(`mosaic_projects?id=eq.${encodeURIComponent(sub.home_project_id)}&select=id,title`);
   const jsonld = [{
     '@context': 'https://schema.org', '@type': 'VisualArtwork',
     name: sub.art_title || 'Untitled artwork', url: canonical, image: sub.image_url,

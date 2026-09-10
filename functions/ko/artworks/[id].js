@@ -7,12 +7,14 @@ export async function onRequestGet({ params, request, env }) {
   const id = params.id;
   const sub = await pgFetchOne(
     `mosaic_submissions?id=eq.${encodeURIComponent(id)}` +
-    `&select=id,art_title,art_description,image_url,author_id,author_name,project_id,mosaic_projects(id,title)&limit=1`
+    `&select=*,mosaic_projects(id,title)&limit=1` // `*`: the piece columns of supabase_mosaic_pieces.sql may or may not exist yet
   );
 
   const assetResponse = await env.ASSETS.fetch(new Request(new URL('/ko/artwork', request.url), request));
 
   if (!sub) return notFoundResponse(assetResponse, '작품을 찾을 수 없습니다 | Weavo');
+  // A piece has no page of its own — its artwork does.
+  if (sub.parent_id) return Response.redirect(`${SITE}/ko/artworks/${encodeURIComponent(sub.parent_id)}`, 302);
 
   const author = sub.author_id ? await pgFetchOne(`profiles?id=eq.${encodeURIComponent(sub.author_id)}&select=username`) : null;
   const authorHandle = (author && author.username) || sub.author_id;
@@ -24,7 +26,9 @@ export async function onRequestGet({ params, request, env }) {
     ? sub.art_description.slice(0, 300)
     : `${name}님이 Weavo에 제출한 작품입니다.`;
 
-  const project = sub.mosaic_projects;
+  // A cut artwork's own project_id stays null — its campaign is its home campaign.
+  let project = sub.mosaic_projects;
+  if (!project && sub.home_project_id) project = await pgFetchOne(`mosaic_projects?id=eq.${encodeURIComponent(sub.home_project_id)}&select=id,title`);
   const jsonld = [{
     '@context': 'https://schema.org', '@type': 'VisualArtwork',
     name: sub.art_title || '제목 없는 작품', url: canonical, image: sub.image_url,

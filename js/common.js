@@ -563,6 +563,8 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // previewBrightness. #DCE4ED = light grey with a faint blue; a neutral
   // grey such as #808080 means no tint.
   previewTint: '#DCE4ED',
+  pieceGrid: 7, // artwork cut into pieceGrid × pieceGrid pieces for the mosaic (supabase_mosaic_pieces.sql)
+  pieceMatchDistance: 20, // a piece takes a cell only within this Lab distance (server-enforced)
 });
 const SITE_SETTINGS_TTL_MS = 60 * 1000;
 const SITE_SETTINGS_CACHE_KEY = 'weavo.siteSettings';
@@ -740,6 +742,89 @@ async function fetchLikedWeavoArt(userId) {
   return (data || []).map(row => row.mosaic_submissions).filter(Boolean);
 }
 
+// ---------- artwork pieces (supabase_mosaic_pieces.sql) ----------
+// An artwork is cut into n×n pieces in the browser; each piece becomes a
+// row of its own (parent_id → the artwork) with its average colour and a
+// 16px micro thumbnail, and it is the PIECES that get matched into cells.
+// The cut keeps the artwork's full extent: a non-square artwork gives
+// non-square pieces, drawn stretched into the square cell — the same
+// stretch a cell thumbnail gets from background-size (pieceCropStyle).
+// Regions of a PNG that are (almost) fully transparent are left out.
+function artworkPiecesFromImage(img, n) {
+  const w0 = img.naturalWidth, h0 = img.naturalHeight;
+  const pieces = [];
+  if (!w0 || !h0 || !(n >= 2)) return pieces;
+  const SAMPLE = 24;
+  const sample = document.createElement('canvas'); sample.width = SAMPLE; sample.height = SAMPLE;
+  const sctx = sample.getContext('2d');
+  const micro = document.createElement('canvas'); micro.width = MICRO_THUMB_PX; micro.height = MICRO_THUMB_PX;
+  const mctx = micro.getContext('2d');
+  for (let row = 0; row < n; row++) {
+    for (let col = 0; col < n; col++) {
+      const sx = (col * w0) / n, sy = (row * h0) / n, sw = w0 / n, sh = h0 / n;
+      sctx.clearRect(0, 0, SAMPLE, SAMPLE);
+      sctx.drawImage(img, sx, sy, sw, sh, 0, 0, SAMPLE, SAMPLE);
+      const d = sctx.getImageData(0, 0, SAMPLE, SAMPLE).data;
+      let r = 0, g = 0, b = 0, a = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const al = d[i + 3];
+        if (al < 16) continue;
+        r += d[i] * al; g += d[i + 1] * al; b += d[i + 2] * al; a += al;
+      }
+      if (a < 255 * SAMPLE * SAMPLE * 0.2) continue; // mostly transparent (PNG padding): not part of the artwork
+      mctx.fillStyle = '#fff'; mctx.fillRect(0, 0, MICRO_THUMB_PX, MICRO_THUMB_PX); // JPEG has no alpha
+      mctx.drawImage(img, sx, sy, sw, sh, 0, 0, MICRO_THUMB_PX, MICRO_THUMB_PX);
+      pieces.push({ row, col, r: Math.round(r / a), g: Math.round(g / a), b: Math.round(b / a), micro: micro.toDataURL('image/jpeg', 0.65) });
+    }
+  }
+  return pieces;
+}
+function pieceGridOf(settings) {
+  const n = Math.round(Number(settings && settings.pieceGrid));
+  return Number.isInteger(n) && n >= 2 && n <= 12 ? n : 7;
+}
+// Cuts (or re-cuts) an artwork: n from the pieceGrid site option unless
+// given. `img` must be same-origin (the upload preview, or /img/) so the
+// canvas stays readable. Resolves {count}, {missing:true} while
+// supabase_mosaic_pieces.sql isn't applied (the artwork then stays whole
+// and is matched as before), or {error}.
+async function makeArtworkPieces(parentId, img, n) {
+  const grid = n || pieceGridOf(await getSiteSettings());
+  const pieces = artworkPiecesFromImage(img, grid);
+  if (!pieces.length) return { count: 0 };
+  const { data, error } = await sb.rpc('set_submission_pieces', { p_parent_id: parentId, p_n: grid, p_pieces: pieces });
+  if (error) {
+    if (error.code === 'PGRST202' || error.code === '42883') return { missing: true };
+    console.error('set_submission_pieces error:', error);
+    return { error };
+  }
+  return { count: Number(data) || pieces.length };
+}
+// How much of a cut artwork sits in a campaign mosaic ("12/49 pieces").
+async function fetchPieceUsage(parentId) {
+  const { data, error } = await sb.from('mosaic_submissions').select('id,pixel_id,piece_n').eq('parent_id', parentId);
+  if (error) { if (!isSchemaMismatchError(error)) console.error('load pieces error:', error); return null; }
+  const total = (data || []).length;
+  if (!total) return null;
+  const placed = data.filter(p => p.pixel_id != null).length;
+  return { placed, total, pct: Math.round((placed / total) * 100), n: data[0].piece_n };
+}
+// A user's own artworks, newest first — pieces excluded; asked again
+// without the filter while supabase_mosaic_pieces.sql isn't applied
+// (unknown column → schema mismatch). Shared by the profile grid and the
+// collection picker.
+const ARTWORK_ROW_COLS = 'id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at';
+async function fetchOwnArtworkRows(userId) {
+  const q = withPieces => {
+    let s = sb.from('mosaic_submissions').select(ARTWORK_ROW_COLS + (withPieces ? ',piece_n,home_project_id' : '')).eq('author_id', userId);
+    if (withPieces) s = s.is('parent_id', null);
+    return s.order('created_at', { ascending: false });
+  };
+  let res = await q(true);
+  if (res.error && isSchemaMismatchError(res.error)) res = await q(false);
+  return res;
+}
+
 // ---------- collectible artwork pool (liked ∪ own) ----------
 // Everything a user can add to one of their Collections: their liked pool
 // above, plus every piece they've authored themselves — a user's own
@@ -749,9 +834,7 @@ async function fetchLikedWeavoArt(userId) {
 async function fetchCollectibleWeavoArt(userId) {
   const [liked, { data: own, error: ownErr }] = await Promise.all([
     fetchLikedWeavoArt(userId),
-    sb.from('mosaic_submissions')
-      .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url')
-      .eq('author_id', userId),
+    fetchOwnArtworkRows(userId), // artworks only — pieces are not collectible
   ]);
   if (ownErr) console.error('load own weavo art error:', ownErr);
   const byId = new Map(liked.map(sub => [sub.id, sub]));

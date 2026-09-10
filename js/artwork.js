@@ -8,11 +8,33 @@
 "use strict";
 
 async function fetchArtwork(id) {
-  const { data, error } = await sb.from('mosaic_submissions')
-    .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at,mosaic_projects(id,title)')
-    .eq('id', id).maybeSingle();
+  const base = 'id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at,mosaic_projects(id,title)';
+  // Piece columns (supabase_mosaic_pieces.sql) asked for first, dropped
+  // while that file isn't applied.
+  let { data, error } = await sb.from('mosaic_submissions').select(base + ',parent_id,piece_n,home_project_id').eq('id', id).maybeSingle();
+  if (error && isSchemaMismatchError(error)) ({ data, error } = await sb.from('mosaic_submissions').select(base).eq('id', id).maybeSingle());
   if (error) { console.error('load artwork error:', error); return null; }
+  // A cut artwork's campaign is its home campaign (its pieces are placed
+  // there); the row's own project_id stays null.
+  if (data && !data.mosaic_projects && data.home_project_id) {
+    const { data: p } = await sb.from('mosaic_projects').select('id,title').eq('id', data.home_project_id).maybeSingle();
+    if (p) data.mosaic_projects = p;
+  }
   return data;
+}
+// "12/49 pieces in the campaign mosaic (24%)" — shown on this page only.
+async function renderArtworkPieceUsage(sub) {
+  const el = document.getElementById('artworkPieceUsage');
+  if (!el || !sub.piece_n || typeof fetchPieceUsage !== 'function') return;
+  const u = await fetchPieceUsage(sub.id);
+  if (!u) return;
+  el.textContent = '';
+  const bar = document.createElement('span'); bar.className = 'piece-usage-bar';
+  const fill = document.createElement('span'); fill.style.width = `${u.pct}%`; bar.appendChild(fill);
+  const text = document.createElement('span');
+  text.textContent = tr('artworkPieceUsage', { placed: u.placed, total: u.total, pct: u.pct });
+  el.append(bar, text);
+  el.style.display = '';
 }
 
 function updateArtworkMeta(sub) {
@@ -60,10 +82,14 @@ async function loadArtworkPage(id) {
     document.getElementById('artworkBreadcrumb').style.display = 'none';
     return;
   }
+  // A piece has no page of its own — its artwork does.
+  if (sub.parent_id) { location.replace(artworkUrl(sub.parent_id)); return; }
   const backBtn = document.getElementById('artworkBackBtn');
-  backBtn.href = sub.project_id ? projectUrl(sub.project_id) : `/${CURRENT_LANG}/campaigns`;
+  const campaignId = sub.project_id || sub.home_project_id;
+  backBtn.href = campaignId ? projectUrl(campaignId) : `/${CURRENT_LANG}/campaigns`;
   renderArtworkBreadcrumb(sub);
   populateLightboxContent(sub);
+  renderArtworkPieceUsage(sub);
   updateArtworkMeta(sub);
   renderArtworkJsonLd(sub);
   // Set once the actual image dimensions are known, to give the browser a

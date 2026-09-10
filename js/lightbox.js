@@ -390,11 +390,38 @@ function applyArtDetailsToCaption(sub) {
     sub.art_material || null,
     sub.art_completed_date ? fmtCompletedYear(sub.art_completed_date) : null,
   ].filter(Boolean).join(' · ');
+  renderLightboxPieceNote(sub);
   document.getElementById('lightbox-cap-desc').textContent = sub.art_description || '';
   const linkEl = document.getElementById('lightbox-cap-link');
   const href = sub.art_link ? safeHref(sub.art_link) : null;
   if (href) { linkEl.textContent = sub.art_link; linkEl.href = href; }
   else { linkEl.textContent = ''; linkEl.removeAttribute('href'); }
+}
+
+// Opened from a mosaic cell holding a PIECE of this artwork: say which
+// piece (row/column of the n×n cut) under the title, with a mini grid
+// marking it (supabase_mosaic_pieces.sql). The element is made here, once,
+// rather than in every page copy of the caption markup.
+function renderLightboxPieceNote(sub) {
+  let el = document.getElementById('lightbox-cap-piece');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'lightbox-cap-piece';
+    document.getElementById('lightbox-cap-meta').insertAdjacentElement('afterend', el);
+  }
+  el.textContent = '';
+  const piece = sub.piece;
+  if (!piece || !(piece.n > 1)) { el.style.display = 'none'; return; }
+  const grid = document.createElement('span'); grid.className = 'lb-piece-grid';
+  grid.style.gridTemplateColumns = `repeat(${piece.n}, 1fr)`;
+  for (let i = 0; i < piece.n * piece.n; i++) {
+    const cell = document.createElement('i');
+    if (i === piece.row * piece.n + piece.col) cell.className = 'on';
+    grid.appendChild(cell);
+  }
+  const text = document.createElement('span');
+  text.textContent = tr('pieceOfArtwork', { row: piece.row + 1, col: piece.col + 1, n: piece.n });
+  el.append(grid, text);
+  el.style.display = '';
 }
 
 // The like/comments/exhibit buttons are the same for everyone, but Edit,
@@ -414,7 +441,9 @@ function applyLightboxOwnerControls(sub) {
   deleteBtn.onclick = () => deleteWeavoSubmission(sub);
   lbEditBtn.style.display = isOwner ? '' : 'none';
   const removeBtn = document.getElementById('lb-remove-btn');
-  removeBtn.style.display = (me.isAdmin && !isOwner && sub.project_id) ? '' : 'none';
+  // A cut artwork opened from one of its pieces can be pulled out too —
+  // unmatch_submission releases every piece of it.
+  removeBtn.style.display = (me.isAdmin && !isOwner && (sub.project_id || sub.piece)) ? '' : 'none';
   removeBtn.onclick = () => removeSubmissionFromProject(sub);
 }
 document.addEventListener('weavo:authchange', () => {

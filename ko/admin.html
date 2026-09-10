@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-154431">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-154431">
+<link rel="stylesheet" href="/css/base.css?v=20260910-162519">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-162519">
 </head>
 
 <body>
@@ -55,7 +55,7 @@
           <div class="admin-usage">
             <div class="admin-usage-tile"><div class="admin-usage-k">DB 용량</div><div class="admin-usage-v" id="adminDbSize">—</div></div>
             <div class="admin-usage-tile"><div class="admin-usage-k">Storage 사용량</div><div class="admin-usage-v" id="adminStorageSize">—</div><div class="admin-usage-s">파일 <span id="adminStorageFiles">—</span>개</div></div>
-            <div class="admin-usage-tile"><div class="admin-usage-k">작품 (풀 대기)</div><div class="admin-usage-v" id="adminCountSubmissions">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">작품 (대기 조각)</div><div class="admin-usage-v" id="adminCountSubmissions">—</div></div>
             <div class="admin-usage-tile"><div class="admin-usage-k">캠페인 칸 합계</div><div class="admin-usage-v" id="adminCountPixels">—</div><div class="admin-usage-s">진행 중 캠페인 <span id="adminCountProjects">—</span>개</div></div>
             <div class="admin-usage-tile"><div class="admin-usage-k">회원</div><div class="admin-usage-v" id="adminCountProfiles">—</div></div>
           </div>
@@ -84,6 +84,12 @@
           <div class="admin-settings" id="adminSettings">
             <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>캠페인 페이지 오른쪽에 "미리보기"(기준 색상) 썸네일 표시 <em>(기본: 끔)</em></span></label>
             <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>방문자 수 집계 — 브라우저마다 하루(한국 시간) 한 번, 회원·게스트를 구분해 위 "방문 통계" 에 표시 <em>(기본 켜짐; 끄면 서버의 record_visit() 도 기록하지 않음)</em></span></label>
+            <div class="admin-setting admin-setting-range">
+              <label for="adminPieceGrid">작품 조각 — <strong>분할 개수</strong>: 작품을 가로·세로 몇 등분으로 잘라 모자이크 조각으로 쓸지. 7 이면 49조각. 새로 올리는 작품부터 적용되고, 기존 작품은 아래 "작품 조각" 의 "전체 다시 생성" 으로 바꿉니다. <em>(기본: 7)</em></label>
+              <div class="admin-range"><input id="adminPieceGrid" type="range" min="2" max="12" step="1" data-setting="pieceGrid" disabled><output for="adminPieceGrid" data-setting-output="pieceGrid">7</output></div>
+              <label for="adminPieceMatchDistance">작품 조각 — <strong>색 일치 기준</strong>: 조각 색과 빈 칸 색의 거리(Lab, 밝기 가중 0.2)가 이 값 이하일 때만 조각을 넣습니다. 낮을수록 엄격해 조각이 덜 들어가고 색은 더 정확합니다. 서버 매칭이 직접 읽어 강제합니다. <em>(기본: 20)</em></label>
+              <div class="admin-range"><input id="adminPieceMatchDistance" type="range" min="5" max="60" step="1" data-setting="pieceMatchDistance" disabled><output for="adminPieceMatchDistance" data-setting-output="pieceMatchDistance">20</output></div>
+            </div>
             <div class="admin-setting admin-setting-range">
               <label for="adminPreviewContrast">빈 칸 회색 — <strong>대비</strong>: 100 이면 기준 사진의 명암 차이 그대로, 0 이면 평평한 회색. 낮출수록 홈·캠페인 카드·캠페인 격자·공유 카드에서 사진을 알아보기 어려워집니다. <em>(기본 40)</em></label>
               <div class="admin-range"><input id="adminPreviewContrast" type="range" min="0" max="100" step="1" data-setting="previewContrast" disabled><output for="adminPreviewContrast" data-setting-output="previewContrast">40</output></div>
@@ -123,8 +129,25 @@
             <button type="button" class="admin-btn primary" id="adminPoolRunBtn">지금 배치</button>
           </div>
           <p class="admin-help">아직 어느 캠페인에도 들어가지 못한 작품입니다(새로 올라온 작품, 캠페인 삭제로 돌아온 작품). 매칭은 업로드·캠페인 생성·reshape·작품 제거·캠페인 삭제 때만 돌기 때문에 <strong>지금 배치</strong>로 바로 돌릴 수 있습니다. 진행 중인 캠페인의 빈 칸과 색이 맞지 않는 작품은 여기 그대로 남습니다.</p>
+          <p class="admin-help">대기 중인 조각: <strong id="adminPoolPieces">—</strong>개 — 조각은 자기 캠페인에 색이 맞는 빈 칸이 생길 때 자동으로 들어갑니다.</p>
           <div id="adminPoolList" class="admin-list"></div>
           <p class="empty-note admin-empty" id="adminPoolEmpty" style="display:none;">풀에 대기 중인 작품이 없습니다.</p>
+        </section>
+
+        <section class="admin-section" id="adminPiecesSection">
+          <div class="admin-section-head">
+            <h2>작품 조각</h2>
+            <div class="admin-actions">
+              <button type="button" class="admin-btn primary" id="adminPiecesRunBtn" disabled>조각 생성</button>
+              <button type="button" class="admin-btn" id="adminPiecesRegenBtn" disabled>전체 다시 생성</button>
+            </div>
+          </div>
+          <p class="admin-help">작품은 올릴 때 브라우저가 "사이트 옵션" 의 분할 개수대로 조각을 만들고, 모자이크에는 색이 맞는 조각만 들어갑니다. 조각이 없는 작품(이 기능 전에 올라온 작품, 조각 생성에 실패한 작품)은 "조각 생성" 으로 만듭니다 — 통째로 배치돼 있던 작품은 칸에서 풀려 조각으로 다시 배치됩니다. 분할 개수를 바꾼 뒤에는 "전체 다시 생성" 으로 모든 작품을 새 개수로 다시 자릅니다.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminPiecesUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_mosaic_pieces.sql</code> 을 먼저 실행하세요.</p>
+          <div class="admin-usage">
+            <div class="admin-usage-tile"><div class="admin-usage-k">조각 없는 작품</div><div class="admin-usage-v" id="adminPiecesMissing">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">조각 있는 작품</div><div class="admin-usage-v" id="adminPiecesDoneCount">—</div></div>
+          </div>
         </section>
 
         <section class="admin-section" id="adminThumbsSection">
@@ -401,14 +424,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-154431"></script>
-<script src="/js/i18n/ko.js?v=20260910-154431"></script>
-<script src="/js/common.js?v=20260910-154431"></script>
-<script src="/js/auth.js?v=20260910-154431"></script>
-<script src="/js/notifications.js?v=20260910-154431"></script>
-<script src="/js/color-engine.js?v=20260910-154431"></script>
-<script src="/js/matching.js?v=20260910-154431"></script>
-<script src="/js/admin.js?v=20260910-154431"></script>
+<script src="/js/supabase-client.js?v=20260910-162519"></script>
+<script src="/js/i18n/ko.js?v=20260910-162519"></script>
+<script src="/js/common.js?v=20260910-162519"></script>
+<script src="/js/auth.js?v=20260910-162519"></script>
+<script src="/js/notifications.js?v=20260910-162519"></script>
+<script src="/js/color-engine.js?v=20260910-162519"></script>
+<script src="/js/matching.js?v=20260910-162519"></script>
+<script src="/js/admin.js?v=20260910-162519"></script>
 
 </body>
 </html>

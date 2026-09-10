@@ -20,6 +20,7 @@ let artworksDone = false; // the server sent a short page: nothing more to load
 let artworksLoading = false;
 let artworksRun = 0;      // bumped on every new search/sort so a stale page is ignored
 let artworksHasLikeCount = true; // false once the column turns out to be missing
+let artworksHasPieces = true; // false once parent_id (supabase_mosaic_pieces.sql) turns out to be missing
 
 function artworkCardEl(sub, i) {
   const name = sub.author_name || tr('anonymous');
@@ -70,6 +71,7 @@ function artworksPageQuery() {
   const cols = 'id,image_url,thumb_url,art_title,author_id,author_name,author_avatar_url,created_at'
     + (artworksHasLikeCount ? ',like_count' : '');
   let q = sb.from('mosaic_submissions').select(cols);
+  if (artworksHasPieces) q = q.is('parent_id', null); // pieces are not artworks
   if (artworksQuery) {
     const v = artworksSearchValue();
     q = q.or(`art_title.ilike.${v},author_name.ilike.${v}`);
@@ -84,10 +86,15 @@ async function loadMoreArtworks() {
   const run = artworksRun;
   updateArtworksMore();
   let { data, error } = await artworksPageQuery();
-  if (error && artworksHasLikeCount && isSchemaMismatchError(error)) {
-    // supabase_mosaic_like_count.sql not applied yet — plain newest-first.
-    artworksHasLikeCount = false;
-    if (run === artworksRun) ({ data, error } = await artworksPageQuery());
+  // supabase_mosaic_like_count.sql / supabase_mosaic_pieces.sql not applied
+  // yet: the error names the missing column — drop that one (not both) and
+  // ask again, at most once per column.
+  for (let tries = 0; tries < 2 && error && isSchemaMismatchError(error) && (artworksHasLikeCount || artworksHasPieces); tries++) {
+    const msg = String(error.message || '');
+    if (artworksHasPieces && (msg.includes('parent_id') || !artworksHasLikeCount)) artworksHasPieces = false;
+    else artworksHasLikeCount = false;
+    if (run !== artworksRun) return;
+    ({ data, error } = await artworksPageQuery());
   }
   if (run !== artworksRun) return; // the visitor changed the search/sort meanwhile
   artworksLoading = false;
