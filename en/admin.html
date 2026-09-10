@@ -7,8 +7,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-115859">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-115859">
+<link rel="stylesheet" href="/css/base.css?v=20260910-121023">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-121023">
 </head>
 <body>
 
@@ -56,12 +56,29 @@
           </div>
         </section>
 
+        <section class="admin-section" id="adminVisitsSection">
+          <h2>Visitors</h2>
+          <p class="admin-help">Browsers that opened the site, counted once per day (Asia/Seoul) per browser; a <strong>member</strong> is a browser with a signed-in session at that moment, everything else is a <strong>guest</strong>. Two devices count twice, a guest who signs in the same day counts once on each side, and visitors without JavaScript and known crawlers are not counted. Recorded by <code>record_visit()</code> from <code>supabase_visit_stats.sql</code> — the "Count visitors" option below switches it off. New artworks and new members come from the existing tables.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminVisitsUnavailable" style="display:none;">Not available yet — run <code>supabase_visit_stats.sql</code> in the Supabase SQL editor.</p>
+          <div id="adminVisitsBody" style="display:none;">
+            <div class="admin-usage">
+              <div class="admin-usage-tile"><div class="admin-usage-k">Today</div><div class="admin-usage-v" id="adminVisitsToday">—</div><div class="admin-usage-s"><span id="adminVisitsTodayMembers">—</span> members · <span id="adminVisitsTodayGuests">—</span> guests</div></div>
+              <div class="admin-usage-tile"><div class="admin-usage-k">Last 10 days</div><div class="admin-usage-v" id="adminVisitsTotal">—</div><div class="admin-usage-s"><span id="adminVisitsTotalMembers">—</span> members · <span id="adminVisitsTotalGuests">—</span> guests</div></div>
+              <div class="admin-usage-tile"><div class="admin-usage-k">New artworks today</div><div class="admin-usage-v" id="adminVisitsNewArtworks">—</div><div class="admin-usage-s"><span id="adminVisitsNewArtworksAll">—</span> in 10 days</div></div>
+              <div class="admin-usage-tile"><div class="admin-usage-k">New members today</div><div class="admin-usage-v" id="adminVisitsNewMembers">—</div><div class="admin-usage-s"><span id="adminVisitsNewMembersAll">—</span> in 10 days</div></div>
+            </div>
+            <div class="admin-chart" id="adminVisitsChart"></div>
+            <div class="admin-chart-legend"><span><i class="admin-chart-swatch admin-bar-members"></i>Members</span><span><i class="admin-chart-swatch admin-bar-guests"></i>Guests</span></div>
+          </div>
+        </section>
+
         <section class="admin-section" id="adminSettingsSection">
           <h2>Site options</h2>
           <p class="admin-help">Apply to every visitor from their next page load (within about a minute). Stored in the single <code>site_settings</code> row (<code>supabase_site_settings.sql</code>); every site option is set here and only here.</p>
           <p class="admin-help admin-settings-unavailable" id="adminSettingsUnavailable" style="display:none;">Not available yet — run <code>supabase_site_settings.sql</code> in the Supabase SQL editor first. Until then every option uses its default.</p>
           <div class="admin-settings" id="adminSettings">
             <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>Show the "Preview" thumbnail (the reference colors) in the corner of campaign pages <em>(default: off)</em></span></label>
+            <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>Count visitors — once a day per browser (Asia/Seoul), members and guests separately, for the "Visitors" section above <em>(default on; when off, record_visit() refuses on the server as well)</em></span></label>
           </div>
         </section>
 
@@ -246,13 +263,13 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-115859"></script>
-<script src="/js/i18n/en.js?v=20260910-115859"></script>
-<script src="/js/common.js?v=20260910-115859"></script>
-<script src="/js/auth.js?v=20260910-115859"></script>
-<script src="/js/notifications.js?v=20260910-115859"></script>
-<script src="/js/color-engine.js?v=20260910-115859"></script>
-<script src="/js/matching.js?v=20260910-115859"></script>
-<script src="/js/admin.js?v=20260910-115859"></script>
+<script src="/js/supabase-client.js?v=20260910-121023"></script>
+<script src="/js/i18n/en.js?v=20260910-121023"></script>
+<script src="/js/common.js?v=20260910-121023"></script>
+<script src="/js/auth.js?v=20260910-121023"></script>
+<script src="/js/notifications.js?v=20260910-121023"></script>
+<script src="/js/color-engine.js?v=20260910-121023"></script>
+<script src="/js/matching.js?v=20260910-121023"></script>
+<script src="/js/admin.js?v=20260910-121023"></script>
 </body>
 </html>

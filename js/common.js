@@ -482,6 +482,10 @@ function isSchemaMismatchError(error) {
 const SITE_SETTING_DEFAULTS = Object.freeze({
   // Corner "Preview" thumbnail (the reference colors) on the campaign page.
   showCampaignPreview: false,
+  // Daily visitor counting for the admin "Visitors" section. record_visit()
+  // in supabase_visit_stats.sql reads this same key, so "off" is enforced on
+  // the server too, not merely skipped by the browser (see js/auth.js).
+  countVisits: true,
 });
 const SITE_SETTINGS_TTL_MS = 60 * 1000;
 const SITE_SETTINGS_CACHE_KEY = 'weavo.siteSettings';

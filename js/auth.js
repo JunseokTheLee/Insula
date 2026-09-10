@@ -511,6 +511,40 @@ addEventListener('keydown', e => {
   if (anyOpen) anyOpen.classList.remove('open');
 });
 
+// ---------- visitor count (admin "Visitors" section) ----------
+// One record_visit() call per browser per Asia/Seoul day, per kind —
+// "member" when a session is present, "guest" otherwise. The RPC itself
+// decides the kind from auth.uid(), so the client cannot pose as a member;
+// all it does is not call twice. localStorage remembers what was already
+// counted today, an in-memory set stops the two boot paths (authReady and
+// onAuthStateChange) from racing before that mark is written, and bots
+// that run JavaScript are skipped by user agent. Never throws — a page
+// must never break over statistics — and a missing RPC (SQL not applied
+// yet) is marked as done for the day too, so it costs one request per
+// browser per day rather than one per page view.
+const visitKindsTried = new Set();
+function visitDayKst() {
+  try { return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(new Date()); }
+  catch (e) { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+}
+async function recordVisitOnce() {
+  try {
+    if (navigator.webdriver || /bot|crawl|spider|slurp|headless|lighthouse/i.test(navigator.userAgent)) return;
+    const kind = me.id ? 'member' : 'guest';
+    if (visitKindsTried.has(kind)) return;
+    visitKindsTried.add(kind);
+    const day = visitDayKst();
+    let mark = {};
+    try { mark = JSON.parse(localStorage.getItem('weavoVisit') || '{}') || {}; } catch (e) { mark = {}; }
+    if (mark.day !== day) mark = { day };
+    if (mark[kind]) return;
+    const { error } = await sb.rpc('record_visit');
+    if (error && error.code !== 'PGRST202' && error.code !== '42883') { visitKindsTried.delete(kind); return; } // network etc.: try again on the next page
+    mark[kind] = true;
+    try { localStorage.setItem('weavoVisit', JSON.stringify(mark)); } catch (e) { /* private mode: at most one call per page instead */ }
+  } catch (e) { /* statistics never break a page */ }
+}
+
 // ---------- boot ----------
 sb.auth.onAuthStateChange(async (_event, session) => {
   me = session ? meFromUser(session.user) : { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: [] };
@@ -518,6 +552,7 @@ sb.auth.onAuthStateChange(async (_event, session) => {
   if (me.id) { await loadMyProfile(); upsertBaseProfile(); }
   updateIdentityUI();
   maybeRequireProfileSetup();
+  if (_event === 'SIGNED_IN') recordVisitOnce(); // a guest who signs in now counts as a member too
   // Lets anything already on screen that keys off `me` (e.g. the lightbox's
   // owner-only Edit/Delete buttons) re-evaluate now that it may have flipped.
   document.dispatchEvent(new CustomEvent('weavo:authchange'));
@@ -537,4 +572,5 @@ window.authReady = (async () => {
   updateIdentityUI();
   maybeRequireProfileSetup();
   document.dispatchEvent(new CustomEvent('weavo:authchange'));
+  recordVisitOnce(); // after the session is known, so a member is not counted as a guest
 })();

@@ -1,5 +1,5 @@
 // Admin page (/{lang}/admin): report queue, campaign list with per-campaign
-// delete, and the admin roster. Everything here is gated twice — the page
+// delete, the admin roster, usage and visitor statistics. Everything here is gated twice — the page
 // hides itself unless me.isAdmin, and every read/write it makes is already
 // admin-only at the database (reports RLS, delete_mosaic_project RPC).
 // Deliberately offers NO way to delete artwork, let alone many at once (see
@@ -440,6 +440,75 @@ async function loadAdminUsage() {
   set('adminCountProfiles', String(data.profiles ?? '—'));
 }
 
+// ---------- visitor statistics (visit_days) ----------
+// admin_visit_stats(p_days) (supabase_visit_stats.sql) returns one row per
+// day for the last N days — guests, members, new artworks, new members —
+// oldest first, with empty days already filled in as 0. Until that SQL has
+// been applied (PGRST202 / 42883: function missing) the section shows a
+// notice instead of its tiles and chart.
+const ADMIN_VISIT_DAYS = 10;
+const adminNum = n => Number(n || 0).toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US');
+async function loadAdminVisits() {
+  const section = document.getElementById('adminVisitsSection');
+  if (!section) return;
+  const { data, error } = await sb.rpc('admin_visit_stats', { p_days: ADMIN_VISIT_DAYS });
+  if (error) {
+    if (error.code !== 'PGRST202' && error.code !== '42883') console.error('admin_visit_stats error:', error);
+    adminShow('adminVisitsUnavailable', true);
+    adminShow('adminVisitsBody', false);
+    return;
+  }
+  const rows = Array.isArray(data) ? data : [];
+  adminShow('adminVisitsUnavailable', false);
+  adminShow('adminVisitsBody', true);
+  const sum = key => rows.reduce((a, r) => a + Number(r[key] || 0), 0);
+  const today = rows[rows.length - 1] || {};
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('adminVisitsToday', adminNum(Number(today.guests || 0) + Number(today.members || 0)));
+  set('adminVisitsTodayMembers', adminNum(today.members));
+  set('adminVisitsTodayGuests', adminNum(today.guests));
+  set('adminVisitsTotal', adminNum(sum('guests') + sum('members')));
+  set('adminVisitsTotalMembers', adminNum(sum('members')));
+  set('adminVisitsTotalGuests', adminNum(sum('guests')));
+  set('adminVisitsNewArtworks', adminNum(today.new_artworks));
+  set('adminVisitsNewArtworksAll', adminNum(sum('new_artworks')));
+  set('adminVisitsNewMembers', adminNum(today.new_members));
+  set('adminVisitsNewMembersAll', adminNum(sum('new_members')));
+  const chart = document.getElementById('adminVisitsChart');
+  if (chart) chart.innerHTML = adminVisitsChartSvg(rows);
+}
+// Stacked bars — guests below, members on top — with the day's total above
+// each bar and the date under it, as one inline <svg>. Ten bars need no
+// chart library (this page does not load d3). The width is fluid through
+// the viewBox; colours live in admin.css (.admin-bar-*) and the static
+// legend in the HTML reuses those classes. Dates arrive as YYYY-MM-DD
+// strings and are split by hand — new Date("YYYY-MM-DD") would shift them
+// to UTC.
+function adminVisitsChartSvg(rows) {
+  const W = 640, H = 210, top = 24, bottom = 26, left = 8, right = 8;
+  const n = Math.max(rows.length, 1);
+  const slot = (W - left - right) / n;
+  const barW = Math.min(36, slot * 0.6);
+  const area = H - top - bottom;
+  const base = H - bottom;
+  const max = Math.max(1, ...rows.map(r => Number(r.guests || 0) + Number(r.members || 0)));
+  const label = iso => { const p = String(iso).split('-'); return p.length === 3 ? `${Number(p[1])}/${Number(p[2])}` : String(iso); };
+  const parts = [`<line class="admin-chart-axis" x1="${left}" y1="${base + 0.5}" x2="${W - right}" y2="${base + 0.5}"/>`];
+  rows.forEach((r, i) => {
+    const g = Number(r.guests || 0), m = Number(r.members || 0), total = g + m;
+    const x = (left + slot * i + (slot - barW) / 2).toFixed(1);
+    const cx = (left + slot * i + slot / 2).toFixed(1);
+    const gh = area * g / max, mh = area * m / max;
+    const tip = escapeHtml(tr('adminVisitsTip', { date: r.day, total: adminNum(total), members: adminNum(m), guests: adminNum(g) }));
+    parts.push(`<g><title>${tip}</title>`
+      + `<rect class="admin-bar-guests" x="${x}" y="${(base - gh).toFixed(1)}" width="${barW.toFixed(1)}" height="${gh.toFixed(1)}"/>`
+      + `<rect class="admin-bar-members" x="${x}" y="${(base - gh - mh).toFixed(1)}" width="${barW.toFixed(1)}" height="${mh.toFixed(1)}"/>`
+      + `<text class="admin-chart-total" x="${cx}" y="${(base - gh - mh - 6).toFixed(1)}" text-anchor="middle">${adminNum(total)}</text>`
+      + `<text class="admin-chart-day" x="${cx}" y="${H - 8}" text-anchor="middle">${escapeHtml(label(r.day))}</text></g>`);
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(tr('adminVisitsChartLabel', { n: rows.length }))}">${parts.join('')}</svg>`;
+}
+
 // ---------- site options (site_settings) ----------
 // The checkboxes are static HTML (en/ko admin.html) tagged
 // data-setting="<key>"; this binds each one to the site_settings row
@@ -487,7 +556,7 @@ async function loadAdminPage() {
   adminShow('adminNotice', !isAdmin);
   adminShow('adminBody', isAdmin);
   if (!isAdmin) return;
-  await Promise.all([loadAdminUsage(), loadAdminSettings(), loadAdminReports(), loadAdminCampaigns(), loadAdminPool(), loadAdminThumbs(), loadAdminAdmins()]);
+  await Promise.all([loadAdminUsage(), loadAdminVisits(), loadAdminSettings(), loadAdminReports(), loadAdminCampaigns(), loadAdminPool(), loadAdminThumbs(), loadAdminAdmins()]);
 }
 document.getElementById('adminReportsShowAll').onchange = () => loadAdminReports();
 document.addEventListener('weavo:authchange', () => loadAdminPage());
