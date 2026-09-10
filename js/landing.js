@@ -8,6 +8,7 @@
 // percent, pledge progress, the caption) follows the campaign on screen.
 let heroProjects = [];
 let heroIndex = 0;
+let heroPledge = 500000; // the campaign on screen's pledge_amount (see renderHeroPreview)
 async function loadHeroPreview() {
   const { data: projects, error } = await sb.from('mosaic_projects')
     .select('*')
@@ -24,6 +25,10 @@ async function renderHeroPreview() {
   const link = document.getElementById('heroPreview');
   const featured = heroProjects[heroIndex];
   document.getElementById('heroArtNav').style.display = heroProjects.length > 1 ? '' : 'none';
+  // Pledge partner + amount follow the campaign on screen, defaults when
+  // there is none (or the DB predates supabase_mosaic_sponsor.sql).
+  heroPledge = typeof pledgeAmountOf === 'function' ? pledgeAmountOf(featured) : 500000;
+  renderHeroPartner(featured);
   if (!featured) {
     canvas.style.display = 'none';
     emptyEl.style.display = '';
@@ -70,13 +75,33 @@ function renderHeroMine(filled, total) {
   if (!me.id) { box.style.display = 'none'; return; }
   let mine = 0;
   for (const sub of filled.values()) if (sub.author_id === me.id) mine++;
-  const pledge = parseInt(document.getElementById('heroProgress').dataset.pledge, 10) || 0;
+  const pledge = heroPledge;
   const fmt = n => n.toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US');
   document.getElementById('heroMineAmount').textContent = fmt(total ? Math.round(pledge * mine / total) : 0);
   document.getElementById('heroMineCount').textContent = fmt(mine);
   box.style.display = '';
 }
 document.addEventListener('weavo:authchange', () => { if (heroMineFilled) renderHeroMine(heroMineFilled, heroMineTotal); });
+// The pledging partner line (supabase_mosaic_sponsor.sql): the campaign's
+// own logo + name where the fixed "Pledging partner" label sits, its
+// tagline on the line under it, and its name inside the body copy. A
+// campaign without those falls back to the static copy in the HTML, kept
+// on each element's data-default so the fallback needs no i18n key.
+function renderHeroPartner(project) {
+  const name = String((project && project.sponsor_name) || '').trim();
+  const tagline = String((project && project.sponsor_tagline) || '').trim();
+  const logoUrl = project && project.sponsor_logo_url;
+  const nameEl = document.getElementById('heroPartnerName');
+  const logoEl = document.getElementById('heroPartnerLogo');
+  const titleEl = document.getElementById('heroPartnerTitle');
+  const inlineEl = document.getElementById('heroPartnerInline');
+  if (!nameEl || !logoEl || !titleEl || !inlineEl) return;
+  nameEl.textContent = name || nameEl.dataset.default;
+  if (logoUrl) { logoEl.src = cdnUrl(logoUrl); logoEl.alt = name; logoEl.style.display = ''; }
+  else { logoEl.removeAttribute('src'); logoEl.alt = ''; logoEl.style.display = 'none'; }
+  titleEl.textContent = tagline || titleEl.dataset.default;
+  inlineEl.textContent = name ? tr('heroPartnerNamed', { name }) : inlineEl.dataset.default;
+}
 function heroStep(delta) {
   if (heroProjects.length < 2) return;
   heroIndex = (heroIndex + delta + heroProjects.length) % heroProjects.length;
@@ -85,12 +110,11 @@ function heroStep(delta) {
 document.getElementById('heroPrev').onclick = () => heroStep(-1);
 document.getElementById('heroNext').onclick = () => heroStep(1);
 // Pieces / percent / "donated so far" for the campaign on screen. The pledge
-// amount is a placeholder read from data-pledge on #heroProgress until
-// campaigns carry their own donor and pledge fields; donated-so-far is the
-// pledge × the exact filled share (so 71.5% of ₩2,000,000 is ₩1,430,000).
+// is the campaign's own pledge_amount (heroPledge, set in renderHeroPreview);
+// donated-so-far is the pledge × the exact filled share (so 71.5% of
+// ₩2,000,000 is ₩1,430,000).
 function renderHeroProgress(filled, total) {
-  const wrap = document.getElementById('heroProgress');
-  const pledge = parseInt(wrap.dataset.pledge, 10) || 0;
+  const pledge = heroPledge;
   const share = total ? filled / total : 0;
   const fmt = n => n.toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US');
   const set = (id, v) => { document.getElementById(id).textContent = v; };

@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-143518">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-143518">
+<link rel="stylesheet" href="/css/base.css?v=20260910-153923">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-153923">
 </head>
 
 <body>
@@ -355,7 +355,7 @@
 </div>
 
 
-<!-- Edit campaign modal: title / description only. Size and reference image
+<!-- Edit campaign modal: title / description / donation pledge. Size and reference image
      are changed with Reshape on the campaign page (it re-places artwork). -->
 <div id="admin-edit-campaign-modal" class="modal-overlay">
   <div class="modal-panel" role="dialog" aria-labelledby="aec-heading">
@@ -368,6 +368,28 @@
       <label for="aec-desc">설명 <span class="field-hint">(선택)</span></label>
       <textarea id="aec-desc" placeholder="이 Weavo는 무엇에 관한 건가요?" maxlength="300"></textarea>
     </div>
+    <!-- Donation pledge (supabase_mosaic_sponsor.sql) — shown on the landing hero. -->
+    <div class="field">
+      <label for="aec-sponsor">약정 기업명 <span class="field-hint">(선택)</span></label>
+      <input type="text" id="aec-sponsor" placeholder="기부를 약정한 기업·단체 이름" maxlength="80">
+    </div>
+    <div class="field">
+      <label>약정 기업 로고 <span class="field-hint">(선택 — ✕ 로 제거)</span></label>
+      <div class="img-upload-area logo-picker" id="aec-logo-picker">
+        <div class="img-placeholder"><span class="up-icon">🖼</span><span>클릭하거나 로고 이미지를 끌어다 놓으세요</span></div>
+        <img class="img-preview" alt="">
+        <button type="button" class="img-remove" aria-label="로고 제거">✕</button>
+        <input type="file" class="img-input" accept="image/*">
+      </div>
+    </div>
+    <div class="field">
+      <label for="aec-tagline">홍보 문구 <span class="field-hint">(선택 — 로고 아래 한 줄)</span></label>
+      <input type="text" id="aec-tagline" placeholder="예: 예술로 잇는 더 따뜻한 내일" maxlength="200">
+    </div>
+    <div class="field">
+      <label for="aec-pledge">기부 약정 금액 (원)</label>
+      <input type="text" inputmode="numeric" id="aec-pledge" placeholder="500000">
+    </div>
     <p class="admin-help">크기와 기준 이미지는 캠페인 페이지의 <strong>Reshape</strong> 로 바꿉니다. 작품을 다시 배치해야 하기 때문입니다.</p>
     <div class="field-error" id="aec-error"></div>
     <div class="modal-actions">
@@ -379,14 +401,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-143518"></script>
-<script src="/js/i18n/ko.js?v=20260910-143518"></script>
-<script src="/js/common.js?v=20260910-143518"></script>
-<script src="/js/auth.js?v=20260910-143518"></script>
-<script src="/js/notifications.js?v=20260910-143518"></script>
-<script src="/js/color-engine.js?v=20260910-143518"></script>
-<script src="/js/matching.js?v=20260910-143518"></script>
-<script src="/js/admin.js?v=20260910-143518"></script>
+<script src="/js/supabase-client.js?v=20260910-153923"></script>
+<script src="/js/i18n/ko.js?v=20260910-153923"></script>
+<script src="/js/common.js?v=20260910-153923"></script>
+<script src="/js/auth.js?v=20260910-153923"></script>
+<script src="/js/notifications.js?v=20260910-153923"></script>
+<script src="/js/color-engine.js?v=20260910-153923"></script>
+<script src="/js/matching.js?v=20260910-153923"></script>
+<script src="/js/admin.js?v=20260910-153923"></script>
 
 </body>
 </html>

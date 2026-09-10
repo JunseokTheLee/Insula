@@ -627,6 +627,48 @@ async function uploadImage(file) {
   return sb.storage.from('artwork').getPublicUrl(path).data.publicUrl;
 }
 
+// ---------- campaign donation pledge (supabase_mosaic_sponsor.sql) ----------
+// Every campaign carries its pledging partner (name / logo / tagline) and
+// the pledged amount in KRW. Rows from before that file — or a DB where it
+// isn't applied yet — have no pledge_amount, so readers go through
+// pledgeAmountOf() and get the default rather than NaN.
+const PLEDGE_AMOUNT_DEFAULT = 500000;
+function pledgeAmountOf(project) {
+  const n = project ? Number(project.pledge_amount) : NaN;
+  return Number.isInteger(n) && n >= 0 ? n : PLEDGE_AMOUNT_DEFAULT;
+}
+// Admin form input → integer won, or null when it is not a whole number ≥ 0.
+// Typed thousands separators ("2,000,000") are accepted; blank = the default.
+function parsePledgeInput(text) {
+  const raw = String(text || '').trim();
+  if (raw === '') return PLEDGE_AMOUNT_DEFAULT;
+  if (!/^[\d,\s]+$/.test(raw)) return null;
+  const n = parseInt(raw.replace(/[^\d]/g, ''), 10);
+  return Number.isInteger(n) && n >= 0 && n <= 1000000000 ? n : null;
+}
+// Shrinks an image file so its longer side is ≤ maxDim (PNG, so a logo's
+// transparency survives); a file already that small is returned untouched.
+// Resolves to the original on any decode failure — never blocks an upload.
+async function shrinkImageFile(file, maxDim) {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await loadImageEl(objectUrl);
+    const w0 = img.naturalWidth, h0 = img.naturalHeight;
+    if (!w0 || !h0 || Math.max(w0, h0) <= maxDim) return file;
+    const scale = maxDim / Math.max(w0, h0);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(w0 * scale)); canvas.height = Math.max(1, Math.round(h0 * scale));
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    return blob ? new File([blob], file.name.replace(/\.[^.]+$/, '') + '.png', { type: 'image/png' }) : file;
+  } catch (e) {
+    console.error('shrinkImageFile failed:', e);
+    return file;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 // Downscaled copies of an uploaded artwork, both made in the browser from a
 // single decode of the file:
 //  • thumb — longer side ≤ THUMB_MAX_DIM px, JPEG — for every place a piece

@@ -26,8 +26,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-143518">
-<link rel="stylesheet" href="/css/home.css?v=20260910-143518">
+<link rel="stylesheet" href="/css/base.css?v=20260910-153923">
+<link rel="stylesheet" href="/css/home.css?v=20260910-153923">
 </head>
 <body>
 
@@ -68,8 +68,8 @@
                display:contents, so grid areas place the mosaic on the right. -->
           <div class="hero-card">
             <div class="hero-partner-head">
-              <div class="hero-partner-logos"><span class="hero-partner-name">Pledging partner</span><span class="hero-partner-x" aria-hidden="true">×</span><span class="hero-partner-weavo">WEAVO</span></div>
-              <div class="hero-partner-title">A warmer world, seen differently</div>
+              <div class="hero-partner-logos"><img class="hero-partner-logo" id="heroPartnerLogo" alt="" style="display:none;"><span class="hero-partner-name" id="heroPartnerName" data-default="Pledging partner">Pledging partner</span><span class="hero-partner-x" aria-hidden="true">×</span><span class="hero-partner-weavo">WEAVO</span></div>
+              <div class="hero-partner-title" id="heroPartnerTitle" data-default="A warmer world, seen differently">A warmer world, seen differently</div>
             </div>
             <div class="hero-art">
               <div class="hero-art-main">
@@ -89,9 +89,7 @@
                 </div>
               </div>
             </div>
-            <!-- data-pledge: placeholder until campaigns carry their own donor /
-                 pledge fields — the one place to change the amount for now. -->
-            <div class="hero-progress" id="heroProgress" data-pledge="2000000">
+            <div class="hero-progress" id="heroProgress">
               <div class="hero-pieces">
                 <div class="hero-pieces-count"><b id="heroPieces">0</b> <span class="hero-pieces-total">/ <span id="heroPiecesTotal">0</span> pieces</span></div>
                 <div class="hero-pieces-pct" id="heroPercent">0%</div>
@@ -104,7 +102,7 @@
           <div class="hero-donation">
             <span class="hero-heart-wrap" aria-hidden="true"><svg class="hero-heart" viewBox="-2 -2 28 28" width="34" height="34"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
             <div>
-              <div class="hero-donation-amount"><b>₩<span id="heroDonation">0</span></b> <span class="hero-donation-of">/ ₩<span id="heroPledge">2,000,000</span></span></div>
+              <div class="hero-donation-amount"><b>₩<span id="heroDonation">0</span></b> <span class="hero-donation-of">/ ₩<span id="heroPledge">500,000</span></span></div>
               <div class="hero-donation-note">The more artworks come together, the closer a brighter tomorrow gets for more children.</div>
             </div>
           </div>
@@ -119,7 +117,7 @@
           </div>
 
           <div class="hero-partner-body">
-            <p class="hero-partner-desc">When <span id="heroTotalInline">0</span> small artworks come together to complete the mosaic, the pledging partner will donate <strong>₩<span class="hero-pledge-inline">2,000,000</span></strong> to art and rehabilitation programs for children and youth with disabilities.</p>
+            <p class="hero-partner-desc">When <span id="heroTotalInline">0</span> small artworks come together to complete the mosaic, <span id="heroPartnerInline" data-default="the pledging partner">the pledging partner</span> will donate <strong>₩<span class="hero-pledge-inline">500,000</span></strong> to art and rehabilitation programs for children and youth with disabilities.</p>
             <a class="hero-partner-link" id="heroCampaignLink" href="/en/campaigns">See the campaign <span aria-hidden="true">&rarr;</span></a>
           </div>
 
@@ -323,15 +321,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-143518"></script>
-<script src="/js/i18n/en.js?v=20260910-143518"></script>
-<script src="/js/common.js?v=20260910-143518"></script>
-<script src="/js/color-engine.js?v=20260910-143518"></script>
-<script src="/js/matching.js?v=20260910-143518"></script>
-<script src="/js/auth.js?v=20260910-143518"></script>
-<script src="/js/notifications.js?v=20260910-143518"></script>
-<script src="/js/project-preview.js?v=20260910-143518"></script>
-<script src="/js/lightbox.js?v=20260910-143518"></script>
-<script src="/js/landing.js?v=20260910-143518"></script>
+<script src="/js/supabase-client.js?v=20260910-153923"></script>
+<script src="/js/i18n/en.js?v=20260910-153923"></script>
+<script src="/js/common.js?v=20260910-153923"></script>
+<script src="/js/color-engine.js?v=20260910-153923"></script>
+<script src="/js/matching.js?v=20260910-153923"></script>
+<script src="/js/auth.js?v=20260910-153923"></script>
+<script src="/js/notifications.js?v=20260910-153923"></script>
+<script src="/js/project-preview.js?v=20260910-153923"></script>
+<script src="/js/lightbox.js?v=20260910-153923"></script>
+<script src="/js/landing.js?v=20260910-153923"></script>
 </body>
 </html>

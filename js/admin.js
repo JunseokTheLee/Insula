@@ -112,9 +112,20 @@ async function setAdminReportStatus(id, status) {
 }
 
 // ---------- campaigns ----------
+// The pledge columns (supabase_mosaic_sponsor.sql) are asked for first and
+// dropped from the select when the DB doesn't have them yet (42703), so the
+// list keeps working — the edit modal then just shows the defaults.
+const ADMIN_CAMPAIGN_COLS = 'id,title,description,width,height,created_at,is_archived,version_number,grid_image_url,preview_image_url';
+const ADMIN_PLEDGE_COLS = 'sponsor_name,sponsor_logo_url,sponsor_tagline,pledge_amount';
+async function fetchAdminCampaignRows() {
+  const q = cols => sb.from('mosaic_projects').select(cols).order('created_at', { ascending: false });
+  let res = await q(`${ADMIN_CAMPAIGN_COLS},${ADMIN_PLEDGE_COLS}`);
+  if (res.error && typeof isSchemaMismatchError === 'function' && isSchemaMismatchError(res.error)) res = await q(ADMIN_CAMPAIGN_COLS);
+  return res;
+}
 async function loadAdminCampaigns() {
   const [{ data: projects, error }, { data: placed }] = await Promise.all([
-    sb.from('mosaic_projects').select('id,title,description,width,height,created_at,is_archived,version_number,grid_image_url,preview_image_url').order('created_at', { ascending: false }),
+    fetchAdminCampaignRows(),
     sb.from('mosaic_submissions').select('project_id').not('project_id', 'is', null),
   ]);
   if (error) { console.error('load campaigns error:', error); toast(tr('adminLoadError')); return; }
@@ -131,6 +142,9 @@ async function loadAdminCampaigns() {
     if (p.is_archived) { const b = document.createElement('span'); b.className = 'admin-badge'; b.textContent = `${tr('archivedBadge')} v${p.version_number}`; title.appendChild(document.createTextNode(' ')); title.appendChild(b); }
     const sub = document.createElement('div'); sub.className = 'admin-sub';
     sub.textContent = `${tr('adminCells', { w: p.width, h: p.height, filled: filledBy.get(p.id) || 0 })} · ${tr('adminCreatedOn', { date: adminDate(p.created_at) })} · ${p.grid_image_url ? tr('adminGridImageYes') : tr('adminGridImageNo')} · ${p.preview_image_url ? tr('adminPreviewImageYes') : tr('adminPreviewImageNo')}`;
+    // Donation pledge: the amount, and the partner once one is set.
+    const pledgeWon = (typeof pledgeAmountOf === 'function' ? pledgeAmountOf(p) : 500000).toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US');
+    sub.textContent += ` · ${tr('adminPledgeLine', { amount: pledgeWon })}${p.sponsor_name ? ` · ${p.sponsor_name}` : ''}`;
     main.append(title, sub);
     const actions = document.createElement('div'); actions.className = 'admin-actions';
     // Older campaigns (pre grid-image cache) get a one-off "create" button;
@@ -237,16 +251,22 @@ async function createAdminGridImage(p, btn) {
   }
 }
 
-// ---------- campaigns: edit title / description ----------
+// ---------- campaigns: edit title / description / donation pledge ----------
 // Size and reference image are NOT edited here — that's the reshape flow on
-// the campaign page (js/project.js), which re-places the artwork. Title and
-// description are plain columns an admin may update directly (RLS "Admins
-// can update mosaic projects" in supabase_mosaic.sql).
+// the campaign page (js/project.js), which re-places the artwork. Title,
+// description and the pledge (partner name / logo / tagline, amount —
+// supabase_mosaic_sponsor.sql) are plain columns an admin may update
+// directly (RLS "Admins can update mosaic projects" in supabase_mosaic.sql).
 let adminEditingCampaign = null;
+const adminLogoPicker = setupPicker('aec-logo-picker');
 function openAdminEditCampaign(p) {
   adminEditingCampaign = p;
   document.getElementById('aec-title').value = p.title || '';
   document.getElementById('aec-desc').value = p.description || '';
+  document.getElementById('aec-sponsor').value = p.sponsor_name || '';
+  document.getElementById('aec-tagline').value = p.sponsor_tagline || '';
+  document.getElementById('aec-pledge').value = String(typeof pledgeAmountOf === 'function' ? pledgeAmountOf(p) : 500000);
+  adminLogoPicker.setExisting(p.sponsor_logo_url ? cdnUrl(p.sponsor_logo_url) : '');
   document.getElementById('aec-error').textContent = '';
   document.getElementById('admin-edit-campaign-modal').classList.add('open');
   document.getElementById('aec-title').focus();
@@ -260,13 +280,34 @@ async function saveAdminEditCampaign() {
   if (!p) return;
   const title = document.getElementById('aec-title').value.trim();
   const description = document.getElementById('aec-desc').value.trim();
+  const sponsor = document.getElementById('aec-sponsor').value.trim();
+  const tagline = document.getElementById('aec-tagline').value.trim();
+  const pledge = typeof parsePledgeInput === 'function' ? parsePledgeInput(document.getElementById('aec-pledge').value) : 500000;
   const errorEl = document.getElementById('aec-error');
   if (!title) { errorEl.textContent = tr('titleRequired'); return; }
+  if (pledge === null) { errorEl.textContent = tr('pledgeAmountInvalid'); return; }
   errorEl.textContent = '';
   const btn = document.getElementById('aec-save');
   btn.disabled = true;
-  const { data: updated, error } = await sb.from('mosaic_projects')
-    .update({ title, description: description || null }).eq('id', p.id).select('id');
+  // Logo: a newly picked file replaces it (shrunk like a thumbnail), the
+  // picker's ✕ clears it, otherwise the current URL stays as it is.
+  let logoUrl = p.sponsor_logo_url || null;
+  const logoFile = adminLogoPicker.getFile();
+  if (logoFile) {
+    logoUrl = await uploadImage(typeof shrinkImageFile === 'function' ? await shrinkImageFile(logoFile, 512) : logoFile);
+    if (!logoUrl) { btn.disabled = false; return; } // uploadImage already toasted
+  } else if (adminLogoPicker.wasRemoved()) {
+    logoUrl = null;
+  }
+  const patch = { title, description: description || null };
+  const pledgePatch = { sponsor_name: sponsor || null, sponsor_logo_url: logoUrl, sponsor_tagline: tagline || null, pledge_amount: pledge };
+  let { data: updated, error } = await sb.from('mosaic_projects').update({ ...patch, ...pledgePatch }).eq('id', p.id).select('id');
+  // supabase_mosaic_sponsor.sql not applied yet → save the rest and say so.
+  let pledgeSkipped = false;
+  if (error && typeof isSchemaMismatchError === 'function' && isSchemaMismatchError(error)) {
+    pledgeSkipped = true;
+    ({ data: updated, error } = await sb.from('mosaic_projects').update(patch).eq('id', p.id).select('id'));
+  }
   btn.disabled = false;
   if (error || !updated || !updated.length) {
     // No row back = RLS let nothing through (session expired, admin flag
@@ -276,7 +317,7 @@ async function saveAdminEditCampaign() {
     return;
   }
   closeAdminEditCampaign();
-  toast(tr('adminCampaignUpdated'));
+  toast(tr(pledgeSkipped ? 'sponsorNotSaved' : 'adminCampaignUpdated'));
   loadAdminCampaigns();
 }
 document.getElementById('aec-cancel').onclick = closeAdminEditCampaign;

@@ -103,6 +103,8 @@
 .hero-partner-head{grid-area:phead;margin:0 0 6px;}
 .hero-partner-logos{display:flex;align-items:center;gap:12px;font-family:'Pretendard',sans-serif;font-weight:800;letter-spacing:.02em;margin:0 0 10px;}
 .hero-partner-name{color:#1F3BB3;font-size:17px;}
+/* The partner's logo (landing.js renderHeroPartner) sits before the name; hidden until a campaign has one. */
+.hero-partner-logo{display:block;height:30px;width:auto;max-width:160px;object-fit:contain;}
 .hero-partner-x{color:var(--muted);font-weight:500;font-size:15px;}
 .hero-partner-weavo{color:var(--hero-ink);font-size:17px;letter-spacing:.18em;}
 .hero-partner-title{font-family:'Pretendard',sans-serif;font-size:18px;font-weight:700;color:var(--hero-ink);margin:0;word-break:keep-all;}
@@ -254,6 +256,7 @@
   .hero-lead{font-size:15px;margin:0;}
   .hero-partner-head{text-align:center;margin:2px 0 14px;}
   .hero-partner-logos{justify-content:center;margin-bottom:6px;}
+  .hero-partner-logo{height:26px;max-width:130px;}
   .hero-art{display:block;}
   .hero-art-main{display:block;}
   .hero-preview{display:block;border-radius:14px;box-shadow:none;}

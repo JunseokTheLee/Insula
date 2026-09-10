@@ -110,14 +110,19 @@ document.getElementById('scrollHint').onclick = () => {
 
 // ---------- admin: create project (needs js/color-engine.js for imageToColorGrid) ----------
 const refPicker = setupPicker('ref-picker');
+const logoPicker = setupPicker('np-logo-picker'); // pledging partner logo (supabase_mosaic_sponsor.sql)
 document.getElementById('newProjectBtn').onclick = () => {
   if (!me.id) { openAuthModal(); return; }
   document.getElementById('np-title').value = '';
   document.getElementById('np-desc').value = '';
   document.getElementById('np-width').value = '';
   document.getElementById('np-height').value = '';
+  document.getElementById('np-sponsor').value = '';
+  document.getElementById('np-tagline').value = '';
+  document.getElementById('np-pledge').value = String(typeof PLEDGE_AMOUNT_DEFAULT === 'number' ? PLEDGE_AMOUNT_DEFAULT : 500000);
   document.getElementById('np-error').textContent = '';
   refPicker.reset();
+  logoPicker.reset();
   document.getElementById('new-project-modal').classList.add('open');
 };
 document.getElementById('np-cancel').onclick = () => document.getElementById('new-project-modal').classList.remove('open');
@@ -128,6 +133,9 @@ document.getElementById('np-submit').onclick = async () => {
   const description = document.getElementById('np-desc').value.trim();
   const width = parseInt(document.getElementById('np-width').value, 10);
   const height = parseInt(document.getElementById('np-height').value, 10);
+  const sponsor = document.getElementById('np-sponsor').value.trim();
+  const tagline = document.getElementById('np-tagline').value.trim();
+  const pledge = typeof parsePledgeInput === 'function' ? parsePledgeInput(document.getElementById('np-pledge').value) : 500000;
   const errorEl = document.getElementById('np-error');
   const file = refPicker.getFile();
   if (!title) { errorEl.textContent = tr('titleRequired'); return; }
@@ -136,6 +144,7 @@ document.getElementById('np-submit').onclick = async () => {
     errorEl.textContent = tr('widthHeightRange');
     return;
   }
+  if (pledge === null) { errorEl.textContent = tr('pledgeAmountInvalid'); return; }
   errorEl.textContent = '';
   const btn = document.getElementById('np-submit');
   btn.disabled = true;
@@ -150,21 +159,28 @@ document.getElementById('np-submit').onclick = async () => {
     }
     const referenceUrl = await uploadImage(file);
     if (!referenceUrl) return;
+    // Pledging partner logo (optional), shrunk like a thumbnail so a huge
+    // PNG isn't served to every visitor. A failed upload is already
+    // reported by uploadImage; the campaign is then created without one.
+    let logoUrl = null;
+    const logoFile = logoPicker.getFile();
+    if (logoFile) logoUrl = await uploadImage(typeof shrinkImageFile === 'function' ? await shrinkImageFile(logoFile, 512) : logoFile);
     // Static cell-color image and the share card for the new grid (see
     // common.js) — uploaded before the row so the project is created already
     // pointing at them.
     const gridImageUrl = await uploadGridImage(cells, width, height);
     const previewImageUrl = await uploadPreviewImage(cells, width, height);
     const baseRow = { title, description: description || null, width, height, reference_image_url: referenceUrl, created_by: me.id };
-    // Columns added by later SQL files, retried without them (newest first)
-    // while those files haven't been applied yet.
-    const extras = [];
-    if (previewImageUrl) extras.push(['preview_image_url', previewImageUrl]);
-    if (gridImageUrl) extras.push(['grid_image_url', gridImageUrl]);
-    let project = null, projErr = null;
-    for (let n = extras.length; n >= 0; n--) {
-      const row = { ...baseRow };
-      for (const [k, v] of extras.slice(extras.length - n)) row[k] = v;
+    // Column groups added by later SQL files, newest first: each retry drops
+    // the first group still in the row while its file hasn't been applied.
+    const extras = [
+      { sponsor_name: sponsor || null, sponsor_logo_url: logoUrl, sponsor_tagline: tagline || null, pledge_amount: pledge }, // supabase_mosaic_sponsor.sql
+    ];
+    if (previewImageUrl) extras.push({ preview_image_url: previewImageUrl });
+    if (gridImageUrl) extras.push({ grid_image_url: gridImageUrl });
+    let project = null, projErr = null, dropped = 0;
+    for (dropped = 0; dropped <= extras.length; dropped++) {
+      const row = Object.assign({}, baseRow, ...extras.slice(dropped));
       ({ data: project, error: projErr } = await sb.from('mosaic_projects').insert(row).select().single());
       if (!projErr || !isSchemaMismatchError(projErr)) break;
     }
@@ -182,6 +198,9 @@ document.getElementById('np-submit').onclick = async () => {
     document.getElementById('new-project-modal').classList.remove('open');
     const skipped = width * height - cells.length;
     toast(projectCreatedToast(skipped));
+    // The pledge group is the first one dropped — the admin just typed it,
+    // so hold the page long enough for the warning to be read.
+    if (dropped > 0) { toast(tr('sponsorNotSaved')); await new Promise(r => setTimeout(r, 2500)); }
     // The new grid just opened a batch of fresh cells — see if anything
     // already waiting in the profile pool is a good match for them.
     runPoolMatching().catch(err => console.error('pool matching after project creation error:', err));

@@ -55,6 +55,8 @@ const T = {
   archivedIterationLabel: 'This is an archived iteration (v{version}) — frozen the way it looked before a reshape.',
   enlargePreview: 'Enlarge reference preview', shrinkPreview: 'Shrink reference preview',
   couldNotLoadWeavo: 'Could not load weavo',
+  pledgeAmountInvalid: 'The pledge amount must be a whole number of 0 or more.', sponsorNotSaved: 'Pledge partner details were not saved — run supabase_mosaic_sponsor.sql first.',
+  heroPartnerNamed: 'the pledging partner, {name},', adminPledgeLine: 'pledge ₩{amount}',
   titleRequired: 'Title is required.', addReferenceImage: 'Add a reference image.',
   widthHeightRange: 'Width and height must be 1-100, and no more than 10,000 cells total.',
   creatingProject: 'Creating campaign…',
