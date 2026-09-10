@@ -9,6 +9,11 @@ let me = { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', 
 
 async function signIn(provider = 'google') {
   const options = { redirectTo: location.origin + location.pathname };
+  // Always show Google's account chooser: without it Google silently reuses
+  // the account of its current browser session, so someone who signed out
+  // to switch accounts (or to leave onboarding — see renderSetupExits)
+  // landed straight back in the same one (2026-09-10).
+  if (provider === 'google') options.queryParams = { prompt: 'select_account' };
   await sb.auth.signInWithOAuth({ provider, options });
 }
 async function signOut() { await sb.auth.signOut(); }
@@ -379,11 +384,51 @@ function openEditProfileModal(profile, forced) {
   }
   document.getElementById('ep-cancel').style.display = forced ? 'none' : '';
   document.getElementById('ep-danger-zone').style.display = forced ? 'none' : '';
+  renderSetupExits(forced);
   document.getElementById('edit-profile-modal').classList.add('open');
 }
 function closeEditProfileModal() {
   if (profileEditRequired) return;
   document.getElementById('edit-profile-modal').classList.remove('open');
+}
+// ---------- onboarding exits ----------
+// The forced (first sign-in) modal cannot be dismissed — Esc, the backdrop
+// and the Cancel button are all disabled so nobody ends up signed in without
+// a username. That left no way out at all: the overlay covers the header's
+// sign-out button, the session persists, so every visit reopened the form,
+// and Google kept auto-picking the same account (2026-09-10). These two
+// links are the way out, built here on demand rather than in the 30 page
+// copies of the modal (like the header's admin link):
+//   "Not now" — sign out, back to guest. The base profile row stays, so the
+//   same account simply resumes onboarding next time.
+//   "Cancel sign-up" — delete the account outright; there is nothing of the
+//   person's to keep yet.
+function renderSetupExits(forced) {
+  let box = document.getElementById('ep-setup-exits');
+  if (!forced) { if (box) box.style.display = 'none'; return; }
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'ep-setup-exits';
+    box.className = 'ep-setup-exits';
+    const later = document.createElement('button');
+    later.type = 'button'; later.id = 'ep-setup-later'; later.className = 'link-muted';
+    later.onclick = leaveOnboardingAsGuest;
+    const cancel = document.createElement('button');
+    cancel.type = 'button'; cancel.id = 'ep-setup-cancel'; cancel.className = 'link-danger';
+    cancel.onclick = e => deleteMyAccount(e.currentTarget, { signup: true });
+    box.append(later, cancel);
+    const actions = document.querySelector('#edit-profile-dialog .modal-actions');
+    (actions || document.getElementById('ep-required-note')).insertAdjacentElement('afterend', box);
+  }
+  document.getElementById('ep-setup-later').textContent = tr('setupLater');
+  document.getElementById('ep-setup-cancel').textContent = tr('cancelSignup');
+  box.style.display = '';
+}
+async function leaveOnboardingAsGuest() {
+  profileEditRequired = false;
+  closeEditProfileModal();
+  await signOut(); // onAuthStateChange(SIGNED_OUT) resets `me` and the header
+  toast(tr('setupLaterDone'));
 }
 const epAvatarPicker = setupPicker('ep-avatar-picker');
 document.getElementById('ep-cancel').onclick = closeEditProfileModal;
@@ -467,14 +512,18 @@ async function deleteMyStorageFiles() {
 // — the client SDK has no self-serve "delete my account" call, only an
 // admin API that needs a service-role key that must never reach the
 // browser. That function drops the auth.users row, which cascades to
-// profiles, submissions, comments, and follows.
-document.getElementById('ep-delete-account').onclick = async () => {
+// profiles, submissions, comments, and follows. Shared by the edit-profile
+// danger zone and the onboarding "cancel sign-up" exit; during onboarding
+// there is no username to type back and nothing of the person's to lose
+// yet, so that path asks a plain yes/no instead.
+async function deleteMyAccount(btn, { signup = false } = {}) {
   const proceed = await confirmDialog(
-    tr('deleteAccountMessage', { username: me.username }),
-    { title: tr('deleteAccountTitle'), okLabel: tr('deleteAccountConfirmLabel'), confirmText: me.username }
+    signup ? tr('cancelSignupMessage') : tr('deleteAccountMessage', { username: me.username }),
+    signup
+      ? { title: tr('cancelSignupTitle'), okLabel: tr('cancelSignupConfirmLabel') }
+      : { title: tr('deleteAccountTitle'), okLabel: tr('deleteAccountConfirmLabel'), confirmText: me.username }
   );
   if (!proceed) return;
-  const btn = document.getElementById('ep-delete-account');
   btn.disabled = true;
   await deleteMyStorageFiles();
   const { error } = await sb.rpc('delete_own_account');
@@ -484,11 +533,13 @@ document.getElementById('ep-delete-account').onclick = async () => {
     document.getElementById('ep-error').textContent = tr('couldNotDeleteAccount');
     return;
   }
+  profileEditRequired = false; // the forced modal may close now — the account is gone
   closeEditProfileModal();
   await signOut();
-  toast(tr('accountDeleted'));
+  toast(tr(signup ? 'signupCancelled' : 'accountDeleted'));
   location.href = `/${CURRENT_LANG}/campaigns`;
-};
+}
+document.getElementById('ep-delete-account').onclick = e => deleteMyAccount(e.currentTarget);
 
 wireLangToggle();
 document.querySelectorAll('.lang-btn').forEach(btn => {
