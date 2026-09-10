@@ -162,6 +162,8 @@ const T = {
   adminEditLabel: '수정', adminCampaignUpdated: '캠페인을 수정했습니다', adminCouldNotUpdateCampaign: '캠페인을 수정할 수 없습니다',
   adminGridImageBtn: '격자 이미지 생성', adminGridImageWorking: '격자 이미지를 만드는 중…', adminGridImageDone: '격자 이미지를 만들었습니다 — 캠페인 페이지가 캐시에서 읽습니다', adminGridImageFailed: '격자 이미지를 만들 수 없습니다 (변경된 것 없음)',
   adminGridImageYes: '격자 이미지 ✓', adminGridImageNo: '격자 이미지 없음',
+  adminPreviewImageBtn: '공유 이미지 생성', adminPreviewImageWorking: '공유 이미지를 만드는 중…', adminPreviewImageDone: '공유 이미지를 만들었습니다', adminPreviewImageFailed: '공유 이미지를 만들 수 없습니다',
+  adminPreviewImageYes: '공유 이미지 ✓', adminPreviewImageNo: '공유 이미지 없음 (로고 사용)',
   adminPoolRunning: '풀 작품을 배치하는 중…', adminPoolPlaced: '{n}개 작품을 캠페인에 배치했습니다', adminPoolNonePlaced: '배치된 작품이 없습니다 — 진행 중인 캠페인의 빈 칸과 색이 맞지 않습니다', adminPoolFailed: '배치를 실행할 수 없습니다',
   adminThumbsWorking: '썸네일 생성 중… {done}/{total}', adminThumbsDone: '{n}개 작품의 썸네일을 만들었습니다', adminThumbsFailed: '{done}개 완료, {failed}개 실패 (콘솔 확인)',
   mfsClose: '닫기',

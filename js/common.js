@@ -424,6 +424,45 @@ function loadProjectCells(project) {
   }
   return projectCellsCache.get(key);
 }
+// ---------- campaign share image (og:image) ----------
+// A 1200×630 card with the campaign drawn as the site shows it — every
+// cell in grey (luminance of its target color) on white — for social
+// previews and crawlers, instead of the reference photo, which stays
+// hidden until the campaign is complete (supabase_mosaic_preview_image.sql).
+// Made in the browser on create / reshape and from the admin page for
+// older campaigns. Needs color-engine.js's luminance() by call time.
+const PREVIEW_CARD_W = 1200;
+const PREVIEW_CARD_H = 630;
+function previewImageBlob(cells, width, height) {
+  const canvas = document.createElement('canvas');
+  canvas.width = PREVIEW_CARD_W; canvas.height = PREVIEW_CARD_H;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, PREVIEW_CARD_W, PREVIEW_CARD_H);
+  const pad = 40;
+  const cell = Math.max(1, Math.floor(Math.min((PREVIEW_CARD_W - pad * 2) / width, (PREVIEW_CARD_H - pad * 2) / height)));
+  const ox = Math.round((PREVIEW_CARD_W - cell * width) / 2);
+  const oy = Math.round((PREVIEW_CARD_H - cell * height) / 2);
+  for (const c of cells) {
+    const l = Math.round(luminance(c.target_r, c.target_g, c.target_b));
+    ctx.fillStyle = `rgb(${l},${l},${l})`;
+    ctx.fillRect(ox + c.x * cell, oy + c.y * cell, Math.max(1, cell - 1), Math.max(1, cell - 1));
+  }
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+}
+// Renders + uploads the share image; resolves to its public URL, or null on
+// any failure (the page then falls back to the site logo).
+async function uploadPreviewImage(cells, width, height) {
+  try {
+    const blob = await previewImageBlob(cells, width, height);
+    if (!blob) return null;
+    return await uploadImage(new File([blob], `share-${width}x${height}.jpg`, { type: 'image/jpeg' }));
+  } catch (e) {
+    console.error('uploadPreviewImage failed:', e);
+    return null;
+  }
+}
+
 // PostgREST's "unknown column" / "unknown function" errors — used by the
 // creation/reshape paths to retry without the new grid-image argument while
 // supabase_mosaic_grid_image.sql hasn't been applied yet.

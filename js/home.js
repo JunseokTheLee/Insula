@@ -150,15 +150,23 @@ document.getElementById('np-submit').onclick = async () => {
     }
     const referenceUrl = await uploadImage(file);
     if (!referenceUrl) return;
-    // Static cell-color image for the new grid (see common.js) — uploaded
-    // before the row so the project is created already pointing at it.
+    // Static cell-color image and the share card for the new grid (see
+    // common.js) — uploaded before the row so the project is created already
+    // pointing at them.
     const gridImageUrl = await uploadGridImage(cells, width, height);
+    const previewImageUrl = await uploadPreviewImage(cells, width, height);
     const baseRow = { title, description: description || null, width, height, reference_image_url: referenceUrl, created_by: me.id };
-    let { data: project, error: projErr } = await sb.from('mosaic_projects')
-      .insert(gridImageUrl ? { ...baseRow, grid_image_url: gridImageUrl } : baseRow).select().single();
-    if (projErr && gridImageUrl && isSchemaMismatchError(projErr)) {
-      // supabase_mosaic_grid_image.sql not applied yet — create without the image.
-      ({ data: project, error: projErr } = await sb.from('mosaic_projects').insert(baseRow).select().single());
+    // Columns added by later SQL files, retried without them (newest first)
+    // while those files haven't been applied yet.
+    const extras = [];
+    if (previewImageUrl) extras.push(['preview_image_url', previewImageUrl]);
+    if (gridImageUrl) extras.push(['grid_image_url', gridImageUrl]);
+    let project = null, projErr = null;
+    for (let n = extras.length; n >= 0; n--) {
+      const row = { ...baseRow };
+      for (const [k, v] of extras.slice(extras.length - n)) row[k] = v;
+      ({ data: project, error: projErr } = await sb.from('mosaic_projects').insert(row).select().single());
+      if (!projErr || !isSchemaMismatchError(projErr)) break;
     }
     if (projErr || !project) {
       console.error('weavo project insert error:', projErr);

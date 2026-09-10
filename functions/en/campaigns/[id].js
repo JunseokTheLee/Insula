@@ -6,7 +6,7 @@ const SITE = 'https://weavo.art';
 export async function onRequestGet({ params, request, env }) {
   const id = params.id;
   const project = await pgFetchOne(
-    `mosaic_projects?id=eq.${encodeURIComponent(id)}&select=id,title,description,reference_image_url&limit=1`
+    `mosaic_projects?id=eq.${encodeURIComponent(id)}&select=*&limit=1`
   );
 
   const assetResponse = await env.ASSETS.fetch(new Request(new URL('/en/campaign', request.url), request));
@@ -23,11 +23,11 @@ export async function onRequestGet({ params, request, env }) {
     title, description, canonical,
     hreflangEn: canonical,
     hreflangKo: `${SITE}/ko/campaigns/${encodeURIComponent(project.id)}`,
-    image: project.reference_image_url,
+    image: project.preview_image_url || `${SITE}/logo.png`,
     jsonld: [
       {
         '@context': 'https://schema.org', '@type': 'CreativeWork',
-        name: project.title, url: canonical, image: project.reference_image_url,
+        name: project.title, url: canonical, image: project.preview_image_url || `${SITE}/logo.png`,
         ...(project.description ? { description: project.description } : {}),
       },
       {

@@ -114,7 +114,7 @@ async function setAdminReportStatus(id, status) {
 // ---------- campaigns ----------
 async function loadAdminCampaigns() {
   const [{ data: projects, error }, { data: placed }] = await Promise.all([
-    sb.from('mosaic_projects').select('id,title,description,width,height,created_at,is_archived,version_number,grid_image_url').order('created_at', { ascending: false }),
+    sb.from('mosaic_projects').select('id,title,description,width,height,created_at,is_archived,version_number,grid_image_url,preview_image_url').order('created_at', { ascending: false }),
     sb.from('mosaic_submissions').select('project_id').not('project_id', 'is', null),
   ]);
   if (error) { console.error('load campaigns error:', error); toast(tr('adminLoadError')); return; }
@@ -130,12 +130,13 @@ async function loadAdminCampaigns() {
     const title = document.createElement('a'); title.className = 'admin-target-label'; title.href = projectUrl(p.id); title.textContent = p.title;
     if (p.is_archived) { const b = document.createElement('span'); b.className = 'admin-badge'; b.textContent = `${tr('archivedBadge')} v${p.version_number}`; title.appendChild(document.createTextNode(' ')); title.appendChild(b); }
     const sub = document.createElement('div'); sub.className = 'admin-sub';
-    sub.textContent = `${tr('adminCells', { w: p.width, h: p.height, filled: filledBy.get(p.id) || 0 })} · ${tr('adminCreatedOn', { date: adminDate(p.created_at) })} · ${p.grid_image_url ? tr('adminGridImageYes') : tr('adminGridImageNo')}`;
+    sub.textContent = `${tr('adminCells', { w: p.width, h: p.height, filled: filledBy.get(p.id) || 0 })} · ${tr('adminCreatedOn', { date: adminDate(p.created_at) })} · ${p.grid_image_url ? tr('adminGridImageYes') : tr('adminGridImageNo')} · ${p.preview_image_url ? tr('adminPreviewImageYes') : tr('adminPreviewImageNo')}`;
     main.append(title, sub);
     const actions = document.createElement('div'); actions.className = 'admin-actions';
     // Older campaigns (pre grid-image cache) get a one-off "create" button;
     // new and reshaped ones already have theirs.
     if (!p.grid_image_url) actions.appendChild(adminActionBtn(tr('adminGridImageBtn'), e => createAdminGridImage(p, e.currentTarget)));
+    if (!p.preview_image_url) actions.appendChild(adminActionBtn(tr('adminPreviewImageBtn'), e => createAdminPreviewImage(p, e.currentTarget)));
     // Archived iterations can't be deleted on their own (the RPC refuses) —
     // they go away with their live campaign.
     if (!p.is_archived) {
@@ -160,6 +161,34 @@ async function deleteAdminCampaign(p) {
   // The freed pieces are back in the pool — place them right away, the same
   // trigger every other pool-changing event has — then refresh what changed.
   placePooledPieces(false).then(() => { loadAdminCampaigns(); loadAdminPool(); loadAdminUsage(); });
+}
+
+// ---------- campaigns: share image for older campaigns ----------
+// Campaigns made before preview_image_url existed have no share card, so
+// their links fall back to the site logo. This renders the same grey card
+// the create / reshape paths make (common.js uploadPreviewImage) from the
+// campaign's cells and records it — guarded so a card that appeared in the
+// meantime is never overwritten.
+async function createAdminPreviewImage(p, btn) {
+  btn.disabled = true;
+  toast(tr('adminPreviewImageWorking'));
+  try {
+    const { cells, error } = await loadProjectCells(p);
+    if (error) throw error;
+    if (!cells.length) throw new Error('campaign has no cells');
+    const url = await uploadPreviewImage(cells, p.width, p.height);
+    if (!url) throw new Error('share image upload failed');
+    const { data: updated, error: updErr } = await sb.from('mosaic_projects')
+      .update({ preview_image_url: url }).eq('id', p.id).is('preview_image_url', null).select('id');
+    if (updErr) throw updErr;
+    if (!updated || !updated.length) throw new Error('campaign changed meanwhile — not updated');
+    toast(tr('adminPreviewImageDone'));
+    loadAdminCampaigns();
+  } catch (e) {
+    console.error('create share image error:', e);
+    toast(tr('adminPreviewImageFailed'));
+    btn.disabled = false;
+  }
 }
 
 // ---------- campaigns: one-off grid image for older campaigns ----------

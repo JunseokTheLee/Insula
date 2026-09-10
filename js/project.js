@@ -14,13 +14,13 @@ function updateProjectMeta(project) {
   const description = project.description
     ? project.description.slice(0, 300)
     : (CURRENT_LANG === 'ko' ? `Weavo의 공동 모자이크 프로젝트 '${project.title}'.` : `A collaborative mosaic project on Weavo: ${project.title}.`);
-  updatePageMeta({ title, description, canonical: `${location.origin}${projectUrl(project.id)}`, image: project.reference_image_url });
+  updatePageMeta({ title, description, canonical: `${location.origin}${projectUrl(project.id)}`, image: project.preview_image_url || `${location.origin}/logo.png` });
 }
 function renderProjectJsonLd(project) {
   const url = `${location.origin}${projectUrl(project.id)}`;
   const data = {
     '@context': 'https://schema.org', '@type': 'CreativeWork',
-    name: project.title, url, image: project.reference_image_url,
+    name: project.title, url, image: project.preview_image_url || `${location.origin}/logo.png`,
   };
   if (project.description) data.description = project.description;
   const breadcrumb = {
@@ -562,6 +562,13 @@ document.getElementById('rs-submit').onclick = async () => {
     // The new grid opened fresh cells — try to backfill them from the pool
     // (including any pieces this same reshape just returned to it).
     runPoolMatching().catch(err => console.error('pool matching after reshape error:', err));
+    // Share card for the new grid (common.js); ignored while the column
+    // doesn't exist yet — the page then keeps using the site logo.
+    const previewImageUrl = await uploadPreviewImage(cells, width, height);
+    if (previewImageUrl) {
+      const { error: pvErr } = await sb.from('mosaic_projects').update({ preview_image_url: previewImageUrl }).eq('id', project.id);
+      if (pvErr && !isSchemaMismatchError(pvErr)) console.error('preview image update error:', pvErr);
+    }
     openProject(project.id);
   } catch (err) {
     console.error('reshape project error:', err);
