@@ -472,7 +472,15 @@ async function applyPieceMatchToAll() {
     toast(tr('adminPieceApplyDone', { released: Number(released) || 0, retried: Number(waiting) || 0, placed }));
   } catch (e) {
     console.error('apply piece match error:', e);
-    toast(tr(e && (e.code === 'PGRST202' || e.code === '42883') ? 'adminPieceApplyMissing' : 'adminPieceApplyFailed'));
+    // A missing function is either this feature's own RPC (its SQL file not
+    // applied) or one the cleanup relies on — claim_rematch_slot /
+    // unmatch_submissions / mosaic_meta from supabase_mosaic_rematch.sql,
+    // which turned out never applied on 2026-09-10 — so name the file.
+    const missing = !!e && (e.code === 'PGRST202' || e.code === '42883');
+    const msg = String((e && (e.message || e.details)) || '');
+    if (missing && /claim_rematch_slot|unmatch_submissions|mosaic_meta/.test(msg)) toast(tr('adminPieceApplyMissingRematch'));
+    else if (missing) toast(tr('adminPieceApplyMissing'));
+    else toast(tr('adminPieceApplyFailed'));
   } finally {
     btn.disabled = false;
     loadAdminPool(); loadAdminUsage(); loadAdminCampaigns(); loadAdminPieces();

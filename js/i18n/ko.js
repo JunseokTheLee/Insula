@@ -181,6 +181,7 @@ const T = {
   adminPieceApplyTitle: '색 기준 전체 적용', adminPieceApplyLabel: '적용', adminPieceApplyConfirm: '지금 설정된 색 일치 기준으로 모든 조각을 다시 맞춥니다. 기준을 넘는 배치 조각은 풀려나고, 대기 조각은 전부 다시 매칭됩니다. 계속할까요?',
   adminPieceApplyWorking: '조각을 다시 맞추는 중…', adminPieceApplyDone: '풀린 조각 {released}개 · 다시 시도 {retried}개 · 새로 배치 {placed}개', adminPieceApplyFailed: '전체 적용에 실패했습니다 (콘솔 확인)',
   adminPieceApplyMissing: '아직 사용할 수 없습니다 — supabase_mosaic_pieces_retry.sql 을 먼저 실행하세요.',
+  adminPieceApplyMissingRematch: '정리 함수가 없습니다 — supabase_mosaic_rematch.sql 을 먼저 실행하세요 (6시간 정리 작업도 이 파일이 필요합니다).',
   adminPiecesRegenTitle: '조각 전체 다시 생성', adminPiecesRegenLabel: '다시 생성', adminPiecesRegenConfirm: '모든 작품의 조각을 지금 설정된 분할 개수로 다시 만듭니다. 배치된 조각은 모두 풀려났다가 다시 매칭됩니다. 계속할까요?',
   mfsClose: '닫기',
   mfsExpand: '전체 화면으로 보기',

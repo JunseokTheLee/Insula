@@ -181,6 +181,7 @@ const T = {
   adminPieceApplyTitle: 'Apply colour match to all', adminPieceApplyLabel: 'Apply', adminPieceApplyConfirm: 'Every piece is matched again at the current colour threshold: placed pieces beyond it are released, and all waiting pieces are tried again. Continue?',
   adminPieceApplyWorking: 'Re-matching pieces…', adminPieceApplyDone: '{released} released · {retried} tried again · {placed} newly placed', adminPieceApplyFailed: 'Could not apply to all (see console)',
   adminPieceApplyMissing: 'Not available yet — run supabase_mosaic_pieces_retry.sql first.',
+  adminPieceApplyMissingRematch: 'The cleanup functions are missing — run supabase_mosaic_rematch.sql first (the 6-hourly cleanup needs it too).',
   adminPiecesRegenTitle: 'Recut every artwork', adminPiecesRegenLabel: 'Recut', adminPiecesRegenConfirm: 'Every artwork is cut again at the current piece grid. All placed pieces are released and matched again. Continue?',
   mfsClose: 'Close',
   mfsExpand: 'View fullscreen',
