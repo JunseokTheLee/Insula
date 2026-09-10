@@ -132,9 +132,10 @@
 /* Signed-in visitor's own share of the pledge: the third card on the
    stats row (right column), level with the other two. */
 .hero-mine{grid-area:mine;align-self:stretch;justify-self:start;min-width:260px;display:flex;align-items:center;gap:14px;background:var(--gray-0);border-radius:var(--r-md);padding:16px 22px;box-shadow:var(--shadow-sm);}
-/* Same icon slot as the donation card's heart, with a blue gift box instead. */
+/* Same icon slot as the donation card's heart, with a green sprout (Lucide
+   "sprout", ISC) — a contribution that grows. */
 .hero-mine-icon{flex:0 0 44px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;overflow:visible;}
-.hero-gift{display:block;width:32px;height:32px;overflow:visible;fill:none;stroke:var(--hero-blue);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+.hero-sprout{display:block;width:32px;height:32px;overflow:visible;fill:none;stroke:var(--primary);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
 .hero-mine > div{min-width:0;}
 .hero-mine-k{font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;color:var(--muted);}
 .hero-mine-v{font-family:'Pretendard',sans-serif;font-size:22px;font-weight:800;color:var(--hero-ink);letter-spacing:-.01em;margin-top:2px;}
@@ -233,7 +234,7 @@
   .hero-art-foot{flex-wrap:wrap;justify-content:flex-end;margin-top:12px;}
   .hero-mine{border-radius:20px;box-shadow:var(--shadow-md);padding:18px 20px;}
   .hero-mine-icon{flex-basis:40px;width:40px;height:40px;}
-  .hero-gift{width:30px;height:30px;}
+  .hero-sprout{width:30px;height:30px;}
   .hero-art-caption{display:none;}
   .hero-arrow{width:34px;height:34px;font-size:19px;}
   .hero-progress{display:block;padding:12px 2px 2px;box-shadow:none;border-radius:0;}
