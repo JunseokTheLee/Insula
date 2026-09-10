@@ -260,10 +260,14 @@ body.no-scroll-lock{overflow:hidden;}
 .ep-danger-zone{margin-top:18px;padding-top:14px;border-top:1px solid var(--border-strong);text-align:center;}
 .link-danger{background:none;border:none;padding:0;font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--accent-warm);cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
 .link-danger:hover{opacity:.8;}
-/* Onboarding exits under the forced edit-profile modal's actions (auth.js renderSetupExits). */
-.ep-setup-exits{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
-.link-muted{background:none;border:none;padding:0;font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
-.link-muted:hover{color:var(--text);}
+/* Onboarding exits under the forced edit-profile modal's actions (auth.js
+   renderSetupExits): two pill buttons like the modal's own, the sign-up cancel in the warning colour. */
+.ep-setup-exits{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.ep-setup-exits button{padding:9px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text);border:1px solid var(--border-strong);transition:background .12s linear,opacity .12s linear;}
+.ep-setup-exits button:hover{background:rgba(33,30,48,.06);}
+.ep-setup-exits button.danger{color:var(--accent-warm);border-color:var(--accent-warm);}
+.ep-setup-exits button.danger:hover{background:#FFF1EA;}
+.ep-setup-exits button:disabled{opacity:.6;cursor:default;}
 
 /* ---------- blocked-users list (edit-profile modal) ---------- */
 .ep-blocked-section{margin-top:18px;padding-top:14px;border-top:1px solid var(--border-strong);}

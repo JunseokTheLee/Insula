@@ -397,7 +397,7 @@ function closeEditProfileModal() {
 // a username. That left no way out at all: the overlay covers the header's
 // sign-out button, the session persists, so every visit reopened the form,
 // and Google kept auto-picking the same account (2026-09-10). These two
-// links are the way out, built here on demand rather than in the 30 page
+// buttons are the way out, built here on demand rather than in the 30 page
 // copies of the modal (like the header's admin link):
 //   "Not now" — sign out, back to guest. The base profile row stays, so the
 //   same account simply resumes onboarding next time.
@@ -411,10 +411,10 @@ function renderSetupExits(forced) {
     box.id = 'ep-setup-exits';
     box.className = 'ep-setup-exits';
     const later = document.createElement('button');
-    later.type = 'button'; later.id = 'ep-setup-later'; later.className = 'link-muted';
+    later.type = 'button'; later.id = 'ep-setup-later';
     later.onclick = leaveOnboardingAsGuest;
     const cancel = document.createElement('button');
-    cancel.type = 'button'; cancel.id = 'ep-setup-cancel'; cancel.className = 'link-danger';
+    cancel.type = 'button'; cancel.id = 'ep-setup-cancel'; cancel.className = 'danger';
     cancel.onclick = e => deleteMyAccount(e.currentTarget, { signup: true });
     box.append(later, cancel);
     const actions = document.querySelector('#edit-profile-dialog .modal-actions');

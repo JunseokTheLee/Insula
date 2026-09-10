@@ -40,7 +40,7 @@ const T = {
   deleteAccountTitle: '계정을 삭제할까요?', deleteAccountConfirmLabel: '계정 삭제하기',
   deleteAccountMessage: '계정, 프로필, 작품, 댓글, 전시, 팔로우 정보가 모두 영구적으로 삭제됩니다. 되돌릴 수 없습니다. 확인하려면 아래에 사용자 이름 {username}을(를) 입력하세요.',
   couldNotDeleteAccount: '계정을 삭제할 수 없습니다. 다시 시도해주세요.', accountDeleted: '계정이 삭제되었습니다.',
-  setupLater: '나중에 할게요 — 게스트로 둘러보기', setupLaterDone: '로그아웃했습니다. 언제든 다시 로그인해 설정을 마칠 수 있어요.',
+  setupLater: '나중에 할게요 (게스트로 둘러보기)', setupLaterDone: '로그아웃했습니다. 언제든 다시 로그인해 설정을 마칠 수 있어요.',
   cancelSignup: '가입 취소 (이 계정 삭제)', cancelSignupTitle: '가입을 취소할까요?', cancelSignupConfirmLabel: '가입 취소',
   cancelSignupMessage: '방금 이 로그인으로 만들어진 계정을 삭제합니다. 다른 것은 지워지지 않으며 언제든 다시 가입할 수 있습니다.',
   signupCancelled: '가입을 취소했습니다. 계정이 삭제되었습니다.',
