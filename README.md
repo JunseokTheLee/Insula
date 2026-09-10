@@ -59,7 +59,7 @@ js/                     common.js, auth.js, color-engine.js, matching.js, lightb
                         project.js, profile-view.js, network.js, notifications.js, …
 js/i18n/                runtime-only strings (toasts, dialogs); static copy lives in the HTML itself
 functions/              Cloudflare Pages Functions (see above)
-supabase_*.sql          database schema, RLS policies, RPCs — run manually in the Supabase SQL editor
+supabase/               database schema, RLS policies, RPCs (supabase_*.sql) — run manually in the Supabase SQL editor; served as 404 on the web
 _headers, _redirects    Cloudflare Pages cache / security headers and redirects
 robots.txt, sitemap*.xml
 tools/                  bump-asset-version.js (stamps ?v= on script/style links) + versioned git hooks
@@ -103,7 +103,7 @@ in `js/supabase-client.js` is a public key by design).
 
 ## Database
 
-Schema changes are plain SQL files (`supabase_*.sql`), each meant to be run once in the Supabase SQL
+Schema changes are plain SQL files (`supabase/supabase_*.sql`), each meant to be run once in the Supabase SQL
 editor. `supabase_mosaic.sql` is the core (projects, pixels, submissions, admin flag); the others add
 profiles, likes, "saves" (the app's word for user-to-user follows), comments, notifications, reports,
 blocks, collections/exhibitions, thumbnails, versions, the profile-pool matching, reshape/rematch
@@ -129,6 +129,6 @@ applied is tracked outside the repository.
 - **구성**: 빌드 없는 순수 정적 HTML/CSS/JS + Cloudflare Pages(Functions) + Supabase(Postgres/Auth/Storage)
 - **다국어**: `/en/`, `/ko/` 페이지 트리 완전 분리, 런타임 문자열만 `js/i18n/`
 - **배포**: GitHub `main` 에 push 하면 Cloudflare Pages 가 자동으로 운영 사이트에 배포 (push = 릴리스)
-- **DB**: `supabase_*.sql` 을 Supabase SQL 에디터에서 수동 실행 (마이그레이션 도구 없음)
+- **DB**: `supabase/supabase_*.sql` 을 Supabase SQL 에디터에서 수동 실행 (마이그레이션 도구 없음)
 - **로컬 실행**: `npx wrangler pages dev .`
 - **문서**: 전체 설명은 `DevDocs/ProjectOverview_20260908.html` (영어 기본, 한국어 전환), 작업 규칙은 `CLAUDE.md`

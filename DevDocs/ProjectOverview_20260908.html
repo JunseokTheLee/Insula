@@ -344,8 +344,8 @@ profile.js               루트에 남아 있는 잔여 파일 (어느 페이지
     <li><code>notify_follow</code> · <code>notify_submission_like</code> · <code>notify_submission_comment</code> · <code>check_mosaic_comment_parent</code> · <code>set_profiles_updated_at</code> — <span class="en">triggers</span><span class="ko">트리거</span></li>
   </ul>
   <div class="warn">
-    <span class="en"><b>No migration runner.</b> Nothing in the repository records which SQL files have been applied to the production database. When code starts depending on a new column or RPC, the SQL file to run first must be called out explicitly (see <code>CLAUDE.md</code> §6).</span>
-    <span class="ko"><b>마이그레이션 도구가 없습니다.</b> 어떤 SQL 파일이 운영 DB 에 적용됐는지 저장소에 기록되지 않습니다. 코드가 새 컬럼이나 RPC 에 의존하게 되면 먼저 실행할 SQL 파일을 명시해야 합니다(<code>CLAUDE.md</code> 6절).</span>
+    <span class="en">The SQL files live in <code>supabase/</code> (the web answers 404 for that folder, as for <code>DevDocs/</code> and <code>tools/</code>). <b>No migration runner.</b> Nothing in the repository records which SQL files have been applied to the production database. When code starts depending on a new column or RPC, the SQL file to run first must be called out explicitly (see <code>CLAUDE.md</code> §6).</span>
+    <span class="ko">SQL 파일은 <code>supabase/</code> 폴더에 있다(웹에서는 <code>DevDocs/</code>·<code>tools/</code> 와 함께 404). <b>마이그레이션 도구가 없습니다.</b> 어떤 SQL 파일이 운영 DB 에 적용됐는지 저장소에 기록되지 않습니다. 코드가 새 컬럼이나 RPC 에 의존하게 되면 먼저 실행할 SQL 파일을 명시해야 합니다(<code>CLAUDE.md</code> 6절).</span>
   </div>
 
   <!-- ─────────────────────────────────────────────────────────────── -->

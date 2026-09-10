@@ -5,6 +5,7 @@ Weavo 개발 기록 (DevDocs/DevLog.txt)
 - 접두어: feat(새 기능) / fix(수정) / chore(정리·문서·설정)
 
 ========== 2026-09-10 ==========
+chore: SQL 파일을 supabase/ 로 이동, supabase/·DevDocs/·tools/ 웹 접근을 404 로 차단
 feat: 작품 탐색을 60개씩 서버 페이지네이션(더 보기·자동 로드)과 서버 검색·정렬로 변경
 feat: 좋아요 수 컬럼(like_count)과 트리거 — 인기순을 서버에서 정렬 (SQL)
 fix: 썸네일 업로드가 Storage 정책에 막혀 전부 실패하던 문제 — thumb/ 정책 SQL, 관리자 재생성

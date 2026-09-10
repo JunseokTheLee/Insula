@@ -40,6 +40,7 @@
 - `functions/img/[[path]].js` — Supabase Storage 이미지를 같은 도메인으로 프록시해 엣지 캐시 (`js/common.js` 의 `cdnUrl()` 이 `/img/` 로 바꿔 보냄)
 - `functions/sitemap-*.xml.js` — 동적 사이트맵
 - `functions/{en,ko}/{profile,project}.html.js` — 옛 `?id=`/`?user=` 주소 301
+- `functions/{supabase,DevDocs,tools}/[[path]].js` — 저장소에만 필요한 폴더(SQL·개발 문서·도구)를 웹에서 404 로 막음 (2026.9.10). Function 경로가 정적 파일보다 우선하므로 해당 폴더의 파일은 어떤 주소로도 내려받을 수 없다.
 
 ### 절대 추가하지 말 것
 - 빌드 스텝(번들러, 트랜스파일러, CSS 전처리기). 캐시 무력화는 파일명 해시 대신 `?v=` 버전 쿼리로 한다 (12절).
@@ -54,7 +55,7 @@
   → **push = 운영 릴리스다.** 공통 규칙의 "push 는 콕 집어 지시할 때만" 은 이 저장소에서 특히 중요하다. 로컬 `main` 이 `ahead` 로 남는 것이 정상이다.
 - **저장소 루트가 곧 배포 루트다.** 커밋한 파일은 예외 없이 `https://weavo.art/<경로>` 로 공개된다.
   - 비밀값(서비스 롤 키, 토큰, 계정 정보)은 **어떤 파일에도 넣지 않는다.** `js/supabase-client.js` 의 anon 키는 공개용 키라 예외.
-  - 개발 문서는 `DevDocs/` 에 두고, `robots.txt` 에 `Disallow` 로 색인만 막아 둔 상태다(접근 자체는 열려 있음). 공개되면 안 되는 문서는 저장소에 넣지 않는다.
+  - 개발 문서는 `DevDocs/`, SQL 은 `supabase/`, 도구는 `tools/` 에 둔다. 이 세 폴더는 `functions/<폴더>/[[path]].js` 가 404 를 돌려 웹에서 접근할 수 없고 `robots.txt` 에도 Disallow 되어 있다 (2026.9.10). 그래도 비밀값은 저장소에 넣지 않는다.
 - 배포 후 확인이 필요한 항목(SEO·리다이렉트·헤더)은 `SEO_DEPLOYMENT_CHECKLIST.md` 를 따른다.
 
 ---
@@ -80,7 +81,7 @@
 
 ## 6. DB(Supabase) 변경 규칙
 
-- 스키마·RLS·RPC 변경은 `supabase_<기능>.sql` 파일로 남긴다. 파일 머리에 기존 파일과 같은 형식의 실행 안내 주석(`-- Run this once in the Supabase SQL editor …`)과 목적 설명을 쓴다.
+- 스키마·RLS·RPC 변경은 **`supabase/supabase_<기능>.sql`** 파일로 남긴다 (2026.9.10 부터 `supabase/` 폴더; 웹에서는 Function 이 404 로 막는다). 파일 머리에 기존 파일과 같은 형식의 실행 안내 주석(`-- Run this once in the Supabase SQL editor …`)과 목적 설명을 쓴다.
 - **마이그레이션 도구가 없다.** 파일은 사람이 Supabase SQL 에디터에서 직접 실행한다. 따라서
   - 새 SQL 은 **멱등**하게 쓴다 (`if not exists`, `drop policy if exists` 후 `create policy`, `add column if not exists`).
   - 코드가 새 컬럼·RPC 에 의존하면 **어떤 SQL 파일을 먼저 실행해야 하는지 보고에 반드시 적는다.** 적용 여부는 저장소에 기록되지 않으므로 사용자에게 확인한다.
@@ -169,7 +170,7 @@ git config core.hooksPath tools/git-hooks
 
 - HTML 만 고친 커밋은 버전을 올리지 않는다 (HTML 은 `no-cache`).
 - **배포 전환 순간의 캐시 오염 주의 (2026.9.10 실제 발생)**: push 직후 몇십 초 동안은 새 HTML 이 새 `?v=` 로 JS 를 요청해도 옛 파일이 내려올 수 있고, 그 옛 파일이 새 주소로 1년 캐시된다(PC 에서 히어로 숫자가 전부 0). 그래서 **파일 간 새 함수·반환값에 의존하는 코드는 옛 파일과 섞여도 죽지 않게** 쓴다(존재 검사·폴백·try/catch). 이미 오염된 브라우저는 다음 배포(새 `?v=`)나 강력 새로고침으로 풀린다. 새 페이지를 만들 때는 링크에 `?v=` 가 있는지 확인하고 없으면 스크립트를 한 번 돌린다.
-- `tools/` 는 배포 루트에 포함돼 공개되지만 비밀값이 없고 `robots.txt` 로 색인만 막았다.
+- `tools/` 는 저장소에 있지만 `functions/tools/[[path]].js` 가 웹 접근을 404 로 막는다 (2026.9.10).
 
 ---
 
