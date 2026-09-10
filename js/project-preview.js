@@ -24,7 +24,7 @@ const previewGridCache = new Map();
 // again without micro_thumb while supabase_mosaic_micro_thumbs.sql hasn't
 // been applied (unknown column → schema mismatch).
 async function fetchPreviewFilled(project, withMicro) {
-  const cols = 'x,y,mosaic_submissions!mosaic_pixels_submission_id_fkey(avg_r,avg_g,avg_b' + (withMicro ? ',micro_thumb' : '') + ')';
+  const cols = 'x,y,mosaic_submissions!mosaic_pixels_submission_id_fkey(avg_r,avg_g,avg_b,author_id' + (withMicro ? ',micro_thumb' : '') + ')';
   const res = await fetchAllRows(
     () => sb.from('mosaic_pixels').select(cols)
       .eq('project_id', project.id).eq('filled', true).not('submission_id', 'is', null),

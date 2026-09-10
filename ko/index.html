@@ -26,8 +26,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-094430">
-<link rel="stylesheet" href="/css/home.css?v=20260910-094430">
+<link rel="stylesheet" href="/css/base.css?v=20260910-094902">
+<link rel="stylesheet" href="/css/home.css?v=20260910-094902">
 </head>
 <body>
 
@@ -80,11 +80,18 @@
                 <div class="hero-tagline" aria-hidden="true"><span>Different</span><span>People</span><span>Brighter</span><span>Tomorrows</span></div>
               </div>
               <div class="hero-art-foot">
+                <div class="hero-mine" id="heroMine" style="display:none;">
+                  <div class="hero-mine-k">내가 기여한 금액</div>
+                  <div class="hero-mine-v">₩<span id="heroMineAmount">0</span></div>
+                  <div class="hero-mine-s">이 캠페인에 참여 중인 내 작품 <b id="heroMineCount">0</b>개</div>
+                </div>
+                <div class="hero-art-side">
                 <div class="hero-art-nav" id="heroArtNav">
                   <button type="button" class="hero-arrow" id="heroPrev" aria-label="이전 캠페인">&lsaquo;</button>
                   <button type="button" class="hero-arrow dark" id="heroNext" aria-label="다음 캠페인">&rsaquo;</button>
                 </div>
                 <div class="hero-art-caption"><b>함께 만든 <span id="heroTotalCaption">0</span>개의 이야기</b><span>지금, 한 조각을 더해보세요.</span></div>
+                </div>
               </div>
             </div>
             <!-- data-pledge: placeholder until campaigns carry their own donor /
@@ -335,15 +342,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-094430"></script>
-<script src="/js/i18n/ko.js?v=20260910-094430"></script>
-<script src="/js/common.js?v=20260910-094430"></script>
-<script src="/js/color-engine.js?v=20260910-094430"></script>
-<script src="/js/matching.js?v=20260910-094430"></script>
-<script src="/js/auth.js?v=20260910-094430"></script>
-<script src="/js/notifications.js?v=20260910-094430"></script>
-<script src="/js/project-preview.js?v=20260910-094430"></script>
-<script src="/js/lightbox.js?v=20260910-094430"></script>
-<script src="/js/landing.js?v=20260910-094430"></script>
+<script src="/js/supabase-client.js?v=20260910-094902"></script>
+<script src="/js/i18n/ko.js?v=20260910-094902"></script>
+<script src="/js/common.js?v=20260910-094902"></script>
+<script src="/js/color-engine.js?v=20260910-094902"></script>
+<script src="/js/matching.js?v=20260910-094902"></script>
+<script src="/js/auth.js?v=20260910-094902"></script>
+<script src="/js/notifications.js?v=20260910-094902"></script>
+<script src="/js/project-preview.js?v=20260910-094902"></script>
+<script src="/js/lightbox.js?v=20260910-094902"></script>
+<script src="/js/landing.js?v=20260910-094902"></script>
 </body>
 </html>

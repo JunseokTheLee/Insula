@@ -28,6 +28,7 @@ async function renderHeroPreview() {
     canvas.style.display = 'none';
     emptyEl.style.display = '';
     renderHeroProgress(0, 0);
+    renderHeroMine(new Map(), 0);
     return;
   }
   canvas.style.display = '';
@@ -52,10 +53,30 @@ async function renderHeroPreview() {
     let filledCount = 0;
     for (const c of cells) if (filled.has(`${c.x},${c.y}`)) filledCount++;
     renderHeroProgress(filledCount, cells.length);
+    renderHeroMine(filled, cells.length);
   } catch (e) {
     console.error('hero preview error:', e);
   }
 }
+// "My contribution": the share of the pledge attributable to the signed-in
+// visitor's own pieces in the campaign on screen (their placed pieces ×
+// pledge / all cells). Hidden while signed out; re-evaluated when the
+// session changes (auth.js dispatches weavo:authchange).
+let heroMineFilled = null;
+let heroMineTotal = 0;
+function renderHeroMine(filled, total) {
+  heroMineFilled = filled; heroMineTotal = total;
+  const box = document.getElementById('heroMine');
+  if (!me.id) { box.style.display = 'none'; return; }
+  let mine = 0;
+  for (const sub of filled.values()) if (sub.author_id === me.id) mine++;
+  const pledge = parseInt(document.getElementById('heroProgress').dataset.pledge, 10) || 0;
+  const fmt = n => n.toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US');
+  document.getElementById('heroMineAmount').textContent = fmt(total ? Math.round(pledge * mine / total) : 0);
+  document.getElementById('heroMineCount').textContent = fmt(mine);
+  box.style.display = '';
+}
+document.addEventListener('weavo:authchange', () => { if (heroMineFilled) renderHeroMine(heroMineFilled, heroMineTotal); });
 function heroStep(delta) {
   if (heroProjects.length < 2) return;
   heroIndex = (heroIndex + delta + heroProjects.length) % heroProjects.length;
