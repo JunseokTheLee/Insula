@@ -7,8 +7,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-122800">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-122800">
+<link rel="stylesheet" href="/css/base.css?v=20260910-123800">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-123800">
 </head>
 <body>
 
@@ -80,9 +80,11 @@
             <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>Show the "Preview" thumbnail (the reference colors) in the corner of campaign pages <em>(default: off)</em></span></label>
             <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>Count visitors — once a day per browser (Asia/Seoul), members and guests separately, for the "Visitors" section above <em>(default on; when off, record_visit() refuses on the server as well)</em></span></label>
             <div class="admin-setting admin-setting-range">
-              <label for="adminPreviewContrast">Grey contrast of open cells — 100 keeps each cell's own luminance, 0 is flat grey. Lower makes the reference photo harder to recognise on the home page, campaign cards, the campaign grid and share cards. <em>(default 40; share cards already made keep their old contrast until "Recreate share image" in the campaign list below)</em></label>
+              <label for="adminPreviewContrast">Grey of open cells — <strong>contrast</strong>: 100 keeps the reference's own light-and-dark spread, 0 is flat grey. Lower makes the photo harder to recognise on the home page, campaign cards, the campaign grid and share cards. <em>(default 40)</em></label>
               <div class="admin-range"><input id="adminPreviewContrast" type="range" min="0" max="100" step="1" data-setting="previewContrast" disabled><output for="adminPreviewContrast" data-setting-output="previewContrast">40</output></div>
-              <canvas class="admin-contrast-preview" id="adminContrastPreview" aria-label="How open cells look at this contrast"></canvas>
+              <label for="adminPreviewBrightness">Grey of open cells — <strong>brightness</strong>: the average grey level, 0 black · 50 mid-grey · 100 white. Every campaign's open cells average this level whatever the photo's exposure. <em>(default 70, a light grey; share cards already made keep their old look until "Recreate share image" in the campaign list below)</em></label>
+              <div class="admin-range"><input id="adminPreviewBrightness" type="range" min="0" max="100" step="1" data-setting="previewBrightness" disabled><output for="adminPreviewBrightness" data-setting-output="previewBrightness">70</output></div>
+              <canvas class="admin-contrast-preview" id="adminContrastPreview" aria-label="How open cells look with these settings"></canvas>
               <p class="admin-help" id="adminContrastPreviewNone" style="display:none;">No live campaign with a grid image yet — nothing to preview.</p>
             </div>
           </div>
@@ -269,13 +271,13 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-122800"></script>
-<script src="/js/i18n/en.js?v=20260910-122800"></script>
-<script src="/js/common.js?v=20260910-122800"></script>
-<script src="/js/auth.js?v=20260910-122800"></script>
-<script src="/js/notifications.js?v=20260910-122800"></script>
-<script src="/js/color-engine.js?v=20260910-122800"></script>
-<script src="/js/matching.js?v=20260910-122800"></script>
-<script src="/js/admin.js?v=20260910-122800"></script>
+<script src="/js/supabase-client.js?v=20260910-123800"></script>
+<script src="/js/i18n/en.js?v=20260910-123800"></script>
+<script src="/js/common.js?v=20260910-123800"></script>
+<script src="/js/auth.js?v=20260910-123800"></script>
+<script src="/js/notifications.js?v=20260910-123800"></script>
+<script src="/js/color-engine.js?v=20260910-123800"></script>
+<script src="/js/matching.js?v=20260910-123800"></script>
+<script src="/js/admin.js?v=20260910-123800"></script>
 </body>
 </html>

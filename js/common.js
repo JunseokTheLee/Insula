@@ -425,19 +425,39 @@ function loadProjectCells(project) {
   return projectCellsCache.get(key);
 }
 // ---------- open-cell grey ----------
-// Open (unfilled) cells are drawn as grey: the target color's luminance
-// pulled toward mid-grey (128) by the previewContrast site option — 100
-// keeps the plain luminance, 0 flattens everything to one grey. Every
-// renderer of open cells goes through here (project-preview.js, project.js,
-// the share card below, the admin page's slider preview) so the look is
-// defined once. Needs color-engine.js's luminance() by call time.
+// Open (unfilled) cells are drawn as grey. openCellGrayer(cells, settings)
+// returns the (r, g, b) → grey function for one campaign: each cell's
+// luminance is re-centred from the reference's own mean luminance onto the
+// previewBrightness level, and its distance from that mean is scaled by
+// previewContrast — so every campaign's open cells average the same
+// brightness whatever the photo's exposure, and the spread (what makes the
+// picture recognisable) shrinks with the contrast. `cells` is the whole
+// grid, filled ones included, so the mean does not drift as pieces land.
+// Every renderer of open cells goes through here (project-preview.js,
+// project.js, the share card below, the admin page's slider preview) so
+// the look is defined once. Needs color-engine.js's luminance() by call
+// time. `settings` is a getSiteSettings() result (defaults fill any gap).
+function openCellOption(settings, key) {
+  const v = Number(settings && settings[key]);
+  return Math.min(100, Math.max(0, Number.isFinite(v) ? v : SITE_SETTING_DEFAULTS[key]));
+}
+function openCellGrayer(cells, settings) {
+  const contrast = openCellOption(settings, 'previewContrast') / 100;
+  const level = openCellOption(settings, 'previewBrightness') / 100 * 255;
+  let sum = 0, n = 0;
+  for (const c of cells || []) { sum += luminance(c.target_r, c.target_g, c.target_b); n++; }
+  const mean = n ? sum / n : 128;
+  return (r, g, b) => Math.round(Math.min(255, Math.max(0, level + (luminance(r, g, b) - mean) * contrast)));
+}
+// Kept for browsers still running the previous project-preview.js /
+// project.js (cache transition, CLAUDE.md §12): the earlier per-color
+// version, pivoting on mid-grey, and its option reader. New code uses
+// openCellGrayer with getSiteSettings.
 function openCellGray(r, g, b, contrast) {
   const c = Number(contrast);
   const k = (Number.isFinite(c) ? Math.min(100, Math.max(0, c)) : SITE_SETTING_DEFAULTS.previewContrast) / 100;
   return Math.round(128 + (luminance(r, g, b) - 128) * k);
 }
-// The option value for this page. getSiteSettings never rejects — with the
-// table missing or the request failing it answers the defaults.
 async function getPreviewContrast() {
   const settings = await getSiteSettings();
   const c = Number(settings.previewContrast);
@@ -446,8 +466,9 @@ async function getPreviewContrast() {
 
 // ---------- campaign share image (og:image) ----------
 // A 1200×630 card with the campaign drawn as the site shows it — every
-// cell in the open-cell grey (openCellGray, at the previewContrast option
-// current when the card is made) on white — for social previews and
+// cell in the open-cell grey (openCellGrayer, at the previewContrast /
+// previewBrightness options current when the card is made) on white — for
+// social previews and
 // crawlers, instead of the reference photo, which stays hidden until the
 // campaign is complete (supabase_mosaic_preview_image.sql). Made in the
 // browser on create / reshape and from the admin page ("create" for older
@@ -455,7 +476,8 @@ async function getPreviewContrast() {
 // color-engine.js's luminance() by call time.
 const PREVIEW_CARD_W = 1200;
 const PREVIEW_CARD_H = 630;
-function previewImageBlob(cells, width, height, contrast) {
+function previewImageBlob(cells, width, height, settings) {
+  const grayer = openCellGrayer(cells, settings);
   const canvas = document.createElement('canvas');
   canvas.width = PREVIEW_CARD_W; canvas.height = PREVIEW_CARD_H;
   const ctx = canvas.getContext('2d');
@@ -466,7 +488,7 @@ function previewImageBlob(cells, width, height, contrast) {
   const ox = Math.round((PREVIEW_CARD_W - cell * width) / 2);
   const oy = Math.round((PREVIEW_CARD_H - cell * height) / 2);
   for (const c of cells) {
-    const l = openCellGray(c.target_r, c.target_g, c.target_b, contrast);
+    const l = grayer(c.target_r, c.target_g, c.target_b);
     ctx.fillStyle = `rgb(${l},${l},${l})`;
     ctx.fillRect(ox + c.x * cell, oy + c.y * cell, Math.max(1, cell - 1), Math.max(1, cell - 1));
   }
@@ -476,7 +498,7 @@ function previewImageBlob(cells, width, height, contrast) {
 // any failure (the page then falls back to the site logo).
 async function uploadPreviewImage(cells, width, height) {
   try {
-    const blob = await previewImageBlob(cells, width, height, await getPreviewContrast());
+    const blob = await previewImageBlob(cells, width, height, await getSiteSettings());
     if (!blob) return null;
     return await uploadImage(new File([blob], `share-${width}x${height}.jpg`, { type: 'image/jpeg' }));
   } catch (e) {
@@ -508,11 +530,16 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // in supabase_visit_stats.sql reads this same key, so "off" is enforced on
   // the server too, not merely skipped by the browser (see js/auth.js).
   countVisits: true,
-  // Contrast of the grey that open cells are drawn in (home hero, campaign
-  // cards, campaign grid, share card): 100 = each cell's plain luminance,
-  // 0 = flat mid-grey. Kept low so the reference photo stays hard to make
-  // out until the pieces reveal it. Applied at draw time by openCellGray().
+  // The grey that open cells are drawn in (home hero, campaign cards,
+  // campaign grid, share card) — applied at draw time by openCellGrayer().
+  // Contrast: 100 keeps the reference's own light-and-dark spread, 0 is
+  // flat grey. Kept low so the photo stays hard to make out until the
+  // pieces reveal it.
   previewContrast: 40,
+  // Brightness: the average grey level (0 black, 50 mid-grey, 100 white)
+  // that every campaign's open cells are re-centred onto, whatever the
+  // photo's exposure. 70 = a light grey.
+  previewBrightness: 70,
 });
 const SITE_SETTINGS_TTL_MS = 60 * 1000;
 const SITE_SETTINGS_CACHE_KEY = 'weavo.siteSettings';

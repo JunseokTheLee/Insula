@@ -569,7 +569,7 @@ function syncAdminSettingOutput(input) {
   const key = input.dataset.setting;
   const out = document.querySelector(`[data-setting-output="${key}"]`);
   if (out) out.textContent = String(input.value);
-  if (key === 'previewContrast') paintAdminContrastPreview(Number(input.value)).catch(e => console.error('contrast preview error:', e));
+  if (key === 'previewContrast' || key === 'previewBrightness') paintAdminGrayPreview().catch(e => console.error('grey preview error:', e));
 }
 async function saveAdminSetting(input) {
   const key = input.dataset.setting;
@@ -590,10 +590,11 @@ async function saveAdminSetting(input) {
 }
 
 // ---------- site options: open-cell grey preview ----------
-// The previewContrast slider repaints a small canvas with the newest live
-// campaign that has a grid image (one small PNG through /img/, cached by
-// loadProjectCells) so the admin sees the effect before saving. When no
-// campaign has one yet the canvas is hidden and a note says so.
+// The contrast / brightness sliders repaint a small canvas with the newest
+// live campaign that has a grid image (one small PNG through /img/, cached
+// by loadProjectCells) so the admin sees the effect before saving. The
+// preview reads BOTH sliders' current positions, saved or not. When no
+// campaign has a grid image yet the canvas is hidden and a note says so.
 let adminContrastCellsPromise = null;
 function getAdminContrastCells() {
   if (!adminContrastCellsPromise) {
@@ -611,11 +612,18 @@ function getAdminContrastCells() {
   }
   return adminContrastCellsPromise;
 }
-async function paintAdminContrastPreview(contrast) {
+function adminGrayPreviewSettings() {
+  const read = key => {
+    const el = document.querySelector(`#adminSettings input[data-setting="${key}"]`);
+    return el ? Number(el.value) : SITE_SETTING_DEFAULTS[key];
+  };
+  return { previewContrast: read('previewContrast'), previewBrightness: read('previewBrightness') };
+}
+async function paintAdminGrayPreview() {
   const canvas = document.getElementById('adminContrastPreview');
-  // A stale common.js without openCellGray (cache transition, CLAUDE.md §12)
-  // just leaves the preview hidden; the option itself still saves.
-  if (!canvas || typeof openCellGray !== 'function') return;
+  // A stale common.js without openCellGrayer (cache transition, CLAUDE.md
+  // §12) just leaves the preview hidden; the options themselves still save.
+  if (!canvas || typeof openCellGrayer !== 'function') return;
   const grid = await getAdminContrastCells();
   adminShow('adminContrastPreviewNone', !grid);
   canvas.style.display = grid ? '' : 'none';
@@ -626,8 +634,9 @@ async function paintAdminContrastPreview(contrast) {
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const grayer = openCellGrayer(grid.cells, adminGrayPreviewSettings());
   for (const c of grid.cells) {
-    const l = openCellGray(c.target_r, c.target_g, c.target_b, contrast);
+    const l = grayer(c.target_r, c.target_g, c.target_b);
     ctx.fillStyle = `rgb(${l},${l},${l})`;
     ctx.fillRect(c.x * cell, c.y * cell, cell, cell);
   }

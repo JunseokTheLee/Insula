@@ -53,6 +53,7 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
 .admin-settings-unavailable{color:#C0522F;}
 /* Number options: text above, slider + readout below, then the grey preview. */
 .admin-setting-range{flex-direction:column;align-items:stretch;gap:6px;cursor:default;}
+.admin-setting-range label:not(:first-child){margin-top:8px;}
 .admin-range{display:flex;align-items:center;gap:12px;}
 .admin-range input[type=range]{flex:1 1 auto;max-width:360px;margin:0;accent-color:var(--primary);}
 .admin-range input:disabled+output{opacity:.55;}

@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-122800">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-122800">
+<link rel="stylesheet" href="/css/base.css?v=20260910-123800">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-123800">
 </head>
 
 <body>
@@ -85,9 +85,11 @@
             <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>캠페인 페이지 오른쪽에 "미리보기"(기준 색상) 썸네일 표시 <em>(기본: 끔)</em></span></label>
             <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>방문자 수 집계 — 브라우저마다 하루(한국 시간) 한 번, 회원·게스트를 구분해 위 "방문 통계" 에 표시 <em>(기본 켜짐; 끄면 서버의 record_visit() 도 기록하지 않음)</em></span></label>
             <div class="admin-setting admin-setting-range">
-              <label for="adminPreviewContrast">빈 칸 회색의 대비 — 100 이면 칸마다 원래 명도 그대로, 0 이면 평평한 회색. 낮출수록 홈·캠페인 카드·캠페인 격자·공유 카드에서 기준 사진을 알아보기 어려워집니다. <em>(기본 40; 이미 만든 공유 카드는 아래 캠페인 목록의 "공유 이미지 다시 생성" 전까지 옛 대비로 남음)</em></label>
+              <label for="adminPreviewContrast">빈 칸 회색 — <strong>대비</strong>: 100 이면 기준 사진의 명암 차이 그대로, 0 이면 평평한 회색. 낮출수록 홈·캠페인 카드·캠페인 격자·공유 카드에서 사진을 알아보기 어려워집니다. <em>(기본 40)</em></label>
               <div class="admin-range"><input id="adminPreviewContrast" type="range" min="0" max="100" step="1" data-setting="previewContrast" disabled><output for="adminPreviewContrast" data-setting-output="previewContrast">40</output></div>
-              <canvas class="admin-contrast-preview" id="adminContrastPreview" aria-label="이 대비로 그린 빈 칸 미리보기"></canvas>
+              <label for="adminPreviewBrightness">빈 칸 회색 — <strong>밝기</strong>: 회색의 평균 밝기. 0 검정 · 50 중간 회색 · 100 흰색. 사진의 노출과 관계없이 모든 캠페인의 빈 칸이 이 밝기를 평균으로 그려집니다. <em>(기본 70, 밝은 회색; 이미 만든 공유 카드는 아래 캠페인 목록의 "공유 이미지 다시 생성" 전까지 옛 모습으로 남음)</em></label>
+              <div class="admin-range"><input id="adminPreviewBrightness" type="range" min="0" max="100" step="1" data-setting="previewBrightness" disabled><output for="adminPreviewBrightness" data-setting-output="previewBrightness">70</output></div>
+              <canvas class="admin-contrast-preview" id="adminContrastPreview" aria-label="이 설정으로 그린 빈 칸 미리보기"></canvas>
               <p class="admin-help" id="adminContrastPreviewNone" style="display:none;">격자 이미지가 있는 진행 중 캠페인이 없어 미리보기를 그릴 수 없습니다.</p>
             </div>
           </div>
@@ -375,14 +377,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-122800"></script>
-<script src="/js/i18n/ko.js?v=20260910-122800"></script>
-<script src="/js/common.js?v=20260910-122800"></script>
-<script src="/js/auth.js?v=20260910-122800"></script>
-<script src="/js/notifications.js?v=20260910-122800"></script>
-<script src="/js/color-engine.js?v=20260910-122800"></script>
-<script src="/js/matching.js?v=20260910-122800"></script>
-<script src="/js/admin.js?v=20260910-122800"></script>
+<script src="/js/supabase-client.js?v=20260910-123800"></script>
+<script src="/js/i18n/ko.js?v=20260910-123800"></script>
+<script src="/js/common.js?v=20260910-123800"></script>
+<script src="/js/auth.js?v=20260910-123800"></script>
+<script src="/js/notifications.js?v=20260910-123800"></script>
+<script src="/js/color-engine.js?v=20260910-123800"></script>
+<script src="/js/matching.js?v=20260910-123800"></script>
+<script src="/js/admin.js?v=20260910-123800"></script>
 
 </body>
 </html>
