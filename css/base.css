@@ -155,6 +155,8 @@ body.no-scroll-lock{overflow:hidden;}
 .pv-card:hover{box-shadow:var(--shadow-md);}
 .pv-card-thumb{aspect-ratio:1;background:var(--bg);position:relative;}
 .pv-card-thumb img{width:100%;height:100%;object-fit:cover;display:block;color:transparent;}
+/* Campaign cards paint a preview canvas instead of an <img> (the reference photo stays hidden). */
+.pv-card-thumb canvas{width:100%;height:100%;object-fit:cover;display:block;}
 .pv-card-thumb:empty::after{
   content:'🖼';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   font-size:22px;opacity:.2;

@@ -75,7 +75,7 @@ async function fetchParticipatedProjects(artwork, userId) {
   const placedIds = [...new Set(artwork.map(s => s.project_id).filter(id => id != null))];
   if (placedIds.length) {
     const { data, error } = await sb.from('mosaic_projects')
-      .select('id,title,reference_image_url')
+      .select('*') // the preview renderer needs width/height/grid_image_url too
       .in('id', placedIds);
     if (error) console.error('load participated (live) projects error:', error);
     if (data) {
@@ -92,7 +92,7 @@ async function fetchParticipatedProjects(artwork, userId) {
   }
   {
     const { data: archived, error: archivedErr } = await fetchAllRows(() => sb.from('mosaic_pixels')
-      .select('project_id,mosaic_submissions!mosaic_pixels_submission_id_fkey!inner(author_id),mosaic_projects!inner(id,title,reference_image_url,is_archived,version_number)', { count: 'exact' })
+      .select('project_id,mosaic_submissions!mosaic_pixels_submission_id_fkey!inner(author_id),mosaic_projects!inner(*)', { count: 'exact' })
       .eq('mosaic_submissions.author_id', userId)
       .eq('mosaic_projects.is_archived', true));
     if (archivedErr) console.error('load participated (archived) projects error:', archivedErr);
@@ -115,11 +115,15 @@ function profileProjectCardEl(project) {
   card.href = projectUrl(project.id);
   const thumb = document.createElement('div');
   thumb.className = 'pv-card-thumb';
-  const img = document.createElement('img');
-  img.src = cdnUrl(project.reference_image_url);
-  img.alt = project.title ? tr('projectPreviewAlt', { title: project.title }) : '';
-  thumb.appendChild(img);
+  // Never the reference photo itself — that is what the campaign is
+  // assembling toward and stays hidden until it is. The card shows the same
+  // preview as the home page: open cells as grey, placed pieces as tiny
+  // pictures (js/project-preview.js).
+  const canvas = document.createElement('canvas');
+  canvas.setAttribute('aria-label', project.title ? tr('projectPreviewAlt', { title: project.title }) : '');
+  thumb.appendChild(canvas);
   card.appendChild(thumb);
+  paintProjectPreview(card, project).catch(err => console.error('profile campaign preview error:', err));
   const info = document.createElement('div');
   info.className = 'pv-card-info';
   const title = document.createElement('div');

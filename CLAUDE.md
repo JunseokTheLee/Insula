@@ -100,7 +100,8 @@
 - Supabase Storage URL 은 `cdnUrl()` 로 감싸 `/img/` 프록시를 타게 한다.
 - **캠페인 칸의 색은 `loadProjectCells(project)`(common.js)로 읽는다.** 프로젝트에 `grid_image_url`(정적 PNG, `/img/` 캐시)이 있으면 그 이미지에서, 없거나 못 읽으면 `mosaic_pixels` 조회로 자동 폴백한다. 격자·미리보기·필요한 색상이 모두 이 경로를 쓰므로 `mosaic_pixels` 를 직접 전체 조회하지 않는다 (2026.9.10, `supabase_mosaic_grid_image.sql`). 이미지가 없는 옛 캠페인은 관리자 페이지의 "격자 이미지 생성" 버튼으로 한 번 만든다(업로드한 PNG 를 다시 읽어 칸과 일치하는지 검증한 뒤 `grid_image_url` 기록).
 - **매칭은 서버 RPC(`match_pool_artworks`·`release_poor_matches`)가 한다.** `matching.js` 는 RPC 를 먼저 부르고, 함수가 없을 때(PGRST202)만 옛 클라이언트 계산으로 폴백한다. 매칭 규칙(Lab 거리·가중치 0.2·한계 30)을 바꾸면 **SQL 과 color-engine.js 를 함께** 고친다.
-- **작품 썸네일은 업로드 때 브라우저가 만든다** (`common.js` `makeArtworkDerivatives`): 긴 변 480px JPEG 는 `thumb/<작가id>/` 에 올려 `thumb_url` 에, 원본이 이미 480px 이하면 원본 URL 을 그대로 `thumb_url` 에 넣는다(별도 파일 없음). 16×16 JPEG data URI 는 `micro_thumb` 컬럼에 넣어 캠페인 캔버스가 배율과 무관하게 작은 그림으로 그린다. 둘 중 하나라도 빠진 작품은 관리자 페이지 "작품 썸네일" 에서 세고 재생성한다. 화면은 항상 `thumb_url || image_url` 순으로 쓴다.
+- **캠페인의 기준 이미지 원본(`reference_image_url`)은 화면에 직접 보여주지 않는다** (2026.9.10 확정). 캠페인이 완성될 때까지 숨겨야 하는 그림이므로, 캠페인을 보여주는 곳(홈 히어로·캠페인 목록·프로필의 참여 캠페인)은 모두 `paintProjectPreview()`(project-preview.js: 빈 칸은 회색, 채워진 칸은 초소형 썸네일)로 그린다. 새로 캠페인을 노출하는 화면을 만들 때도 같은 렌더러를 쓴다.
+$1 (`common.js` `makeArtworkDerivatives`): 긴 변 480px JPEG 는 `thumb/<작가id>/` 에 올려 `thumb_url` 에, 원본이 이미 480px 이하면 원본 URL 을 그대로 `thumb_url` 에 넣는다(별도 파일 없음). 16×16 JPEG data URI 는 `micro_thumb` 컬럼에 넣어 캠페인 캔버스가 배율과 무관하게 작은 그림으로 그린다. 둘 중 하나라도 빠진 작품은 관리자 페이지 "작품 썸네일" 에서 세고 재생성한다. 화면은 항상 `thumb_url || image_url` 순으로 쓴다.
 $1(common.js)로 받는다.** Supabase 는 응답을 기본 1,000행에서 조용히 잘라낸다 — 캠페인 칸(`mosaic_pixels`, 최대 10,000)이 대표적. 2026.9.9 에 58×86 캠페인이 상단 1,000칸만 그려지고 개수·매칭이 어긋난 원인이었다. 페이지 수를 알면 `expected`(예: `width*height`)를, 모르면 `select(cols, { count: 'exact' })` 를 넘겨 병렬로 받는다.
 - UI 디자인 작업에는 `.claude/skills/superdesign` 스킬이 있다. 이 스킬은 외부(GitHub raw) 지침을 가져오므로, 디자인 작업을 명시적으로 요청받았을 때만 쓴다.
 
