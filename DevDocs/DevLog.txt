@@ -5,6 +5,7 @@ Weavo 개발 기록 (DevDocs/DevLog.txt)
 - 접두어: feat(새 기능) / fix(수정) / chore(정리·문서·설정)
 
 ========== 2026-09-10 ==========
+fix: 캠페인 격자의 칸 사이 1px 선 제거 — 축소하면 선이 보였다 안 보였다 하던 문제
 feat: 빈 칸 회색에 틴트 색 옵션(previewTint, 기본 #DCE4ED 은은한 블루) — 색조만 쓰고 밝기는 슬라이더가 정함
 feat: 빈 칸 회색의 밝기 옵션(previewBrightness, 기본 70) — 캠페인마다 평균 밝기를 같게, 밝은 회색·낮은 대비
 feat: 빈 칸 회색의 대비를 관리자 옵션(previewContrast, 기본 40)으로 낮춰 완성 전 원본을 알아보기 어렵게

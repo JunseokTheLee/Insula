@@ -215,8 +215,10 @@ async function renderWeavoGrid(project) {
     } else {
       ctx.fillStyle = paint(c.target_r, c.target_g, c.target_b);
     }
-    // One canvas pixel of gap between cells, like the old CSS grid's 1px gap.
-    ctx.fillRect(c.x * cellPx, c.y * cellPx, cellPx - 1, cellPx - 1);
+    // Cells butt up against each other — no gap. The old 1px gap let the dark
+    // stage show through as grid lines that flickered in and out whenever the
+    // canvas was scaled to the screen (2026-09-10).
+    ctx.fillRect(c.x * cellPx, c.y * cellPx, cellPx, cellPx);
   }
   grid.appendChild(base);
   paintMicroThumbs(ctx, filledRows, cellPx, project);
@@ -342,7 +344,7 @@ async function paintMicroThumbs(ctx, rows, cellPx, project) {
   const withMicro = rows.filter(px => px.mosaic_submissions && px.mosaic_submissions.micro_thumb);
   await Promise.all(withMicro.map(px => loadImageEl(px.mosaic_submissions.micro_thumb).then(img => {
     if (currentProject !== project) return; // the page has moved on to another campaign
-    ctx.drawImage(img, px.x * cellPx, px.y * cellPx, cellPx - 1, cellPx - 1);
+    ctx.drawImage(img, px.x * cellPx, px.y * cellPx, cellPx, cellPx); // full cell, like the base colour
   }).catch(() => { /* a bad data URI just leaves the average colour */ })));
 }
 // Thumbnails are only loaded for filled cells that are on screen AND at
