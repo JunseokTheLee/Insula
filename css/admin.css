@@ -63,7 +63,13 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
 .admin-contrast-preview{display:block;width:180px;max-width:100%;height:auto;border:1px solid var(--border);border-radius:var(--r-xs);background:#fff;image-rendering:pixelated;}
 .admin-code{background:var(--gray-100);padding:10px 12px;border-radius:var(--r-xs);font-size:12.5px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;}
 .admin-empty{padding:28px 16px;}
+/* Edit-campaign dialog. base.css sizes and pads every dialog by its id (the
+   bare .modal-panel has neither), so until this rule the form sat flush
+   against the panel edges. */
+#admin-edit-campaign-dialog{width:600px;max-width:calc(100vw - 40px);padding:32px 34px 28px;}
+#admin-edit-campaign-dialog h3{font-family:'Pretendard',sans-serif;font-size:18px;font-weight:700;margin:0 0 18px;color:var(--primary);}
 @media (max-width:640px){
+  #admin-edit-campaign-dialog{padding:24px 20px 20px;}
   .admin-row{flex-direction:column;gap:10px;}
   .admin-target{flex-basis:auto;}
   .admin-actions{justify-content:flex-start;}
