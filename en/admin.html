@@ -7,8 +7,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-123800">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-123800">
+<link rel="stylesheet" href="/css/base.css?v=20260910-124526">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-124526">
 </head>
 <body>
 
@@ -84,6 +84,8 @@
               <div class="admin-range"><input id="adminPreviewContrast" type="range" min="0" max="100" step="1" data-setting="previewContrast" disabled><output for="adminPreviewContrast" data-setting-output="previewContrast">40</output></div>
               <label for="adminPreviewBrightness">Grey of open cells — <strong>brightness</strong>: the average grey level, 0 black · 50 mid-grey · 100 white. Every campaign's open cells average this level whatever the photo's exposure. <em>(default 70, a light grey; share cards already made keep their old look until "Recreate share image" in the campaign list below)</em></label>
               <div class="admin-range"><input id="adminPreviewBrightness" type="range" min="0" max="100" step="1" data-setting="previewBrightness" disabled><output for="adminPreviewBrightness" data-setting-output="previewBrightness">70</output></div>
+              <label for="adminPreviewTint">Grey of open cells — <strong>tint</strong>: the colour the grey leans toward. Only its hue and saturation are used, not its own lightness — brightness above sets the level. #DCE4ED is a light grey with a faint blue; a neutral grey such as #808080 means no tint. To see the picked colour exactly, set brightness to that colour's lightness (89 for #DCE4ED). <em>(default #DCE4ED)</em></label>
+              <div class="admin-range admin-color"><input id="adminPreviewTint" type="color" data-setting="previewTint" value="#dce4ed" disabled><output for="adminPreviewTint" data-setting-output="previewTint">#DCE4ED</output></div>
               <canvas class="admin-contrast-preview" id="adminContrastPreview" aria-label="How open cells look with these settings"></canvas>
               <p class="admin-help" id="adminContrastPreviewNone" style="display:none;">No live campaign with a grid image yet — nothing to preview.</p>
             </div>
@@ -271,13 +273,13 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-123800"></script>
-<script src="/js/i18n/en.js?v=20260910-123800"></script>
-<script src="/js/common.js?v=20260910-123800"></script>
-<script src="/js/auth.js?v=20260910-123800"></script>
-<script src="/js/notifications.js?v=20260910-123800"></script>
-<script src="/js/color-engine.js?v=20260910-123800"></script>
-<script src="/js/matching.js?v=20260910-123800"></script>
-<script src="/js/admin.js?v=20260910-123800"></script>
+<script src="/js/supabase-client.js?v=20260910-124526"></script>
+<script src="/js/i18n/en.js?v=20260910-124526"></script>
+<script src="/js/common.js?v=20260910-124526"></script>
+<script src="/js/auth.js?v=20260910-124526"></script>
+<script src="/js/notifications.js?v=20260910-124526"></script>
+<script src="/js/color-engine.js?v=20260910-124526"></script>
+<script src="/js/matching.js?v=20260910-124526"></script>
+<script src="/js/admin.js?v=20260910-124526"></script>
 </body>
 </html>

@@ -433,10 +433,14 @@ function loadProjectCells(project) {
 // brightness whatever the photo's exposure, and the spread (what makes the
 // picture recognisable) shrinks with the contrast. `cells` is the whole
 // grid, filled ones included, so the mean does not drift as pieces land.
-// Every renderer of open cells goes through here (project-preview.js,
-// project.js, the share card below, the admin page's slider preview) so
-// the look is defined once. Needs color-engine.js's luminance() by call
-// time. `settings` is a getSiteSettings() result (defaults fill any gap).
+// openCellPainter(cells, settings) wraps it with the previewTint colour:
+// the grey is multiplied by the tint's per-channel ratio to its own
+// luminance, so hue and saturation follow the tint at any brightness and
+// a neutral tint leaves plain grey. It returns the CSS colour string every
+// renderer of open cells paints with (project-preview.js, project.js, the
+// share card below, the admin page's slider preview), so the look is
+// defined once. Needs color-engine.js's luminance() by call time.
+// `settings` is a getSiteSettings() result (defaults fill any gap).
 function openCellOption(settings, key) {
   const v = Number(settings && settings[key]);
   return Math.min(100, Math.max(0, Number.isFinite(v) ? v : SITE_SETTING_DEFAULTS[key]));
@@ -449,10 +453,23 @@ function openCellGrayer(cells, settings) {
   const mean = n ? sum / n : 128;
   return (r, g, b) => Math.round(Math.min(255, Math.max(0, level + (luminance(r, g, b) - mean) * contrast)));
 }
+function openCellTint(settings) {
+  const raw = String((settings && settings.previewTint) || '').trim();
+  const hex = /^#[0-9a-f]{6}$/i.test(raw) ? raw : SITE_SETTING_DEFAULTS.previewTint;
+  const tr = parseInt(hex.slice(1, 3), 16), tg = parseInt(hex.slice(3, 5), 16), tb = parseInt(hex.slice(5, 7), 16);
+  const tl = luminance(tr, tg, tb);
+  return tl > 0 ? { kr: tr / tl, kg: tg / tl, kb: tb / tl } : { kr: 1, kg: 1, kb: 1 };
+}
+function openCellPainter(cells, settings) {
+  const gray = openCellGrayer(cells, settings);
+  const { kr, kg, kb } = openCellTint(settings);
+  const ch = v => Math.round(Math.min(255, Math.max(0, v)));
+  return (r, g, b) => { const l = gray(r, g, b); return `rgb(${ch(l * kr)},${ch(l * kg)},${ch(l * kb)})`; };
+}
 // Kept for browsers still running the previous project-preview.js /
 // project.js (cache transition, CLAUDE.md §12): the earlier per-color
 // version, pivoting on mid-grey, and its option reader. New code uses
-// openCellGrayer with getSiteSettings.
+// openCellPainter with getSiteSettings.
 function openCellGray(r, g, b, contrast) {
   const c = Number(contrast);
   const k = (Number.isFinite(c) ? Math.min(100, Math.max(0, c)) : SITE_SETTING_DEFAULTS.previewContrast) / 100;
@@ -466,8 +483,9 @@ async function getPreviewContrast() {
 
 // ---------- campaign share image (og:image) ----------
 // A 1200×630 card with the campaign drawn as the site shows it — every
-// cell in the open-cell grey (openCellGrayer, at the previewContrast /
-// previewBrightness options current when the card is made) on white — for
+// cell in the open-cell grey (openCellPainter, at the previewContrast /
+// previewBrightness / previewTint options current when the card is made)
+// on white — for
 // social previews and
 // crawlers, instead of the reference photo, which stays hidden until the
 // campaign is complete (supabase_mosaic_preview_image.sql). Made in the
@@ -477,7 +495,7 @@ async function getPreviewContrast() {
 const PREVIEW_CARD_W = 1200;
 const PREVIEW_CARD_H = 630;
 function previewImageBlob(cells, width, height, settings) {
-  const grayer = openCellGrayer(cells, settings);
+  const paint = openCellPainter(cells, settings);
   const canvas = document.createElement('canvas');
   canvas.width = PREVIEW_CARD_W; canvas.height = PREVIEW_CARD_H;
   const ctx = canvas.getContext('2d');
@@ -488,8 +506,7 @@ function previewImageBlob(cells, width, height, settings) {
   const ox = Math.round((PREVIEW_CARD_W - cell * width) / 2);
   const oy = Math.round((PREVIEW_CARD_H - cell * height) / 2);
   for (const c of cells) {
-    const l = grayer(c.target_r, c.target_g, c.target_b);
-    ctx.fillStyle = `rgb(${l},${l},${l})`;
+    ctx.fillStyle = paint(c.target_r, c.target_g, c.target_b);
     ctx.fillRect(ox + c.x * cell, oy + c.y * cell, Math.max(1, cell - 1), Math.max(1, cell - 1));
   }
   return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
@@ -540,6 +557,12 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // that every campaign's open cells are re-centred onto, whatever the
   // photo's exposure. 70 = a light grey.
   previewBrightness: 70,
+  // Tint: the colour the grey leans toward — only its hue and saturation
+  // are used (openCellPainter multiplies the grey by the colour's per-
+  // channel ratio to its own luminance), the level still comes from
+  // previewBrightness. #DCE4ED = light grey with a faint blue; a neutral
+  // grey such as #808080 means no tint.
+  previewTint: '#DCE4ED',
 });
 const SITE_SETTINGS_TTL_MS = 60 * 1000;
 const SITE_SETTINGS_CACHE_KEY = 'weavo.siteSettings';

@@ -102,7 +102,7 @@
 - Supabase Storage URL 은 `cdnUrl()` 로 감싸 `/img/` 프록시를 타게 한다.
 - **캠페인 칸의 색은 `loadProjectCells(project)`(common.js)로 읽는다.** 프로젝트에 `grid_image_url`(정적 PNG, `/img/` 캐시)이 있으면 그 이미지에서, 없거나 못 읽으면 `mosaic_pixels` 조회로 자동 폴백한다. 격자·미리보기·필요한 색상이 모두 이 경로를 쓰므로 `mosaic_pixels` 를 직접 전체 조회하지 않는다 (2026.9.10, `supabase_mosaic_grid_image.sql`). 이미지가 없는 옛 캠페인은 관리자 페이지의 "격자 이미지 생성" 버튼으로 한 번 만든다(업로드한 PNG 를 다시 읽어 칸과 일치하는지 검증한 뒤 `grid_image_url` 기록).
 - **매칭은 서버 RPC(`match_pool_artworks`·`release_poor_matches`)가 한다.** `matching.js` 는 RPC 를 먼저 부르고, 함수가 없을 때(PGRST202)만 옛 클라이언트 계산으로 폴백한다. 매칭 규칙(Lab 거리·가중치 0.2·한계 30)을 바꾸면 **SQL 과 color-engine.js 를 함께** 고친다.
-- **캠페인의 기준 이미지 원본(`reference_image_url`)은 화면에 직접 보여주지 않는다** (2026.9.10 확정). 캠페인이 완성될 때까지 숨겨야 하는 그림이므로, 캠페인을 보여주는 곳(홈 히어로·캠페인 목록·프로필의 참여 캠페인)은 모두 `paintProjectPreview()`(project-preview.js: 빈 칸은 회색, 채워진 칸은 초소형 썸네일)로 그린다. 빈 칸 회색은 `openCellGrayer(cells, settings)`(common.js)가 `previewContrast`(기본 40)·`previewBrightness`(기본 70) 옵션으로 대비를 낮추고 평균 밝기를 맞춰 만든다 — 캠페인 격자와 공유 카드도 같은 함수를 쓴다 (2026.9.10). 새로 캠페인을 노출하는 화면을 만들 때도 같은 렌더러를 쓴다.
+- **캠페인의 기준 이미지 원본(`reference_image_url`)은 화면에 직접 보여주지 않는다** (2026.9.10 확정). 캠페인이 완성될 때까지 숨겨야 하는 그림이므로, 캠페인을 보여주는 곳(홈 히어로·캠페인 목록·프로필의 참여 캠페인)은 모두 `paintProjectPreview()`(project-preview.js: 빈 칸은 회색, 채워진 칸은 초소형 썸네일)로 그린다. 빈 칸 회색은 `openCellPainter(cells, settings)`(common.js)가 `previewContrast`(기본 40)·`previewBrightness`(기본 70)·`previewTint`(기본 `#DCE4ED`) 옵션으로 대비를 낮추고 평균 밝기를 맞춘 뒤 틴트 색조를 입혀 만든다 — 캠페인 격자와 공유 카드도 같은 함수를 쓴다 (2026.9.10). 새로 캠페인을 노출하는 화면을 만들 때도 같은 렌더러를 쓴다.
 $1 (`common.js` `makeArtworkDerivatives`): 긴 변 480px JPEG 는 `thumb/<작가id>/` 에 올려 `thumb_url` 에, 원본이 이미 480px 이하면 원본 URL 을 그대로 `thumb_url` 에 넣는다(별도 파일 없음). 16×16 JPEG data URI 는 `micro_thumb` 컬럼에 넣어 캠페인 캔버스가 배율과 무관하게 작은 그림으로 그린다. 둘 중 하나라도 빠진 작품은 관리자 페이지 "작품 썸네일" 에서 세고 재생성한다. 화면은 항상 `thumb_url || image_url` 순으로 쓴다.
 $1(common.js)로 받는다.** Supabase 는 응답을 기본 1,000행에서 조용히 잘라낸다 — 캠페인 칸(`mosaic_pixels`, 최대 10,000)이 대표적. 2026.9.9 에 58×86 캠페인이 상단 1,000칸만 그려지고 개수·매칭이 어긋난 원인이었다. 페이지 수를 알면 `expected`(예: `width*height`)를, 모르면 `select(cols, { count: 'exact' })` 를 넘겨 병렬로 받는다.
 - UI 디자인 작업에는 `.claude/skills/superdesign` 스킬이 있다. 이 스킬은 외부(GitHub raw) 지침을 가져오므로, 디자인 작업을 명시적으로 요청받았을 때만 쓴다.
@@ -216,12 +216,12 @@ git config core.hooksPath tools/git-hooks
 - 기본값은 **`js/common.js` 의 `SITE_SETTING_DEFAULTS` 한 곳**에만 둔다. DB 행에는 관리자가 바꾼 키만 저장되므로 옵션을 추가해도 SQL 을 다시 실행할 필요가 없다.
 - 옵션 하나를 추가하는 절차 (세 곳):
   1. `SITE_SETTING_DEFAULTS` 에 키와 기본값 (camelCase, 예: `showCampaignPreview: false`).
-  2. `en/admin.html`·`ko/admin.html` 의 `#adminSettings` 에 `<input type="checkbox" data-setting="키" disabled>` 체크박스 한 줄씩 (문구는 HTML 에 언어별로 직접 — 4절). `admin.js` 가 `data-setting` 을 자동으로 묶어 읽고 저장한다. 숫자 옵션은 `type="range"`(또는 `number`)에 `min`·`max` 를 두면 같은 방식으로 묶이고, 옆의 `<output data-setting-output="키">` 에 값이 표시된다 (2026.9.10, `previewContrast`).
+  2. `en/admin.html`·`ko/admin.html` 의 `#adminSettings` 에 `<input type="checkbox" data-setting="키" disabled>` 체크박스 한 줄씩 (문구는 HTML 에 언어별로 직접 — 4절). `admin.js` 가 `data-setting` 을 자동으로 묶어 읽고 저장한다. 숫자 옵션은 `type="range"`(또는 `number`)에 `min`·`max` 를 두면 같은 방식으로 묶이고, 색 옵션은 `type="color"`(값 `#RRGGBB`)로 묶이며, 옆의 `<output data-setting-output="키">` 에 값이 표시된다 (2026.9.10, `previewContrast`·`previewTint`).
   3. 기능 코드에서 `getSiteSettings().then(s => …)` 로 읽는다. 절대 거부(reject)하지 않고 테이블이 없거나 오프라인이면 기본값을 준다. 페이지당 1회 조회, `sessionStorage` 60초 캐시, 관리자 자신의 저장은 캐시를 즉시 갱신한다.
 - 서버에서도 강제해야 하는 옵션(예: 업로드 잠금)은 RLS 정책·RPC 안에서 같은 `site_settings` 행을 읽어 검사한다. 화면 가림만으로 끝내지 않는다.
 - 현재 옵션: `showCampaignPreview` — 캠페인 페이지 오른쪽 "미리보기" 썸네일 표시, 기본 꺼짐.
 - 현재 옵션: `countVisits` — 방문자 수 집계(브라우저당 하루 1회, 회원/게스트 구분), 기본 켜짐. `record_visit()` 이 서버에서도 검사한다.
-- 현재 옵션: `previewContrast`(대비 0~100, 기본 40)·`previewBrightness`(밝기 0~100, 기본 70) — 빈 칸 회색. `openCellGrayer(cells, settings)`(common.js)가 캠페인 기준 사진의 평균 명도를 밝기 수준으로 옮기고 편차를 대비만큼 줄이므로, 사진 노출과 무관하게 모든 캠페인의 빈 칸 평균 밝기가 같다. 홈·캠페인 카드·캠페인 격자·공유 카드·관리자 미리보기가 모두 이 함수로 그린다. 공유 카드는 만들 때의 값이 구워지므로 바꾼 뒤에는 관리자 캠페인 목록의 "공유 이미지 다시 생성" 으로 다시 만든다 (2026.9.10).
+- 현재 옵션: `previewContrast`(대비 0~100, 기본 40)·`previewBrightness`(밝기 0~100, 기본 70)·`previewTint`(틴트 색 `#RRGGBB`, 기본 `#DCE4ED`) — 빈 칸 회색. `openCellGrayer(cells, settings)`(common.js)가 캠페인 기준 사진의 평균 명도를 밝기 수준으로 옮기고 편차를 대비만큼 줄이며, `openCellPainter()` 가 그 회색에 틴트 색의 채널별 비율(색조·채도만, 밝기는 쓰지 않음)을 곱해 `rgb()` 문자열로 돌려준다. 무채색 틴트는 순수 회색. 홈·캠페인 카드·캠페인 격자·공유 카드·관리자 미리보기가 모두 이 함수로 그린다. 공유 카드는 만들 때의 값이 구워지므로 바꾼 뒤에는 관리자 캠페인 목록의 "공유 이미지 다시 생성" 으로 다시 만든다 (2026.9.10).
 - DB 사용량(15절): 옵션을 읽는 페이지 뷰당 요청 1개·약 0.3KB(캠페인 상세 기준 요청 +6%), 옵션을 읽지 않는 페이지는 영향 없음.
 
 ---

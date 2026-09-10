@@ -536,40 +536,48 @@ async function loadAdminSettings() {
   const settings = { ...SITE_SETTING_DEFAULTS, ...((data && data.settings) || {}) };
   inputs.forEach(input => {
     const key = input.dataset.setting;
-    adminSettingApply(input, adminSettingIsNumber(input) ? adminSettingNumber(settings[key], key) : !!settings[key]);
+    adminSettingApply(input, adminSettingIsNumber(input) ? adminSettingNumber(settings[key], key) : adminSettingIsColor(input) ? adminSettingColor(settings[key], key) : !!settings[key]);
     input.disabled = false;
     // Dragging a slider only updates its readout and preview; the save
     // happens on change (release), once.
-    input.oninput = () => { if (adminSettingIsNumber(input)) syncAdminSettingOutput(input); };
+    input.oninput = () => { if (adminSettingIsNumber(input) || adminSettingIsColor(input)) syncAdminSettingOutput(input); };
     input.onchange = () => saveAdminSetting(input);
   });
 }
-// Number options (type=range / number, e.g. previewContrast) are bound like
-// the checkboxes: clamped to the input's min/max, shown in the <output
-// data-setting-output="key"> beside them, and remembered in data-saved so
-// a failed save can put the stored value back.
+// Number options (type=range / number, e.g. previewContrast) and colour
+// options (type=color, e.g. previewTint) are bound like the checkboxes:
+// numbers clamped to the input's min/max, colours as #rrggbb, both shown in
+// the <output data-setting-output="key"> beside them and remembered in
+// data-saved so a failed save can put the stored value back.
 function adminSettingIsNumber(input) { return input.type === 'range' || input.type === 'number'; }
+function adminSettingIsColor(input) { return input.type === 'color'; }
+function adminSettingColor(v, key) {
+  const raw = String(v || '').trim();
+  return /^#[0-9a-f]{6}$/i.test(raw) ? raw.toUpperCase() : String(SITE_SETTING_DEFAULTS[key]).toUpperCase();
+}
 function adminSettingNumber(v, key) {
   const n = Number(v);
   return Number.isFinite(n) ? Math.round(n) : (Number(SITE_SETTING_DEFAULTS[key]) || 0);
 }
 function adminSettingValue(input) {
+  if (adminSettingIsColor(input)) return adminSettingColor(input.value, input.dataset.setting);
   if (!adminSettingIsNumber(input)) return input.checked;
   const min = Number(input.min || 0), max = Number(input.max || 100);
   return Math.min(max, Math.max(min, adminSettingNumber(input.value, input.dataset.setting)));
 }
 function adminSettingApply(input, value) {
   if (adminSettingIsNumber(input)) input.value = String(value);
+  else if (adminSettingIsColor(input)) input.value = adminSettingColor(value, input.dataset.setting).toLowerCase(); // <input type=color> wants lowercase
   else input.checked = !!value;
   input.dataset.saved = JSON.stringify(value);
   syncAdminSettingOutput(input);
 }
 function syncAdminSettingOutput(input) {
-  if (!adminSettingIsNumber(input)) return;
+  if (!adminSettingIsNumber(input) && !adminSettingIsColor(input)) return;
   const key = input.dataset.setting;
   const out = document.querySelector(`[data-setting-output="${key}"]`);
-  if (out) out.textContent = String(input.value);
-  if (key === 'previewContrast' || key === 'previewBrightness') paintAdminGrayPreview().catch(e => console.error('grey preview error:', e));
+  if (out) out.textContent = adminSettingIsColor(input) ? String(input.value).toUpperCase() : String(input.value);
+  if (key === 'previewContrast' || key === 'previewBrightness' || key === 'previewTint') paintAdminGrayPreview().catch(e => console.error('grey preview error:', e));
 }
 async function saveAdminSetting(input) {
   const key = input.dataset.setting;
@@ -590,11 +598,12 @@ async function saveAdminSetting(input) {
 }
 
 // ---------- site options: open-cell grey preview ----------
-// The contrast / brightness sliders repaint a small canvas with the newest
-// live campaign that has a grid image (one small PNG through /img/, cached
-// by loadProjectCells) so the admin sees the effect before saving. The
-// preview reads BOTH sliders' current positions, saved or not. When no
-// campaign has a grid image yet the canvas is hidden and a note says so.
+// The contrast / brightness sliders and the tint colour repaint a small
+// canvas with the newest live campaign that has a grid image (one small PNG
+// through /img/, cached by loadProjectCells) so the admin sees the effect
+// before saving. The preview reads all three inputs' current values, saved
+// or not. When no campaign has a grid image yet the canvas is hidden and a
+// note says so.
 let adminContrastCellsPromise = null;
 function getAdminContrastCells() {
   if (!adminContrastCellsPromise) {
@@ -617,13 +626,14 @@ function adminGrayPreviewSettings() {
     const el = document.querySelector(`#adminSettings input[data-setting="${key}"]`);
     return el ? Number(el.value) : SITE_SETTING_DEFAULTS[key];
   };
-  return { previewContrast: read('previewContrast'), previewBrightness: read('previewBrightness') };
+  const tint = document.querySelector('#adminSettings input[data-setting="previewTint"]');
+  return { previewContrast: read('previewContrast'), previewBrightness: read('previewBrightness'), previewTint: tint ? tint.value : SITE_SETTING_DEFAULTS.previewTint };
 }
 async function paintAdminGrayPreview() {
   const canvas = document.getElementById('adminContrastPreview');
-  // A stale common.js without openCellGrayer (cache transition, CLAUDE.md
+  // A stale common.js without openCellPainter (cache transition, CLAUDE.md
   // §12) just leaves the preview hidden; the options themselves still save.
-  if (!canvas || typeof openCellGrayer !== 'function') return;
+  if (!canvas || typeof openCellPainter !== 'function') return;
   const grid = await getAdminContrastCells();
   adminShow('adminContrastPreviewNone', !grid);
   canvas.style.display = grid ? '' : 'none';
@@ -634,10 +644,9 @@ async function paintAdminGrayPreview() {
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  const grayer = openCellGrayer(grid.cells, adminGrayPreviewSettings());
+  const paint = openCellPainter(grid.cells, adminGrayPreviewSettings());
   for (const c of grid.cells) {
-    const l = grayer(c.target_r, c.target_g, c.target_b);
-    ctx.fillStyle = `rgb(${l},${l},${l})`;
+    ctx.fillStyle = paint(c.target_r, c.target_g, c.target_b);
     ctx.fillRect(c.x * cell, c.y * cell, cell, cell);
   }
 }

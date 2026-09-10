@@ -10,9 +10,9 @@
 // Cell colors come from the project's static grid image when it has one
 // (common.js loadProjectCells — one small cached PNG instead of every
 // mosaic_pixels row); only the filled cells are read from the database.
-// Open cells are grey at the previewContrast / previewBrightness site
-// options (common.js openCellGrayer).
-// Needs sb, common.js (loadProjectCells, fetchAllRows, openCellGrayer,
+// Open cells are grey at the previewContrast / previewBrightness /
+// previewTint site options (common.js openCellPainter).
+// Needs sb, common.js (loadProjectCells, fetchAllRows, openCellPainter,
 // getSiteSettings) and luminance (color-engine.js) already loaded.
 "use strict";
 
@@ -55,9 +55,9 @@ async function paintProjectPreview(card, project) {
   canvas.classList.add('loading');
   const { cells, filled } = await getCachedProjectGrid(project);
   // A stale common.js from before the grey options (cache transition,
-  // CLAUDE.md §12) has no openCellGrayer — draw the plain luminance it
+  // CLAUDE.md §12) has no openCellPainter — draw the plain luminance it
   // always drew rather than fail.
-  const grayer = typeof openCellGrayer === 'function' ? openCellGrayer(cells, await getSiteSettings()) : (r, g, b) => Math.round(luminance(r, g, b));
+  const paint = typeof openCellPainter === 'function' ? openCellPainter(cells, await getSiteSettings()) : (r, g, b) => { const l = Math.round(luminance(r, g, b)); return `rgb(${l},${l},${l})`; };
   canvas.width = project.width * PREVIEW_CELL_PX;
   canvas.height = project.height * PREVIEW_CELL_PX;
   canvas.style.aspectRatio = `${project.width} / ${project.height}`;
@@ -70,8 +70,7 @@ async function paintProjectPreview(card, project) {
       filledCount++;
       ctx.fillStyle = `rgb(${sub.avg_r},${sub.avg_g},${sub.avg_b})`;
     } else {
-      const l = grayer(px.target_r, px.target_g, px.target_b);
-      ctx.fillStyle = `rgb(${l},${l},${l})`;
+      ctx.fillStyle = paint(px.target_r, px.target_g, px.target_b);
     }
     ctx.fillRect(dx, dy, PREVIEW_CELL_PX, PREVIEW_CELL_PX);
   }

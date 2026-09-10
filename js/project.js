@@ -191,12 +191,12 @@ async function renderWeavoGrid(project) {
   const filledByKey = new Map(filledRows.map(px => [`${px.x},${px.y}`, px]));
   currentFilledKeys = new Set(filledByKey.keys());
 
-  // Open cells are grey at the previewContrast / previewBrightness site
-  // options (common.js openCellGrayer; the settings read is shared with the
-  // corner preview's, so no extra request). A stale common.js without the
-  // helper (cache transition, CLAUDE.md §12) gets the plain luminance it
-  // always drew.
-  const grayer = typeof openCellGrayer === 'function' ? openCellGrayer(cells, await getSiteSettings()) : (r, g, b) => Math.round(luminance(r, g, b));
+  // Open cells are grey at the previewContrast / previewBrightness /
+  // previewTint site options (common.js openCellPainter; the settings read
+  // is shared with the corner preview's, so no extra request). A stale
+  // common.js without the helper (cache transition, CLAUDE.md §12) gets
+  // the plain luminance it always drew.
+  const paint = typeof openCellPainter === 'function' ? openCellPainter(cells, await getSiteSettings()) : (r, g, b) => { const l = Math.round(luminance(r, g, b)); return `rgb(${l},${l},${l})`; };
   // One canvas holds every cell — open cells in the reference's grey, filled
   // cells in the artwork's average color (what shows before/without a
   // thumbnail) — then one <a> per FILLED cell on top for hover/click/links.
@@ -213,8 +213,7 @@ async function renderWeavoGrid(project) {
       const sub = hit.mosaic_submissions;
       ctx.fillStyle = `rgb(${sub.avg_r},${sub.avg_g},${sub.avg_b})`;
     } else {
-      const l = grayer(c.target_r, c.target_g, c.target_b);
-      ctx.fillStyle = `rgb(${l},${l},${l})`;
+      ctx.fillStyle = paint(c.target_r, c.target_g, c.target_b);
     }
     // One canvas pixel of gap between cells, like the old CSS grid's 1px gap.
     ctx.fillRect(c.x * cellPx, c.y * cellPx, cellPx - 1, cellPx - 1);

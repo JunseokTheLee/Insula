@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-123800">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-123800">
+<link rel="stylesheet" href="/css/base.css?v=20260910-124526">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-124526">
 </head>
 
 <body>
@@ -89,6 +89,8 @@
               <div class="admin-range"><input id="adminPreviewContrast" type="range" min="0" max="100" step="1" data-setting="previewContrast" disabled><output for="adminPreviewContrast" data-setting-output="previewContrast">40</output></div>
               <label for="adminPreviewBrightness">빈 칸 회색 — <strong>밝기</strong>: 회색의 평균 밝기. 0 검정 · 50 중간 회색 · 100 흰색. 사진의 노출과 관계없이 모든 캠페인의 빈 칸이 이 밝기를 평균으로 그려집니다. <em>(기본 70, 밝은 회색; 이미 만든 공유 카드는 아래 캠페인 목록의 "공유 이미지 다시 생성" 전까지 옛 모습으로 남음)</em></label>
               <div class="admin-range"><input id="adminPreviewBrightness" type="range" min="0" max="100" step="1" data-setting="previewBrightness" disabled><output for="adminPreviewBrightness" data-setting-output="previewBrightness">70</output></div>
+              <label for="adminPreviewTint">빈 칸 회색 — <strong>틴트</strong>: 회색이 기울 색. 색조와 채도만 쓰고 그 색의 밝기는 쓰지 않으며, 밝기는 위 슬라이더가 정합니다. #DCE4ED 는 은은한 블루가 섞인 밝은 회색이고, 틴트를 없애려면 #808080 같은 무채색을 고릅니다. 고른 색 그대로 보이게 하려면 밝기를 그 색의 명도(#DCE4ED 는 89)로 맞춥니다. <em>(기본 #DCE4ED)</em></label>
+              <div class="admin-range admin-color"><input id="adminPreviewTint" type="color" data-setting="previewTint" value="#dce4ed" disabled><output for="adminPreviewTint" data-setting-output="previewTint">#DCE4ED</output></div>
               <canvas class="admin-contrast-preview" id="adminContrastPreview" aria-label="이 설정으로 그린 빈 칸 미리보기"></canvas>
               <p class="admin-help" id="adminContrastPreviewNone" style="display:none;">격자 이미지가 있는 진행 중 캠페인이 없어 미리보기를 그릴 수 없습니다.</p>
             </div>
@@ -377,14 +379,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-123800"></script>
-<script src="/js/i18n/ko.js?v=20260910-123800"></script>
-<script src="/js/common.js?v=20260910-123800"></script>
-<script src="/js/auth.js?v=20260910-123800"></script>
-<script src="/js/notifications.js?v=20260910-123800"></script>
-<script src="/js/color-engine.js?v=20260910-123800"></script>
-<script src="/js/matching.js?v=20260910-123800"></script>
-<script src="/js/admin.js?v=20260910-123800"></script>
+<script src="/js/supabase-client.js?v=20260910-124526"></script>
+<script src="/js/i18n/ko.js?v=20260910-124526"></script>
+<script src="/js/common.js?v=20260910-124526"></script>
+<script src="/js/auth.js?v=20260910-124526"></script>
+<script src="/js/notifications.js?v=20260910-124526"></script>
+<script src="/js/color-engine.js?v=20260910-124526"></script>
+<script src="/js/matching.js?v=20260910-124526"></script>
+<script src="/js/admin.js?v=20260910-124526"></script>
 
 </body>
 </html>
