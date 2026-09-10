@@ -443,6 +443,43 @@ async function runAdminPieces(all) {
 document.getElementById('adminPiecesRunBtn').onclick = () => runAdminPieces(false);
 document.getElementById('adminPiecesRegenBtn').onclick = () => runAdminPieces(true);
 
+// "Apply colour match to all" (Site options): a changed pieceMatchDistance
+// only reaches new uploads on its own — placed pieces beyond it are released
+// by the 6-hourly cleanup, and waiting pieces are re-tried only when their
+// campaign gains open cells. This does all of it now: the cleanup without
+// its wait (release_poor_matches with a zero interval), every waiting
+// piece's last-try mark cleared (admin_reset_piece_tries —
+// supabase_mosaic_pieces_retry.sql), then matching passes (1,500 pieces
+// each) until the pool has been gone through.
+async function applyPieceMatchToAll() {
+  const btn = document.getElementById('adminPieceApplyBtn');
+  const proceed = await confirmDialog(tr('adminPieceApplyConfirm'), { title: tr('adminPieceApplyTitle'), okLabel: tr('adminPieceApplyLabel') });
+  if (!proceed) return;
+  btn.disabled = true;
+  toast(tr('adminPieceApplyWorking'));
+  try {
+    const { data: waiting, error: resetErr } = await sb.rpc('admin_reset_piece_tries');
+    if (resetErr) throw resetErr;
+    const { data: released, error: relErr } = await sb.rpc('release_poor_matches', { p_min_interval: '0 seconds' });
+    if (relErr) throw relErr;
+    // Released pieces join the waiting ones; each pass takes up to 1,500.
+    const passes = Math.ceil(((Number(waiting) || 0) + (Number(released) || 0)) / 1500) + 1;
+    let placed = 0;
+    for (let i = 0; i < passes; i++) {
+      const assignments = await runPoolMatching();
+      placed += assignments.length;
+    }
+    toast(tr('adminPieceApplyDone', { released: Number(released) || 0, retried: Number(waiting) || 0, placed }));
+  } catch (e) {
+    console.error('apply piece match error:', e);
+    toast(tr(e && (e.code === 'PGRST202' || e.code === '42883') ? 'adminPieceApplyMissing' : 'adminPieceApplyFailed'));
+  } finally {
+    btn.disabled = false;
+    loadAdminPool(); loadAdminUsage(); loadAdminCampaigns(); loadAdminPieces();
+  }
+}
+document.getElementById('adminPieceApplyBtn').onclick = applyPieceMatchToAll;
+
 // ---------- pool: pieces waiting for a campaign ----------
 // Pieces with no campaign — fresh uploads nothing matched yet, or pieces a
 // campaign deletion sent back — wait in the pool until the next matching

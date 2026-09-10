@@ -7,8 +7,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-164503">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-164503">
+<link rel="stylesheet" href="/css/base.css?v=20260910-171819">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-171819">
 </head>
 <body>
 
@@ -84,6 +84,7 @@
               <div class="admin-range"><input id="adminPieceGrid" type="range" min="2" max="12" step="1" data-setting="pieceGrid" disabled><output for="adminPieceGrid" data-setting-output="pieceGrid">7</output></div>
               <label for="adminPieceMatchDistance">Artwork pieces — <strong>colour match</strong>: a piece only goes into an open cell whose colour is within this distance (Lab, lightness weighted 0.2). Lower is stricter: fewer pieces placed, truer colours. Enforced by the server-side matching. <em>(default: 20)</em></label>
               <div class="admin-range"><input id="adminPieceMatchDistance" type="range" min="5" max="60" step="1" data-setting="pieceMatchDistance" disabled><output for="adminPieceMatchDistance" data-setting-output="pieceMatchDistance">20</output></div>
+              <p class="admin-help">After changing it, <button type="button" class="admin-btn" id="adminPieceApplyBtn">Apply colour match to all</button> releases placed pieces beyond the new threshold and re-matches every waiting piece (needs <code>supabase_mosaic_pieces_retry.sql</code>). Without it the new value applies to new uploads, and existing pieces follow as cells open or at the 6-hourly cleanup.</p>
             </div>
             <div class="admin-setting admin-setting-range">
               <label for="adminPreviewContrast">Grey of open cells — <strong>contrast</strong>: 100 keeps the reference's own light-and-dark spread, 0 is flat grey. Lower makes the photo harder to recognise on the home page, campaign cards, the campaign grid and share cards. <em>(default 40)</em></label>
@@ -318,13 +319,13 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-164503"></script>
-<script src="/js/i18n/en.js?v=20260910-164503"></script>
-<script src="/js/common.js?v=20260910-164503"></script>
-<script src="/js/auth.js?v=20260910-164503"></script>
-<script src="/js/notifications.js?v=20260910-164503"></script>
-<script src="/js/color-engine.js?v=20260910-164503"></script>
-<script src="/js/matching.js?v=20260910-164503"></script>
-<script src="/js/admin.js?v=20260910-164503"></script>
+<script src="/js/supabase-client.js?v=20260910-171819"></script>
+<script src="/js/i18n/en.js?v=20260910-171819"></script>
+<script src="/js/common.js?v=20260910-171819"></script>
+<script src="/js/auth.js?v=20260910-171819"></script>
+<script src="/js/notifications.js?v=20260910-171819"></script>
+<script src="/js/color-engine.js?v=20260910-171819"></script>
+<script src="/js/matching.js?v=20260910-171819"></script>
+<script src="/js/admin.js?v=20260910-171819"></script>
 </body>
 </html>

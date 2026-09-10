@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260910-164503">
-<link rel="stylesheet" href="/css/admin.css?v=20260910-164503">
+<link rel="stylesheet" href="/css/base.css?v=20260910-171819">
+<link rel="stylesheet" href="/css/admin.css?v=20260910-171819">
 </head>
 
 <body>
@@ -89,6 +89,7 @@
               <div class="admin-range"><input id="adminPieceGrid" type="range" min="2" max="12" step="1" data-setting="pieceGrid" disabled><output for="adminPieceGrid" data-setting-output="pieceGrid">7</output></div>
               <label for="adminPieceMatchDistance">작품 조각 — <strong>색 일치 기준</strong>: 조각 색과 빈 칸 색의 거리(Lab, 밝기 가중 0.2)가 이 값 이하일 때만 조각을 넣습니다. 낮을수록 엄격해 조각이 덜 들어가고 색은 더 정확합니다. 서버 매칭이 직접 읽어 강제합니다. <em>(기본: 20)</em></label>
               <div class="admin-range"><input id="adminPieceMatchDistance" type="range" min="5" max="60" step="1" data-setting="pieceMatchDistance" disabled><output for="adminPieceMatchDistance" data-setting-output="pieceMatchDistance">20</output></div>
+              <p class="admin-help">기준을 바꾼 뒤 <button type="button" class="admin-btn" id="adminPieceApplyBtn">색 기준 전체 적용</button> 을 누르면 새 기준을 넘는 배치 조각을 풀고 대기 조각을 모두 다시 매칭합니다(<code>supabase_mosaic_pieces_retry.sql</code> 필요). 누르지 않으면 새 작품부터 적용되고, 기존 조각은 빈 칸이 생기거나 6시간 정리 때 서서히 반영됩니다.</p>
             </div>
             <div class="admin-setting admin-setting-range">
               <label for="adminPreviewContrast">빈 칸 회색 — <strong>대비</strong>: 100 이면 기준 사진의 명암 차이 그대로, 0 이면 평평한 회색. 낮출수록 홈·캠페인 카드·캠페인 격자·공유 카드에서 사진을 알아보기 어려워집니다. <em>(기본 40)</em></label>
@@ -424,14 +425,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260910-164503"></script>
-<script src="/js/i18n/ko.js?v=20260910-164503"></script>
-<script src="/js/common.js?v=20260910-164503"></script>
-<script src="/js/auth.js?v=20260910-164503"></script>
-<script src="/js/notifications.js?v=20260910-164503"></script>
-<script src="/js/color-engine.js?v=20260910-164503"></script>
-<script src="/js/matching.js?v=20260910-164503"></script>
-<script src="/js/admin.js?v=20260910-164503"></script>
+<script src="/js/supabase-client.js?v=20260910-171819"></script>
+<script src="/js/i18n/ko.js?v=20260910-171819"></script>
+<script src="/js/common.js?v=20260910-171819"></script>
+<script src="/js/auth.js?v=20260910-171819"></script>
+<script src="/js/notifications.js?v=20260910-171819"></script>
+<script src="/js/color-engine.js?v=20260910-171819"></script>
+<script src="/js/matching.js?v=20260910-171819"></script>
+<script src="/js/admin.js?v=20260910-171819"></script>
 
 </body>
 </html>
