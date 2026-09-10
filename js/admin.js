@@ -136,7 +136,9 @@ async function loadAdminCampaigns() {
     // Older campaigns (pre grid-image cache) get a one-off "create" button;
     // new and reshaped ones already have theirs.
     if (!p.grid_image_url) actions.appendChild(adminActionBtn(tr('adminGridImageBtn'), e => createAdminGridImage(p, e.currentTarget)));
-    if (!p.preview_image_url) actions.appendChild(adminActionBtn(tr('adminPreviewImageBtn'), e => createAdminPreviewImage(p, e.currentTarget)));
+    // The share card can always be (re)made: "create" for campaigns from
+    // before it existed, "recreate" after the previewContrast option changed.
+    actions.appendChild(adminActionBtn(tr(p.preview_image_url ? 'adminPreviewImageRedoBtn' : 'adminPreviewImageBtn'), e => createAdminPreviewImage(p, e.currentTarget)));
     // Archived iterations can't be deleted on their own (the RPC refuses) —
     // they go away with their live campaign.
     if (!p.is_archived) {
@@ -163,12 +165,15 @@ async function deleteAdminCampaign(p) {
   placePooledPieces(false).then(() => { loadAdminCampaigns(); loadAdminPool(); loadAdminUsage(); });
 }
 
-// ---------- campaigns: share image for older campaigns ----------
-// Campaigns made before preview_image_url existed have no share card, so
-// their links fall back to the site logo. This renders the same grey card
-// the create / reshape paths make (common.js uploadPreviewImage) from the
-// campaign's cells and records it — guarded so a card that appeared in the
-// meantime is never overwritten.
+// ---------- campaigns: share image (create / recreate) ----------
+// Campaigns made before preview_image_url existed have no share card (their
+// links fall back to the site logo), and cards made earlier keep the grey
+// contrast of that time — so the button creates or recreates it. This
+// renders the same grey card the create / reshape paths make (common.js
+// uploadPreviewImage, at the current previewContrast option) from the
+// campaign's cells and records it — guarded on the card the row had when
+// the list was drawn, so one that appeared or changed meanwhile is never
+// overwritten. The previous file stays in Storage (nothing deletes uploads).
 async function createAdminPreviewImage(p, btn) {
   btn.disabled = true;
   toast(tr('adminPreviewImageWorking'));
@@ -178,8 +183,9 @@ async function createAdminPreviewImage(p, btn) {
     if (!cells.length) throw new Error('campaign has no cells');
     const url = await uploadPreviewImage(cells, p.width, p.height);
     if (!url) throw new Error('share image upload failed');
-    const { data: updated, error: updErr } = await sb.from('mosaic_projects')
-      .update({ preview_image_url: url }).eq('id', p.id).is('preview_image_url', null).select('id');
+    let q = sb.from('mosaic_projects').update({ preview_image_url: url }).eq('id', p.id);
+    q = p.preview_image_url ? q.eq('preview_image_url', p.preview_image_url) : q.is('preview_image_url', null);
+    const { data: updated, error: updErr } = await q.select('id');
     if (updErr) throw updErr;
     if (!updated || !updated.length) throw new Error('campaign changed meanwhile — not updated');
     toast(tr('adminPreviewImageDone'));
@@ -529,25 +535,102 @@ async function loadAdminSettings() {
   }
   const settings = { ...SITE_SETTING_DEFAULTS, ...((data && data.settings) || {}) };
   inputs.forEach(input => {
-    input.checked = !!settings[input.dataset.setting];
+    const key = input.dataset.setting;
+    adminSettingApply(input, adminSettingIsNumber(input) ? adminSettingNumber(settings[key], key) : !!settings[key]);
     input.disabled = false;
+    // Dragging a slider only updates its readout and preview; the save
+    // happens on change (release), once.
+    input.oninput = () => { if (adminSettingIsNumber(input)) syncAdminSettingOutput(input); };
     input.onchange = () => saveAdminSetting(input);
   });
 }
+// Number options (type=range / number, e.g. previewContrast) are bound like
+// the checkboxes: clamped to the input's min/max, shown in the <output
+// data-setting-output="key"> beside them, and remembered in data-saved so
+// a failed save can put the stored value back.
+function adminSettingIsNumber(input) { return input.type === 'range' || input.type === 'number'; }
+function adminSettingNumber(v, key) {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.round(n) : (Number(SITE_SETTING_DEFAULTS[key]) || 0);
+}
+function adminSettingValue(input) {
+  if (!adminSettingIsNumber(input)) return input.checked;
+  const min = Number(input.min || 0), max = Number(input.max || 100);
+  return Math.min(max, Math.max(min, adminSettingNumber(input.value, input.dataset.setting)));
+}
+function adminSettingApply(input, value) {
+  if (adminSettingIsNumber(input)) input.value = String(value);
+  else input.checked = !!value;
+  input.dataset.saved = JSON.stringify(value);
+  syncAdminSettingOutput(input);
+}
+function syncAdminSettingOutput(input) {
+  if (!adminSettingIsNumber(input)) return;
+  const key = input.dataset.setting;
+  const out = document.querySelector(`[data-setting-output="${key}"]`);
+  if (out) out.textContent = String(input.value);
+  if (key === 'previewContrast') paintAdminContrastPreview(Number(input.value)).catch(e => console.error('contrast preview error:', e));
+}
 async function saveAdminSetting(input) {
   const key = input.dataset.setting;
-  const value = input.checked;
+  const value = adminSettingValue(input);
   input.disabled = true;
   const { data, error } = await sb.rpc('admin_set_site_settings', { p_patch: { [key]: value } });
   input.disabled = false;
   if (error) {
     console.error('admin_set_site_settings error:', error);
-    input.checked = !value; // back to what is actually stored
+    // Back to what is actually stored.
+    adminSettingApply(input, input.dataset.saved ? JSON.parse(input.dataset.saved) : SITE_SETTING_DEFAULTS[key]);
     toast(tr('adminSettingSaveFailed'));
     return;
   }
+  adminSettingApply(input, value);
   setSiteSettingsCache(data);
   toast(tr('adminSettingSaved'));
+}
+
+// ---------- site options: open-cell grey preview ----------
+// The previewContrast slider repaints a small canvas with the newest live
+// campaign that has a grid image (one small PNG through /img/, cached by
+// loadProjectCells) so the admin sees the effect before saving. When no
+// campaign has one yet the canvas is hidden and a note says so.
+let adminContrastCellsPromise = null;
+function getAdminContrastCells() {
+  if (!adminContrastCellsPromise) {
+    adminContrastCellsPromise = (async () => {
+      const { data, error } = await sb.from('mosaic_projects')
+        .select('id,width,height,version_number,grid_image_url')
+        .eq('is_archived', false).not('grid_image_url', 'is', null)
+        .order('created_at', { ascending: false }).limit(1);
+      if (error) { console.error('load contrast preview campaign error:', error); return null; }
+      const p = data && data[0];
+      if (!p) return null;
+      const { cells } = await loadProjectCells(p);
+      return cells && cells.length ? { cells, width: p.width, height: p.height } : null;
+    })();
+  }
+  return adminContrastCellsPromise;
+}
+async function paintAdminContrastPreview(contrast) {
+  const canvas = document.getElementById('adminContrastPreview');
+  // A stale common.js without openCellGray (cache transition, CLAUDE.md §12)
+  // just leaves the preview hidden; the option itself still saves.
+  if (!canvas || typeof openCellGray !== 'function') return;
+  const grid = await getAdminContrastCells();
+  adminShow('adminContrastPreviewNone', !grid);
+  canvas.style.display = grid ? '' : 'none';
+  if (!grid) return;
+  const cell = 4;
+  canvas.width = grid.width * cell; canvas.height = grid.height * cell;
+  canvas.style.aspectRatio = `${grid.width} / ${grid.height}`;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (const c of grid.cells) {
+    const l = openCellGray(c.target_r, c.target_g, c.target_b, contrast);
+    ctx.fillStyle = `rgb(${l},${l},${l})`;
+    ctx.fillRect(c.x * cell, c.y * cell, cell, cell);
+  }
 }
 
 // ---------- boot ----------

@@ -191,6 +191,12 @@ async function renderWeavoGrid(project) {
   const filledByKey = new Map(filledRows.map(px => [`${px.x},${px.y}`, px]));
   currentFilledKeys = new Set(filledByKey.keys());
 
+  // Open cells are grey at the previewContrast site option (common.js
+  // openCellGray; the settings read is shared with the corner preview's, so
+  // no extra request). A stale common.js without the helpers (cache
+  // transition, CLAUDE.md §12) gets the plain luminance it always drew.
+  const contrast = typeof getPreviewContrast === 'function' ? await getPreviewContrast() : 100;
+  const gray = typeof openCellGray === 'function' ? openCellGray : (r, g, b) => Math.round(luminance(r, g, b));
   // One canvas holds every cell — open cells in the reference's grey, filled
   // cells in the artwork's average color (what shows before/without a
   // thumbnail) — then one <a> per FILLED cell on top for hover/click/links.
@@ -207,7 +213,7 @@ async function renderWeavoGrid(project) {
       const sub = hit.mosaic_submissions;
       ctx.fillStyle = `rgb(${sub.avg_r},${sub.avg_g},${sub.avg_b})`;
     } else {
-      const l = Math.round(luminance(c.target_r, c.target_g, c.target_b));
+      const l = gray(c.target_r, c.target_g, c.target_b, contrast);
       ctx.fillStyle = `rgb(${l},${l},${l})`;
     }
     // One canvas pixel of gap between cells, like the old CSS grid's 1px gap.

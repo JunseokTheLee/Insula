@@ -10,8 +10,10 @@
 // Cell colors come from the project's static grid image when it has one
 // (common.js loadProjectCells — one small cached PNG instead of every
 // mosaic_pixels row); only the filled cells are read from the database.
-// Needs sb, common.js (loadProjectCells, fetchAllRows) and luminance
-// (color-engine.js) already loaded.
+// Open cells are grey at the previewContrast site option (common.js
+// openCellGray / getPreviewContrast).
+// Needs sb, common.js (loadProjectCells, fetchAllRows, openCellGray,
+// getPreviewContrast) and luminance (color-engine.js) already loaded.
 "use strict";
 
 const PREVIEW_CELL_PX = 24;
@@ -52,6 +54,11 @@ async function paintProjectPreview(card, project) {
   const canvas = card.querySelector('canvas');
   canvas.classList.add('loading');
   const { cells, filled } = await getCachedProjectGrid(project);
+  // A stale common.js from before the contrast option (cache transition,
+  // CLAUDE.md §12) has neither helper — draw the plain luminance it always
+  // drew rather than fail.
+  const contrast = typeof getPreviewContrast === 'function' ? await getPreviewContrast() : 100;
+  const gray = typeof openCellGray === 'function' ? openCellGray : (r, g, b) => Math.round(luminance(r, g, b));
   canvas.width = project.width * PREVIEW_CELL_PX;
   canvas.height = project.height * PREVIEW_CELL_PX;
   canvas.style.aspectRatio = `${project.width} / ${project.height}`;
@@ -64,7 +71,7 @@ async function paintProjectPreview(card, project) {
       filledCount++;
       ctx.fillStyle = `rgb(${sub.avg_r},${sub.avg_g},${sub.avg_b})`;
     } else {
-      const l = Math.round(luminance(px.target_r, px.target_g, px.target_b));
+      const l = gray(px.target_r, px.target_g, px.target_b, contrast);
       ctx.fillStyle = `rgb(${l},${l},${l})`;
     }
     ctx.fillRect(dx, dy, PREVIEW_CELL_PX, PREVIEW_CELL_PX);

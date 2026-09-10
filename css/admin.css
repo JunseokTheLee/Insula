@@ -51,6 +51,13 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
 .admin-setting input:disabled+span{opacity:.55;}
 .admin-setting em{color:var(--muted);font-style:normal;font-size:12.5px;}
 .admin-settings-unavailable{color:#C0522F;}
+/* Number options: text above, slider + readout below, then the grey preview. */
+.admin-setting-range{flex-direction:column;align-items:stretch;gap:6px;cursor:default;}
+.admin-range{display:flex;align-items:center;gap:12px;}
+.admin-range input[type=range]{flex:1 1 auto;max-width:360px;margin:0;accent-color:var(--primary);}
+.admin-range input:disabled+output{opacity:.55;}
+.admin-range output{font-family:'Pretendard',sans-serif;font-weight:700;color:var(--primary);min-width:2.5em;}
+.admin-contrast-preview{display:block;width:180px;max-width:100%;height:auto;border:1px solid var(--border);border-radius:var(--r-xs);background:#fff;image-rendering:pixelated;}
 .admin-code{background:var(--gray-100);padding:10px 12px;border-radius:var(--r-xs);font-size:12.5px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;}
 .admin-empty{padding:28px 16px;}
 @media (max-width:640px){

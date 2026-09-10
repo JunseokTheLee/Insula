@@ -163,7 +163,7 @@ const T = {
   adminEditLabel: 'Edit', adminCampaignUpdated: 'Campaign updated', adminCouldNotUpdateCampaign: 'Could not update the campaign',
   adminGridImageBtn: 'Create grid image', adminGridImageWorking: 'Creating the grid image…', adminGridImageDone: 'Grid image created — campaign pages now read it from the cache', adminGridImageFailed: 'Could not create the grid image (nothing was changed)',
   adminGridImageYes: 'grid image ✓', adminGridImageNo: 'no grid image yet',
-  adminPreviewImageBtn: 'Create share image', adminPreviewImageWorking: 'Creating the share image…', adminPreviewImageDone: 'Share image created', adminPreviewImageFailed: 'Could not create the share image',
+  adminPreviewImageBtn: 'Create share image', adminPreviewImageRedoBtn: 'Recreate share image', adminPreviewImageWorking: 'Creating the share image…', adminPreviewImageDone: 'Share image created', adminPreviewImageFailed: 'Could not create the share image',
   adminPreviewImageYes: 'share image ✓', adminPreviewImageNo: 'no share image (logo used)',
   adminPoolRunning: 'Placing pooled artworks…', adminPoolPlaced: '{n} artwork(s) placed into campaigns', adminPoolNonePlaced: 'Nothing placed — no open cell in an active campaign matches these colors', adminPoolFailed: 'Could not run the placement',
   adminThumbsWorking: 'Rebuilding thumbnails… {done}/{total}', adminThumbsDone: 'Thumbnails made for {n} artwork(s)', adminThumbsFailed: '{done} done, {failed} failed (see console)',
