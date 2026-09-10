@@ -5,6 +5,7 @@ Weavo 개발 기록 (DevDocs/DevLog.txt)
 - 접두어: feat(새 기능) / fix(수정) / chore(정리·문서·설정)
 
 ========== 2026-09-10 ==========
+fix: 조각 SQL 의 빈 칸 기록 트리거를 insert·update 둘로 분리 (transition table 제약 0A000)
 chore: 공유 이미지용 logo.png 를 3840px 8MB 에서 1200px 1.8MB 로 축소
 feat: 조각 클릭 시 원작을 열고 조각 위치를 표시, 작품 상세에 조각 사용률 표시
 feat: 관리자 옵션 — 조각 분할 개수(기본 7)·색 일치 기준(기본 20), "조각 생성"·"전체 다시 생성" 도구

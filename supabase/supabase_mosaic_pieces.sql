@@ -78,9 +78,18 @@ begin
   return null;
 end;
 $$;
+-- One trigger per event: Postgres refuses a transition table on a trigger
+-- that names more than one event ("transition tables cannot be specified
+-- for triggers with more than one event", 0A000).
 drop trigger if exists mosaic_pixels_note_open_cells on public.mosaic_pixels;
-create trigger mosaic_pixels_note_open_cells
-  after insert or update on public.mosaic_pixels
+drop trigger if exists mosaic_pixels_note_open_cells_ins on public.mosaic_pixels;
+drop trigger if exists mosaic_pixels_note_open_cells_upd on public.mosaic_pixels;
+create trigger mosaic_pixels_note_open_cells_ins
+  after insert on public.mosaic_pixels
+  referencing new table as changed_rows
+  for each statement execute function public.mosaic_pixels_note_open_cells();
+create trigger mosaic_pixels_note_open_cells_upd
+  after update on public.mosaic_pixels
   referencing new table as changed_rows
   for each statement execute function public.mosaic_pixels_note_open_cells();
 
