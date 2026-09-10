@@ -424,6 +424,29 @@ function renderLightboxPieceNote(sub) {
   el.style.display = '';
 }
 
+// "12/49 pieces in the campaign mosaic (24%)" for a cut artwork — one
+// small query per open (supabase_mosaic_pieces.sql), in the popup and on
+// the standalone artwork page alike. artwork.html carries the element;
+// the other pages get it made here, under the piece note.
+async function renderLightboxPieceUsage(sub) {
+  let el = document.getElementById('artworkPieceUsage');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'artworkPieceUsage'; el.className = 'piece-usage';
+    const anchor = document.getElementById('lightbox-cap-piece') || document.getElementById('lightbox-cap-meta');
+    anchor.insertAdjacentElement('afterend', el);
+  }
+  el.style.display = 'none'; el.textContent = '';
+  if (sub.parent_id || typeof fetchPieceUsage !== 'function') return;
+  const u = await fetchPieceUsage(sub.id);
+  if (!u || lbCurrentSub !== sub) return; // nothing cut, or another artwork opened meanwhile
+  const bar = document.createElement('span'); bar.className = 'piece-usage-bar';
+  const fill = document.createElement('span'); fill.style.width = `${u.pct}%`; bar.appendChild(fill);
+  const text = document.createElement('span');
+  text.textContent = tr('artworkPieceUsage', { placed: u.placed, total: u.total, pct: u.pct });
+  el.append(bar, text);
+  el.style.display = '';
+}
+
 // The like/comments/exhibit buttons are the same for everyone, but Edit,
 // Delete, Report and admin "Remove from project" depend on who's signed in
 // — and `me` is a mutable global that auth.js reassigns on every auth-state
@@ -456,6 +479,7 @@ function populateLightboxContent(sub) {
   closeLbExhibitMenu();
   lbImg.src = cdnUrl(sub.image_url);
   applyArtDetailsToCaption(sub);
+  renderLightboxPieceUsage(sub);
   renderLightboxArtistCard(sub);
   loadLightboxArtistDetails(sub);
   setupLightboxArtistFollow(sub);

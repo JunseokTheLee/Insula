@@ -5,6 +5,7 @@ Weavo 개발 기록 (DevDocs/DevLog.txt)
 - 접두어: feat(새 기능) / fix(수정) / chore(정리·문서·설정)
 
 ========== 2026-09-10 ==========
+feat: 작품 팝업(라이트박스)에도 조각 사용률("조각 12/49 사용") 표시
 chore: 조각 SQL(supabase_mosaic_pieces.sql) 운영 DB 적용 확인 — CLAUDE.md 6절 갱신
 fix: 조각 SQL 의 빈 칸 기록 트리거를 insert·update 둘로 분리 (transition table 제약 0A000)
 chore: 공유 이미지용 logo.png 를 3840px 8MB 에서 1200px 1.8MB 로 축소

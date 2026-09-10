@@ -22,20 +22,6 @@ async function fetchArtwork(id) {
   }
   return data;
 }
-// "12/49 pieces in the campaign mosaic (24%)" — shown on this page only.
-async function renderArtworkPieceUsage(sub) {
-  const el = document.getElementById('artworkPieceUsage');
-  if (!el || !sub.piece_n || typeof fetchPieceUsage !== 'function') return;
-  const u = await fetchPieceUsage(sub.id);
-  if (!u) return;
-  el.textContent = '';
-  const bar = document.createElement('span'); bar.className = 'piece-usage-bar';
-  const fill = document.createElement('span'); fill.style.width = `${u.pct}%`; bar.appendChild(fill);
-  const text = document.createElement('span');
-  text.textContent = tr('artworkPieceUsage', { placed: u.placed, total: u.total, pct: u.pct });
-  el.append(bar, text);
-  el.style.display = '';
-}
 
 function updateArtworkMeta(sub) {
   const name = sub.author_name || tr('anonymous');
@@ -88,8 +74,7 @@ async function loadArtworkPage(id) {
   const campaignId = sub.project_id || sub.home_project_id;
   backBtn.href = campaignId ? projectUrl(campaignId) : `/${CURRENT_LANG}/campaigns`;
   renderArtworkBreadcrumb(sub);
-  populateLightboxContent(sub);
-  renderArtworkPieceUsage(sub);
+  populateLightboxContent(sub); // also renders the piece usage line (lightbox.js)
   updateArtworkMeta(sub);
   renderArtworkJsonLd(sub);
   // Set once the actual image dimensions are known, to give the browser a
