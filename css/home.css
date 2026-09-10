@@ -136,6 +136,19 @@
    "sprout", ISC) — a contribution that grows. */
 .hero-mine-icon{flex:0 0 44px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;overflow:visible;}
 .hero-sprout{display:block;width:32px;height:32px;overflow:visible;fill:none;stroke:var(--primary);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+/* The plant (stem + leaves — not the soil line) grows up out of the soil the
+   moment the card appears, then keeps swaying in a light breeze. Both pivot
+   on the base of the stem: the markup nests the plant between
+   translate(10 20) / translate(-10 -20) groups, so the animated group's own
+   origin *is* the stem base and no transform-origin / transform-box is
+   needed (their reference boxes for SVG content, offset by this viewBox's
+   -2,-2 origin, are easy to get subtly wrong). The sway starts from 0°
+   exactly when the grow ends, so the hand-over has no jump — the later
+   animation in the list owns the transform from then on. */
+.hero-sprout-plant{animation:heroSproutGrow .6s cubic-bezier(.22,1,.36,1) both,heroSproutSway 3.6s ease-in-out .6s infinite;}
+@keyframes heroSproutGrow{from{transform:scale(.35);}to{transform:scale(1);}}
+@keyframes heroSproutSway{0%,100%{transform:rotate(0deg);}25%{transform:rotate(4deg);}75%{transform:rotate(-4deg);}}
+@media (prefers-reduced-motion:reduce){.hero-sprout-plant{animation:none;}}
 .hero-mine > div{min-width:0;}
 .hero-mine-k{font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;color:var(--muted);}
 .hero-mine-v{font-family:'Pretendard',sans-serif;font-size:22px;font-weight:800;color:var(--hero-ink);letter-spacing:-.01em;margin-top:2px;}
