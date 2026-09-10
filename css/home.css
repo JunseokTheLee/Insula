@@ -136,18 +136,30 @@
    "sprout", ISC) — a contribution that grows. */
 .hero-mine-icon{flex:0 0 44px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;overflow:visible;}
 .hero-sprout{display:block;width:32px;height:32px;overflow:visible;fill:none;stroke:var(--primary);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
-/* The plant (stem + leaves — not the soil line) grows up out of the soil the
-   moment the card appears, then keeps swaying in a light breeze. Both pivot
-   on the base of the stem: the markup nests the plant between
+/* The plant (stem + leaves — not the soil line) grows up out of the soil,
+   sways in a light breeze five times, then starts over from the soil — one
+   22 s loop: 0–2 s grow (scale .35 → 1, ease-in-out like the rest so the
+   growth visibly fills the whole 2 s — a strong ease-out looked finished
+   after half a second), then 5 × 4 s sways of ±6° (+6° at 1 s, −6° at 3 s,
+   back to 0° at 4 s of each sway). It is a single keyframe set because
+   CSS cannot restart a finished animation, and the loop point
+   (100% → 0%) is a deliberate hard cut: full plant → tiny sprout again.
+   Both pivot on the base of the stem: the markup nests the plant between
    translate(10 20) / translate(-10 -20) groups, so the animated group's own
    origin *is* the stem base and no transform-origin / transform-box is
    needed (their reference boxes for SVG content, offset by this viewBox's
-   -2,-2 origin, are easy to get subtly wrong). The sway starts from 0°
-   exactly when the grow ends, so the hand-over has no jump — the later
-   animation in the list owns the transform from then on. */
-.hero-sprout-plant{animation:heroSproutGrow .6s cubic-bezier(.22,1,.36,1) both,heroSproutSway 3.6s ease-in-out .6s infinite;}
-@keyframes heroSproutGrow{from{transform:scale(.35);}to{transform:scale(1);}}
-@keyframes heroSproutSway{0%,100%{transform:rotate(0deg);}25%{transform:rotate(4deg);}75%{transform:rotate(-4deg);}}
+   -2,-2 origin, are easy to get subtly wrong). Percentages are seconds/22;
+   every keyframe lists scale() then rotate() so the two interpolate. */
+.hero-sprout-plant{animation:heroSproutCycle 22s ease-in-out infinite;}
+@keyframes heroSproutCycle{
+  0%{transform:scale(.35) rotate(0deg);}
+  9.0909%{transform:scale(1) rotate(0deg);} /* 2 s: fully grown */
+  13.6364%{transform:scale(1) rotate(6deg);} 22.7273%{transform:scale(1) rotate(-6deg);} 27.2727%{transform:scale(1) rotate(0deg);} /* sway 1: 3 s / 5 s / 6 s */
+  31.8182%{transform:scale(1) rotate(6deg);} 40.9091%{transform:scale(1) rotate(-6deg);} 45.4545%{transform:scale(1) rotate(0deg);} /* sway 2: 7 s / 9 s / 10 s */
+  50%{transform:scale(1) rotate(6deg);} 59.0909%{transform:scale(1) rotate(-6deg);} 63.6364%{transform:scale(1) rotate(0deg);} /* sway 3: 11 s / 13 s / 14 s */
+  68.1818%{transform:scale(1) rotate(6deg);} 77.2727%{transform:scale(1) rotate(-6deg);} 81.8182%{transform:scale(1) rotate(0deg);} /* sway 4: 15 s / 17 s / 18 s */
+  86.3636%{transform:scale(1) rotate(6deg);} 95.4545%{transform:scale(1) rotate(-6deg);} 100%{transform:scale(1) rotate(0deg);} /* sway 5: 19 s / 21 s / 22 s */
+}
 @media (prefers-reduced-motion:reduce){.hero-sprout-plant{animation:none;}}
 .hero-mine > div{min-width:0;}
 .hero-mine-k{font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;color:var(--muted);}
