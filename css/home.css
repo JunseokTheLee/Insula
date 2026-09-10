@@ -145,12 +145,14 @@
 .hero-pieces-sub{display:flex;gap:8px;flex-wrap:wrap;font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);margin-top:10px;}
 .hero-pieces-sub b{color:var(--gray-700);font-weight:700;}
 .hero-donation{grid-area:don;align-self:stretch;background:var(--gray-0);border-radius:0 var(--r-md) var(--r-md) 0;padding:16px 22px;box-shadow:var(--shadow-sm);border-left:1px solid var(--border);display:flex;align-items:center;gap:14px;}
-/* The heart sits centred in a roomy 56px circle. The beat animates the
+/* Heart outline: the Feather icons "heart" path (MIT), symmetric — the
+   first hand-drawn path was lopsided (its right lobe bulged out further).
+   The heart sits centred in a roomy 44px box (no background). The beat animates the
    wrapper (a plain span, which never clips its contents) and the SVG keeps
    a 2-unit viewBox margin plus overflow:visible — so whichever box a
    browser decides to clip to, nothing of the heart can be cut off (it was
    clipped on the right for one visitor with the bare 36px SVG). */
-.hero-heart-wrap{flex:0 0 56px;width:56px;height:56px;border-radius:50%;background:#FFF0F3;display:flex;align-items:center;justify-content:center;overflow:visible;transform-origin:50% 52%;animation:heroHeartbeat 2.2s ease-in-out infinite;}
+.hero-heart-wrap{flex:0 0 44px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;overflow:visible;transform-origin:50% 52%;animation:heroHeartbeat 2.2s ease-in-out infinite;}
 .hero-heart{display:block;width:34px;height:34px;overflow:visible;fill:none;stroke:#FF4D6D;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round;}
 /* A quiet "lub-dub": two small swells, then rest. */
 @keyframes heroHeartbeat{0%,100%{transform:scale(1);}12%{transform:scale(1.1);}24%{transform:scale(1);}36%{transform:scale(1.06);}60%{transform:scale(1);}}
@@ -221,7 +223,7 @@
   .hero-arrow{width:34px;height:34px;font-size:19px;}
   .hero-progress{display:block;padding:12px 2px 2px;box-shadow:none;border-radius:0;}
   .hero-donation{border-radius:20px;border-left:none;box-shadow:var(--shadow-md);padding:18px 20px;}
-  .hero-heart-wrap{flex-basis:48px;width:48px;height:48px;}
+  .hero-heart-wrap{flex-basis:40px;width:40px;height:40px;}
   .hero-heart{width:30px;height:30px;}
   .hero-partner-body{margin:2px 4px 0;}
   .hero-cta{margin:4px 0 0;}

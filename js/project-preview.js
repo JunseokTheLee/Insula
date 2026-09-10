@@ -1,10 +1,12 @@
-// Shared "paint a project's grid as a small canvas" renderer — filled cells
-// shown as their average color, not the actual artwork (indistinguishable at
-// this size, and loading a real thumbnail per filled cell for every project
-// on every page view was the single biggest driver of Supabase storage
-// egress). Used by home.js (project cards + carousel, on campaigns.html) and
-// landing.js (hero preview, on index.html) — split out here so neither page
-// duplicates it.
+// Shared "paint a project's grid as a small canvas" renderer. Filled cells
+// are painted with the piece's average color first, then overdrawn with its
+// micro thumbnail (the ~16 px JPEG data URI carried in the row — see
+// common.js artworkDerivativesFromImage) once that decodes, so the preview
+// shows tiny pictures without one image request per piece; a row without
+// one (or the column not applied yet) simply keeps the average color. Used
+// by home.js (project cards + carousel, on campaigns.html) and landing.js
+// (hero preview, on index.html) — split out here so neither page duplicates
+// it.
 // Cell colors come from the project's static grid image when it has one
 // (common.js loadProjectCells — one small cached PNG instead of every
 // mosaic_pixels row); only the filled cells are read from the database.
@@ -18,16 +20,24 @@ const PREVIEW_CELL_PX = 24;
 // this cache means the grid image / filled-cell query happen once per
 // project per page load instead of twice.
 const previewGridCache = new Map();
+// Filled cells with their piece's average color and micro thumbnail; asked
+// again without micro_thumb while supabase_mosaic_micro_thumbs.sql hasn't
+// been applied (unknown column → schema mismatch).
+async function fetchPreviewFilled(project, withMicro) {
+  const cols = 'x,y,mosaic_submissions!mosaic_pixels_submission_id_fkey(avg_r,avg_g,avg_b' + (withMicro ? ',micro_thumb' : '') + ')';
+  const res = await fetchAllRows(
+    () => sb.from('mosaic_pixels').select(cols)
+      .eq('project_id', project.id).eq('filled', true).not('submission_id', 'is', null),
+    { expected: project.width * project.height }
+  );
+  if (res.error && withMicro && isSchemaMismatchError(res.error)) return fetchPreviewFilled(project, false);
+  return res;
+}
 function getCachedProjectGrid(project) {
   if (!previewGridCache.has(project.id)) {
     previewGridCache.set(project.id, Promise.all([
       loadProjectCells(project),
-      fetchAllRows(
-        () => sb.from('mosaic_pixels')
-          .select('x,y,mosaic_submissions!mosaic_pixels_submission_id_fkey(avg_r,avg_g,avg_b)')
-          .eq('project_id', project.id).eq('filled', true).not('submission_id', 'is', null),
-        { expected: project.width * project.height }
-      ),
+      fetchPreviewFilled(project, true),
     ]).then(([grid, filledRes]) => {
       if (filledRes.error) console.error('load preview filled cells error:', filledRes.error);
       const filled = new Map();
@@ -59,6 +69,9 @@ async function paintProjectPreview(card, project) {
     }
     ctx.fillRect(dx, dy, PREVIEW_CELL_PX, PREVIEW_CELL_PX);
   }
+  // Tiny pictures over the average-color squares; awaited so a caller that
+  // copies the canvas elsewhere (the landing hero) gets them too.
+  await paintPreviewMicroThumbs(ctx, cells, filled);
   canvas.classList.remove('loading');
   const total = cells.length;
   const progEl = card.querySelector('.p-progress');
@@ -66,4 +79,15 @@ async function paintProjectPreview(card, project) {
   const fill = card.querySelector('.progress-fill');
   if (fill) fill.style.width = `${total ? Math.round((filledCount / total) * 100) : 0}%`;
   return { filledCount, total };
+}
+async function paintPreviewMicroThumbs(ctx, cells, filled) {
+  const jobs = [];
+  for (const px of cells) {
+    const sub = filled.get(`${px.x},${px.y}`);
+    if (!sub || !sub.micro_thumb) continue;
+    jobs.push(loadImageEl(sub.micro_thumb).then(img => {
+      ctx.drawImage(img, px.x * PREVIEW_CELL_PX, px.y * PREVIEW_CELL_PX, PREVIEW_CELL_PX, PREVIEW_CELL_PX);
+    }).catch(() => { /* a bad data URI just leaves the average color */ }));
+  }
+  await Promise.all(jobs);
 }
