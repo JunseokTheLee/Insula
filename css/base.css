@@ -48,9 +48,16 @@ body.no-scroll-lock{overflow:hidden;}
   display:flex;flex-direction:column;
   animation:appIn .3s ease-out;
 }
+/* On a wide monitor the logo was pinned to the far left and the identity
+   block (language toggle, avatar, name, buttons) to the far right, metres
+   apart from the page content below them. Symmetric padding holds the bar's
+   contents in a centred 1400px frame — the width .hero-inner and
+   .stats-bar-inner already use, so the logo lines up with the page content —
+   without adding a wrapper element to all 30 page headers. The 32px floor
+   keeps the original gutters on normal screens. (2026-09-11) */
 .topnav{
   display:flex;align-items:center;flex-shrink:0;
-  margin:0;padding:16px 32px;gap:28px;flex-wrap:wrap;
+  margin:0;padding:16px max(32px, calc((100% - 1400px) / 2));gap:28px;flex-wrap:wrap;
   background:var(--gray-0);
 }
 .logo{
