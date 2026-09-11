@@ -4,32 +4,51 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta name="color-scheme" content="light dark">
 <title>Weavo 보안·안정성 점검 보고서 (2026-09-11)</title>
 <style>
-  :root{--ink:#1a1f2e;--muted:#5b6475;--line:#e3e6ec;--bg:#ffffff;--soft:#f5f7fa;--crit:#b3261e;--high:#c2410c;--med:#b45309;--low:#2563eb;--ok:#15803d;--code:#f1f3f7;}
+  /* ── 테마: 라이트(기본) / 다크. 저장된 선택이 없으면 OS 설정을 따른다. ── */
+  :root{--ink:#1a1f2e;--muted:#5b6475;--line:#e3e6ec;--bg:#ffffff;--soft:#f5f7fa;--code:#f1f3f7;--bar:rgba(255,255,255,.96);
+        --crit:#b3261e;--high:#c2410c;--med:#b45309;--low:#2563eb;--ok:#15803d;--chk:#475569;--noteline:#94a3b8;--btn:#1a1f2e;--btnfg:#ffffff;}
+  @media (prefers-color-scheme: dark){
+    html:not([data-theme="light"]){--ink:#e6e8ee;--muted:#9aa3b5;--line:#2a3040;--bg:#0f1218;--soft:#171b24;--code:#1c212c;--bar:rgba(15,18,24,.96);
+        --crit:#e0534c;--high:#e07a3a;--med:#d09a2a;--low:#5b8dff;--ok:#3fbf6b;--chk:#64748b;--noteline:#475569;--btn:#e6e8ee;--btnfg:#0f1218;}
+  }
+  html[data-theme="dark"]{--ink:#e6e8ee;--muted:#9aa3b5;--line:#2a3040;--bg:#0f1218;--soft:#171b24;--code:#1c212c;--bar:rgba(15,18,24,.96);
+        --crit:#e0534c;--high:#e07a3a;--med:#d09a2a;--low:#5b8dff;--ok:#3fbf6b;--chk:#64748b;--noteline:#475569;--btn:#e6e8ee;--btnfg:#0f1218;}
+  html[data-theme="light"]{--ink:#1a1f2e;--muted:#5b6475;--line:#e3e6ec;--bg:#ffffff;--soft:#f5f7fa;--code:#f1f3f7;--bar:rgba(255,255,255,.96);
+        --crit:#b3261e;--high:#c2410c;--med:#b45309;--low:#2563eb;--ok:#15803d;--chk:#475569;--noteline:#94a3b8;--btn:#1a1f2e;--btnfg:#ffffff;}
+  /* ── 언어: 한국어 기본(JS 없이도 보임), data-lang="en" 이면 영어만 표시 ── */
+  .en{display:none}
+  html[data-lang="en"] .ko{display:none}
+  html[data-lang="en"] .en{display:block}
+  html[data-lang="en"] span.en, html[data-lang="en"] a.en, html[data-lang="en"] b.en{display:inline}
+
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.7;word-break:keep-all}
-  .topbar{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 24px;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center}
-  .topbar b{font-size:15px;margin-right:8px}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.7;word-break:keep-all;transition:background .15s linear,color .15s linear}
+  .topbar{position:sticky;top:0;z-index:10;background:var(--bar);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 24px;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+  .topbar b{font-size:15px;margin-right:6px;color:var(--ink)}
   .topbar a{color:var(--muted);text-decoration:none;font-size:13px}
   .topbar a:hover{color:var(--ink);text-decoration:underline}
+  .topbar .spacer{flex:1 1 auto}
+  .tbtn{appearance:none;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+  .tbtn.primary{background:var(--btn);color:var(--btnfg);border-color:var(--btn)}
+  .tbtn:hover{filter:brightness(.95)}
   main{max-width:1100px;margin:0 auto;padding:28px 24px 80px}
   h1{font-size:28px;margin:0 0 6px;letter-spacing:-.02em}
   h2{font-size:21px;margin:44px 0 12px;padding-top:12px;border-top:2px solid var(--ink)}
   h3{font-size:17px;margin:26px 0 8px}
   p{margin:8px 0}
   .meta{color:var(--muted);font-size:13.5px;margin-bottom:18px}
-  .note{background:var(--soft);border-left:4px solid #94a3b8;padding:10px 14px;border-radius:6px;margin:12px 0;font-size:14px}
+  .note{background:var(--soft);border-left:4px solid var(--noteline);padding:10px 14px;border-radius:6px;margin:12px 0;font-size:14px}
   table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}
   th,td{border:1px solid var(--line);padding:8px 10px;vertical-align:top;text-align:left}
   th{background:var(--soft);font-weight:700}
   .wrap{overflow-x:auto}
   code{background:var(--code);padding:1px 5px;border-radius:4px;font-family:Consolas,"D2Coding",monospace;font-size:13px}
-  pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.55;margin:8px 0}
-  pre code{background:none;padding:0}
   .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;vertical-align:middle;white-space:nowrap}
-  .b-crit{background:var(--crit)} .b-high{background:var(--high)} .b-med{background:var(--med)} .b-low{background:var(--low)} .b-ok{background:var(--ok)} .b-chk{background:#475569}
-  .finding{border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:16px 0;background:#fff}
+  .b-crit{background:var(--crit)} .b-high{background:var(--high)} .b-med{background:var(--med)} .b-low{background:var(--low)} .b-ok{background:var(--ok)} .b-chk{background:var(--chk)}
+  .finding{border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:16px 0;background:var(--bg)}
   .finding h3{margin:0 0 8px;font-size:16.5px}
   .finding .kv{display:grid;grid-template-columns:96px 1fr;gap:6px 12px;margin-top:8px;font-size:14px}
   .finding .kv b{color:var(--muted);font-weight:600}
@@ -39,27 +58,32 @@
   .card .n{font-size:28px;font-weight:800;letter-spacing:-.02em}
   .card .l{font-size:13px;color:var(--muted)}
   .small{font-size:13px;color:var(--muted)}
-  @media (max-width:640px){ main{padding:18px 14px 60px} .finding .kv{grid-template-columns:1fr} }
-  @media print{ .topbar{position:static} .finding{break-inside:avoid} }
+  @media (max-width:640px){ main{padding:18px 14px 60px} .finding .kv{grid-template-columns:1fr} .topbar{padding:8px 12px} }
+  @media print{ .topbar{position:static} .finding{break-inside:avoid} .tbtn{display:none} }
 </style>
 </head>
 <body>
-<nav class="topbar">
-  <b>Weavo 보안 점검</b>
-  <a href="#summary">요약</a>
-  <a href="#scope">범위·방법</a>
-  <a href="#hack">해킹·XSS</a>
-  <a href="#loss">데이터 손실·삭제</a>
-  <a href="#spam">스팸·음란물</a>
-  <a href="#privacy">개인정보</a>
-  <a href="#ops">운영·설정 확인</a>
-  <a href="#plan">조치 계획</a>
-  <a href="#good">잘 된 점</a>
+<nav class="topbar" aria-label="문서 내비게이션 / Document navigation">
+  <b class="ko">Weavo 보안 점검</b><b class="en">Weavo Security Review</b>
+  <a class="ko" href="#summary">요약</a><a class="en" href="#summary">Summary</a>
+  <a class="ko" href="#scope">범위·방법</a><a class="en" href="#scope">Scope</a>
+  <a class="ko" href="#hack">해킹·XSS</a><a class="en" href="#hack">Hacking · XSS</a>
+  <a class="ko" href="#loss">데이터 손실·삭제</a><a class="en" href="#loss">Data loss · deletion</a>
+  <a class="ko" href="#spam">스팸·음란물</a><a class="en" href="#spam">Spam · abuse</a>
+  <a class="ko" href="#privacy">개인정보</a><a class="en" href="#privacy">Privacy</a>
+  <a class="ko" href="#ops">운영·설정 확인</a><a class="en" href="#ops">Ops checks</a>
+  <a class="ko" href="#plan">조치 계획</a><a class="en" href="#plan">Action plan</a>
+  <a class="ko" href="#good">잘 된 점</a><a class="en" href="#good">What works</a>
+  <span class="spacer"></span>
+  <button type="button" class="tbtn primary" id="langBtn" aria-label="언어 전환 / Switch language">EN</button>
+  <button type="button" class="tbtn" id="themeBtn" aria-label="테마 전환 / Switch theme">다크</button>
 </nav>
-<main>
+
+<!-- ============================== 한국어 (기본) ============================== -->
+<main class="ko" lang="ko">
 
 <h1>Weavo 보안·안정성 점검 보고서</h1>
-<div class="meta">작성일 2026-09-11 · 대상 weavo.art (저장소 <code>Insula</code>, 커밋 c2b1e93 기준) · 작성 Claude(사용자 요청으로 한국어 단일본 — 저장소 문서 규칙의 영어 기본판은 생략)</div>
+<div class="meta">작성일 2026-09-11 · 대상 weavo.art (저장소 <code>Insula</code>, 커밋 c2b1e93 기준) · 작성 Claude · 오른쪽 위 버튼으로 영어 번역과 라이트/다크 테마를 바꿀 수 있습니다.</div>
 
 <div class="note">이 문서는 <b>코드 읽기(supabase/*.sql 40개, js/ 22개, functions/ 26개, HTML)</b>와 <b>운영 사이트의 읽기 전용 응답 확인</b>(응답 헤더, 익명 키로 읽히는 테이블·컬럼, 이미지 프록시 헤더, 공개 파일)으로 작성했습니다. 실제 공격을 시도하거나 데이터를 바꾸지 않았고, 코드도 수정하지 않았습니다. Supabase 대시보드에서만 볼 수 있는 설정(Storage 버킷의 MIME·크기 제한, Auth 가입 설정, 백업 옵션)은 <b>확인 필요</b>로 표시했습니다.</div>
 
@@ -79,8 +103,8 @@
 <tr><td>1</td><td>Supabase 대시보드 → Storage → <code>artwork</code> 버킷에 <b>허용 MIME(image/jpeg, png, webp, gif)</b>과 <b>파일 크기 제한(10 MB)</b> 설정. 이미지 프록시(<code>functions/img</code>)에서 버킷·확장자 허용 목록, <code>nosniff</code>·<code>Content-Security-Policy: sandbox</code> 헤더 추가</td><td>H-01</td><td>1시간</td></tr>
 <tr><td>2</td><td>관리자 Google 계정 2단계 인증 확인. 관리자 계정은 최소 인원으로</td><td>L-01, P-01</td><td>10분</td></tr>
 <tr><td>3</td><td><code>mosaic_submissions</code> 의 테이블 단위 insert 권한 회수 + 컬럼 단위 권한만 부여 + 조각 행 직접 insert 차단(SQL 파일 1개)</td><td>L-04</td><td>1시간</td></tr>
-<tr><td>4</td><td>누구나 호출 가능한 배치 RPC 잠그기: <code>commit_pool_matches</code>·<code>unmatch_submissions</code>·<code>claim_rematch_slot</code> 실행 권한 회수, <code>release_poor_matches</code> 의 대기 시간 인자 무시(관리자 제외)</td><td>L-05, L-06, L-08</td><td>1시간</td></tr>
-<tr><td>5</td><td><code>mosaic_pixels</code> 의 일반 사용자 update 정책 제거 또는 <code>claimed_at</code> 검증(빈 칸 싹쓸이·영구 잠금 차단)</td><td>L-07</td><td>1시간</td></tr>
+<tr><td>4</td><td>누구나 호출 가능한 배치 RPC 잠그기: <code>commit_pool_matches</code>·<code>unmatch_submissions</code>·<code>claim_rematch_slot</code> 실행 권한 회수, <code>release_poor_matches</code> 의 대기 시간 인자 무시(관리자 제외)</td><td>L-02, L-03, L-06</td><td>1시간</td></tr>
+<tr><td>5</td><td><code>mosaic_pixels</code> 의 일반 사용자 update 정책 제거 또는 <code>claimed_at</code> 검증(빈 칸 싹쓸이·영구 잠금 차단)</td><td>L-05</td><td>1시간</td></tr>
 <tr><td>6</td><td><code>js/artists.js</code> 의 아바타 URL 속성 삽입을 DOM 생성 방식으로 교체(저장형 XSS)</td><td>H-03</td><td>30분</td></tr>
 <tr><td>7</td><td><code>profiles</code> 의 익명 조회를 컬럼 단위로 제한(장애 정보·관리자 여부·실명 비공개)</td><td>P-01</td><td>1시간</td></tr>
 <tr><td>8</td><td><code>supabase_profiles.sql</code> 의 테이블 전체 grant 줄 제거(재실행 시 관리자 자기 승격 부활 방지)</td><td>L-09</td><td>10분</td></tr>
@@ -344,5 +368,340 @@
 <p class="small" style="margin-top:36px">부록 — 근거 위치 요약: 정책·grant <code>supabase/supabase_mosaic.sql</code>, <code>supabase_profiles.sql</code>, <code>supabase_mosaic_versions.sql</code>, <code>supabase_mosaic_profile_pool.sql</code>, <code>supabase_mosaic_rematch.sql</code>, <code>supabase_mosaic_pieces.sql</code>, <code>supabase_reports.sql</code>, <code>supabase_user_blocks.sql</code> · 클라이언트 <code>js/common.js</code>(escapeHtml·safeHref·cdnUrl·uploadImage·setupPicker), <code>js/artists.js</code>, <code>js/auth.js</code>(deleteMyStorageFiles), <code>js/lightbox.js</code>(삭제), <code>js/matching.js</code> · 서버 <code>functions/img/[[path]].js</code>, <code>functions/_lib/render.js</code>, <code>_headers</code>. 운영 확인 일시 2026-09-11.</p>
 
 </main>
+
+<!-- ============================== English (translation) ============================== -->
+<main class="en" lang="en">
+
+<h1>Weavo Security &amp; Stability Review</h1>
+<div class="meta">Written 2026-09-11 · Target weavo.art (repository <code>Insula</code>, at commit c2b1e93) · Author Claude · Use the buttons at the top right to switch language and light/dark theme.</div>
+
+<div class="note">This document was written from <b>code reading</b> (40 SQL files under supabase/, 22 files under js/, 26 under functions/, and the HTML) and <b>read-only checks of the live site's responses</b> (response headers, tables and columns readable with the anon key, image-proxy headers, publicly served files). No attack was attempted, no data was changed, and no code was modified. Settings visible only in the Supabase dashboard (Storage bucket MIME/size limits, Auth sign-up settings, backup options) are marked <b>to verify</b>.</div>
+
+<h2 id="summary-en">0. Summary</h2>
+<div class="summary-grid">
+  <div class="card"><div class="n" style="color:var(--crit)">3</div><div class="l">Critical — act now</div></div>
+  <div class="card"><div class="n" style="color:var(--high)">10</div><div class="l">High — within 1–2 weeks</div></div>
+  <div class="card"><div class="n" style="color:var(--med)">7</div><div class="l">Medium — within a month</div></div>
+  <div class="card"><div class="n" style="color:var(--low)">5</div><div class="l">Low · to verify</div></div>
+</div>
+
+<p><b>One-line conclusion.</b> The broad strokes of account permissions (RLS) hold up: nobody can edit or delete another artist's work, nobody can promote themselves to admin, and reports, notifications and block lists are private. The three biggest risks are <b>①</b> the server does not restrict uploaded file types and the image proxy relays the original content type, so <b>a script can run on the site's own origin</b>; <b>②</b> a single admin session can <b>irreversibly delete every artwork, and there is no backup or recovery path</b>; <b>③</b> uploads go live on the home page and the mosaic <b>instantly, with no review and no hide/suspend tool</b>. Below those sit three RPCs that any signed-in user can use to wreck mosaic placement, and an early table-level grant that was never revoked, which lets the upload rate limit be bypassed.</p>
+
+<h3>Eight things to do now</h3>
+<div class="wrap"><table>
+<tr><th style="width:44px">#</th><th>Action</th><th style="width:110px">Items</th><th style="width:90px">Effort</th></tr>
+<tr><td>1</td><td>Supabase dashboard → Storage → <code>artwork</code> bucket: set <b>allowed MIME types (image/jpeg, png, webp, gif)</b> and a <b>file size limit (10 MB)</b>. In the image proxy (<code>functions/img</code>) add a bucket/extension allowlist plus <code>nosniff</code> and <code>Content-Security-Policy: sandbox</code> headers</td><td>H-01</td><td>1 hour</td></tr>
+<tr><td>2</td><td>Confirm two-factor authentication on admin Google accounts; keep the number of admins minimal</td><td>L-01, P-01</td><td>10 min</td></tr>
+<tr><td>3</td><td>Revoke the table-level insert grant on <code>mosaic_submissions</code>, grant only the needed columns, and block direct inserts of piece rows (one SQL file)</td><td>L-04</td><td>1 hour</td></tr>
+<tr><td>4</td><td>Lock down the placement RPCs anyone can call: revoke execute on <code>commit_pool_matches</code>, <code>unmatch_submissions</code>, <code>claim_rematch_slot</code>; make <code>release_poor_matches</code> ignore its interval argument for non-admins</td><td>L-02, L-03, L-06</td><td>1 hour</td></tr>
+<tr><td>5</td><td>Remove the regular-user update policy on <code>mosaic_pixels</code> or validate <code>claimed_at</code> (blocks grabbing every open cell and locking it forever)</td><td>L-05</td><td>1 hour</td></tr>
+<tr><td>6</td><td>Replace the avatar-URL attribute interpolation in <code>js/artists.js</code> with DOM construction (stored XSS)</td><td>H-03</td><td>30 min</td></tr>
+<tr><td>7</td><td>Restrict anonymous reads of <code>profiles</code> to specific columns (hide disability data, admin flag, real names)</td><td>P-01</td><td>1 hour</td></tr>
+<tr><td>8</td><td>Remove the table-wide grant line from <code>supabase_profiles.sql</code> (re-running it would revive self-promotion to admin)</td><td>L-09</td><td>10 min</td></tr>
+</table></div>
+
+<h2 id="scope-en">1. Scope and method</h2>
+<ul>
+  <li><b>Code</b> — <code>supabase/*.sql</code> (every table, RLS policy, grant, RPC and trigger), <code>js/*.js</code> (input handling, DOM insertion, uploads, sessions), <code>functions/**</code> (server rendering, image proxy, blocking routes), <code>_headers</code>, <code>_redirects</code>, <code>robots.txt</code>, and the external scripts in the HTML.</li>
+  <li><b>Live responses</b> — page and proxy response headers, HTTP status of development files, tables and columns readable with the anon key (profiles, likes, follows, reports, blocks, notifications), attempts to list Storage buckets and files (all read-only).</li>
+  <li><b>Yardstick</b> — whether the server (DB, Storage, Functions) actually stops three actors: "any signed-in user", "a hijacked admin session", and "an automated tool calling REST directly". Checks that exist only in the browser (JS) were not counted as defences.</li>
+  <li><b>Not done</b> — actual attacks, data changes, reading dashboard settings (no access), vulnerability research on the dependencies themselves (supabase-js, d3).</li>
+</ul>
+<p class="small">Severity: <span class="badge b-crit">Critical</span> account takeover, mass loss, irreversible damage / <span class="badge b-high">High</span> any signed-in user can damage others' data or the service / <span class="badge b-med">Medium</span> abuse, cost, load, integrity / <span class="badge b-low">Low</span> information exposure, housekeeping / <span class="badge b-chk">Verify</span> needs a dashboard check.</p>
+
+<h2 id="hack-en">2. Hacking, XSS and session theft</h2>
+
+<div class="finding">
+<h3><span class="badge b-crit">Critical</span> H-01. SVG/HTML upload → script runs on the weavo.art origin → session theft</h3>
+<div class="kv">
+<b>Finding</b><div>The only upload check is the browser's <code>file.type.startsWith('image/')</code> (<code>js/common.js:1005</code>), which <code>image/svg+xml</code> passes; <code>uploadImage()</code> (<code>js/common.js:621-629</code>) keeps the extension from the file name and sets no <code>contentType</code>. There is no MIME or size limit in SQL, and the bucket settings live only in the dashboard (unverified). The image proxy <code>functions/img/[[path]].js</code> copies the upstream headers verbatim (<code>new Response(upstream.body, upstream)</code>), relaying the original <code>Content-Type</code>, and adds no <code>X-Content-Type-Options</code>, <code>Content-Security-Policy</code> or <code>Content-Disposition</code>. The live <code>/img/artwork/…jpg</code> response carried only <code>content-type</code> and <code>cache-control</code> (the security headers in <code>_headers</code> do not apply to Functions responses). The bucket name is taken from the path and is not pinned.</div>
+<b>Impact</b><div>A signed-in user who uploads an SVG containing <code>&lt;script&gt;</code> as an artwork or avatar gets it served at <code>https://weavo.art/img/artwork/&lt;uid&gt;/….svg</code>, where <b>the script runs on the weavo.art origin</b> (not inside <code>&lt;img&gt;</code>, but yes when the link is opened directly). Because the session token lives in localStorage (H-04), whoever clicks the link — admins included — can have their account taken over. The address can be planted in an artwork link (<code>art_link</code>). Calling the Storage API directly also allows <code>text/html</code>, with the same result.</div>
+<b>Fix</b><div>
+<ul>
+<li><b>Dashboard</b>: <code>artwork</code> bucket → Allowed MIME types = <code>image/jpeg, image/png, image/webp, image/gif</code>, File size limit = 10 MB. (This is the only layer the server enforces.)</li>
+<li><b>Proxy</b>: pass only when the first segment is <code>artwork</code>; 404 for extensions outside jpg/jpeg/png/webp/gif/avif; add <code>X-Content-Type-Options: nosniff</code>, <code>Content-Security-Policy: default-src 'none'; sandbox</code>, <code>Content-Disposition: inline</code>; set <code>Content-Type</code> from the extension.</li>
+<li><b>Client</b>: an allowlist check (jpeg/png/webp/gif) and an explicit <code>contentType</code>. Re-encoding through a canvas, as <code>shrinkImageFile</code> does, normalises the format itself.</li>
+</ul></div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-high">High</span> H-02. No site-wide CSP; external scripts without SRI (versions not pinned)</h3>
+<div class="kv">
+<b>Finding</b><div><code>_headers</code> sets only <code>X-Frame-Options</code> and HSTS; CSP is commented out as "deliberately left out for now" (the live response has no CSP and no <code>Permissions-Policy</code>). Thirty pages load <code>cdn.jsdelivr.net/npm/@supabase/supabase-js@2</code> (major version only), d3@7 and topojson-client@3 without <code>integrity</code>. CSS pulls Google Fonts and Pretendard through <code>@import</code>.</div>
+<b>Impact</b><div>When an injection path such as H-01 or H-03 exists, CSP is the last line of defence, and it is missing. A CDN incident or account compromise that alters supabase-js — the code that handles auth tokens — affects every account.</div>
+<b>Fix</b><div>Add a CSP in <code>_headers</code> (<code>default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://kzvheplmtzjmzcxjkxub.supabase.co; img-src 'self' data: https://kzvheplmtzjmzcxjkxub.supabase.co https://lh3.googleusercontent.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src https://fonts.gstatic.com https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self'; frame-ancestors 'self'</code> — move the inline scripts (the language redirect in index.html, JSON-LD) to a <code>nonce</code> or external files first). Pin the CDN libraries to exact versions with <code>integrity</code> and <code>crossorigin</code>, or self-host the three libraries under <code>/js/vendor/</code> (no build step needed, and not a new CDN). Add <code>Permissions-Policy: camera=(), microphone=(), geolocation=()</code>.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-high">High</span> H-03. The artists page inserts the avatar URL into an attribute unescaped (stored XSS)</h3>
+<div class="kv">
+<b>Finding</b><div><code>js/artists.js:12</code> — <code>`&lt;img class="artist-card-avatar" src="${cdnUrl(p.avatar_url)}" alt=""&gt;`</code> is assigned through <code>innerHTML</code>. <code>avatar_url</code> is a column the owner can set to any string through REST (<code>supabase_mosaic.sql:22</code> update grant), and <code>cdnUrl()</code> returns non-Supabase values unchanged. The project's <code>escapeHtml()</code> does not escape double quotes (<code>js/common.js:10-12</code>), so wrapping it would still be insufficient in an attribute context.</div>
+<b>Impact</b><div>Setting <code>avatar_url</code> to <code>x" onerror="…</code> runs a script in the browser of every visitor of <code>/ko/artists</code> and <code>/en/artists</code>. Everywhere else user strings go through <code>textContent</code>; this is the single exception.</div>
+<b>Fix</b><div>Build the element with <code>document.createElement('img')</code> and assign <code>img.src = …</code> (no attribute context). Extend <code>escapeHtml</code> to escape <code>"</code> and <code>'</code>. Add a DB check on <code>avatar_url</code> (starts with <code>https://</code>; allowed hosts: own Storage and googleusercontent).</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-med">Medium</span> H-04. Session tokens are stored in localStorage (amplifies any XSS)</h3>
+<div class="kv">
+<b>Finding</b><div><code>js/supabase-client.js</code> calls <code>createClient</code> with no options, so the supabase-js defaults apply (localStorage, persistent session).</div>
+<b>Impact</b><div>Any successful script injection can read the access and refresh tokens and clone the session. The real remedy is closing H-01 to H-03; this on its own is the standard supabase-js configuration.</div>
+<b>Fix</b><div>Prioritise H-01, H-02 and H-03. Additionally, use a separate browser profile for admin accounts and sign out routinely.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-med">Medium</span> H-05. Artwork image URLs may point to external hosts (tracking, off-site hosting)</h3>
+<div class="kv">
+<b>Finding</b><div><code>mosaic_submissions.image_url</code>, <code>thumb_url</code> and <code>author_avatar_url</code> are insertable by signed-in users with no length or format check (<code>supabase_mosaic_profile_pool.sql:53-55</code>). Pages put them straight into <code>img.src</code> via <code>cdnUrl()</code>. <code>js/project.js:404</code> interpolates the thumbnail into a <code>url("…")</code> string without escaping quotes.</div>
+<b>Impact</b><div>An attacker can display images from their own server on Weavo to collect visitor IPs and user agents, or register off-site images whose originals survive deletion.</div>
+<b>Fix</b><div>DB checks: the three columns must be <code>null</code> or start with <code>https://kzvheplmtzjmzcxjkxub.supabase.co/storage/v1/object/public/artwork/%</code> (avatars may also be googleusercontent). Make <code>cdnUrl()</code> return <code>null</code> for other hosts so a placeholder is drawn.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-low">Low</span> H-06. Escaping of server-rendered meta attributes relies on the runtime alone</h3>
+<div class="kv">
+<b>Finding</b><div><code>functions/_lib/render.js</code> passes bios, artwork descriptions and image URLs to <code>el.setAttribute()</code> with no escaping of its own. JSON-LD is safe: every <code>&lt;</code> becomes <code><</code>. No live bio or description currently contains a double quote, so this could not be tested against real data.</div>
+<b>Fix</b><div>HTMLRewriter (lol-html) is understood to escape attribute values, but verify it: put <code>"&gt;&lt;svg onload=alert(1)&gt;</code> in a test account's bio and inspect the raw response of <code>/ko/artists/&lt;name&gt;</code>. Adding <code>replace(/"/g,'&amp;quot;')</code> as defence in depth is harmless.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-low">Low</span> H-07. Development files are served on the web as-is</h3>
+<div class="kv">
+<b>Finding</b><div>Live checks return 200 for <code>/CLAUDE.md</code> (52 KB of architecture, SQL file list and admin procedures), <code>/README.md</code>, <code>/SEO_DEPLOYMENT_CHECKLIST.md</code>, <code>/.gitignore</code>, <code>/.gitattributes</code>, <code>/.claude/skills/superdesign/SKILL.md</code>, the leftover root file <code>/profile.js</code> (35 KB of old code), <code>/image.png</code> and <code>/suggestion.png</code>. <code>DevDocs/</code>, <code>supabase/</code> and <code>tools/</code> return 404 through Functions; <code>node_modules/</code> is 404 (excluded by Pages).</div>
+<b>Fix</b><div>Delete the leftovers (<code>profile.js</code>, the two PNGs) from the repository. For the rest, add single-path routes such as <code>functions/CLAUDE.md.js</code> or a <code>functions/[[path]].js</code> middleware that returns 404 for root files outside an allowlist. A <code>robots.txt</code> <code>Disallow</code> is not access control and only a supplement.</div>
+</div></div>
+
+<h2 id="loss-en">3. Data loss and artwork deletion</h2>
+
+<div class="finding">
+<h3><span class="badge b-crit">Critical</span> L-01. One admin session can delete every artwork at once — no count limit, no audit trail, no recovery</h3>
+<div class="kv">
+<b>Finding</b><div>The delete policy on <code>mosaic_submissions</code> is a per-row predicate, <code>auth.uid() = author_id or exists(… is_admin)</code> (<code>supabase_mosaic.sql:221-226</code>). With an admin token, a single <code>DELETE /rest/v1/mosaic_submissions?id=neq.0</code> removes every artwork, cascading to pieces, likes, comments, collection items and notifications. Keeping delete buttons out of the admin page (<code>js/admin.js</code>) is a convention (CLAUDE.md §13); the database does not enforce it. There is no soft delete, no audit table and no export script anywhere in the repository, and Supabase's daily backups (Pro, 7 days) cover the database only — not Storage files.</div>
+<b>Impact</b><div>A hijacked admin Google account, a malicious extension on an admin's PC, or one accidentally run line of script can <b>erase all of the artists' work irreversibly.</b> This is the service's core asset and should be addressed first.</div>
+<b>Fix</b><div>
+<ul>
+<li><b>Deletion audit + throttle trigger</b> (small SQL): record each deleted row in <code>submission_deletions(id, author_id, deleted_by, deleted_at, row jsonb)</code> from a BEFORE DELETE trigger, and raise when the same user exceeds 5 deletions in 10 minutes. Inside account deletion (<code>delete_own_account</code>) bypass with a session flag (<code>set_config('weavo.bulk_delete_ok','on',true)</code>). This alone makes "everything at once" impossible and keeps the deleted rows recoverable.</li>
+<li><b>Soft delete</b> (medium): a <code>deleted_at</code> column, <code>deleted_at is null</code> in the public select policy, an admin restore tool, purge after 30 days.</li>
+<li><b>Storage backup</b>: an offline script (outside the repository, on an admin PC) that periodically downloads the whole <code>artwork</code> bucket with the service key. The database has Pro backups; consider adding PITR.</li>
+<li>Two-factor authentication on admin Google accounts; keep admins to a minimum.</li>
+</ul></div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-high">High</span> L-02. Any signed-in user can pull other people's pieces out of the mosaic in bulk — <code>unmatch_submissions</code></h3>
+<div class="kv">
+<b>Finding</b><div><code>supabase_mosaic_rematch.sql:70-119</code>. The file's own comment says it is callable by "any signed-in user"; 5,000 ids per call, no call-rate limit, and the only guard is an RGB distance above 15 (which the comment itself calls "coarse … NOT the real match-quality test"). That is far looser than the real placement threshold (Lab 20), so most correctly placed pieces pass it.</div>
+<b>Impact</b><div>One account calling it repeatedly keeps campaigns empty (rows survive and return to the pool, but the screen goes blank). Whatever matching refills can be pulled out again.</div>
+<b>Fix</b><div>The function is now used only by the server cleanup (<code>release_poor_matches</code>, security definer): <code>revoke execute … from authenticated</code>. The client fallback (<code>releasePoorlyMatchedPieces</code> in <code>js/matching.js</code>) already ignores errors, so nothing breaks.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-high">High</span> L-03. Any signed-in user can force other people's pieces into cells of their choosing — <code>commit_pool_matches</code></h3>
+<div class="kv">
+<b>Finding</b><div><code>supabase_mosaic_profile_pool.sql:65-129</code>. It checks only "is the piece in the pool, is the cell open, are there duplicates" — <b>no ownership check and no colour check</b> (re-verified). Being security definer it also bypasses RLS.</div>
+<b>Impact</b><div>Waiting pieces can be planted in arbitrary cells to draw patterns or words on the mosaic. The 6-hourly cleanup undoes it, but it can be repeated.</div>
+<b>Fix</b><div>Server-side matching exists now, so <code>revoke execute … from authenticated</code> (the client fallback is used only when the RPC is missing). If it must stay, verify <code>s.author_id = auth.uid()</code> and a distance within <code>piece_match_distance()</code> per assignment.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-high">High</span> L-04. The table-level insert grant on <code>mosaic_submissions</code> was never revoked — rate-limit bypass and forged pieces</h3>
+<div class="kv">
+<b>Finding</b><div>Nothing revokes <code>grant insert on public.mosaic_submissions to authenticated</code> from <code>supabase_mosaic.sql:207</code> (re-verified); later column-level grants only add to it. A signed-in user can therefore insert <code>created_at</code>, <code>parent_id</code>, <code>piece_row/col/n</code>, <code>home_project_id</code>, <code>match_tried_at</code> and even <code>id</code> directly. The rate-limit trigger counts a 10-minute window by <code>created_at</code> and skips rows that have a <code>parent_id</code>.</div>
+<b>Impact</b><div>① Backdating <code>created_at</code> or filling <code>parent_id</code> makes the <b>20-per-10-minutes limit meaningless</b>. ② A piece row whose <code>parent_id</code> is <b>someone else's artwork</b> gets placed by matching, and clicking that cell opens the victim's artwork (the attacker's 16 px image shown as the victim's work). ③ <code>id</code> collisions and <code>home_project_id</code> manipulation.</div>
+<b>Fix</b><div>One SQL file: <code>revoke insert on public.mosaic_submissions from authenticated;</code> then grant only the needed columns: <code>grant insert (author_id, author_name, author_avatar_url, image_url, thumb_url, micro_thumb, avg_r, avg_g, avg_b, art_title, art_material, art_completed_date, art_description, art_link)</code>. Add <code>parent_id is null and piece_n is null</code> to the upload insert policy (pieces only via the RPC). Review <code>profiles</code> the same way (L-09).</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-high">High</span> L-05. Any signed-in user can claim every open cell and halt matching, and lock cells forever with a future timestamp</h3>
+<div class="kv">
+<b>Finding</b><div>The regular-user update policy on <code>mosaic_pixels</code> (<code>supabase_mosaic_versions.sql:44-65</code>) lets anyone turn a <code>filled = false</code> cell into <code>filled=true, claimed_by=me</code>; <code>claimed_at</code> is granted too but never validated. Claims older than 10 minutes can be reset by others, but a future <code>claimed_at</code> is "under 10 minutes" forever. Cells that already hold artwork cannot be touched (safe).</div>
+<b>Impact</b><div>One REST call (<code>update … .eq('filled', false)</code>) claims every open cell in every campaign, leaving new pieces nowhere to go; only the admin policy can undo it.</div>
+<b>Fix</b><div>Now that uploads go through the pool and server matching, client-side cell claiming is unused. Remove the regular-user update policy and grant; cover the two remaining uses (sweeping stale claims, resetting a cell after deleting one's own artwork) with a trigger (<code>reset_pixel_on_submission_delete</code> already does the latter) and an admin RPC. If it must stay, add <code>claimed_at &lt;= now()</code> and a per-user claim cap to <code>with check</code>.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-high">High</span> L-06. The cleanup's wait interval is chosen by the caller — the 6-hour throttle can be nullified or monopolised</h3>
+<div class="kv">
+<b>Finding</b><div><code>release_poor_matches(p_min_interval)</code> and <code>claim_rematch_slot(p_min_interval)</code> use the argument as given. Just as the admin "apply colour match to all" passes <code>'0 seconds'</code>, anyone can, and repeated calls can keep consuming the global slot so legitimate cleanups never run.</div>
+<b>Fix</b><div>Inside <code>release_poor_matches</code>, for non-admins set <code>p_min_interval := greatest(p_min_interval, interval '6 hours')</code>. <code>claim_rematch_slot</code> is internal — revoke execute.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-med">Medium</span> L-07. Repeated calls to the piece-cutting and matching RPCs cause DB load and hold the global lock</h3>
+<div class="kv">
+<b>Finding</b><div><code>set_submission_pieces</code> can be called without limit on one's own artwork; each call takes the global advisory lock and deletes and re-inserts up to 144 rows (the rate-limit trigger does not count piece rows). <code>match_pool_artworks</code> can also be called repeatedly by any signed-in user (capped at 1,500 pieces per call). Both share the same lock key.</div>
+<b>Fix</b><div>Add a per-artwork cut cooldown to <code>set_submission_pieces</code> (e.g. 60 s, admins exempt) via a <code>pieces_cut_at</code> column. For <code>match_pool_artworks</code>, a per-user calls-per-minute cap (a small <code>mosaic_meta</code>-style counter) or, longer term, a Cloudflare front proxy.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-med">Medium</span> L-08. When the admin who created a campaign deletes their account, the campaign cascades away or the deletion fails</h3>
+<div class="kv">
+<b>Finding</b><div><code>mosaic_projects.created_by … references auth.users(id) on delete cascade</code> (<code>supabase_mosaic.sql:42</code>). <code>delete_own_account()</code> deletes the <code>auth.users</code> row, so every campaign that admin created becomes a cascade target; if the artworks' <code>(project_id is null) = (pixel_id is null)</code> check trips mid-way, the whole account deletion rolls back. Neither outcome is intended.</div>
+<b>Fix</b><div>Make <code>created_by</code> nullable with <code>on delete set null</code> (artworks and cells untouched). Campaigns belong to the site, not to an individual admin, so this is the right semantics.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-high">High</span> L-09. Re-running <code>supabase_profiles.sql</code> would let every signed-in user make themselves admin</h3>
+<div class="kv">
+<b>Finding</b><div>The <b>only</b> protection of <code>is_admin</code> is the "revoke table-wide grant + column-level grants" in <code>supabase_mosaic.sql:17-22</code> (no trigger, no policy). Yet <code>supabase_profiles.sql:62</code> still contains <code>grant insert, update on public.profiles to authenticated;</code>, so running that file once more would make <code>update({ is_admin: true })</code> succeed. Both files are written as "safe to re-run", so this is a realistic mistake.</div>
+<b>Fix</b><div>Replace line 62 of <code>supabase_profiles.sql</code> with column-level grants. As defence in depth, add a BEFORE UPDATE trigger on <code>profiles</code> that raises when <code>new.is_admin &lt;&gt; old.is_admin</code> in a session that has an <code>auth.uid()</code> (i.e. via the API).</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-med">Medium</span> L-10. Deleted artworks' images remain in Storage and the one-year cache; account deletion's file cleanup is incomplete</h3>
+<div class="kv">
+<b>Finding</b><div>Deleting an artwork removes only the DB row (<code>js/lightbox.js:639-650</code>; no Storage delete call). Anyone who knows the URL can keep viewing it through <code>/img/</code> (cached for a year). During account deletion, <code>deleteMyStorageFiles()</code> (<code>js/auth.js:504-512</code>) removes only the first page of the listing, ignores errors, and the account is deleted anyway — after which no principal is left to delete the remaining files. This can contradict the "uploaded images are deleted" wording on the deletion page.</div>
+<b>Fix</b><div>Delete the owner's files (original and thumbnail) from the client when an artwork is deleted; record admin deletions in a cleanup queue table processed by an admin tool. Page through the whole listing during account deletion and abort with a message if cleanup fails. Purge <code>/img/</code> cache entries for reported images from the Cloudflare dashboard.</div>
+</div></div>
+
+<h2 id="spam-en">4. Spam, automation and mass upload of obscene material</h2>
+
+<div class="finding">
+<h3><span class="badge b-crit">Critical</span> S-01. Uploads go public instantly with no review, and there is no hide, suspend or emergency-stop tool</h3>
+<div class="kv">
+<b>Finding</b><div>An upload appears immediately in the home page's recent artworks (5), the artwork browser, the campaign mosaic (auto-placed), the artist profile, the share image (OG) and the sitemap. <code>mosaic_submissions</code> has no <code>hidden</code>/<code>status</code> column, <code>profiles</code> has no suspend or upload-block flag, and accumulated reports (<code>reports</code>) never hide anything automatically. An admin can only "delete" or "remove from campaign" (which the next matching pass undoes). The "uploads locked" site option exists only as a comment example, not as code.</div>
+<b>Impact</b><div>With one Google account, 20 obscene or hateful images per 10 minutes (multiplied by accounts) show up within seconds in the home hero mosaic and in share previews. Deleting leaves the files and caches behind (L-10), and the same account can upload again immediately.</div>
+<b>Fix</b><div>
+<ul>
+<li><b>Review status column</b>: <code>status text default 'approved' check (status in ('pending','approved','hidden'))</code>. Public select policy, matching, sitemap and SSR use <code>approved</code> only. A site option <code>moderateNewUploads</code> (uploads from accounts younger than N days or with fewer than N approved works become <code>pending</code>) enforced by an insert trigger.</li>
+<li><b>Admin tools</b>: a review queue (approve/hide), hide an artwork (not delete — no conflict with §13), <b>hide and block uploads per artist</b> (<code>profiles.upload_blocked</code> checked in the insert policy). Hiding is reversible, so misjudgements cost nothing.</li>
+<li><b>Auto-hide on reports</b>: a trigger sets <code>hidden</code> once three distinct reporters have flagged a work, pending admin review.</li>
+<li><b>Emergency switch</b>: check the <code>uploadsOpen</code> site option in the upload insert policy (turning it off in the admin page blocks all uploads immediately).</li>
+<li><b>Automatic screening (optional)</b>: run an NSFW classifier (e.g. nsfwjs) in the browser before upload. It needs a new CDN, so per CLAUDE.md §2 introduce it only after approval and CSP updates, or self-host the model.</li>
+<li><b>Bot protection (optional)</b>: Cloudflare Turnstile on upload and comment forms (external script, needs approval), Cloudflare WAF Bot Fight Mode.</li>
+</ul></div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-high">High</span> S-02. The upload rate limit can be bypassed and scales with the number of accounts</h3>
+<div class="kv">
+<b>Finding</b><div>The only server limit is 20 uploads per 10 minutes per artist, and L-04 bypasses it. There is no daily cap, no per-IP limit and no CAPTCHA; sign-up is Google/Apple OAuth, so the limit grows linearly with accounts (if email sign-up is enabled in the dashboard, mass account creation becomes easier — verify O-02).</div>
+<b>Fix</b><div>After fixing L-04: a daily cap (e.g. 50), a separate cap for new accounts (under 24 hours, e.g. 5), and the Storage bucket size limit (H-01). Keep email sign-up disabled.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-med">Medium</span> S-03. No rate limits on comments, reports, likes or follows; comment notifications are not collapsed</h3>
+<div class="kv">
+<b>Finding</b><div>Artwork comments (1,000 characters) have no frequency limit and each creates a notification (only like and follow notifications are collapsed by a unique index). Reports are one per target but not rate-limited. The unused legacy tables <code>profile_comments</code>, <code>cell_comments</code> and <code>cell_likes</code> are still live with grants and no length limits, so REST can insert into them without bound.</div>
+<b>Fix</b><div>Triggers: comments 10 per 10 min, reports 5 per 10 min, like/follow toggles 60 per 10 min. Collapse notifications by (recipient, actor, artwork, type) within a 5-minute window. Revoke insert on the legacy tables (or drop them).</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-med">Medium</span> S-04. Blocking (user_blocks) is enforced server-side in one place only — comments</h3>
+<div class="kv">
+<b>Finding</b><div>The insert policy stops a blocked user from commenting on the blocker's artworks, and nothing else: likes, follows, adding to collections and profile comments are not blocked. List hiding is a client filter that REST bypasses, and mosaic cells show blocked users regardless (by design). The block list is read once at sign-in.</div>
+<b>Fix</b><div>Add the same block condition to the like and follow insert policies. Refresh <code>myBlockedIds</code> right after blocking.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-low">Low</span> S-05. Abuse room in visit counting and unbounded list queries</h3>
+<div class="kv">
+<b>Finding</b><div><code>record_visit()</code> can be called without limit by anyone, anonymous included (statistics inflation). The artists and network pages query everything without <code>fetchAllRows</code> and are silently truncated at 1,000 rows. The campaign page fetches the whole artwork row per filled cell (<code>select *</code>, about 0.9 KB per piece), reaching several MB per view once cells fill up (the composite-image cache task reported earlier).</div>
+<b>Fix</b><div>Per-IP limits on <code>record_visit</code> are hard, but enforce once-per-day server-side for members. Use <code>fetchAllRows</code> for list queries. Trim the campaign cell columns and add the composite image cache.</div>
+</div></div>
+
+<h2 id="privacy-en">5. User data exposure</h2>
+
+<div class="finding">
+<h3><span class="badge b-high">High</span> P-01. Every column of the profiles table is readable anonymously — disability data, real names, admin flag, city</h3>
+<div class="kv">
+<b>Finding</b><div>Reading <code>profiles?select=*</code> with the anon key on the live site returns <code>name</code> (the Google real name, still present for older sign-ups), <code>disabilities</code> (an array of disability tags), <code>city</code>, <code>links</code> and <code>is_admin</code>. The select policy is <code>using (true)</code> with no column restriction (<code>supabase_profiles.sql:44-46, 61</code>).</div>
+<b>Impact</b><div>Disability status is sensitive personal data. Even where members chose to display it, being able to download the whole membership in one REST call is a separate problem. <code>is_admin</code> lets anyone enumerate admin accounts — the starting point of targeted phishing (luring them to an H-01 link).</div>
+<b>Fix</b><div><code>revoke select on public.profiles from anon, authenticated;</code> then column-level <code>grant select (id, username, avatar_url, bio, country_id, links, created_at)</code>. Owners and admins get the full row through an RPC or a separate policy. Return <code>disabilities</code> only where the profile page uses it and only when a consent flag (<code>show_disabilities</code>) is on, via a view. <code>name</code> is no longer used — null the old values. Serve the admin list through an admin RPC.</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-low">Low</span> P-02. Likes and follows are fully public</h3>
+<div class="kv">
+<b>Finding</b><div>Who liked what (<code>mosaic_submission_likes</code>) and who follows whom (<code>user_saves</code>) are readable in full anonymously (by design, stated in comments). Notifications, reports, block lists and visit statistics are properly private.</div>
+<b>Fix</b><div>If intended, state "likes and follows are public" in the privacy policy (follows are mentioned; likes need checking). To make them private, restrict like reads to the owner plus the aggregate (<code>like_count</code>).</div>
+</div></div>
+
+<div class="finding">
+<h3><span class="badge b-low">Low</span> P-03. Privacy policy does not match the code</h3>
+<div class="kv">
+<b>Finding</b><div>There is an Apple sign-in button, but the policy mentions Google only. It says the name is received, but the code no longer stores it (over-disclosure; old rows still hold real names). The promise to delete files on account deletion may not hold because of L-10. The policy does not say profile columns are fully readable anonymously.</div>
+<b>Fix</b><div>Add Apple, fix the name wording, state what is public (profile fields, likes, follows), and align the deletion wording with the L-10 fix.</div>
+</div></div>
+
+<h2 id="ops-en">6. Operations and settings to verify (dashboard)</h2>
+<div class="wrap"><table>
+<tr><th style="width:56px">#</th><th>Check / setting</th><th>Why</th></tr>
+<tr><td>O-01</td><td><b>Storage → artwork bucket</b>: Public flag, File size limit, Allowed MIME types. If unset, use 10 MB / image/jpeg·png·webp·gif</td><td>The only server-side defence for H-01; not in SQL today</td></tr>
+<tr><td>O-02</td><td><b>Authentication → Providers</b>: email sign-up disabled, only Google and Apple enabled. <b>URL Configuration</b>: Site URL and Redirect URL allowlist</td><td>Email sign-up makes automated account creation easy (S-02)</td></tr>
+<tr><td>O-03</td><td><b>Admin Google accounts</b>: two-factor authentication; count the admins (<code>profiles.is_admin</code>)</td><td>Blast radius of L-01</td></tr>
+<tr><td>O-04</td><td><b>Database → Backups</b>: confirm daily backups, consider PITR. Set up a separate offline backup procedure for Storage</td><td>Recovery for L-01</td></tr>
+<tr><td>O-05</td><td><b>Cloudflare</b>: WAF Bot Fight Mode, rate-limiting rules for <code>/img/*</code> and pages (e.g. 300 per minute per IP), security notifications</td><td>Mitigates S-01 and S-05</td></tr>
+<tr><td>O-06</td><td><b>Supabase → Logs</b>: alerts on error codes such as 42883/42501/RATE1 (Log Drains or periodic review). The unapplied <code>rematch.sql</code> hid for a long time this way — check for other ignored errors</td><td>Operational visibility</td></tr>
+<tr><td>O-07</td><td>Repository housekeeping: delete leftover root files (<code>profile.js</code>, <code>image.png</code>, <code>suggestion.png</code>); move <code>functions/resweep-bad-matches.js</code> (a console script sitting in the functions folder) to <code>tools/</code></td><td>H-07, avoids confusion</td></tr>
+</table></div>
+
+<h2 id="plan-en">7. Action plan (recommended order)</h2>
+<div class="wrap"><table>
+<tr><th style="width:110px">Phase</th><th>Items</th><th style="width:150px">Main deliverables</th></tr>
+<tr><td><b>Phase 1 · now</b><br><span class="small">1–3 days</span></td><td>O-01 bucket limits · H-01 proxy headers/allowlist · H-03 avatar via DOM · L-04 revoke insert grant · L-02/L-03/L-06 revoke RPC execute · L-05 pixels policy · L-09 profiles grant · P-01 column-level select · verify O-02/O-03</td><td>1 SQL file (permissions), <code>functions/img</code>, <code>js/artists.js</code>, dashboard</td></tr>
+<tr><td><b>Phase 2 · short term</b><br><span class="small">1–2 weeks</span></td><td>L-01 deletion audit and throttle trigger · S-01 review status, hide, per-artist upload block, auto-hide on reports, emergency switch (with admin UI) · H-02 CSP + pinned/self-hosted CDN libraries · S-02 daily cap · L-07 cut cooldown</td><td>2 SQL files, admin page, <code>_headers</code>, 30 HTML files (script tags)</td></tr>
+<tr><td><b>Phase 3 · medium term</b><br><span class="small">1 month</span></td><td>L-01 soft delete and restore tool · O-04 backup procedure and PITR · L-10 file cleanup · L-08 created_by · S-03 comment/report limits, notification collapsing, legacy tables · S-04 block policies · H-05 URL validation · H-06 measurement · H-07 routes · P-02/P-03 policy text · S-05 query cleanup · (optional) NSFW screening, Turnstile</td><td>2–3 SQL files, several JS files, documents</td></tr>
+</table></div>
+<p class="small">Each phase follows the CLAUDE.md procedure (development instruction → DB usage impact report → implementation → two adversarial reviews → commit; push only when instructed); SQL stays in idempotent files with the run order reported. The Phase 1 permissions SQL must be validated together with the client code so existing features (upload, matching, admin tools) keep working — L-05 in particular requires matching changes to <code>sweepStaleClaims</code> and the post-delete cell reset code.</p>
+
+<h2 id="good-en">8. What already works well (keep)</h2>
+<ul>
+<li><code>is_admin</code> is locked by column-level grants, and every admin RPC re-checks <code>is_admin</code> inside the function. Admins can only be appointed via SQL.</li>
+<li>Artwork edits are owner-only; deletion is owner or admin (per row); even an admin cannot delete other people's auth accounts or Storage originals.</li>
+<li>Campaign deletion and reshape return artworks to the pool instead of deleting them (FK <code>on delete set null</code> plus a check constraint as a double safeguard).</li>
+<li>User strings go through <code>textContent</code> everywhere except one place (H-03); links pass <code>safeHref</code> (http(s) only) and carry <code>rel="ugc nofollow noopener noreferrer"</code>. JSON-LD escapes <code>&lt;</code>.</li>
+<li>Notifications, reports, block lists and visit statistics are private; there are no secrets (service keys) in the repository; no open redirects and no inline event handlers.</li>
+<li>HSTS, <code>X-Frame-Options</code>, <code>nosniff</code> and <code>Referrer-Policy</code> are present on page responses, and upload rate limits plus text length limits exist as DB triggers and checks (only their bypass paths need closing).</li>
+<li>A privacy policy and an account-deletion page exist, and self-service account deletion is implemented as a server RPC.</li>
+</ul>
+
+<p class="small" style="margin-top:36px">Appendix — where the evidence lives: policies and grants in <code>supabase/supabase_mosaic.sql</code>, <code>supabase_profiles.sql</code>, <code>supabase_mosaic_versions.sql</code>, <code>supabase_mosaic_profile_pool.sql</code>, <code>supabase_mosaic_rematch.sql</code>, <code>supabase_mosaic_pieces.sql</code>, <code>supabase_reports.sql</code>, <code>supabase_user_blocks.sql</code> · client: <code>js/common.js</code> (escapeHtml, safeHref, cdnUrl, uploadImage, setupPicker), <code>js/artists.js</code>, <code>js/auth.js</code> (deleteMyStorageFiles), <code>js/lightbox.js</code> (deletion), <code>js/matching.js</code> · server: <code>functions/img/[[path]].js</code>, <code>functions/_lib/render.js</code>, <code>_headers</code>. Live checks performed 2026-09-11.</p>
+
+</main>
+
+<script>
+(function () {
+  // 언어: 저장된 선택 → ?lang= → 기본 한국어. 테마: 저장된 선택 → ?theme= → OS 설정(CSS).
+  var root = document.documentElement;
+  var q = new URLSearchParams(location.search);
+  function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  var lang = q.get('lang') || read('weavoDocLang') || 'ko';
+  if (lang !== 'en') lang = 'ko';
+  var theme = q.get('theme') || read('weavoDocTheme') || '';
+  if (theme !== 'dark' && theme !== 'light') theme = '';
+
+  var langBtn = document.getElementById('langBtn');
+  var themeBtn = document.getElementById('themeBtn');
+  function applyLang(l) {
+    lang = l;
+    root.setAttribute('data-lang', l);
+    root.setAttribute('lang', l);
+    document.title = l === 'en' ? 'Weavo Security & Stability Review (2026-09-11)' : 'Weavo 보안·안정성 점검 보고서 (2026-09-11)';
+    langBtn.textContent = l === 'en' ? '한국어' : 'EN';
+    applyThemeLabel();
+  }
+  function effectiveTheme() {
+    if (theme) return theme;
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  function applyThemeLabel() {
+    var dark = effectiveTheme() === 'dark';
+    themeBtn.textContent = lang === 'en' ? (dark ? 'Light' : 'Dark') : (dark ? '라이트' : '다크');
+  }
+  function applyTheme(t) {
+    theme = t;
+    if (t) root.setAttribute('data-theme', t); else root.removeAttribute('data-theme');
+    applyThemeLabel();
+  }
+  langBtn.addEventListener('click', function () { var l = lang === 'en' ? 'ko' : 'en'; save('weavoDocLang', l); applyLang(l); });
+  themeBtn.addEventListener('click', function () { var t = effectiveTheme() === 'dark' ? 'light' : 'dark'; save('weavoDocTheme', t); applyTheme(t); });
+  if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyThemeLabel);
+
+  applyTheme(theme);
+  applyLang(lang);
+})();
+</script>
 </body>
 </html>
