@@ -1,4 +1,12 @@
 /* ============ PROJECT DETAIL ============ */
+/* Wide screens: the page sits in a centred frame (content stays left-
+   aligned inside it) instead of stretching across the monitor; the
+   32px gutters are kept below the frame width. project.js fitWeavoStage()
+   additionally narrows the dark stage to hug a portrait mosaic (2026-09-11). */
+.project-main > .backnav,
+.project-main > .project-head{box-sizing:border-box;max-width:1240px;margin-left:auto;margin-right:auto;}
+.project-main > .weavo-grid-wrap,
+.project-main > .project-list-view{box-sizing:border-box;width:calc(100% - 64px);max-width:1176px;margin-left:auto;margin-right:auto;}
 .project-head{padding:28px 32px 20px;animation:fadeIn .3s ease-out;}
 .project-head h1{margin:0 0 8px;font-family:'Pretendard',sans-serif;font-weight:700;font-size:30px;color:var(--primary);letter-spacing:-.01em;}
 .project-head p{color:var(--muted);font-family:'Pretendard',sans-serif;font-size:15px;line-height:1.6;margin:0 0 12px;max-width:560px;}
@@ -109,6 +117,10 @@
   .project-head{padding-left:16px;padding-right:16px;}
   .weavo-grid-wrap{margin-left:16px;margin-right:16px;margin-bottom:56px;}
   .project-list-view{margin-left:16px;margin-right:16px;margin-bottom:56px;}
+  /* The frame rule above is for wide screens only — back to the plain 16px
+     gutters here so the phone full-screen mode's margin:0 gives full width. */
+  .project-main > .weavo-grid-wrap,
+  .project-main > .project-list-view{width:auto;max-width:none;margin-left:16px;margin-right:16px;}
   .color-swatches{gap:9px;}
   .color-swatch .swatch-dot{width:28px;height:28px;}
 

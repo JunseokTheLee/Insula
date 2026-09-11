@@ -358,8 +358,15 @@ let weavoSuppressClick = false;
 // visible at 100%), so the grid's cells stay square regardless of the
 // project's width/height ratio.
 function fitWeavoStage(project) {
-  const availW = weavoWrap.clientWidth, availH = weavoWrap.clientHeight;
   const ratio = project.width / project.height;
+  // A portrait campaign is height-bound, so on a wide screen the dark
+  // stage would be mostly empty band either side of it. Narrow the stage
+  // to the mosaic plus room for the zoom toolbar (project.css keeps the
+  // frame and gutters as the upper bound); landscape ones use the frame.
+  // Cleared first so clientHeight reflects the CSS clamp alone.
+  weavoWrap.style.maxWidth = '';
+  if (ratio < 1) weavoWrap.style.maxWidth = `${Math.max(520, Math.round(weavoWrap.clientHeight * ratio + 280))}px`;
+  const availW = weavoWrap.clientWidth, availH = weavoWrap.clientHeight;
   let w = availW, h = w / ratio;
   if (h > availH) { h = availH; w = h * ratio; }
   msBaseW = w; msBaseH = h;
