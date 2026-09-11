@@ -113,7 +113,7 @@ $1(common.js)로 받는다.** Supabase 는 응답을 기본 1,000행에서 조�
     1. **화면 끝까지 배경이 닿는 막대·카드** (`.topnav`·`.backnav`·`.weavo-grid-wrap`·`.project-list-view`·`.artwork-stage`·`.profile-section`): 좌우 `padding` 또는 `margin` 을 `max(var(--gutter), calc((100% - var(--frame)) / 2))` 로 준다.
     2. **보통 컨테이너** (`.artworks-page`·`.artists-page`·`.exhibitions-page`·`.network-page`·`.legal-page`·`.project-head`·`.profile-head`·`.projects-grid`·`.artworks-grid`·`.carousel-header`·`.carousel-track-wrap`·`.recent-activity`·`.artwork-breadcrumb`·`#collectionItemsGrid`): `max-width:var(--frame-max); margin:0 auto; padding-inline:var(--gutter)`.
     3. **이미 여백이 있는 부모 안의 요소** (`.hero-inner`·`.stats-bar-inner`): `max-width:var(--frame)` 만.
-  - 읽기 좋은 좁은 단(법적 문서 760px, 관리자 960px)은 프레임을 좁히지 말고 **자식에** `max-width` 를 건다 (`.legal-page > *`, `.admin-page > *`). 그래야 제목이 로고 선에서 시작한다.
+  - **글만 있는 페이지는 유일한 예외다** (소개·개인정보처리방침·면책조항·계정 삭제·404·관리자). 760px(관리자 960px) 읽기 폭을 1400px 프레임 왼쪽에 붙이면 넓은 모니터에서 오른쪽이 휑해 보이므로 **가운데 정렬**한다: `max-width:calc(760px + var(--gutter) * 2); margin:0 auto`. 좌우 여백은 그대로 `--gutter` 를 쓰고, 모바일에서는 화면이 좁아 자동으로 로고 선과 맞는다. (2026.9.11 사용자 피드백)
   - 모바일은 `--gutter` 가 16px 로 바뀌어 자동 처리되므로 미디어 쿼리에 16px 을 새로 적지 않는다. 캠페인·네트워크의 휴대폰 전체 화면 모드(`body[data-mobile-fs]`)만 여백 0 인 의도된 예외다.
   - **확인 방법**: 화면 폭 2560 / 1280 / 768 / 375 에서 `.logo` 의 left 와 그 페이지 본문 첫 요소의 left 가 같아야 한다(카드류는 카드 바깥 테두리 기준). 가로 스크롤이 생기지 않아야 한다.
 - UI 디자인 작업에는 `.claude/skills/superdesign` 스킬이 있다. 이 스킬은 외부(GitHub raw) 지침을 가져오므로, 디자인 작업을 명시적으로 요청받았을 때만 쓴다.

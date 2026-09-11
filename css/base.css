@@ -593,11 +593,12 @@ body.lb-img-fs-lock{overflow:hidden;}
 #lightbox-comment-post:disabled{opacity:.5;cursor:default;}
 
 /* ---------- legal (about / privacy / disclaimer) ---------- */
-/* Text pages sit in the same frame as everything else; the readable
-   measure is capped on the children so the heading still starts on the
-   logo line instead of being centred somewhere else entirely. */
-.legal-page{max-width:var(--frame-max);margin:0 auto;padding:36px var(--gutter) 64px;animation:fadeIn .3s ease-out;}
-.legal-page > *{max-width:760px;}
+/* Text-only pages are the one documented exception to the shared frame: a
+   760px reading measure left-aligned inside a 1400px frame left most of a
+   wide monitor empty beside it, so the column is CENTRED instead (the look
+   these pages always had). Still built from --gutter so the side padding
+   matches every other page. (2026-09-11) */
+.legal-page{max-width:calc(760px + var(--gutter) * 2);margin:0 auto;padding:36px var(--gutter) 64px;animation:fadeIn .3s ease-out;}
 .legal-page h1{font-family:'Pretendard',sans-serif;font-size:30px;font-weight:700;margin:0 0 4px;color:var(--primary);letter-spacing:-.01em;}
 .legal-updated{font-family:'Pretendard',sans-serif;font-size:12px;color:var(--muted);margin:0 0 24px;}
 .legal-body{font-size:14px;line-height:1.7;color:var(--text);max-width:680px;}

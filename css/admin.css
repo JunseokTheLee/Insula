@@ -1,5 +1,5 @@
 /* Admin page (/{lang}/admin) — layered on base.css's .legal-page shell. */
-.admin-page > *{max-width:960px;} /* wider measure than .legal-page, same frame */
+.admin-page{max-width:calc(960px + var(--gutter) * 2);} /* wider measure than .legal-page, same centring */
 .admin-notice{padding:14px 16px;border-radius:var(--r-sm);background:var(--primary-soft);color:var(--primary);font-weight:600;}
 .admin-section{margin:32px 0 0;}
 .admin-section h2{margin:0;}
