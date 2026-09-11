@@ -4,6 +4,9 @@ Weavo 개발 기록 (DevDocs/DevLog.txt)
 - 이슈마다 한 줄, 80자 이내, 한 가지 내용만. 같은 날짜 안에서는 최근 작업이 위.
 - 접두어: feat(새 기능) / fix(수정) / chore(정리·문서·설정)
 
+========== 2026-09-11 ==========
+chore: 사이트 보안·안정성 점검 보고서 작성 — DevDocs/SecurityReview_20260911.html
+
 ========== 2026-09-10 ==========
 chore: rematch.sql·pieces_retry.sql 운영 DB 적용 확인 — CLAUDE.md 6절 갱신
 fix: "색 기준 전체 적용" 안내가 빠진 SQL 파일(rematch.sql / retry.sql)을 구분해 알리도록
