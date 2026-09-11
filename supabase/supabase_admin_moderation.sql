@@ -63,6 +63,11 @@ create policy "Admins can read the audit log"
   on public.admin_audit_log for select
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
 
+-- Supabase grants ALL on newly created public tables to anon and
+-- authenticated by default; revoke first so the grant below is the whole
+-- story. RLS already hides every row from non-admins, but an audit trail
+-- that cannot be rewritten is the point of having one.
+revoke all on public.admin_audit_log from anon, authenticated;
 grant select on public.admin_audit_log to authenticated;
 -- No insert/update/delete grant on purpose — writes go through the RPC.
 

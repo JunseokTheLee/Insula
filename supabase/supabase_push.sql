@@ -83,6 +83,12 @@ create policy "Users delete their own push subscriptions"
 drop policy if exists "Users add their own push subscriptions" on public.push_subscriptions;
 drop policy if exists "Users update their own push subscriptions" on public.push_subscriptions;
 
+-- Supabase grants ALL on newly created public tables to anon and
+-- authenticated by default, so an explicit revoke is needed for the grants
+-- to match the intent above — RLS already blocks every row either way, but
+-- a push endpoint is a capability (whoever holds it can notify that device),
+-- so it gets the same belt-and-braces treatment as visit_days.
+revoke all on public.push_subscriptions from anon, authenticated;
 grant select, delete on public.push_subscriptions to authenticated;
 -- Never anon: an unauthenticated caller has no device of its own to register.
 
