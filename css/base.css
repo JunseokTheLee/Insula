@@ -23,7 +23,24 @@
   --shadow-sm:0 1px 3px rgba(15,36,23,.08);
   --shadow-md:0 8px 24px rgba(15,36,23,.10);
   --shadow-lg:0 16px 48px rgba(15,36,23,.14);
+
+  /* ONE PAGE FRAME, EVERY PAGE (2026-09-11). Page content is --frame wide
+     with --gutter either side, so every page's left edge falls on the same
+     vertical line as the Weavo logo in the top bar. Two ways to sit in the
+     frame — both produce the identical edge, so pick by element type:
+       • full-bleed bar or card (its own background reaches the screen edge
+         on small screens): padding/margin of
+         max(var(--gutter), calc((100% - var(--frame)) / 2))
+       • ordinary container: max-width:var(--frame-max) + margin:0 auto
+         + padding-inline:var(--gutter)
+       • element already inside a gutter-padded parent: max-width:var(--frame)
+     Never give a page container a max-width of its own — that is exactly
+     what made every page start at a different x before this. */
+  --frame:1400px;
+  --gutter:32px;
+  --frame-max:calc(var(--frame) + var(--gutter) * 2);
 }
+@media (max-width:640px){ :root{ --gutter:16px; } }
 *{box-sizing:border-box;}
 html,body{height:100%;}
 body{
@@ -57,7 +74,7 @@ body.no-scroll-lock{overflow:hidden;}
    keeps the original gutters on normal screens. (2026-09-11) */
 .topnav{
   display:flex;align-items:center;flex-shrink:0;
-  margin:0;padding:16px max(32px, calc((100% - 1400px) / 2));gap:28px;flex-wrap:wrap;
+  margin:0;padding:16px max(var(--gutter), calc((100% - var(--frame)) / 2));gap:28px;flex-wrap:wrap;
   background:var(--gray-0);
 }
 .logo{
@@ -129,7 +146,7 @@ body.no-scroll-lock{overflow:hidden;}
 
 .backnav{
   display:flex;align-items:center;justify-content:space-between;flex-shrink:0;flex-wrap:wrap;gap:10px;
-  padding:16px 32px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text);
+  padding:16px max(var(--gutter), calc((100% - var(--frame)) / 2));border-bottom:1px solid var(--border);font-size:11px;color:var(--text);
   background:var(--bg);
 }
 .backnav .back{
@@ -576,7 +593,11 @@ body.lb-img-fs-lock{overflow:hidden;}
 #lightbox-comment-post:disabled{opacity:.5;cursor:default;}
 
 /* ---------- legal (about / privacy / disclaimer) ---------- */
-.legal-page{max-width:760px;margin:0 auto;padding:36px 32px 64px;animation:fadeIn .3s ease-out;}
+/* Text pages sit in the same frame as everything else; the readable
+   measure is capped on the children so the heading still starts on the
+   logo line instead of being centred somewhere else entirely. */
+.legal-page{max-width:var(--frame-max);margin:0 auto;padding:36px var(--gutter) 64px;animation:fadeIn .3s ease-out;}
+.legal-page > *{max-width:760px;}
 .legal-page h1{font-family:'Pretendard',sans-serif;font-size:30px;font-weight:700;margin:0 0 4px;color:var(--primary);letter-spacing:-.01em;}
 .legal-updated{font-family:'Pretendard',sans-serif;font-size:12px;color:var(--muted);margin:0 0 24px;}
 .legal-body{font-size:14px;line-height:1.7;color:var(--text);max-width:680px;}
@@ -587,7 +608,7 @@ body.lb-img-fs-lock{overflow:hidden;}
 .legal-body li{margin-bottom:5px;}
 .legal-body li strong{color:var(--text);}
 .legal-body a{color:var(--primary);}
-@media (max-width:640px){ .legal-page{padding:28px 16px 48px;} }
+@media (max-width:640px){ .legal-page{padding:28px var(--gutter) 48px;} }
 
 #legal-footer{
   flex-shrink:0;

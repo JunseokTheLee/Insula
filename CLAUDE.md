@@ -107,6 +107,15 @@
 $1 (`common.js` `makeArtworkDerivatives`): 긴 변 480px JPEG 는 `thumb/<작가id>/` 에 올려 `thumb_url` 에, 원본이 이미 480px 이하면 원본 URL 을 그대로 `thumb_url` 에 넣는다(별도 파일 없음). 16×16 JPEG data URI 는 `micro_thumb` 컬럼에 넣어 캠페인 캔버스가 배율과 무관하게 작은 그림으로 그린다. 둘 중 하나라도 빠진 작품은 관리자 페이지 "작품 썸네일" 에서 세고 재생성한다. 화면은 항상 `thumb_url || image_url` 순으로 쓴다.
 $1(common.js)로 받는다.** Supabase 는 응답을 기본 1,000행에서 조용히 잘라낸다 — 캠페인 칸(`mosaic_pixels`, 최대 10,000)이 대표적. 2026.9.9 에 58×86 캠페인이 상단 1,000칸만 그려지고 개수·매칭이 어긋난 원인이었다. 페이지 수를 알면 `expected`(예: `width*height`)를, 모르면 `select(cols, { count: 'exact' })` 를 넘겨 병렬로 받는다.
 - **홈 히어로의 기부 약정 표시는 캠페인 행의 약정 컬럼에서 읽는다** (2026.9.10, `supabase_mosaic_sponsor.sql`). "기부 약정 기업" 자리에 로고+기업명, 그 아래 홍보 문구, 금액(기부 카드·내 기여 금액·본문 문장)은 `pledgeAmountOf(project)`(common.js, 기본 500,000). 값이 없으면 HTML 의 `data-default` 문구로 돌아간다(`landing.js` `renderHeroPartner()`). HTML 에 금액을 박지 않는다. 로고는 `shrinkImageFile(file, 512)` 로 줄여 기준 이미지와 같은 경로에 올린다.
+- **모든 페이지의 좌우 폭은 하나의 공용 프레임으로 맞춘다 — 상단 바의 Weavo 로고와 세로줄이 맞아야 한다** (2026.9.11 확정, 사용자 지시). 페이지마다 `max-width` 를 따로 정하던 탓에 페이지를 옮길 때마다 본문 시작 위치가 좌우로 튀었다. 이제 `css/base.css` 의 `:root` 에 있는 변수 **세 개만** 쓴다.
+  - `--frame`(내용 폭, 1400px) · `--gutter`(좌우 여백, 32px / 640px 이하 16px) · `--frame-max`(= `--frame` + `--gutter` × 2).
+  - **새 페이지·섹션에 자체 `max-width` 를 넣지 않는다.** 아래 세 방식 중 하나를 쓰며, 셋 다 왼쪽 끝이 로고와 같은 x 에 온다.
+    1. **화면 끝까지 배경이 닿는 막대·카드** (`.topnav`·`.backnav`·`.weavo-grid-wrap`·`.project-list-view`·`.artwork-stage`·`.profile-section`): 좌우 `padding` 또는 `margin` 을 `max(var(--gutter), calc((100% - var(--frame)) / 2))` 로 준다.
+    2. **보통 컨테이너** (`.artworks-page`·`.artists-page`·`.exhibitions-page`·`.network-page`·`.legal-page`·`.project-head`·`.profile-head`·`.projects-grid`·`.artworks-grid`·`.carousel-header`·`.carousel-track-wrap`·`.recent-activity`·`.artwork-breadcrumb`·`#collectionItemsGrid`): `max-width:var(--frame-max); margin:0 auto; padding-inline:var(--gutter)`.
+    3. **이미 여백이 있는 부모 안의 요소** (`.hero-inner`·`.stats-bar-inner`): `max-width:var(--frame)` 만.
+  - 읽기 좋은 좁은 단(법적 문서 760px, 관리자 960px)은 프레임을 좁히지 말고 **자식에** `max-width` 를 건다 (`.legal-page > *`, `.admin-page > *`). 그래야 제목이 로고 선에서 시작한다.
+  - 모바일은 `--gutter` 가 16px 로 바뀌어 자동 처리되므로 미디어 쿼리에 16px 을 새로 적지 않는다. 캠페인·네트워크의 휴대폰 전체 화면 모드(`body[data-mobile-fs]`)만 여백 0 인 의도된 예외다.
+  - **확인 방법**: 화면 폭 2560 / 1280 / 768 / 375 에서 `.logo` 의 left 와 그 페이지 본문 첫 요소의 left 가 같아야 한다(카드류는 카드 바깥 테두리 기준). 가로 스크롤이 생기지 않아야 한다.
 - UI 디자인 작업에는 `.claude/skills/superdesign` 스킬이 있다. 이 스킬은 외부(GitHub raw) 지침을 가져오므로, 디자인 작업을 명시적으로 요청받았을 때만 쓴다.
 
 ---
@@ -156,6 +165,7 @@ $1(common.js)로 받는다.** Supabase 는 응답을 기본 1,000행에서 조�
 - [ ] DB 변경이 있다면 SQL 파일을 남겼고, 실행 순서를 보고에 적었는가?
 - [ ] 새 파일이 루트에 생겼다면 웹에 공개돼도 되는 파일인가?
 - [ ] JS/CSS 를 고쳤다면 `?v=` 자산 버전이 올라갔는가? (12절 — 훅이 자동으로 하지만 확인)
+- [ ] 새 페이지·섹션에 자체 `max-width` 를 넣지 않고 공용 프레임(`--frame`/`--gutter`/`--frame-max`)을 썼는가? 로고와 세로줄이 맞는가? (7절)
 - [ ] 작품을 여러 건 한꺼번에 삭제하는 코드·SQL 이 들어가지 않았는가? (13절)
 - [ ] `DevDocs/DevLog.txt` 오늘 날짜 아래에 이슈별 한 줄(80자 이내)을 추가했는가? (9절)
 - [ ] DB 전송량·요청 수·월 한도 영향을 코드 수정 전에 계산해 보고에 적었는가? (15절)

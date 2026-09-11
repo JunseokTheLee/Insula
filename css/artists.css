@@ -1,5 +1,5 @@
 /* ============ ALL ARTISTS ============ */
-.artists-page{padding:28px 32px 48px;max-width:1200px;margin:0 auto;animation:fadeIn .3s ease-out;}
+.artists-page{padding:28px var(--gutter) 48px;max-width:var(--frame-max);margin:0 auto;animation:fadeIn .3s ease-out;}
 .artists-page-title{font-family:'Pretendard',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.01em;color:var(--gray-900);margin:0 0 8px;}
 .artists-page-desc{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 20px;max-width:640px;}
 .artists-search-row{margin-bottom:24px;}

@@ -1,5 +1,5 @@
 /* ============ PROFILE ============ */
-.profile-head{padding:28px 32px 8px;max-width:900px;margin:0 auto;animation:fadeIn .3s ease-out;background:var(--bg);}
+.profile-head{padding:28px var(--gutter) 8px;max-width:var(--frame-max);margin:0 auto;animation:fadeIn .3s ease-out;background:var(--bg);}
 .profile-head-top{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
 .profile-head-actions{display:flex;gap:10px;flex-shrink:0;margin-left:auto;}
 #profileEditBtn{
@@ -94,7 +94,7 @@
   background:var(--primary-soft);color:var(--primary);font-family:'Pretendard',sans-serif;font-size:11.5px;font-weight:600;
 }
 .profile-section{
-  max-width:900px;margin:16px auto 0;padding:22px 32px 26px;
+  margin:16px max(var(--gutter), calc((100% - var(--frame)) / 2)) 0;padding:22px var(--gutter) 26px;
   background:var(--surface);border-top:none;border-radius:var(--r-lg);
 }
 .profile-section:last-child{margin-bottom:48px;}
@@ -163,10 +163,10 @@
 .pg-link.pg-mutual{stroke:var(--primary);stroke-width:1.6px;}
 
 /* ---------- standalone collection page item grid ---------- */
-#collectionItemsGrid{padding:0 32px;}
+#collectionItemsGrid{max-width:var(--frame-max);margin:0 auto;padding:0 var(--gutter);}
 
 @media (max-width:640px){
-  .profile-head,.profile-section{padding-left:16px;padding-right:16px;}
+  /* Side gutters come from the shared frame (--gutter is 16px here). */
   .profile-head-actions{margin-left:0;}
   #collectionItemsGrid{padding-left:16px;padding-right:16px;}
 }

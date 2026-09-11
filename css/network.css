@@ -1,5 +1,5 @@
 /* ============ GLOBAL NETWORK ============ */
-.network-page{padding:28px 32px 40px;max-width:1600px;margin:0 auto;animation:fadeIn .3s ease-out;}
+.network-page{padding:28px var(--gutter) 40px;max-width:var(--frame-max);margin:0 auto;animation:fadeIn .3s ease-out;}
 .network-page-title{font-family:'Pretendard',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.01em;color:var(--gray-900);margin:0 0 10px;}
 .network-graph-panel{height:min(880px,85vh);margin-top:4px;background:var(--primary-dark);border:none;border-radius:var(--r-lg);box-shadow:var(--shadow-md);}
 .network-graph-panel .profile-graph-empty{color:rgba(247,247,245,.55);}

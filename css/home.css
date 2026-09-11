@@ -9,7 +9,7 @@
    Deliberately not a .snap-panel — it's a short, glanceable strip below the
    hero (since 2026-09-10 the hero with the campaign preview comes first),
    not a full-viewport section of its own. */
-.recent-activity{flex-shrink:0;width:100%;max-width:1400px;margin:0 auto;padding:28px 32px 40px;}
+.recent-activity{flex-shrink:0;width:100%;max-width:var(--frame-max);margin:0 auto;padding:28px var(--gutter) 40px;}
 .recent-activity-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;}
 .recent-list-col{min-width:0;}
 .recent-list-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;min-width:0;}
@@ -83,7 +83,7 @@
     radial-gradient(40% 38% at 72% 92%,rgba(255,186,150,.18),transparent 70%),
     radial-gradient(34% 34% at 6% 88%,rgba(255,170,205,.14),transparent 70%),
     #fff;}
-.hero-inner{max-width:1400px;margin:0 auto;display:grid;
+.hero-inner{max-width:var(--frame);margin:0 auto;display:grid;
   grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.9fr);
   grid-template-rows:auto auto auto 1fr auto;
   grid-template-areas:"copy copy art" "cta cta art" "phead phead art" "pbody pbody art" "prog don mine";
@@ -234,7 +234,7 @@
 }
 .stats-bar-inner{
   display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
-  max-width:1400px;margin:0 auto;
+  max-width:var(--frame);margin:0 auto;
 }
 .stat-tile{
   display:flex;align-items:center;gap:12px;padding:16px 20px;text-align:left;
@@ -300,11 +300,8 @@
 /* ---------- carousel ---------- */
 .carousel-section{flex-shrink:0;padding:20px 0 0;}
 .carousel-section.empty{display:none;}
-.carousel-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1600px;margin:0 auto 22px;padding:0 32px;}
+.carousel-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;width:100%;max-width:var(--frame-max);margin:0 auto 22px;padding:0 var(--gutter);}
 .carousel-header .section-label{margin:0;}
-/* Latest Artworks section: match the hero/stats-bar content width (1400px)
-   above it so left/right edges line up instead of the wider 1600px carousel default. */
-#recentArtworksPanel .carousel-header{max-width:1464px;}
 .carousel-nav{display:flex;gap:10px;}
 .car-arrow{
   width:46px;height:46px;border-radius:50%;border:1px solid var(--border-strong);background:var(--bg);color:var(--text);
@@ -315,7 +312,7 @@
 .car-arrow:active{opacity:.85;}
 .car-arrow:disabled{opacity:.3;cursor:default;pointer-events:none;}
 
-.carousel-track-wrap{height:clamp(480px,80vh,880px);max-width:1600px;margin:0 auto;overflow:hidden;padding:2px 32px;}
+.carousel-track-wrap{height:clamp(480px,80vh,880px);max-width:var(--frame-max);margin:0 auto;overflow:hidden;padding:2px var(--gutter);}
 .carousel-track{
   height:100%;
   display:flex;gap:1px;overflow-x:auto;scroll-snap-type:x mandatory;
@@ -369,11 +366,7 @@
   .carousel-track-wrap{padding-left:16px;padding-right:16px;}
 }
 
-/* "All campaigns": the same 1240px centred frame as the campaign page, so on
-   a wide monitor the three columns stay ~380px wide instead of growing with
-   the viewport (a lone portrait card was 600px+ on 1920px, 2026-09-11). */
-.projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0 32px 32px;max-width:1240px;margin:0 auto;box-sizing:border-box;}
-#projectsPanel .carousel-header{max-width:1240px;}
+.projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0 var(--gutter) 32px;max-width:var(--frame-max);margin:0 auto;}
 .project-card{
   position:relative;border:none;border-radius:var(--r-lg);overflow:hidden;cursor:pointer;min-width:0;
   background:var(--bg);box-shadow:var(--shadow-sm);
@@ -406,7 +399,7 @@
 @media (max-width:640px){ .projects-grid{padding-left:16px;padding-right:16px;padding-bottom:56px;} }
 
 /* ---------- landing: latest artworks ---------- */
-.artworks-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;padding:0 32px 32px;width:100%;max-width:1464px;margin:0 auto;}
+.artworks-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;padding:0 var(--gutter) 32px;width:100%;max-width:var(--frame-max);margin:0 auto;}
 .artwork-card{
   position:relative;border:none;border-radius:var(--r-lg);overflow:hidden;cursor:pointer;min-width:0;
   background:var(--bg);box-shadow:var(--shadow-sm);
