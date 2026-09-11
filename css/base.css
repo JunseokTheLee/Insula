@@ -180,8 +180,15 @@ body.no-scroll-lock{overflow:hidden;}
 .pv-card:hover::after{opacity:1;background:var(--primary);color:var(--bg);border-color:var(--primary);}
 
 /* ---------- shared modal shell ---------- */
+/* No backdrop-filter here (2026-09-11): it blurs the WHOLE viewport behind
+   the overlay, and the GPU re-runs that blur on every repaint inside the
+   dialog — a blinking caret alone is twice a second, plus once per typed
+   character. Typing in #edit-profile-dialog (a near-full-viewport panel) was
+   noticeably heavy on big desktop monitors because the cost scales with the
+   blurred area. The dim scrim alone separates the dialog just as well, so it
+   is a little darker to compensate. */
 .modal-overlay{
-  position:fixed;inset:0;background:rgba(15,36,23,.35);backdrop-filter:blur(3px);
+  position:fixed;inset:0;background:rgba(15,36,23,.45);
   display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;
   opacity:0;visibility:hidden;pointer-events:none;
   transition:opacity .15s linear,visibility .15s linear;
@@ -355,8 +362,11 @@ body.no-scroll-lock{overflow:hidden;}
 .zoom-level{color:var(--bg);font-family:'Pretendard',sans-serif;font-size:12px;min-width:38px;text-align:center;font-variant-numeric:tabular-nums;}
 
 /* ---------- lightbox (project.html + profile.html) ---------- */
+/* Same reason as .modal-overlay above — and at 94% opacity the blur was
+   invisible anyway, while still costing a viewport-sized GPU filter on every
+   repaint (this overlay holds the comment box, so it is a typing surface too). */
 .lightbox-overlay{
-  background:rgba(15,20,17,.94);backdrop-filter:blur(2px);cursor:zoom-out;
+  background:rgba(15,20,17,.96);cursor:zoom-out;
   flex-direction:row;align-items:stretch;gap:1px;overflow:hidden;
 }
 .lightbox-stage{
