@@ -60,7 +60,7 @@
         <div class="admin-panel" data-panel="dashboard" role="tabpanel" hidden>
         <section class="admin-section" id="adminVisitsSection">
           <h2>Visitors</h2>
-          <p class="admin-help">Browsers that opened the site, counted once per day (Asia/Seoul) per browser; a <strong>member</strong> is a browser with a signed-in session at that moment, everything else is a <strong>guest</strong>. Two devices count twice, a guest who signs in the same day counts once on each side, and visitors without JavaScript and known crawlers are not counted. Recorded by <code>record_visit()</code> from <code>supabase_visit_stats.sql</code> — the "Count visitors" option below switches it off. New artworks and new members come from the existing tables.</p>
+          <p class="admin-help">Browsers that opened the site, counted once per day (Asia/Seoul) per browser; a <strong>member</strong> is a browser with a signed-in session at that moment, everything else is a <strong>guest</strong>. Two devices count twice, a guest who signs in the same day counts once on each side, and visitors without JavaScript and known crawlers are not counted. Recorded by <code>record_visit()</code> from <code>supabase_visit_stats.sql</code> — the "Count visitors" option below switches it off. New artworks and new members come from the existing tables — artworks count the original only, never the pieces it was cut into.</p>
           <p class="admin-help admin-settings-unavailable" id="adminVisitsUnavailable" style="display:none;">Not available yet — run <code>supabase_visit_stats.sql</code> in the Supabase SQL editor.</p>
           <div id="adminVisitsBody" style="display:none;">
             <div class="admin-usage">

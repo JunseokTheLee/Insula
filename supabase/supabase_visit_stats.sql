@@ -1,7 +1,12 @@
 -- Run this once in the Supabase SQL editor (Project → SQL Editor → New query).
 -- Run AFTER supabase_profiles.sql and supabase_mosaic.sql (profiles.is_admin,
--- mosaic_submissions) and AFTER supabase_site_settings.sql (the countVisits
--- option is read from that table).
+-- mosaic_submissions), AFTER supabase_site_settings.sql (the countVisits
+-- option is read from that table) and AFTER supabase_mosaic_pieces.sql
+-- (admin_visit_stats filters on mosaic_submissions.parent_id).
+--
+-- Re-run safe: table is `if not exists`, everything else is `create or
+-- replace` / revoke+grant. It touches no data. Re-run it after any change
+-- to this file — 2026-09-11 fixed "new artworks" counting piece rows.
 --
 -- Visitor statistics for the admin page (2026-09-10). One row per day
 -- (Asia/Seoul) holding two counters — guests and members — and nothing
@@ -84,9 +89,13 @@ begin
   with days as (
     select (v_from + i)::date as d from generate_series(0, v_days - 1) as i
   ), arts as (
+    -- Artworks only. Uploading one artwork also inserts one row per piece
+    -- it is cut into (parent_id → the artwork, supabase_mosaic_pieces.sql),
+    -- so without this filter a single upload counted as ~50 new artworks.
     select (s.created_at at time zone 'Asia/Seoul')::date as d, count(*)::integer as n
     from public.mosaic_submissions s
     where s.created_at >= v_from_ts
+      and s.parent_id is null
     group by 1
   ), people as (
     select (p.created_at at time zone 'Asia/Seoul')::date as d, count(*)::integer as n
