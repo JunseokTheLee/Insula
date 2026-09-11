@@ -23,9 +23,11 @@
 <meta name="twitter:image" content="https://weavo.art/logo.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/ko/"},{"@type":"ListItem","position":2,"name":"작품 탐색","item":"https://weavo.art/ko/artworks"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260911-155838">
-<link rel="stylesheet" href="/css/home.css?v=20260911-155838">
-<link rel="stylesheet" href="/css/artworks.css?v=20260911-155838">
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<link rel="stylesheet" href="/css/base.css?v=20260911-163309">
+<link rel="stylesheet" href="/css/home.css?v=20260911-163309">
+<link rel="stylesheet" href="/css/artworks.css?v=20260911-163309">
 </head>
 <body>
 
@@ -179,13 +181,69 @@
   </div>
 </div>
 
+<div id="lightbox-modal" class="modal-overlay lightbox-overlay">
+  <div class="lightbox-stage" id="lightboxStage">
+    <div class="zoom-toolbar">
+      <button type="button" class="zoom-btn" id="lightbox-zoom-out" aria-label="축소">&minus;</button>
+      <span class="zoom-level" id="lightbox-zoom-level">100%</span>
+      <button type="button" class="zoom-btn" id="lightbox-zoom-in" aria-label="확대">+</button>
+      <button type="button" class="zoom-btn" id="lightbox-close" aria-label="닫기">&#10005;</button>
+    </div>
+    <img id="lightbox-img" src="" alt="">
+  </div>
+  <div id="lightbox-caption">
+    <div id="lightbox-cap-title"></div>
+    <div id="lightbox-cap-meta"></div>
+    <div id="lightbox-artist-card">
+      <div id="lightbox-artist-avatar-wrap"></div>
+      <div class="lb-artist-info">
+        <a id="lightbox-artist-name" class="lb-artist-name"></a>
+      </div>
+    <button type="button" id="lightbox-artist-follow-btn" class="lb-artist-follow-btn" style="display:none;">팔로우</button>
+    </div>
+    <div id="lightbox-artist-about">
+      <div class="lb-artist-about-label">작가 소개</div>
+      <div id="lightbox-artist-bio" class="lb-artist-bio"></div>
+    </div>
+    <div id="lightbox-cap-desc"></div>
+    <a id="lightbox-cap-link" target="_blank" rel="ugc nofollow noopener noreferrer"></a>
+    <div class="lightbox-actions">
+      <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="이 작품 좋아요">
+        <span class="icon"></span><span id="lb-like-count">0</span>
+      </button>
+      <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="댓글 보기" aria-expanded="true">
+        <span class="icon"></span><span id="lb-comments-count">0</span>
+      </button>
+      <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="이 작품 삭제" style="display:none;">
+        <span class="icon"></span><span>삭제</span>
+      </button>
+      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="캠페인에서 제외" style="display:none;">
+        <span class="icon"></span><span>캠페인에서 제외</span>
+      </button>
+    </div>
+    <div id="lightbox-comments" class="lightbox-comments open">
+      <div id="lightbox-comments-list"></div>
+      <div id="lightbox-comment-form">
+        <textarea id="lightbox-comment-input" placeholder="댓글을 입력하세요…" maxlength="1000"></textarea>
+        <button type="button" id="lightbox-comment-post">게시</button>
+      </div>
+    </div>
+    <div id="lightbox-country-map">
+      <div class="lb-country-map-label" id="lb-country-map-label"></div>
+      <svg id="lb-country-map-svg" viewBox="0 0 280 150" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+  </div>
+</div>
+
+
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260911-155838"></script>
-<script src="/js/i18n/ko.js?v=20260911-155838"></script>
-<script src="/js/common.js?v=20260911-155838"></script>
-<script src="/js/auth.js?v=20260911-155838"></script>
-<script src="/js/notifications.js?v=20260911-155838"></script>
-<script src="/js/artworks.js?v=20260911-155838"></script>
+<script src="/js/supabase-client.js?v=20260911-163309"></script>
+<script src="/js/i18n/ko.js?v=20260911-163309"></script>
+<script src="/js/common.js?v=20260911-163309"></script>
+<script src="/js/auth.js?v=20260911-163309"></script>
+<script src="/js/notifications.js?v=20260911-163309"></script>
+<script src="/js/lightbox.js?v=20260911-163309"></script>
+<script src="/js/artworks.js?v=20260911-163309"></script>
 </body>
 </html>

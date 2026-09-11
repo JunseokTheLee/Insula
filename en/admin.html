@@ -7,8 +7,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260911-155838">
-<link rel="stylesheet" href="/css/admin.css?v=20260911-155838">
+<link rel="stylesheet" href="/css/base.css?v=20260911-163309">
+<link rel="stylesheet" href="/css/admin.css?v=20260911-163309">
 </head>
 <body>
 
@@ -43,19 +43,21 @@
       <h1>Admin</h1>
       <p class="admin-notice" id="adminNotice" style="display:none;">This page is for admins only. Please sign in with an admin account.</p>
       <div id="adminBody" style="display:none;">
+        <div class="admin-layout">
+        <nav class="admin-tabs" id="adminTabs" role="tablist" aria-label="Admin sections">
+          <button type="button" class="admin-tab" data-tab="dashboard" role="tab" aria-selected="false">Dashboard</button>
+          <button type="button" class="admin-tab" data-tab="reports" role="tab" aria-selected="false">Reports<span class="admin-tab-badge" id="adminReportsBadge" hidden>0</span></button>
+          <button type="button" class="admin-tab" data-tab="artworks" role="tab" aria-selected="false">Artworks</button>
+          <button type="button" class="admin-tab" data-tab="comments" role="tab" aria-selected="false">Comments</button>
+          <button type="button" class="admin-tab" data-tab="campaigns" role="tab" aria-selected="false">Campaigns</button>
+          <button type="button" class="admin-tab" data-tab="tools" role="tab" aria-selected="false">Maintenance</button>
+          <button type="button" class="admin-tab" data-tab="members" role="tab" aria-selected="false">Members</button>
+          <button type="button" class="admin-tab" data-tab="settings" role="tab" aria-selected="false">Site options</button>
+          <button type="button" class="admin-tab" data-tab="log" role="tab" aria-selected="false">Log</button>
+        </nav>
+        <div class="admin-panels">
 
-        <section class="admin-section" id="adminUsageSection" style="display:none;">
-          <h2>Usage</h2>
-          <p class="admin-help">Database size and Storage (file) usage. <strong>Monthly egress can't be read from the database</strong> — see the Supabase dashboard → Reports → Usage. Reference limits — Free: DB 500 MB · Storage 1 GB · egress 5 GB/mo; Pro: DB 8 GB · Storage 100 GB · egress 250 GB/mo.</p>
-          <div class="admin-usage">
-            <div class="admin-usage-tile"><div class="admin-usage-k">Database</div><div class="admin-usage-v" id="adminDbSize">—</div></div>
-            <div class="admin-usage-tile"><div class="admin-usage-k">Storage</div><div class="admin-usage-v" id="adminStorageSize">—</div><div class="admin-usage-s"><span id="adminStorageFiles">—</span> files</div></div>
-            <div class="admin-usage-tile"><div class="admin-usage-k">Artworks (pieces waiting)</div><div class="admin-usage-v" id="adminCountSubmissions">—</div></div>
-            <div class="admin-usage-tile"><div class="admin-usage-k">Campaign cells</div><div class="admin-usage-v" id="adminCountPixels">—</div><div class="admin-usage-s"><span id="adminCountProjects">—</span> active campaigns</div></div>
-            <div class="admin-usage-tile"><div class="admin-usage-k">Members</div><div class="admin-usage-v" id="adminCountProfiles">—</div></div>
-          </div>
-        </section>
-
+        <div class="admin-panel" data-panel="dashboard" role="tabpanel" hidden>
         <section class="admin-section" id="adminVisitsSection">
           <h2>Visitors</h2>
           <p class="admin-help">Browsers that opened the site, counted once per day (Asia/Seoul) per browser; a <strong>member</strong> is a browser with a signed-in session at that moment, everything else is a <strong>guest</strong>. Two devices count twice, a guest who signs in the same day counts once on each side, and visitors without JavaScript and known crawlers are not counted. Recorded by <code>record_visit()</code> from <code>supabase_visit_stats.sql</code> — the "Count visitors" option below switches it off. New artworks and new members come from the existing tables.</p>
@@ -72,33 +74,20 @@
           </div>
         </section>
 
-        <section class="admin-section" id="adminSettingsSection">
-          <h2>Site options</h2>
-          <p class="admin-help">Apply to every visitor from their next page load (within about a minute). Stored in the single <code>site_settings</code> row (<code>supabase_site_settings.sql</code>); every site option is set here and only here.</p>
-          <p class="admin-help admin-settings-unavailable" id="adminSettingsUnavailable" style="display:none;">Not available yet — run <code>supabase_site_settings.sql</code> in the Supabase SQL editor first. Until then every option uses its default.</p>
-          <div class="admin-settings" id="adminSettings">
-            <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>Show the "Preview" thumbnail (the reference colors) in the corner of campaign pages <em>(default: off)</em></span></label>
-            <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>Count visitors — once a day per browser (Asia/Seoul), members and guests separately, for the "Visitors" section above <em>(default on; when off, record_visit() refuses on the server as well)</em></span></label>
-            <div class="admin-setting admin-setting-range">
-              <label for="adminPieceGrid">Artwork pieces — <strong>grid</strong>: how many pieces across and down an artwork is cut into for the mosaic; 7 makes 49. Applies to new uploads; existing artwork changes with "Recut all" under "Artwork pieces" below. <em>(default: 7)</em></label>
-              <div class="admin-range"><input id="adminPieceGrid" type="range" min="2" max="12" step="1" data-setting="pieceGrid" disabled><output for="adminPieceGrid" data-setting-output="pieceGrid">7</output></div>
-              <label for="adminPieceMatchDistance">Artwork pieces — <strong>colour match</strong>: a piece only goes into an open cell whose colour is within this distance (Lab, lightness weighted 0.2). Lower is stricter: fewer pieces placed, truer colours. Enforced by the server-side matching. <em>(default: 20)</em></label>
-              <div class="admin-range"><input id="adminPieceMatchDistance" type="range" min="5" max="60" step="1" data-setting="pieceMatchDistance" disabled><output for="adminPieceMatchDistance" data-setting-output="pieceMatchDistance">20</output></div>
-              <p class="admin-help">After changing it, <button type="button" class="admin-btn" id="adminPieceApplyBtn">Apply colour match to all</button> releases placed pieces beyond the new threshold and re-matches every waiting piece (needs <code>supabase_mosaic_pieces_retry.sql</code>). Without it the new value applies to new uploads, and existing pieces follow as cells open or at the 6-hourly cleanup.</p>
-            </div>
-            <div class="admin-setting admin-setting-range">
-              <label for="adminPreviewContrast">Grey of open cells — <strong>contrast</strong>: 100 keeps the reference's own light-and-dark spread, 0 is flat grey. Lower makes the photo harder to recognise on the home page, campaign cards, the campaign grid and share cards. <em>(default 40)</em></label>
-              <div class="admin-range"><input id="adminPreviewContrast" type="range" min="0" max="100" step="1" data-setting="previewContrast" disabled><output for="adminPreviewContrast" data-setting-output="previewContrast">40</output></div>
-              <label for="adminPreviewBrightness">Grey of open cells — <strong>brightness</strong>: the average grey level, 0 black · 50 mid-grey · 100 white. Every campaign's open cells average this level whatever the photo's exposure. <em>(default 70, a light grey; share cards already made keep their old look until "Recreate share image" in the campaign list below)</em></label>
-              <div class="admin-range"><input id="adminPreviewBrightness" type="range" min="0" max="100" step="1" data-setting="previewBrightness" disabled><output for="adminPreviewBrightness" data-setting-output="previewBrightness">70</output></div>
-              <label for="adminPreviewTint">Grey of open cells — <strong>tint</strong>: the colour the grey leans toward. Only its hue and saturation are used, not its own lightness — brightness above sets the level. #DCE4ED is a light grey with a faint blue; a neutral grey such as #808080 means no tint. To see the picked colour exactly, set brightness to that colour's lightness (89 for #DCE4ED). <em>(default #DCE4ED)</em></label>
-              <div class="admin-range admin-color"><input id="adminPreviewTint" type="color" data-setting="previewTint" value="#dce4ed" disabled><output for="adminPreviewTint" data-setting-output="previewTint">#DCE4ED</output></div>
-              <canvas class="admin-contrast-preview" id="adminContrastPreview" aria-label="How open cells look with these settings"></canvas>
-              <p class="admin-help" id="adminContrastPreviewNone" style="display:none;">No live campaign with a grid image yet — nothing to preview.</p>
-            </div>
+        <section class="admin-section" id="adminUsageSection" style="display:none;">
+          <h2>Usage</h2>
+          <p class="admin-help">Database size and Storage (file) usage. <strong>Monthly egress can't be read from the database</strong> — see the Supabase dashboard → Reports → Usage. Reference limits — Free: DB 500 MB · Storage 1 GB · egress 5 GB/mo; Pro: DB 8 GB · Storage 100 GB · egress 250 GB/mo.</p>
+          <div class="admin-usage">
+            <div class="admin-usage-tile"><div class="admin-usage-k">Database</div><div class="admin-usage-v" id="adminDbSize">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Storage</div><div class="admin-usage-v" id="adminStorageSize">—</div><div class="admin-usage-s"><span id="adminStorageFiles">—</span> files</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Artworks (pieces waiting)</div><div class="admin-usage-v" id="adminCountSubmissions">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Campaign cells</div><div class="admin-usage-v" id="adminCountPixels">—</div><div class="admin-usage-s"><span id="adminCountProjects">—</span> active campaigns</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Members</div><div class="admin-usage-v" id="adminCountProfiles">—</div></div>
           </div>
         </section>
+        </div>
 
+        <div class="admin-panel" data-panel="reports" role="tabpanel" hidden>
         <section class="admin-section">
           <div class="admin-section-head">
             <h2>Reports</h2>
@@ -108,7 +97,60 @@
           <div id="adminReports" class="admin-list"></div>
           <p class="empty-note admin-empty" id="adminReportsEmpty" style="display:none;">No open reports.</p>
         </section>
+        </div>
 
+        <div class="admin-panel" data-panel="artworks" role="tabpanel" hidden>
+        <section class="admin-section" id="adminArtSection">
+          <div class="admin-section-head">
+            <h2>Artworks</h2>
+            <div class="admin-actions">
+              <button type="button" class="admin-btn danger" id="adminArtDeleteBtn" disabled>Delete selected</button>
+            </div>
+          </div>
+          <p class="admin-help">Every uploaded artwork, newest first. Tick the ones to remove — <strong>up to 20 per action</strong> — and deleting also removes the original image file from Storage. <strong>This cannot be undone</strong>: it is for spam and abuse, and the normal route is still to review a report and delete one piece at a time. Every deletion is written to the "Log" tab.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminArtUnavailable" style="display:none;">Not available yet — run <code>supabase_admin_moderation.sql</code> in the Supabase SQL editor first.</p>
+          <div class="admin-toolbar">
+            <label class="admin-field"><span>Period</span>
+              <select id="adminArtRange">
+                <option value="0">All time</option>
+                <option value="1">Last 24 hours</option>
+                <option value="7">Last 7 days</option>
+              </select>
+            </label>
+            <label class="admin-field"><span>Artist</span>
+              <input type="search" id="adminArtAuthor" placeholder="Filter by artist name" autocomplete="off">
+            </label>
+            <label class="admin-filter"><input type="checkbox" id="adminArtSelectAll"> Select all shown</label>
+            <span class="admin-sub" id="adminArtCount"></span>
+          </div>
+          <p class="admin-help">Click an artist’s name to show only their work.</p>
+          <div class="admin-grid" id="adminArtGrid"></div>
+          <p class="empty-note admin-empty" id="adminArtEmpty" style="display:none;">No artworks.</p>
+          <div class="admin-more"><button type="button" class="admin-btn" id="adminArtMoreBtn" style="display:none;">Load more</button></div>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="comments" role="tabpanel" hidden>
+        <section class="admin-section" id="adminCommentsSection">
+          <div class="admin-section-head">
+            <h2>Comments</h2>
+            <div class="admin-actions">
+              <button type="button" class="admin-btn danger" id="adminComDeleteBtn" disabled>Delete selected</button>
+            </div>
+          </div>
+          <p class="admin-help">Every comment on the site, newest first. Tick the ones to remove — <strong>up to 20 per action</strong>. The artwork title links to the piece it is on. Deletions are written to the "Log" tab.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminComUnavailable" style="display:none;">Not available yet — run <code>supabase_admin_moderation.sql</code> in the Supabase SQL editor first.</p>
+          <div class="admin-toolbar">
+            <label class="admin-filter"><input type="checkbox" id="adminComSelectAll"> Select all shown</label>
+            <span class="admin-sub" id="adminComCount"></span>
+          </div>
+          <div class="admin-list" id="adminComments"></div>
+          <p class="empty-note admin-empty" id="adminComEmpty" style="display:none;">No comments.</p>
+          <div class="admin-more"><button type="button" class="admin-btn" id="adminComMoreBtn" style="display:none;">Load more</button></div>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="campaigns" role="tabpanel" hidden>
         <section class="admin-section">
           <div class="admin-section-head">
             <h2>Campaigns</h2>
@@ -118,7 +160,9 @@
           <div id="adminCampaigns" class="admin-list"></div>
           <p class="empty-note admin-empty" id="adminCampaignsEmpty" style="display:none;">No campaigns.</p>
         </section>
+        </div>
 
+        <div class="admin-panel" data-panel="tools" role="tabpanel" hidden>
         <section class="admin-section">
           <div class="admin-section-head">
             <h2>Waiting in the pool <span class="admin-badge" id="adminPoolCount">0</span></h2>
@@ -158,13 +202,105 @@
             <div class="admin-usage-tile"><div class="admin-usage-k">Missing micro thumbnail</div><div class="admin-usage-v" id="adminMicroMissing">—</div></div>
           </div>
         </section>
+        </div>
 
+        <div class="admin-panel" data-panel="members" role="tabpanel" hidden>
         <section class="admin-section">
           <h2>Admins</h2>
           <div id="adminAdmins" class="admin-list"></div>
           <p class="admin-help">Admins can't be granted or revoked from the site (by design). Run this in the Supabase SQL editor:</p>
           <pre class="admin-code">update public.profiles set is_admin = true where lower(username) = lower('username');</pre>
         </section>
+
+        <section class="admin-section" id="adminBlockSection">
+          <h2>Upload block</h2>
+          <p class="admin-help">Find an account by username to block its uploads. A blocked account cannot upload new artwork (an insert trigger on the server refuses it); what it already uploaded, and the account itself, stay untouched. Use it when deleting alone does not stop the flood.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminBlockUnavailable" style="display:none;">Not available yet — run <code>supabase_admin_moderation.sql</code> in the Supabase SQL editor first.</p>
+          <div class="admin-toolbar">
+            <label class="admin-field admin-field-grow"><span class="sr-only">Search username</span>
+              <input type="search" id="adminBlockSearch" placeholder="Search username" autocomplete="off">
+            </label>
+            <button type="button" class="admin-btn" id="adminBlockSearchBtn">Search</button>
+          </div>
+          <div class="admin-list" id="adminBlockResults"></div>
+          <h3 class="admin-subhead">Blocked accounts</h3>
+          <div class="admin-list" id="adminBlockedList"></div>
+          <p class="empty-note admin-empty" id="adminBlockedEmpty" style="display:none;">No blocked accounts.</p>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="settings" role="tabpanel" hidden>
+        <section class="admin-section" id="adminSettingsSection">
+          <h2>Site options</h2>
+          <p class="admin-help">Apply to every visitor from their next page load (within about a minute). Stored in the single <code>site_settings</code> row (<code>supabase_site_settings.sql</code>); every site option is set here and only here.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminSettingsUnavailable" style="display:none;">Not available yet — run <code>supabase_site_settings.sql</code> in the Supabase SQL editor first. Until then every option uses its default.</p>
+          <div class="admin-settings" id="adminSettings">
+
+            <div class="admin-option-card">
+              <h3>General</h3>
+              <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>Show the "Preview" thumbnail (the reference colors) in the corner of campaign pages <em>(default: off)</em></span></label>
+              <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>Count visitors — once a day per browser (Asia/Seoul), members and guests separately, for the Visitors section on "Dashboard" <em>(default on; when off, record_visit() refuses on the server as well)</em></span></label>
+            </div>
+
+            <div class="admin-option-card">
+              <h3>Upload limits</h3>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminUploadLimitCount">Upload limit — <strong>count</strong>: how many artworks one account may upload within the window below. The pieces an artwork is cut into don’t count. Enforced by an insert trigger on the server, so a script cannot route around it. <em>(default: 20)</em></label>
+                <div class="admin-range"><input id="adminUploadLimitCount" type="range" min="1" max="200" step="1" data-setting="uploadLimitCount" disabled><output for="adminUploadLimitCount" data-setting-output="uploadLimitCount">20</output></div>
+                <label for="adminUploadLimitMinutes">Upload limit — <strong>window</strong>: the number of minutes the count above is measured over. 10 means "20 within 10 minutes". <em>(default: 10 minutes)</em></label>
+                <div class="admin-range"><input id="adminUploadLimitMinutes" type="range" min="1" max="240" step="1" data-setting="uploadLimitMinutes" disabled><output for="adminUploadLimitMinutes" data-setting-output="uploadLimitMinutes">10</output></div>
+                <p class="admin-help">Deliberately generous so a real artist uploading a portfolio never trips it — this exists to stop an automated script. Until <code>supabase_admin_moderation.sql</code> is applied the limit stays fixed at 20 per 10 minutes.</p>
+              </div>
+            </div>
+
+            <div class="admin-option-card">
+              <h3>Artwork pieces</h3>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPieceGrid">Artwork pieces — <strong>grid</strong>: how many pieces across and down an artwork is cut into for the mosaic; 7 makes 49. Applies to new uploads; existing artwork changes with "Recut all" under "Artwork pieces" below. <em>(default: 7)</em></label>
+                <div class="admin-range"><input id="adminPieceGrid" type="range" min="2" max="12" step="1" data-setting="pieceGrid" disabled><output for="adminPieceGrid" data-setting-output="pieceGrid">7</output></div>
+                <label for="adminPieceMatchDistance">Artwork pieces — <strong>colour match</strong>: a piece only goes into an open cell whose colour is within this distance (Lab, lightness weighted 0.2). Lower is stricter: fewer pieces placed, truer colours. Enforced by the server-side matching. <em>(default: 20)</em></label>
+                <div class="admin-range"><input id="adminPieceMatchDistance" type="range" min="5" max="60" step="1" data-setting="pieceMatchDistance" disabled><output for="adminPieceMatchDistance" data-setting-output="pieceMatchDistance">20</output></div>
+                <p class="admin-help">After changing it, <button type="button" class="admin-btn" id="adminPieceApplyBtn">Apply colour match to all</button> releases placed pieces beyond the new threshold and re-matches every waiting piece (needs <code>supabase_mosaic_pieces_retry.sql</code>). Without it the new value applies to new uploads, and existing pieces follow as cells open or at the 6-hourly cleanup.</p>
+              </div>
+            </div>
+
+            <div class="admin-option-card admin-option-card-grey">
+              <h3>Grey of open cells</h3>
+              <p class="admin-help">The grey a campaign’s still-empty cells are drawn in. The home hero, campaign cards, the campaign grid and share cards all use these three values; the preview below shows a live campaign with the current settings.</p>
+              <div class="admin-grey-split">
+                <div class="admin-grey-controls">
+                  <div class="admin-setting admin-setting-range">
+                    <label for="adminPreviewContrast">Grey of open cells — <strong>contrast</strong>: 100 keeps the reference's own light-and-dark spread, 0 is flat grey. Lower makes the photo harder to recognise on the home page, campaign cards, the campaign grid and share cards. <em>(default 40)</em></label>
+                    <div class="admin-range"><input id="adminPreviewContrast" type="range" min="0" max="100" step="1" data-setting="previewContrast" disabled><output for="adminPreviewContrast" data-setting-output="previewContrast">40</output></div>
+                    <label for="adminPreviewBrightness">Grey of open cells — <strong>brightness</strong>: the average grey level, 0 black · 50 mid-grey · 100 white. Every campaign's open cells average this level whatever the photo's exposure. <em>(default 70, a light grey; share cards already made keep their old look until "Recreate share image" in the campaign list below)</em></label>
+                    <div class="admin-range"><input id="adminPreviewBrightness" type="range" min="0" max="100" step="1" data-setting="previewBrightness" disabled><output for="adminPreviewBrightness" data-setting-output="previewBrightness">70</output></div>
+                    <label for="adminPreviewTint">Grey of open cells — <strong>tint</strong>: the colour the grey leans toward. Only its hue and saturation are used, not its own lightness — brightness above sets the level. #DCE4ED is a light grey with a faint blue; a neutral grey such as #808080 means no tint. To see the picked colour exactly, set brightness to that colour's lightness (89 for #DCE4ED). <em>(default #DCE4ED)</em></label>
+                    <div class="admin-range admin-color"><input id="adminPreviewTint" type="color" data-setting="previewTint" value="#dce4ed" disabled><output for="adminPreviewTint" data-setting-output="previewTint">#DCE4ED</output></div>
+                  </div>
+                </div>
+                <figure class="admin-grey-figure">
+                  <canvas class="admin-contrast-preview" id="adminContrastPreview" aria-label="How open cells look with these settings"></canvas>
+                  <figcaption class="admin-help" id="adminContrastPreviewNone" style="display:none;">No live campaign with a grid image yet — nothing to preview.</figcaption>
+                </figure>
+              </div>
+            </div>
+
+          </div>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="log" role="tabpanel" hidden>
+        <section class="admin-section" id="adminLogSection">
+          <h2>Log</h2>
+          <p class="admin-help">Deletions and blocks made from this page, newest first. The log is append-only — it cannot be edited or deleted. Last 200 entries.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminLogUnavailable" style="display:none;">Not available yet — run <code>supabase_admin_moderation.sql</code> in the Supabase SQL editor first.</p>
+          <div class="admin-list" id="adminLog"></div>
+          <p class="empty-note admin-empty" id="adminLogEmpty" style="display:none;">Nothing logged yet.</p>
+        </section>
+        </div>
+
+        </div>
+        </div>
 
       </div>
     </div>
@@ -319,13 +455,13 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260911-155838"></script>
-<script src="/js/i18n/en.js?v=20260911-155838"></script>
-<script src="/js/common.js?v=20260911-155838"></script>
-<script src="/js/auth.js?v=20260911-155838"></script>
-<script src="/js/notifications.js?v=20260911-155838"></script>
-<script src="/js/color-engine.js?v=20260911-155838"></script>
-<script src="/js/matching.js?v=20260911-155838"></script>
-<script src="/js/admin.js?v=20260911-155838"></script>
+<script src="/js/supabase-client.js?v=20260911-163309"></script>
+<script src="/js/i18n/en.js?v=20260911-163309"></script>
+<script src="/js/common.js?v=20260911-163309"></script>
+<script src="/js/auth.js?v=20260911-163309"></script>
+<script src="/js/notifications.js?v=20260911-163309"></script>
+<script src="/js/color-engine.js?v=20260911-163309"></script>
+<script src="/js/matching.js?v=20260911-163309"></script>
+<script src="/js/admin.js?v=20260911-163309"></script>
 </body>
 </html>

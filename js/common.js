@@ -565,6 +565,13 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   previewTint: '#DCE4ED',
   pieceGrid: 7, // artwork cut into pieceGrid × pieceGrid pieces for the mosaic (supabase_mosaic_pieces.sql)
   pieceMatchDistance: 20, // a piece takes a cell only within this Lab distance (server-enforced)
+  // Upload rate limit, enforced by the insert trigger in
+  // supabase_admin_moderation.sql (not by anything in the browser — the
+  // anon key lets a script call PostgREST directly). Generous on purpose:
+  // it exists to stop a runaway script, not to pace a real artist
+  // uploading a portfolio. Pieces don't count, only artworks.
+  uploadLimitCount: 20,
+  uploadLimitMinutes: 10,
 });
 const SITE_SETTINGS_TTL_MS = 60 * 1000;
 const SITE_SETTINGS_CACHE_KEY = 'weavo.siteSettings';

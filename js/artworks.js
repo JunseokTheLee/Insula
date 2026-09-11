@@ -7,8 +7,10 @@
 // counts now come from mosaic_submissions.like_count, kept by a trigger on
 // mosaic_submission_likes (supabase_mosaic_like_count.sql); until that SQL
 // is applied the page falls back to newest-first without counts.
-// Needs common.js (sb, cdnUrl, artworkUrl, fmtShortDate, isUserBlocked,
-// isSchemaMismatchError) and auth.js (authReady) loaded first.
+// Needs common.js (sb, cdnUrl, artworkUrl, ARTWORK_ROW_COLS, fmtShortDate,
+// isUserBlocked, isSchemaMismatchError), auth.js (authReady) and
+// lightbox.js (openLightbox — cards open in place rather than navigating)
+// loaded first.
 "use strict";
 
 const ARTWORKS_PAGE = 60;
@@ -27,6 +29,7 @@ function artworkCardEl(sub, i) {
   const card = document.createElement('a');
   card.className = 'artwork-card';
   card.href = artworkUrl(sub.id);
+  card.dataset.id = String(sub.id);
   card.style.animationDelay = `${Math.min(i, 10) * 0.05}s`;
 
   const img = document.createElement('img');
@@ -58,8 +61,27 @@ function artworkCardEl(sub, i) {
   date.textContent = fmtShortDate(sub.created_at);
   info.append(title, byline, date);
   card.appendChild(info);
+
+  // Open in the lightbox instead of navigating: this page loads 60 artworks
+  // at a time and a visitor browsing it can be many "Load more" clicks deep,
+  // all of which a round trip to the artwork page and back would throw away.
+  // The href stays real so crawlers, middle-click and ctrl/cmd-click still
+  // reach the artwork's own indexable URL.
+  card.onclick = e => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    openLightbox(sub);
+  };
   return card;
 }
+
+// A deleted artwork (the lightbox's own Delete, author or admin) leaves the
+// grid without a reload — lightbox.js calls this hook.
+window.onSubmissionDeleted = sub => {
+  const card = document.querySelector(`.artwork-card[data-id="${sub.id}"]`);
+  if (card) { card.remove(); artworksShown--; }
+  if (typeof closeLightbox === 'function') closeLightbox();
+};
 
 // ---------- paging ----------
 // PostgREST filter value: double-quoted so commas / parentheses in the
@@ -68,7 +90,12 @@ function artworksSearchValue() {
   return `"*${artworksQuery.replace(/"/g, '').split(String.fromCharCode(92)).join('')}*"`;
 }
 function artworksPageQuery() {
-  const cols = 'id,image_url,thumb_url,art_title,author_id,author_name,author_avatar_url,created_at'
+  // The same column set the profile grid feeds the lightbox with
+  // (common.js ARTWORK_ROW_COLS) — clicking a card opens it here too, so
+  // the row must already carry the description, link and material rather
+  // than costing one more request per artwork opened.
+  const cols = ARTWORK_ROW_COLS
+    + (artworksHasPieces ? ',piece_n,home_project_id' : '')
     + (artworksHasLikeCount ? ',like_count' : '');
   let q = sb.from('mosaic_submissions').select(cols);
   if (artworksHasPieces) q = q.is('parent_id', null); // pieces are not artworks

@@ -109,6 +109,7 @@ async function setAdminReportStatus(id, status) {
   if (error) { console.error('update report error:', error); toast(tr('adminCouldNotUpdateReport')); return; }
   toast(tr('adminReportUpdated'));
   loadAdminReports();
+  loadAdminReportsBadge().catch(err => console.error('report badge error:', err));
 }
 
 // ---------- campaigns ----------
@@ -809,14 +810,564 @@ async function paintAdminGrayPreview() {
   }
 }
 
+// ---------- action log (supabase_admin_moderation.sql) ----------
+// Every destructive thing this page does writes one entry. The RPC stamps
+// the actor from auth.uid(), so nothing here can be attributed to someone
+// else. If the file isn't applied yet, the first call says so and the rest
+// stay quiet — a missing log must never stop moderation.
+let adminLogAvailable = true;
+async function adminLogAction(action, targetType, targetId, detail) {
+  if (!adminLogAvailable) return;
+  const { error } = await sb.rpc('admin_log_action', {
+    p_action: action, p_target_type: targetType, p_target_id: targetId == null ? null : String(targetId), p_detail: detail || {},
+  });
+  if (error) {
+    if (isSchemaMismatchError(error)) adminLogAvailable = false;
+    console.error('admin_log_action error:', error);
+  }
+}
+
+const ADMIN_LOG_ACTIONS = ['artwork_delete', 'comment_delete', 'upload_block', 'upload_unblock'];
+
+async function loadAdminLog() {
+  const list = document.getElementById('adminLog');
+  const { data, error } = await sb.from('admin_audit_log')
+    .select('id,actor_name,action,target_type,target_id,detail,created_at')
+    .order('created_at', { ascending: false }).limit(200);
+  if (error) {
+    if (error.code === 'PGRST205' || error.code === '42P01' || error.code === '42501') { adminShow('adminLogUnavailable', true); return; }
+    console.error('load audit log error:', error); toast(tr('adminLoadError')); return;
+  }
+  const rows = data || [];
+  list.innerHTML = '';
+  adminShow('adminLogEmpty', rows.length === 0);
+  for (const r of rows) {
+    const row = document.createElement('div');
+    row.className = 'admin-row';
+    const meta = document.createElement('div'); meta.className = 'admin-meta';
+    const head = document.createElement('div');
+    head.className = 'admin-log-action';
+    // tr() echoes an unknown key back, so only translate the actions this
+    // page writes and show anything else verbatim.
+    head.textContent = ADMIN_LOG_ACTIONS.includes(r.action) ? tr(`adminLogAction_${r.action}`) : r.action;
+    const sub = document.createElement('div'); sub.className = 'admin-sub';
+    sub.textContent = `${r.actor_name || tr('adminTargetMissing')} · ${adminDate(r.created_at)}`;
+    meta.append(head, sub);
+    const detail = r.detail && Object.keys(r.detail).length ? r.detail : null;
+    if (detail) {
+      const d = document.createElement('div'); d.className = 'admin-log-detail';
+      d.textContent = Object.entries(detail).filter(([, v]) => v != null && v !== '').map(([k, v]) => `${k}: ${v}`).join(' · ');
+      if (d.textContent) meta.appendChild(d);
+    }
+    row.appendChild(meta);
+    list.appendChild(row);
+  }
+}
+
+// ---------- shared multi-select delete plumbing ----------
+// CLAUDE.md §13 forbids a bulk artwork-deletion RPC, and there isn't one:
+// rows go one at a time through the existing per-row delete policy, capped
+// here so a mis-click can never take out more than a screenful. The cap is
+// a client guard on a deliberate action, not a security boundary.
+const ADMIN_BULK_MAX = 20;
+
+// A blocked delete is NOT an error in PostgREST — the policy simply matches
+// no rows and it returns success. Asking for the deleted ids back is the
+// only way to tell "removed" from "refused".
+async function adminDeleteRow(table, id) {
+  const { data, error } = await sb.from(table).delete().eq('id', id).select('id');
+  if (error) return { ok: false, refused: false, error };
+  return { ok: !!(data && data.length), refused: !(data && data.length), error: null };
+}
+
+// Storage paths behind one artwork: the original, plus the 480px thumbnail
+// when it is a file of its own (an original already ≤480px is reused as the
+// thumbnail, same URL). The micro thumbnail is a data URI — no file.
+function adminStoragePaths(sub) {
+  const paths = new Set();
+  for (const url of [sub.image_url, sub.thumb_url]) {
+    if (!url || !String(url).startsWith(SUPABASE_STORAGE_PREFIX)) continue;
+    const rest = String(url).slice(SUPABASE_STORAGE_PREFIX.length).split('?')[0];
+    if (rest.startsWith('artwork/')) paths.add(decodeURIComponent(rest.slice('artwork/'.length)));
+  }
+  return [...paths];
+}
+
+// ---------- artworks tab: browse + multi-select delete ----------
+const ADMIN_ART_PAGE = 60;
+let adminArtOffset = 0, adminArtDone = false, adminArtRun = 0, adminArtHasPieces = true;
+const adminArtSelected = new Map(); // id → row (kept so a delete still has its URLs after a filter change)
+
+function adminArtFilters() {
+  const days = Number(document.getElementById('adminArtRange').value) || 0;
+  return { days, author: document.getElementById('adminArtAuthor').value.trim() };
+}
+
+async function resetAdminArtworks() {
+  adminArtOffset = 0; adminArtDone = false;
+  adminArtSelected.clear();
+  document.getElementById('adminArtGrid').innerHTML = '';
+  document.getElementById('adminArtSelectAll').checked = false;
+  syncAdminArtBar();
+  await loadMoreAdminArtworks();
+}
+
+async function loadMoreAdminArtworks() {
+  const run = ++adminArtRun;
+  const { days, author } = adminArtFilters();
+  const btn = document.getElementById('adminArtMoreBtn');
+  btn.disabled = true;
+
+  const build = withPieces => {
+    let q = sb.from('mosaic_submissions')
+      .select('id,art_title,author_id,author_name,thumb_url,image_url,created_at')
+      .order('created_at', { ascending: false })
+      .range(adminArtOffset, adminArtOffset + ADMIN_ART_PAGE - 1);
+    if (withPieces) q = q.is('parent_id', null); // pieces are rows too — never list them
+    if (days) q = q.gte('created_at', new Date(Date.now() - days * 86400000).toISOString());
+    if (author) q = q.ilike('author_name', `%${author}%`);
+    return q;
+  };
+  let { data, error } = await build(adminArtHasPieces);
+  if (error && adminArtHasPieces && isSchemaMismatchError(error)) {
+    adminArtHasPieces = false;
+    ({ data, error } = await build(false));
+  }
+  btn.disabled = false;
+  if (run !== adminArtRun) return; // a newer filter already took over
+  if (error) { console.error('load admin artworks error:', error); toast(tr('adminLoadError')); return; }
+
+  const rows = data || [];
+  const grid = document.getElementById('adminArtGrid');
+  for (const sub of rows) grid.appendChild(adminArtCardEl(sub));
+  adminArtOffset += rows.length;
+  adminArtDone = rows.length < ADMIN_ART_PAGE;
+  adminShow('adminArtEmpty', adminArtOffset === 0);
+  btn.style.display = adminArtDone ? 'none' : '';
+  syncAdminArtBar();
+}
+
+function adminArtCardEl(sub) {
+  const card = document.createElement('div');
+  card.className = 'admin-art';
+  card.dataset.id = String(sub.id);
+
+  const check = document.createElement('input');
+  check.type = 'checkbox'; check.className = 'admin-art-check';
+  check.checked = adminArtSelected.has(sub.id);
+  check.setAttribute('aria-label', sub.art_title || tr('adminNoTitle'));
+  check.onchange = () => setAdminArtSelected(sub, check.checked, card);
+
+  const img = document.createElement('img');
+  img.className = 'admin-art-img'; img.loading = 'lazy';
+  img.src = cdnUrl(sub.thumb_url || sub.image_url); img.alt = '';
+
+  const open = document.createElement('a');
+  open.className = 'admin-art-open'; open.href = artworkUrl(sub.id);
+  open.target = '_blank'; open.rel = 'noopener';
+  open.textContent = '↗'; open.title = tr('adminOpenArtwork');
+
+  const info = document.createElement('div'); info.className = 'admin-art-info';
+  const title = document.createElement('div');
+  title.className = 'admin-art-title'; title.textContent = sub.art_title || tr('adminNoTitle');
+  const by = document.createElement('button');
+  by.type = 'button'; by.className = 'admin-art-by';
+  by.textContent = sub.author_name || tr('anonymous');
+  by.title = tr('adminFilterByArtist');
+  by.onclick = () => {
+    document.getElementById('adminArtAuthor').value = sub.author_name || '';
+    resetAdminArtworks();
+  };
+  const date = document.createElement('div');
+  date.className = 'admin-art-date'; date.textContent = adminDate(sub.created_at);
+  info.append(title, by, date);
+
+  card.append(check, img, open, info);
+  card.classList.toggle('selected', check.checked);
+  // The tile itself toggles selection; its link and artist button keep theirs.
+  card.onclick = e => {
+    if (e.target === check || e.target.closest('a, button')) return;
+    check.checked = !check.checked;
+    setAdminArtSelected(sub, check.checked, card);
+  };
+  return card;
+}
+
+function setAdminArtSelected(sub, on, card) {
+  if (on) adminArtSelected.set(sub.id, sub); else adminArtSelected.delete(sub.id);
+  card.classList.toggle('selected', on);
+  syncAdminArtBar();
+}
+
+function syncAdminArtBar() {
+  const n = adminArtSelected.size;
+  const btn = document.getElementById('adminArtDeleteBtn');
+  btn.disabled = n === 0;
+  btn.textContent = n ? tr('adminDeleteSelectedN', { n }) : tr('adminDeleteSelected');
+  btn.classList.toggle('over-limit', n > ADMIN_BULK_MAX);
+  document.getElementById('adminArtCount').textContent =
+    tr('adminShownSelected', { shown: adminArtOffset, selected: n });
+}
+
+async function deleteSelectedArtworks() {
+  const rows = [...adminArtSelected.values()];
+  if (!rows.length) return;
+  if (rows.length > ADMIN_BULK_MAX) { toast(tr('adminBulkTooMany', { max: ADMIN_BULK_MAX })); return; }
+
+  const word = tr('adminBulkConfirmWord');
+  const proceed = await confirmDialog(
+    tr('adminArtDeleteMessage', { n: rows.length, word }),
+    { title: tr('adminArtDeleteTitle'), okLabel: tr('deleteLabel'), confirmText: word }
+  );
+  if (!proceed) return;
+
+  const btn = document.getElementById('adminArtDeleteBtn');
+  btn.disabled = true;
+  let done = 0, refused = 0, failed = 0, filesGone = 0, filesFailed = 0;
+  for (const sub of rows) {
+    // Row first: that is what takes it off the site. Its URLs are already in
+    // hand, so the file cleanup below doesn't depend on the row surviving —
+    // and a Storage policy that isn't applied yet can't block moderation.
+    const res = await adminDeleteRow('mosaic_submissions', sub.id);
+    if (!res.ok) {
+      if (res.refused) refused++; else { failed++; console.error('admin delete artwork error:', res.error); }
+      continue;
+    }
+    done++;
+    const paths = adminStoragePaths(sub);
+    if (paths.length) {
+      const { error: sErr } = await sb.storage.from('artwork').remove(paths);
+      if (sErr) { filesFailed += paths.length; console.error('remove artwork files error:', sErr); }
+      else filesGone += paths.length;
+    }
+    await adminLogAction('artwork_delete', 'submission', sub.id, {
+      title: sub.art_title || null, author: sub.author_name || null, files: paths.length,
+    });
+  }
+  btn.disabled = false;
+
+  // One toast: each call replaces the last, so separate ones would hide
+  // everything but the final line.
+  const said = [];
+  if (done) said.push(tr('adminArtDeleted', { n: done, files: filesGone }));
+  if (refused) said.push(tr('adminDeleteRefused'));
+  if (failed) said.push(tr('adminBulkPartial', { done, failed }));
+  if (filesFailed) said.push(tr('adminArtFilesFailed', { n: filesFailed }));
+  if (said.length) toast(said.join(' · '));
+  // Files left behind, or nothing written to the log: both mean
+  // supabase_admin_moderation.sql hasn't been applied — say so in the page,
+  // not just in a toast that disappears.
+  if (filesFailed || !adminLogAvailable) adminShow('adminArtUnavailable', true);
+
+  await resetAdminArtworks();
+  // Cells just opened up — give the pool a pass, same as every other path
+  // that frees cells.
+  placePooledPieces(false).then(() => { loadAdminUsage(); }).catch(e => console.error('pool matching after delete error:', e));
+}
+
+// ---------- comments tab ----------
+const ADMIN_COM_PAGE = 50;
+let adminComOffset = 0, adminComDone = false;
+const adminComSelected = new Map();
+
+async function resetAdminComments() {
+  adminComOffset = 0; adminComDone = false;
+  adminComSelected.clear();
+  document.getElementById('adminComments').innerHTML = '';
+  document.getElementById('adminComSelectAll').checked = false;
+  syncAdminComBar();
+  await loadMoreAdminComments();
+}
+
+async function loadMoreAdminComments() {
+  const btn = document.getElementById('adminComMoreBtn');
+  btn.disabled = true;
+  const { data, error } = await sb.from('mosaic_submission_comments')
+    .select('id,submission_id,author_id,author_name,body,created_at')
+    .order('created_at', { ascending: false })
+    .range(adminComOffset, adminComOffset + ADMIN_COM_PAGE - 1);
+  btn.disabled = false;
+  if (error) { console.error('load admin comments error:', error); toast(tr('adminLoadError')); return; }
+
+  const rows = data || [];
+  // One lookup for the artwork each comment sits on, so the row can link out.
+  const subIds = [...new Set(rows.map(r => r.submission_id).filter(Boolean))];
+  const { data: subs } = subIds.length
+    ? await sb.from('mosaic_submissions').select('id,art_title').in('id', subIds)
+    : { data: [] };
+  const titleBy = new Map((subs || []).map(s => [String(s.id), s.art_title]));
+
+  const list = document.getElementById('adminComments');
+  for (const c of rows) list.appendChild(adminCommentRowEl(c, titleBy));
+  adminComOffset += rows.length;
+  adminComDone = rows.length < ADMIN_COM_PAGE;
+  adminShow('adminComEmpty', adminComOffset === 0);
+  btn.style.display = adminComDone ? 'none' : '';
+  syncAdminComBar();
+}
+
+function adminCommentRowEl(c, titleBy) {
+  const row = document.createElement('div');
+  row.className = 'admin-row admin-comment';
+
+  const check = document.createElement('input');
+  check.type = 'checkbox'; check.className = 'admin-com-check';
+  check.checked = adminComSelected.has(c.id);
+  check.setAttribute('aria-label', c.body.slice(0, 40));
+  check.onchange = () => {
+    if (check.checked) adminComSelected.set(c.id, c); else adminComSelected.delete(c.id);
+    row.classList.toggle('selected', check.checked);
+    syncAdminComBar();
+  };
+  row.classList.toggle('selected', check.checked);
+
+  const meta = document.createElement('div'); meta.className = 'admin-meta';
+  const body = document.createElement('div'); body.className = 'admin-com-body'; body.textContent = c.body;
+  const sub = document.createElement('div'); sub.className = 'admin-sub';
+  sub.append(`${c.author_name || tr('anonymous')} · ${adminDate(c.created_at)} · `);
+  if (c.submission_id) {
+    const link = document.createElement('a');
+    link.className = 'admin-target-label'; link.href = artworkUrl(c.submission_id);
+    link.target = '_blank'; link.rel = 'noopener';
+    link.textContent = titleBy.get(String(c.submission_id)) || tr('adminNoTitle');
+    sub.appendChild(link);
+  } else {
+    sub.append(tr('adminTargetMissing'));
+  }
+  meta.append(body, sub);
+
+  row.append(check, meta);
+  return row;
+}
+
+function syncAdminComBar() {
+  const n = adminComSelected.size;
+  const btn = document.getElementById('adminComDeleteBtn');
+  btn.disabled = n === 0;
+  btn.textContent = n ? tr('adminDeleteSelectedN', { n }) : tr('adminDeleteSelected');
+  document.getElementById('adminComCount').textContent =
+    tr('adminShownSelected', { shown: adminComOffset, selected: n });
+}
+
+async function deleteSelectedComments() {
+  const rows = [...adminComSelected.values()];
+  if (!rows.length) return;
+  if (rows.length > ADMIN_BULK_MAX) { toast(tr('adminBulkTooMany', { max: ADMIN_BULK_MAX })); return; }
+
+  const word = tr('adminBulkConfirmWord');
+  const proceed = await confirmDialog(
+    tr('adminComDeleteMessage', { n: rows.length, word }),
+    { title: tr('adminComDeleteTitle'), okLabel: tr('deleteLabel'), confirmText: word }
+  );
+  if (!proceed) return;
+
+  const btn = document.getElementById('adminComDeleteBtn');
+  btn.disabled = true;
+  let done = 0, refused = 0, failed = 0;
+  for (const c of rows) {
+    const res = await adminDeleteRow('mosaic_submission_comments', c.id);
+    if (!res.ok) {
+      if (res.refused) refused++; else { failed++; console.error('admin delete comment error:', res.error); }
+      continue;
+    }
+    done++;
+    await adminLogAction('comment_delete', 'comment', c.id, { author: c.author_name || null, submission: c.submission_id || null });
+  }
+  btn.disabled = false;
+
+  // Until supabase_admin_moderation.sql runs, the delete policy still only
+  // covers the comment's own author and the artwork's author, so an admin's
+  // delete is silently refused rather than failing.
+  if (refused) adminShow('adminComUnavailable', true);
+  const said = [];
+  if (done) said.push(tr('adminComDeleted', { n: done }));
+  if (refused) said.push(tr('adminDeleteRefused'));
+  if (failed) said.push(tr('adminBulkPartial', { done, failed }));
+  if (said.length) toast(said.join(' · '));
+  await resetAdminComments();
+}
+
+// ---------- members tab: upload block ----------
+let adminBlockAvailable = true;
+const ADMIN_PROFILE_COLS = 'id,username,name,avatar_url,upload_blocked';
+
+async function fetchAdminProfiles(apply) {
+  let { data, error } = await apply(sb.from('profiles').select(ADMIN_PROFILE_COLS));
+  if (error && isSchemaMismatchError(error)) {
+    adminBlockAvailable = false;
+    adminShow('adminBlockUnavailable', true);
+    return { data: null, error };
+  }
+  return { data, error };
+}
+
+async function loadAdminBlocked() {
+  if (!adminBlockAvailable) return;
+  const { data, error } = await fetchAdminProfiles(q => q.eq('upload_blocked', true).order('username').limit(100));
+  if (error) { if (!isSchemaMismatchError(error)) console.error('load blocked profiles error:', error); return; }
+  const rows = data || [];
+  const list = document.getElementById('adminBlockedList');
+  list.innerHTML = '';
+  adminShow('adminBlockedEmpty', rows.length === 0);
+  for (const p of rows) list.appendChild(adminProfileRowEl(p));
+}
+
+async function searchAdminMembers() {
+  const term = document.getElementById('adminBlockSearch').value.trim();
+  const list = document.getElementById('adminBlockResults');
+  list.innerHTML = '';
+  // Without the upload_blocked column there is nothing to do with a result.
+  if (!term || !adminBlockAvailable) return;
+  const { data, error } = await fetchAdminProfiles(q => q.ilike('username', `%${term}%`).order('username').limit(20));
+  if (error) { if (!isSchemaMismatchError(error)) { console.error('search profiles error:', error); toast(tr('adminLoadError')); } return; }
+  const rows = data || [];
+  if (!rows.length) { toast(tr('adminBlockNoResults')); return; }
+  for (const p of rows) list.appendChild(adminProfileRowEl(p));
+}
+
+function adminProfileRowEl(p) {
+  const row = document.createElement('div');
+  row.className = 'admin-row admin-admin';
+
+  const name = p.username || p.name || tr('anonymous');
+  const target = document.createElement('div'); target.className = 'admin-target';
+  target.appendChild(miniAvatarEl(name, p.avatar_url, p.id));
+  const label = document.createElement('a');
+  label.className = 'admin-target-label';
+  label.href = profileUrl(p.username || p.id);
+  label.target = '_blank'; label.rel = 'noopener';
+  label.textContent = name;
+  target.appendChild(label);
+
+  const meta = document.createElement('div'); meta.className = 'admin-meta';
+  if (p.upload_blocked) {
+    const badge = document.createElement('span');
+    badge.className = 'admin-badge admin-status-open'; badge.textContent = tr('adminBlockedBadge');
+    meta.appendChild(badge);
+  }
+
+  const actions = document.createElement('div'); actions.className = 'admin-actions';
+  actions.appendChild(adminActionBtn(
+    p.upload_blocked ? tr('adminUnblockLabel') : tr('adminBlockLabel'),
+    () => setAdminUploadBlocked(p, !p.upload_blocked),
+    p.upload_blocked ? '' : 'danger'
+  ));
+
+  row.append(target, meta, actions);
+  return row;
+}
+
+async function setAdminUploadBlocked(p, blocked) {
+  const name = p.username || p.name || tr('anonymous');
+  if (blocked) {
+    const proceed = await confirmDialog(tr('adminBlockMessage', { name }), { title: tr('adminBlockTitle'), okLabel: tr('adminBlockLabel') });
+    if (!proceed) return;
+  }
+  const { error } = await sb.rpc('admin_set_upload_blocked', { p_user: p.id, p_blocked: blocked });
+  if (error) {
+    console.error('admin_set_upload_blocked error:', error);
+    if (isSchemaMismatchError(error)) { adminShow('adminBlockUnavailable', true); toast(tr('adminBlockUnavailableToast')); return; }
+    toast(tr('adminBlockFailed')); return;
+  }
+  toast(blocked ? tr('adminBlockDone', { name }) : tr('adminUnblockDone', { name }));
+  // The RPC logs the change itself, so only the two lists need refreshing.
+  await Promise.all([loadAdminBlocked(), searchAdminMembers()]);
+  if (adminTabsLoaded.has('log')) loadAdminLog();
+}
+
+// ---------- open-report count on the tab, whichever tab is showing ----------
+async function loadAdminReportsBadge() {
+  const badge = document.getElementById('adminReportsBadge');
+  const { count, error } = await sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open');
+  if (error) { console.error('report count error:', error); return; }
+  badge.textContent = String(count || 0);
+  badge.hidden = !count;
+}
+
+// ---------- tabs ----------
+// One section per tab, loaded the first time it is opened — the page used to
+// fire nine requests before showing anything. The hash keeps a tab across a
+// refresh and makes it linkable.
+const ADMIN_TAB_LOADERS = {
+  dashboard: () => Promise.all([loadAdminVisits(), loadAdminUsage()]),
+  reports:   () => loadAdminReports(),
+  artworks:  () => resetAdminArtworks(),
+  comments:  () => resetAdminComments(),
+  campaigns: () => loadAdminCampaigns(),
+  tools:     () => Promise.all([loadAdminPool(), loadAdminPieces(), loadAdminThumbs()]),
+  members:   () => Promise.all([loadAdminAdmins(), loadAdminBlocked()]),
+  settings:  () => loadAdminSettings(),
+  log:       () => loadAdminLog(),
+};
+const ADMIN_DEFAULT_TAB = 'dashboard';
+const adminTabsLoaded = new Set();
+
+function adminTabFromHash() {
+  const want = decodeURIComponent((location.hash || '').replace(/^#/, ''));
+  return Object.prototype.hasOwnProperty.call(ADMIN_TAB_LOADERS, want) ? want : ADMIN_DEFAULT_TAB;
+}
+
+function showAdminTab(name) {
+  document.querySelectorAll('.admin-tab').forEach(btn => {
+    const on = btn.dataset.tab === name;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  document.querySelectorAll('.admin-panel').forEach(panel => { panel.hidden = panel.dataset.panel !== name; });
+  if (adminTabsLoaded.has(name)) return;
+  adminTabsLoaded.add(name);
+  Promise.resolve(ADMIN_TAB_LOADERS[name]()).catch(err => console.error(`admin tab "${name}" load error:`, err));
+}
+
 // ---------- boot ----------
 async function loadAdminPage() {
   const isAdmin = !!(me.id && me.isAdmin);
   adminShow('adminNotice', !isAdmin);
   adminShow('adminBody', isAdmin);
   if (!isAdmin) return;
-  await Promise.all([loadAdminUsage(), loadAdminVisits(), loadAdminSettings(), loadAdminReports(), loadAdminCampaigns(), loadAdminPool(), loadAdminThumbs(), loadAdminPieces(), loadAdminAdmins()]);
+  adminTabsLoaded.clear(); // a sign-in/out re-runs this: every tab is stale
+  showAdminTab(adminTabFromHash());
+  loadAdminReportsBadge().catch(err => console.error('report badge error:', err));
 }
+
+document.getElementById('adminTabs').addEventListener('click', e => {
+  const btn = e.target.closest('.admin-tab');
+  if (!btn) return;
+  // Setting the hash fires hashchange, which does the actual switch.
+  if (adminTabFromHash() === btn.dataset.tab) showAdminTab(btn.dataset.tab);
+  else location.hash = btn.dataset.tab;
+});
+window.addEventListener('hashchange', () => { if (me.id && me.isAdmin) showAdminTab(adminTabFromHash()); });
+
 document.getElementById('adminReportsShowAll').onchange = () => loadAdminReports();
+const reloadAdminArtworks = () => resetAdminArtworks().catch(err => console.error('admin artworks reload error:', err));
+
+document.getElementById('adminArtRange').onchange = reloadAdminArtworks;
+document.getElementById('adminArtAuthor').onchange = reloadAdminArtworks;
+document.getElementById('adminArtMoreBtn').onclick = () => loadMoreAdminArtworks().catch(err => console.error('admin artworks page error:', err));
+document.getElementById('adminArtDeleteBtn').onclick = () => deleteSelectedArtworks().catch(err => console.error('admin artwork delete error:', err));
+// "Select all" stops at the per-action cap rather than ticking 60 boxes the
+// delete would then refuse.
+// Each change event updates `selected` synchronously, so the cap below sees
+// the running total.
+function adminSelectAll(selector, on, selected) {
+  let truncated = false;
+  document.querySelectorAll(selector).forEach(check => {
+    if (on && !check.checked && selected.size >= ADMIN_BULK_MAX) { truncated = true; return; }
+    if (check.checked === on) return;
+    check.checked = on;
+    check.dispatchEvent(new Event('change'));
+  });
+  if (truncated) toast(tr('adminSelectAllCapped', { max: ADMIN_BULK_MAX }));
+}
+document.getElementById('adminArtSelectAll').onchange = e =>
+  adminSelectAll('#adminArtGrid .admin-art-check', e.target.checked, adminArtSelected);
+document.getElementById('adminComMoreBtn').onclick = () => loadMoreAdminComments().catch(err => console.error('admin comments page error:', err));
+document.getElementById('adminComDeleteBtn').onclick = () => deleteSelectedComments().catch(err => console.error('admin comment delete error:', err));
+document.getElementById('adminComSelectAll').onchange = e =>
+  adminSelectAll('#adminComments .admin-com-check', e.target.checked, adminComSelected);
+document.getElementById('adminBlockSearchBtn').onclick = () => searchAdminMembers().catch(err => console.error('admin member search error:', err));
+document.getElementById('adminBlockSearch').onkeydown = e => { if (e.key === 'Enter') searchAdminMembers().catch(err => console.error('admin member search error:', err)); };
+
 document.addEventListener('weavo:authchange', () => loadAdminPage());
 authReady.then(() => loadAdminPage());

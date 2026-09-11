@@ -107,6 +107,10 @@ $$;
 
 -- ── 3. rate limit: pieces are not uploads ─────────────────────────────────
 -- 49 piece rows arrive with every upload; only the artwork rows count.
+-- SUPERSEDED by supabase_admin_moderation.sql §4 (2026-09-11), which keeps
+-- this skip but reads the limit from site_settings and also refuses uploads
+-- from a blocked account. Re-running THIS file puts the hardcoded 20/10min
+-- version back — re-run supabase_admin_moderation.sql afterwards if so.
 create or replace function public.enforce_mosaic_submission_rate_limit()
 returns trigger
 language plpgsql

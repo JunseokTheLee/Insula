@@ -90,6 +90,7 @@
 - 권한은 RLS 정책과 컬럼 단위 grant 로 건다. `is_admin` 은 클라이언트가 바꿀 수 없어야 한다 (`supabase_mosaic.sql` 1절 참고). 정책을 느슨하게 푸는 변경은 사용자에게 먼저 확인한다.
 - 셀 점유는 `claim → attach → stale sweep(10분)` 상태 머신이다. `mosaic_pixels` 의 update 정책을 고칠 때는 이 세 단계가 모두 유지되는지 확인한다.
 - **2026.9.10 추가 SQL (실행 순서; 아래 3개와 `supabase_profiles_username_rules.sql` 모두 2026.9.10 운영 DB 적용 완료 — 사용자 확인)**: ① `supabase_mosaic_grid_image.sql`(`grid_image_url` 컬럼, 7인자 reshape RPC) → ② `supabase_mosaic_server_matching.sql`(Lab 컬럼·트리거·백필, `match_pool_artworks`·`release_poor_matches`·`admin_usage_stats`). 코드는 둘 다 **미적용 상태에서도 옛 경로로 동작**하도록 폴백을 두었으므로 push 순서와 무관하지만, 적용 전까지는 격자 이미지·서버 매칭·관리자 사용량 표시가 비활성이다. ③ `supabase_site_settings.sql`(사이트 옵션 테이블·RPC, 다른 둘과 독립)은 적용 전까지 모든 옵션이 기본값으로 동작하고 관리자 페이지의 옵션 섹션이 비활성이다 (16절). ④ `supabase_mosaic_micro_thumbs.sql`(`thumb/` 업로드 Storage 정책, `micro_thumb` 컬럼, `admin_set_submission_thumbs`)은 **미적용이면 썸네일 업로드가 계속 실패**하고(2026.8~9 전 작품이 그랬음) 관리자 "썸네일 생성" 이 비활성이다. ⑤ `supabase_mosaic_like_count.sql`(`like_count` 컬럼·가드·집계 트리거·백필)은 미적용이면 작품 탐색이 최신순만 되고 인기순이 최신순으로 폴백한다. ⑥ `supabase_mosaic_preview_image.sql`(`preview_image_url` 컬럼)은 미적용이면 공유 이미지가 로고로 나가고 관리자 "공유 이미지 생성" 이 실패한다. ⑦ `supabase_visit_stats.sql`(`visit_days` 테이블, `record_visit`·`admin_visit_stats` RPC; ③ 뒤에 실행, 2026.9.10 운영 DB 적용 완료 — 사용자 확인)은 미적용이면 방문이 기록되지 않고(브라우저당 하루 1회 실패 요청) 관리자 "방문 통계" 가 안내문만 보인다. ⑧ `supabase_mosaic_sponsor.sql`(캠페인별 기부 약정: `sponsor_name`·`sponsor_logo_url`·`sponsor_tagline`·`pledge_amount` 기본 500,000; 다른 파일과 독립, **적용 여부 확인 필요**)은 미적용이면 홈 히어로가 고정 문구·₩500,000 으로 표시되고, 캠페인 생성·관리자 수정 폼의 약정 필드는 저장되지 않는다(나머지는 저장, 토스트로 안내). ⑨ `supabase_mosaic_pieces.sql`(작품 조각: `parent_id`·`piece_row/col/n`·`home_project_id`·`match_tried_at` 컬럼, `cells_changed_at`, `set_submission_pieces` RPC, 매칭·해제·빼기·캠페인 삭제 RPC 와 통계 재정의; ②·③ 뒤에 실행, 2026.9.10 운영 DB 적용 완료 — 사용자 확인)은 미적용이면 작품이 예전처럼 통째로 한 칸에 매칭되고 관리자 "작품 조각" 이 안내문만 보인다. 적용 직후 관리자 "작품 조각 → 조각 생성" 으로 기존 작품을 일괄 전환한다. ⑩ `supabase_mosaic_pieces_retry.sql`(`admin_reset_piece_tries` RPC; ⑨ 뒤에 실행, 2026.9.10 운영 DB 적용 완료 — 사용자 확인)은 미적용이면 관리자 "색 기준 전체 적용" 버튼이 안내 토스트만 낸다. **주의: 옛 파일 `supabase_mosaic_rematch.sql`(`mosaic_meta`·`claim_rematch_slot`·`unmatch_submissions`)이 2026.9.10 까지 운영에 적용된 적이 없었다** — `release_poor_matches` 가 호출마다 42883 으로 실패했지만 `matching.js` 가 "함수 없음" 오류를 무시해 6시간 정리가 조용히 안 돌고 있었다. ⑩ 과 정리 작업 모두 이 파일이 필요하다(2026.9.10 운영 DB 적용 완료 — 사용자 확인).
+- **2026.9.11 추가 SQL**: ⑪ `supabase_admin_moderation.sql`(관리자 모더레이션 — 댓글 삭제 정책에 관리자 추가, `admin_audit_log` 테이블과 `admin_log_action` RPC, `profiles.upload_blocked` 컬럼과 `admin_set_upload_blocked` RPC, 업로드 속도 제한을 사이트 옵션에서 읽도록 재정의, 관리자용 Storage list/delete 정책; ⑨ 와 ③ 뒤에 실행, **적용 여부 확인 필요**). 미적용이면 관리자 페이지에서 ⓐ 댓글 삭제가 조용히 거부되고(RLS 가 정책 없이 0행 삭제) ⓑ "기록" 탭이 안내문만 보이며 ⓒ 업로드 차단이 비활성이고 ⓓ 작품을 지워도 Storage 원본 파일이 남는다. 작품 행 삭제 자체는 기존 정책으로 동작한다. **주의: `enforce_mosaic_submission_rate_limit()` 이 세 파일(`supabase_mosaic_submissions_rate_limit.sql`·`supabase_mosaic_pieces.sql`·⑪)에 모두 있다** — ⑪ 이 최신이므로 앞의 둘을 다시 실행했다면 ⑪ 을 뒤이어 다시 실행한다.
 
 ---
 
@@ -113,9 +114,11 @@ $1(common.js)로 받는다.** Supabase 는 응답을 기본 1,000행에서 조�
     1. **화면 끝까지 배경이 닿는 막대·카드** (`.topnav`·`.backnav`·`.weavo-grid-wrap`·`.project-list-view`·`.artwork-stage`·`.profile-section`): 좌우 `padding` 또는 `margin` 을 `max(var(--gutter), calc((100% - var(--frame)) / 2))` 로 준다.
     2. **보통 컨테이너** (`.artworks-page`·`.artists-page`·`.exhibitions-page`·`.network-page`·`.legal-page`·`.project-head`·`.profile-head`·`.projects-grid`·`.artworks-grid`·`.carousel-header`·`.carousel-track-wrap`·`.recent-activity`·`.artwork-breadcrumb`·`#collectionItemsGrid`): `max-width:var(--frame-max); margin:0 auto; padding-inline:var(--gutter)`.
     3. **이미 여백이 있는 부모 안의 요소** (`.hero-inner`·`.stats-bar-inner`): `max-width:var(--frame)` 만.
-  - **글만 있는 페이지는 유일한 예외다** (소개·개인정보처리방침·면책조항·계정 삭제·404·관리자). 760px(관리자 960px) 읽기 폭을 1400px 프레임 왼쪽에 붙이면 넓은 모니터에서 오른쪽이 휑해 보이므로 **가운데 정렬**한다: `max-width:calc(760px + var(--gutter) * 2); margin:0 auto`. 좌우 여백은 그대로 `--gutter` 를 쓰고, 모바일에서는 화면이 좁아 자동으로 로고 선과 맞는다. (2026.9.11 사용자 피드백)
+  - **글만 있는 페이지는 유일한 예외다** (소개·개인정보처리방침·면책조항·계정 삭제·404). 760px 읽기 폭을 1400px 프레임 왼쪽에 붙이면 넓은 모니터에서 오른쪽이 휑해 보이므로 **가운데 정렬**한다: `max-width:calc(760px + var(--gutter) * 2); margin:0 auto`. 좌우 여백은 그대로 `--gutter` 를 쓰고, 모바일에서는 화면이 좁아 자동으로 로고 선과 맞는다. (2026.9.11 사용자 피드백)
+  - **관리자 페이지는 글 페이지가 아니라 도구라서 프레임 전체를 쓴다** (2026.9.11). `.admin-page{max-width:var(--frame-max)}` 에 왼쪽 탭 레일 190px + 내용 열(`.admin-layout` 그리드) 구조이며, 로고와 맞는 것은 `h1` 과 탭 레일의 왼쪽 끝이다. 본문 글줄은 `.admin-help{max-width:78ch}` 로 따로 잡는다.
   - 모바일은 `--gutter` 가 16px 로 바뀌어 자동 처리되므로 미디어 쿼리에 16px 을 새로 적지 않는다. 캠페인·네트워크의 휴대폰 전체 화면 모드(`body[data-mobile-fs]`)만 여백 0 인 의도된 예외다.
   - **확인 방법**: 화면 폭 2560 / 1280 / 768 / 375 에서 `.logo` 의 left 와 그 페이지 본문 첫 요소의 left 가 같아야 한다(카드류는 카드 바깥 테두리 기준). 가로 스크롤이 생기지 않아야 한다.
+- **작품을 격자로 보여주는 화면은 클릭 시 라이트박스로 연다** (홈·프로필·컬렉션·캠페인·작품 탐색, 2026.9.11 에 작품 탐색 추가). 카드의 `href` 는 작품 상세 주소 그대로 두고 평범한 좌클릭만 `preventDefault()` 로 가로채 `openLightbox(sub)` 를 부른다 — 크롤러·가운데 클릭·Ctrl 클릭은 여전히 색인되는 실제 주소로 간다. 목록 조회는 `ARTWORK_ROW_COLS`(common.js)를 써서 라이트박스가 필요한 설명·링크·재료까지 한 번에 받는다(행당 약 +200바이트). 새로 만드는 작품 격자도 같은 방식을 쓴다.
 - UI 디자인 작업에는 `.claude/skills/superdesign` 스킬이 있다. 이 스킬은 외부(GitHub raw) 지침을 가져오므로, 디자인 작업을 명시적으로 요청받았을 때만 쓴다.
 
 ---
@@ -198,15 +201,23 @@ git config core.hooksPath tools/git-hooks
 - DB 쪽도 같은 원칙을 지킨다: `mosaic_submissions` 의 delete 정책은 "작가 본인 또는 관리자가 행 단위로" 지우는 것만 허용한다. 여러 행을 한 번에 지우는 RPC·정책·트리거를 추가하지 않는다.
 - 작가 본인이 작품 하나를 지울 때 그 작품의 조각 행이 `parent_id` cascade 로 함께 지워지는 것은 본인 작품의 일부이므로 이 절에 어긋나지 않는다.
 - 유일한 예외는 **본인의 계정 삭제**(`delete_own_account`) — 사용자가 자기 계정을 지우면서 자기 작품이 함께 삭제되는 것은 본인 의사이므로 허용. 관리자가 남의 계정을 삭제하는 기능은 없고 만들지 않는다.
+- **예외 하나 — 관리자 페이지 "작품" 탭의 선택 삭제 (2026.9.11 사용자 승인).** 음란물·스팸 대량 업로드 대응 수단이 필요하다는 판단으로, 아래 안전장치를 모두 갖춘 형태로만 허용한다. 안전장치를 빼는 변경은 이 승인 범위 밖이다.
+  - **한 번에 최대 20건** (`ADMIN_BULK_MAX`, js/admin.js). "전체 선택" 도 20건에서 멈춘다.
+  - 삭제 전 **확인 문구 입력**(`confirmDialog` 의 `confirmText`).
+  - **DB 에는 여전히 대량 삭제 RPC·정책이 없다.** 클라이언트가 기존 행 단위 delete 정책으로 **한 건씩** 지운다. `supabase_admin_moderation.sql` 에도 그런 RPC 를 넣지 않았다 — 넣지 말 것.
+  - 삭제할 때 **Storage 원본 이미지 파일까지** 지운다(음란물 대응에서 행만 지우면 파일 URL 이 그대로 살아 있다).
+  - 모든 삭제를 **`admin_audit_log` 에 한 건씩 기록**한다(추가 전용 — update/delete grant 없음).
+- 댓글에는 이 절이 적용되지 않는다. 관리자 페이지 "댓글" 탭의 선택 삭제도 같은 20건 상한·확인 문구·기록을 쓰지만, 댓글은 작가의 작품이 아니다.
 - 이 규칙과 충돌하는 요청을 받으면 구현 전에 이 절을 근거로 사용자에게 먼저 확인한다.
 
 ---
 
 ## 14. 관리자 페이지 `/{lang}/admin` (2026.9.9)
 
+- **화면은 왼쪽 탭 레일 + 패널 구조다** (2026.9.11). 탭은 대시보드(방문 통계 → 사용량) · 신고 · 작품 · 댓글 · 캠페인 · 작품 처리(풀 대기·조각·썸네일) · 회원(관리자 목록·업로드 차단) · 사이트 옵션 · 기록. **탭을 처음 열 때만 그 탭의 데이터를 읽는다**(예전에는 진입하자마자 9개 요청이 한꺼번에 나갔다). 현재 탭은 주소 해시(`/ko/admin#artworks`)에 남아 새로고침·북마크에도 유지된다. 새 관리 기능은 새 `<section>` 을 알맞은 패널 안에 넣고 `ADMIN_TAB_LOADERS` 에 로더를 건다.
 - 파일: `en/admin.html`·`ko/admin.html`(about.html 셸 복제), `js/admin.js`, `css/admin.css`. 헤더의 "관리" 링크는 `auth.js` 의 `updateIdentityUI()` 가 `is_admin` 계정에만 동적으로 만든다(30개 헤더에 숨은 요소를 두지 않기 위해).
 - 접근 제어는 이중이다: 화면은 `me.isAdmin` 이 아니면 안내문만 보이고, 데이터는 DB 정책(`reports` 관리자 전용, `delete_mosaic_project` 관리자 검사)이 막는다. 화면 가림만 믿고 정책을 느슨하게 하지 않는다.
-- 기능: 신고 목록(대상 링크로 열어 한 건씩 검토, 상태 변경만), 캠페인 목록·제목/설명/기부 약정(기업명·로고·홍보 문구·금액) 수정·격자 이미지 생성·공유 이미지 생성(각각 없는 옛 캠페인만)·개별 삭제(작품은 풀로 복귀하고 곧바로 매칭을 돌려 남은 캠페인에 배치; 크기·이미지 변경은 캠페인 페이지의 reshape), 풀 대기 작품 목록과 "지금 배치" 버튼(매칭 수동 실행), 작품 썸네일 누락 수와 "썸네일 생성"(재생성), 작품 조각(조각 없는 작품 수·"조각 생성"·"전체 다시 생성" — `supabase_mosaic_pieces.sql`), 관리자 목록(지정·해제는 SQL 안내만), DB·Storage 사용량, 방문 통계(오늘·최근 10일 회원/게스트 방문 수 누적 막대그래프와 신규 작품·회원 — `supabase_visit_stats.sql`, `js/auth.js` 의 `recordVisitOnce()` 가 브라우저당 하루 1회 기록), 사이트 옵션 체크박스(16절). **13절에 따라 작품 삭제 기능은 여기에 넣지 않는다.**
+- 기능: 신고 목록(대상 링크로 열어 한 건씩 검토, 상태 변경만), 캠페인 목록·제목/설명/기부 약정(기업명·로고·홍보 문구·금액) 수정·격자 이미지 생성·공유 이미지 생성(각각 없는 옛 캠페인만)·개별 삭제(작품은 풀로 복귀하고 곧바로 매칭을 돌려 남은 캠페인에 배치; 크기·이미지 변경은 캠페인 페이지의 reshape), 풀 대기 작품 목록과 "지금 배치" 버튼(매칭 수동 실행), 작품 썸네일 누락 수와 "썸네일 생성"(재생성), 작품 조각(조각 없는 작품 수·"조각 생성"·"전체 다시 생성" — `supabase_mosaic_pieces.sql`), 관리자 목록(지정·해제는 SQL 안내만), DB·Storage 사용량, 방문 통계(오늘·최근 10일 회원/게스트 방문 수 누적 막대그래프와 신규 작품·회원 — `supabase_visit_stats.sql`, `js/auth.js` 의 `recordVisitOnce()` 가 브라우저당 하루 1회 기록), 사이트 옵션 체크박스(16절). 작품 목록(최신순·기간/작가 필터·체크박스 선택 삭제 — 13절의 승인된 예외, 20건 상한·확인 문구·Storage 원본 파일 삭제·기록), 댓글 목록(최신순·체크박스 선택 삭제), 업로드 차단(사용자 이름 검색 → 차단/해제, `admin_set_upload_blocked`), 기록(관리자 삭제·차단 이력 200건, 추가 전용) — 모두 `supabase_admin_moderation.sql` 이 필요하다. **13절의 안전장치를 빼거나 대량 삭제 RPC 를 추가하지 않는다.**
 - `robots.txt` 색인 제외, `sitemap-static.xml` 미등재, `<meta name="robots" content="noindex,nofollow">`. 새 관리자 기능도 같은 원칙으로 이 페이지에 모은다.
 
 ---
@@ -239,6 +250,7 @@ git config core.hooksPath tools/git-hooks
 - 현재 옵션: `countVisits` — 방문자 수 집계(브라우저당 하루 1회, 회원/게스트 구분), 기본 켜짐. `record_visit()` 이 서버에서도 검사한다.
 - 현재 옵션: `previewContrast`(대비 0~100, 기본 40)·`previewBrightness`(밝기 0~100, 기본 70)·`previewTint`(틴트 색 `#RRGGBB`, 기본 `#DCE4ED`) — 빈 칸 회색. `openCellGrayer(cells, settings)`(common.js)가 캠페인 기준 사진의 평균 명도를 밝기 수준으로 옮기고 편차를 대비만큼 줄이며, `openCellPainter()` 가 그 회색에 틴트 색의 채널별 비율(색조·채도만, 밝기는 쓰지 않음)을 곱해 `rgb()` 문자열로 돌려준다. 무채색 틴트는 순수 회색. 홈·캠페인 카드·캠페인 격자·공유 카드·관리자 미리보기가 모두 이 함수로 그린다. 공유 카드는 만들 때의 값이 구워지므로 바꾼 뒤에는 관리자 캠페인 목록의 "공유 이미지 다시 생성" 으로 다시 만든다 (2026.9.10).
 - 현재 옵션: `pieceGrid`(작품 분할 개수 2~12, 기본 7)·`pieceMatchDistance`(조각 색 일치 기준 5~60, 기본 20) — 조각은 `makeArtworkPieces()`(common.js)가 옵션대로 자르고, 서버 매칭 RPC 가 `site_settings` 를 직접 읽어 기준을 강제한다(`supabase_mosaic_pieces.sql`). 분할 개수 변경은 새 업로드부터 적용되고 기존 작품은 관리자 "전체 다시 생성" 으로 바꾼다. 색 기준 변경은 새 업로드부터 적용되며, 기존 조각까지 즉시 맞추려면 옵션 옆 "색 기준 전체 적용" 버튼(정리 즉시 실행 → 대기 조각 재시도 표시 초기화 → 매칭 반복, `supabase_mosaic_pieces_retry.sql`)을 쓴다.
+- 현재 옵션: `uploadLimitCount`(계정당 업로드 횟수 1~200, 기본 20)·`uploadLimitMinutes`(그 횟수를 세는 구간(분) 1~240, 기본 10) — `mosaic_submissions` 의 insert 트리거 `enforce_mosaic_submission_rate_limit()` 이 `site_settings` 를 직접 읽어 강제하므로 anon 키로 PostgREST 를 직접 두드려도 우회할 수 없다. 작품을 자른 조각 행(`parent_id is not null`)은 세지 않는다. 같은 트리거가 `profiles.upload_blocked` 도 검사한다 (`supabase_admin_moderation.sql`). 미적용이면 20건/10분 고정값으로 동작한다.
 - DB 사용량(15절): 옵션을 읽는 페이지 뷰당 요청 1개·약 0.3KB(캠페인 상세 기준 요청 +6%), 옵션을 읽지 않는 페이지는 영향 없음.
 
 ---

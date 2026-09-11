@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260911-155838">
-<link rel="stylesheet" href="/css/admin.css?v=20260911-155838">
+<link rel="stylesheet" href="/css/base.css?v=20260911-163309">
+<link rel="stylesheet" href="/css/admin.css?v=20260911-163309">
 </head>
 
 <body>
@@ -48,19 +48,21 @@
       <h1>관리자</h1>
       <p class="admin-notice" id="adminNotice" style="display:none;">관리자만 볼 수 있는 페이지입니다. 관리자 계정으로 로그인해 주세요.</p>
       <div id="adminBody" style="display:none;">
+        <div class="admin-layout">
+        <nav class="admin-tabs" id="adminTabs" role="tablist" aria-label="관리 메뉴">
+          <button type="button" class="admin-tab" data-tab="dashboard" role="tab" aria-selected="false">대시보드</button>
+          <button type="button" class="admin-tab" data-tab="reports" role="tab" aria-selected="false">신고<span class="admin-tab-badge" id="adminReportsBadge" hidden>0</span></button>
+          <button type="button" class="admin-tab" data-tab="artworks" role="tab" aria-selected="false">작품</button>
+          <button type="button" class="admin-tab" data-tab="comments" role="tab" aria-selected="false">댓글</button>
+          <button type="button" class="admin-tab" data-tab="campaigns" role="tab" aria-selected="false">캠페인</button>
+          <button type="button" class="admin-tab" data-tab="tools" role="tab" aria-selected="false">작품 처리</button>
+          <button type="button" class="admin-tab" data-tab="members" role="tab" aria-selected="false">회원</button>
+          <button type="button" class="admin-tab" data-tab="settings" role="tab" aria-selected="false">사이트 옵션</button>
+          <button type="button" class="admin-tab" data-tab="log" role="tab" aria-selected="false">기록</button>
+        </nav>
+        <div class="admin-panels">
 
-        <section class="admin-section" id="adminUsageSection" style="display:none;">
-          <h2>사용량</h2>
-          <p class="admin-help">DB 용량과 Storage(파일) 사용량입니다. <strong>월 전송량(egress)은 DB 에서 알 수 없어</strong> Supabase 대시보드 → Reports → Usage 에서 확인합니다. 참고 한도 — Free: DB 500MB · Storage 1GB · 전송량 5GB/월, Pro: DB 8GB · Storage 100GB · 전송량 250GB/월.</p>
-          <div class="admin-usage">
-            <div class="admin-usage-tile"><div class="admin-usage-k">DB 용량</div><div class="admin-usage-v" id="adminDbSize">—</div></div>
-            <div class="admin-usage-tile"><div class="admin-usage-k">Storage 사용량</div><div class="admin-usage-v" id="adminStorageSize">—</div><div class="admin-usage-s">파일 <span id="adminStorageFiles">—</span>개</div></div>
-            <div class="admin-usage-tile"><div class="admin-usage-k">작품 (대기 조각)</div><div class="admin-usage-v" id="adminCountSubmissions">—</div></div>
-            <div class="admin-usage-tile"><div class="admin-usage-k">캠페인 칸 합계</div><div class="admin-usage-v" id="adminCountPixels">—</div><div class="admin-usage-s">진행 중 캠페인 <span id="adminCountProjects">—</span>개</div></div>
-            <div class="admin-usage-tile"><div class="admin-usage-k">회원</div><div class="admin-usage-v" id="adminCountProfiles">—</div></div>
-          </div>
-        </section>
-
+        <div class="admin-panel" data-panel="dashboard" role="tabpanel" hidden>
         <section class="admin-section" id="adminVisitsSection">
           <h2>방문 통계</h2>
           <p class="admin-help">사이트를 연 브라우저 수를 브라우저마다 하루(한국 시간) 한 번 집계합니다. 그 순간 로그인 세션이 있으면 <strong>회원</strong>, 아니면 <strong>게스트</strong>입니다. 같은 사람이 두 기기로 오면 2, 게스트로 왔다가 같은 날 로그인하면 양쪽에 1씩, JavaScript 를 실행하지 않는 방문과 알려진 크롤러는 세지 않습니다. <code>supabase_visit_stats.sql</code> 의 <code>record_visit()</code> 이 기록하며 아래 "방문자 수 집계" 옵션으로 끌 수 있습니다. 신규 작품·신규 회원은 기존 테이블에서 셉니다.</p>
@@ -77,33 +79,20 @@
           </div>
         </section>
 
-        <section class="admin-section" id="adminSettingsSection">
-          <h2>사이트 옵션</h2>
-          <p class="admin-help">모든 방문자에게 다음 페이지 로드부터(늦어도 1분 안에) 적용됩니다. <code>site_settings</code> 한 행에 저장되며(<code>supabase_site_settings.sql</code>), 모든 사이트 옵션은 여기서만 설정합니다.</p>
-          <p class="admin-help admin-settings-unavailable" id="adminSettingsUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_site_settings.sql</code> 을 먼저 실행하세요. 그 전까지는 모든 옵션이 기본값으로 동작합니다.</p>
-          <div class="admin-settings" id="adminSettings">
-            <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>캠페인 페이지 오른쪽에 "미리보기"(기준 색상) 썸네일 표시 <em>(기본: 끔)</em></span></label>
-            <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>방문자 수 집계 — 브라우저마다 하루(한국 시간) 한 번, 회원·게스트를 구분해 위 "방문 통계" 에 표시 <em>(기본 켜짐; 끄면 서버의 record_visit() 도 기록하지 않음)</em></span></label>
-            <div class="admin-setting admin-setting-range">
-              <label for="adminPieceGrid">작품 조각 — <strong>분할 개수</strong>: 작품을 가로·세로 몇 등분으로 잘라 모자이크 조각으로 쓸지. 7 이면 49조각. 새로 올리는 작품부터 적용되고, 기존 작품은 아래 "작품 조각" 의 "전체 다시 생성" 으로 바꿉니다. <em>(기본: 7)</em></label>
-              <div class="admin-range"><input id="adminPieceGrid" type="range" min="2" max="12" step="1" data-setting="pieceGrid" disabled><output for="adminPieceGrid" data-setting-output="pieceGrid">7</output></div>
-              <label for="adminPieceMatchDistance">작품 조각 — <strong>색 일치 기준</strong>: 조각 색과 빈 칸 색의 거리(Lab, 밝기 가중 0.2)가 이 값 이하일 때만 조각을 넣습니다. 낮을수록 엄격해 조각이 덜 들어가고 색은 더 정확합니다. 서버 매칭이 직접 읽어 강제합니다. <em>(기본: 20)</em></label>
-              <div class="admin-range"><input id="adminPieceMatchDistance" type="range" min="5" max="60" step="1" data-setting="pieceMatchDistance" disabled><output for="adminPieceMatchDistance" data-setting-output="pieceMatchDistance">20</output></div>
-              <p class="admin-help">기준을 바꾼 뒤 <button type="button" class="admin-btn" id="adminPieceApplyBtn">색 기준 전체 적용</button> 을 누르면 새 기준을 넘는 배치 조각을 풀고 대기 조각을 모두 다시 매칭합니다(<code>supabase_mosaic_pieces_retry.sql</code> 필요). 누르지 않으면 새 작품부터 적용되고, 기존 조각은 빈 칸이 생기거나 6시간 정리 때 서서히 반영됩니다.</p>
-            </div>
-            <div class="admin-setting admin-setting-range">
-              <label for="adminPreviewContrast">빈 칸 회색 — <strong>대비</strong>: 100 이면 기준 사진의 명암 차이 그대로, 0 이면 평평한 회색. 낮출수록 홈·캠페인 카드·캠페인 격자·공유 카드에서 사진을 알아보기 어려워집니다. <em>(기본 40)</em></label>
-              <div class="admin-range"><input id="adminPreviewContrast" type="range" min="0" max="100" step="1" data-setting="previewContrast" disabled><output for="adminPreviewContrast" data-setting-output="previewContrast">40</output></div>
-              <label for="adminPreviewBrightness">빈 칸 회색 — <strong>밝기</strong>: 회색의 평균 밝기. 0 검정 · 50 중간 회색 · 100 흰색. 사진의 노출과 관계없이 모든 캠페인의 빈 칸이 이 밝기를 평균으로 그려집니다. <em>(기본 70, 밝은 회색; 이미 만든 공유 카드는 아래 캠페인 목록의 "공유 이미지 다시 생성" 전까지 옛 모습으로 남음)</em></label>
-              <div class="admin-range"><input id="adminPreviewBrightness" type="range" min="0" max="100" step="1" data-setting="previewBrightness" disabled><output for="adminPreviewBrightness" data-setting-output="previewBrightness">70</output></div>
-              <label for="adminPreviewTint">빈 칸 회색 — <strong>틴트</strong>: 회색이 기울 색. 색조와 채도만 쓰고 그 색의 밝기는 쓰지 않으며, 밝기는 위 슬라이더가 정합니다. #DCE4ED 는 은은한 블루가 섞인 밝은 회색이고, 틴트를 없애려면 #808080 같은 무채색을 고릅니다. 고른 색 그대로 보이게 하려면 밝기를 그 색의 명도(#DCE4ED 는 89)로 맞춥니다. <em>(기본 #DCE4ED)</em></label>
-              <div class="admin-range admin-color"><input id="adminPreviewTint" type="color" data-setting="previewTint" value="#dce4ed" disabled><output for="adminPreviewTint" data-setting-output="previewTint">#DCE4ED</output></div>
-              <canvas class="admin-contrast-preview" id="adminContrastPreview" aria-label="이 설정으로 그린 빈 칸 미리보기"></canvas>
-              <p class="admin-help" id="adminContrastPreviewNone" style="display:none;">격자 이미지가 있는 진행 중 캠페인이 없어 미리보기를 그릴 수 없습니다.</p>
-            </div>
+        <section class="admin-section" id="adminUsageSection" style="display:none;">
+          <h2>사용량</h2>
+          <p class="admin-help">DB 용량과 Storage(파일) 사용량입니다. <strong>월 전송량(egress)은 DB 에서 알 수 없어</strong> Supabase 대시보드 → Reports → Usage 에서 확인합니다. 참고 한도 — Free: DB 500MB · Storage 1GB · 전송량 5GB/월, Pro: DB 8GB · Storage 100GB · 전송량 250GB/월.</p>
+          <div class="admin-usage">
+            <div class="admin-usage-tile"><div class="admin-usage-k">DB 용량</div><div class="admin-usage-v" id="adminDbSize">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Storage 사용량</div><div class="admin-usage-v" id="adminStorageSize">—</div><div class="admin-usage-s">파일 <span id="adminStorageFiles">—</span>개</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">작품 (대기 조각)</div><div class="admin-usage-v" id="adminCountSubmissions">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">캠페인 칸 합계</div><div class="admin-usage-v" id="adminCountPixels">—</div><div class="admin-usage-s">진행 중 캠페인 <span id="adminCountProjects">—</span>개</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">회원</div><div class="admin-usage-v" id="adminCountProfiles">—</div></div>
           </div>
         </section>
+        </div>
 
+        <div class="admin-panel" data-panel="reports" role="tabpanel" hidden>
         <section class="admin-section">
           <div class="admin-section-head">
             <h2>신고</h2>
@@ -113,7 +102,60 @@
           <div id="adminReports" class="admin-list"></div>
           <p class="empty-note admin-empty" id="adminReportsEmpty" style="display:none;">열린 신고가 없습니다.</p>
         </section>
+        </div>
 
+        <div class="admin-panel" data-panel="artworks" role="tabpanel" hidden>
+        <section class="admin-section" id="adminArtSection">
+          <div class="admin-section-head">
+            <h2>작품</h2>
+            <div class="admin-actions">
+              <button type="button" class="admin-btn danger" id="adminArtDeleteBtn" disabled>선택 삭제</button>
+            </div>
+          </div>
+          <p class="admin-help">올라온 작품을 최신순으로 봅니다. 체크박스로 고른 작품을 <strong>한 번에 최대 20건</strong>까지 지울 수 있고, 삭제하면 Storage 의 원본 이미지 파일까지 함께 지워집니다. <strong>되돌릴 수 없습니다</strong> — 스팸·음란물 대응용이며, 평소에는 신고를 통해 한 건씩 확인하고 지웁니다. 모든 삭제는 "기록" 탭에 남습니다.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminArtUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_admin_moderation.sql</code> 을 먼저 실행하세요.</p>
+          <div class="admin-toolbar">
+            <label class="admin-field"><span>기간</span>
+              <select id="adminArtRange">
+                <option value="0">전체</option>
+                <option value="1">최근 24시간</option>
+                <option value="7">최근 7일</option>
+              </select>
+            </label>
+            <label class="admin-field"><span>작가</span>
+              <input type="search" id="adminArtAuthor" placeholder="작가 이름으로 거르기" autocomplete="off">
+            </label>
+            <label class="admin-filter"><input type="checkbox" id="adminArtSelectAll"> 보이는 작품 전체 선택</label>
+            <span class="admin-sub" id="adminArtCount"></span>
+          </div>
+          <p class="admin-help">작가 이름을 누르면 그 작가의 작품만 걸러집니다.</p>
+          <div class="admin-grid" id="adminArtGrid"></div>
+          <p class="empty-note admin-empty" id="adminArtEmpty" style="display:none;">작품이 없습니다.</p>
+          <div class="admin-more"><button type="button" class="admin-btn" id="adminArtMoreBtn" style="display:none;">더 보기</button></div>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="comments" role="tabpanel" hidden>
+        <section class="admin-section" id="adminCommentsSection">
+          <div class="admin-section-head">
+            <h2>댓글</h2>
+            <div class="admin-actions">
+              <button type="button" class="admin-btn danger" id="adminComDeleteBtn" disabled>선택 삭제</button>
+            </div>
+          </div>
+          <p class="admin-help">사이트의 모든 댓글을 최신순으로 봅니다. 체크박스로 고른 댓글을 <strong>한 번에 최대 20건</strong>까지 지울 수 있습니다. 작품 제목을 누르면 그 작품으로 갑니다. 삭제는 "기록" 탭에 남습니다.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminComUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_admin_moderation.sql</code> 을 먼저 실행하세요.</p>
+          <div class="admin-toolbar">
+            <label class="admin-filter"><input type="checkbox" id="adminComSelectAll"> 보이는 댓글 전체 선택</label>
+            <span class="admin-sub" id="adminComCount"></span>
+          </div>
+          <div class="admin-list" id="adminComments"></div>
+          <p class="empty-note admin-empty" id="adminComEmpty" style="display:none;">댓글이 없습니다.</p>
+          <div class="admin-more"><button type="button" class="admin-btn" id="adminComMoreBtn" style="display:none;">더 보기</button></div>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="campaigns" role="tabpanel" hidden>
         <section class="admin-section">
           <div class="admin-section-head">
             <h2>캠페인</h2>
@@ -123,7 +165,9 @@
           <div id="adminCampaigns" class="admin-list"></div>
           <p class="empty-note admin-empty" id="adminCampaignsEmpty" style="display:none;">캠페인이 없습니다.</p>
         </section>
+        </div>
 
+        <div class="admin-panel" data-panel="tools" role="tabpanel" hidden>
         <section class="admin-section">
           <div class="admin-section-head">
             <h2>풀 대기 작품 <span class="admin-badge" id="adminPoolCount">0</span></h2>
@@ -163,13 +207,105 @@
             <div class="admin-usage-tile"><div class="admin-usage-k">초소형 썸네일 없는 작품</div><div class="admin-usage-v" id="adminMicroMissing">—</div></div>
           </div>
         </section>
+        </div>
 
+        <div class="admin-panel" data-panel="members" role="tabpanel" hidden>
         <section class="admin-section">
           <h2>관리자</h2>
           <div id="adminAdmins" class="admin-list"></div>
           <p class="admin-help">관리자 지정·해제는 화면에서 할 수 없습니다(의도된 보호). Supabase SQL 에디터에서 실행합니다:</p>
           <pre class="admin-code">update public.profiles set is_admin = true where lower(username) = lower('사용자이름');</pre>
         </section>
+
+        <section class="admin-section" id="adminBlockSection">
+          <h2>업로드 차단</h2>
+          <p class="admin-help">업로드를 막을 계정을 사용자 이름으로 찾습니다. 차단된 계정은 새 작품을 올릴 수 없고(서버의 insert 트리거가 막습니다), 이미 올린 작품과 계정 자체는 그대로 남습니다. 지워도 다시 올리는 경우에 씁니다.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminBlockUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_admin_moderation.sql</code> 을 먼저 실행하세요.</p>
+          <div class="admin-toolbar">
+            <label class="admin-field admin-field-grow"><span class="sr-only">사용자 이름 검색</span>
+              <input type="search" id="adminBlockSearch" placeholder="사용자 이름 검색" autocomplete="off">
+            </label>
+            <button type="button" class="admin-btn" id="adminBlockSearchBtn">찾기</button>
+          </div>
+          <div class="admin-list" id="adminBlockResults"></div>
+          <h3 class="admin-subhead">차단된 계정</h3>
+          <div class="admin-list" id="adminBlockedList"></div>
+          <p class="empty-note admin-empty" id="adminBlockedEmpty" style="display:none;">차단된 계정이 없습니다.</p>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="settings" role="tabpanel" hidden>
+        <section class="admin-section" id="adminSettingsSection">
+          <h2>사이트 옵션</h2>
+          <p class="admin-help">모든 방문자에게 다음 페이지 로드부터(늦어도 1분 안에) 적용됩니다. <code>site_settings</code> 한 행에 저장되며(<code>supabase_site_settings.sql</code>), 모든 사이트 옵션은 여기서만 설정합니다.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminSettingsUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_site_settings.sql</code> 을 먼저 실행하세요. 그 전까지는 모든 옵션이 기본값으로 동작합니다.</p>
+          <div class="admin-settings" id="adminSettings">
+
+            <div class="admin-option-card">
+              <h3>일반</h3>
+              <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>캠페인 페이지 오른쪽에 "미리보기"(기준 색상) 썸네일 표시 <em>(기본: 끔)</em></span></label>
+              <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>방문자 수 집계 — 브라우저마다 하루(한국 시간) 한 번, 회원·게스트를 구분해 "대시보드" 의 방문 통계에 표시 <em>(기본 켜짐; 끄면 서버의 record_visit() 도 기록하지 않음)</em></span></label>
+            </div>
+
+            <div class="admin-option-card">
+              <h3>업로드 제한</h3>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminUploadLimitCount">업로드 제한 — <strong>횟수</strong>: 한 계정이 아래 시간 동안 올릴 수 있는 작품 수. 작품을 자른 조각은 세지 않습니다. 서버의 insert 트리거가 강제하므로 스크립트로도 우회할 수 없습니다. <em>(기본: 20)</em></label>
+                <div class="admin-range"><input id="adminUploadLimitCount" type="range" min="1" max="200" step="1" data-setting="uploadLimitCount" disabled><output for="adminUploadLimitCount" data-setting-output="uploadLimitCount">20</output></div>
+                <label for="adminUploadLimitMinutes">업로드 제한 — <strong>시간</strong>: 위 횟수를 세는 구간(분). 10분이면 "10분 동안 20건" 입니다. <em>(기본: 10분)</em></label>
+                <div class="admin-range"><input id="adminUploadLimitMinutes" type="range" min="1" max="240" step="1" data-setting="uploadLimitMinutes" disabled><output for="adminUploadLimitMinutes" data-setting-output="uploadLimitMinutes">10</output></div>
+                <p class="admin-help">실제 작가가 포트폴리오를 한꺼번에 올릴 때 걸리지 않도록 넉넉하게 두는 값입니다. 자동화된 스크립트를 막는 것이 목적입니다. <code>supabase_admin_moderation.sql</code> 이 적용되기 전에는 20건/10분 고정값으로 동작합니다.</p>
+              </div>
+            </div>
+
+            <div class="admin-option-card">
+              <h3>작품 조각</h3>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPieceGrid">작품 조각 — <strong>분할 개수</strong>: 작품을 가로·세로 몇 등분으로 잘라 모자이크 조각으로 쓸지. 7 이면 49조각. 새로 올리는 작품부터 적용되고, 기존 작품은 아래 "작품 조각" 의 "전체 다시 생성" 으로 바꿉니다. <em>(기본: 7)</em></label>
+                <div class="admin-range"><input id="adminPieceGrid" type="range" min="2" max="12" step="1" data-setting="pieceGrid" disabled><output for="adminPieceGrid" data-setting-output="pieceGrid">7</output></div>
+                <label for="adminPieceMatchDistance">작품 조각 — <strong>색 일치 기준</strong>: 조각 색과 빈 칸 색의 거리(Lab, 밝기 가중 0.2)가 이 값 이하일 때만 조각을 넣습니다. 낮을수록 엄격해 조각이 덜 들어가고 색은 더 정확합니다. 서버 매칭이 직접 읽어 강제합니다. <em>(기본: 20)</em></label>
+                <div class="admin-range"><input id="adminPieceMatchDistance" type="range" min="5" max="60" step="1" data-setting="pieceMatchDistance" disabled><output for="adminPieceMatchDistance" data-setting-output="pieceMatchDistance">20</output></div>
+                <p class="admin-help">기준을 바꾼 뒤 <button type="button" class="admin-btn" id="adminPieceApplyBtn">색 기준 전체 적용</button> 을 누르면 새 기준을 넘는 배치 조각을 풀고 대기 조각을 모두 다시 매칭합니다(<code>supabase_mosaic_pieces_retry.sql</code> 필요). 누르지 않으면 새 작품부터 적용되고, 기존 조각은 빈 칸이 생기거나 6시간 정리 때 서서히 반영됩니다.</p>
+              </div>
+            </div>
+
+            <div class="admin-option-card admin-option-card-grey">
+              <h3>빈 칸 회색</h3>
+              <p class="admin-help">캠페인에서 아직 채워지지 않은 칸을 그리는 회색입니다. 홈 히어로·캠페인 카드·캠페인 격자·공유 카드가 모두 이 세 값으로 그려지며, 아래 미리보기는 진행 중인 캠페인에 지금 설정을 적용한 모습입니다.</p>
+              <div class="admin-grey-split">
+                <div class="admin-grey-controls">
+                  <div class="admin-setting admin-setting-range">
+                    <label for="adminPreviewContrast">빈 칸 회색 — <strong>대비</strong>: 100 이면 기준 사진의 명암 차이 그대로, 0 이면 평평한 회색. 낮출수록 홈·캠페인 카드·캠페인 격자·공유 카드에서 사진을 알아보기 어려워집니다. <em>(기본 40)</em></label>
+                    <div class="admin-range"><input id="adminPreviewContrast" type="range" min="0" max="100" step="1" data-setting="previewContrast" disabled><output for="adminPreviewContrast" data-setting-output="previewContrast">40</output></div>
+                    <label for="adminPreviewBrightness">빈 칸 회색 — <strong>밝기</strong>: 회색의 평균 밝기. 0 검정 · 50 중간 회색 · 100 흰색. 사진의 노출과 관계없이 모든 캠페인의 빈 칸이 이 밝기를 평균으로 그려집니다. <em>(기본 70, 밝은 회색; 이미 만든 공유 카드는 아래 캠페인 목록의 "공유 이미지 다시 생성" 전까지 옛 모습으로 남음)</em></label>
+                    <div class="admin-range"><input id="adminPreviewBrightness" type="range" min="0" max="100" step="1" data-setting="previewBrightness" disabled><output for="adminPreviewBrightness" data-setting-output="previewBrightness">70</output></div>
+                    <label for="adminPreviewTint">빈 칸 회색 — <strong>틴트</strong>: 회색이 기울 색. 색조와 채도만 쓰고 그 색의 밝기는 쓰지 않으며, 밝기는 위 슬라이더가 정합니다. #DCE4ED 는 은은한 블루가 섞인 밝은 회색이고, 틴트를 없애려면 #808080 같은 무채색을 고릅니다. 고른 색 그대로 보이게 하려면 밝기를 그 색의 명도(#DCE4ED 는 89)로 맞춥니다. <em>(기본 #DCE4ED)</em></label>
+                    <div class="admin-range admin-color"><input id="adminPreviewTint" type="color" data-setting="previewTint" value="#dce4ed" disabled><output for="adminPreviewTint" data-setting-output="previewTint">#DCE4ED</output></div>
+                  </div>
+                </div>
+                <figure class="admin-grey-figure">
+                  <canvas class="admin-contrast-preview" id="adminContrastPreview" aria-label="이 설정으로 그린 빈 칸 미리보기"></canvas>
+                  <figcaption class="admin-help" id="adminContrastPreviewNone" style="display:none;">격자 이미지가 있는 진행 중 캠페인이 없어 미리보기를 그릴 수 없습니다.</figcaption>
+                </figure>
+              </div>
+            </div>
+
+          </div>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="log" role="tabpanel" hidden>
+        <section class="admin-section" id="adminLogSection">
+          <h2>기록</h2>
+          <p class="admin-help">관리자가 이 화면에서 한 삭제·차단이 최신순으로 남습니다. 추가만 가능하고 고치거나 지울 수 없습니다. 최근 200건.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminLogUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_admin_moderation.sql</code> 을 먼저 실행하세요.</p>
+          <div class="admin-list" id="adminLog"></div>
+          <p class="empty-note admin-empty" id="adminLogEmpty" style="display:none;">기록이 없습니다.</p>
+        </section>
+        </div>
+
+        </div>
+        </div>
 
       </div>
     </div>
@@ -425,14 +561,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260911-155838"></script>
-<script src="/js/i18n/ko.js?v=20260911-155838"></script>
-<script src="/js/common.js?v=20260911-155838"></script>
-<script src="/js/auth.js?v=20260911-155838"></script>
-<script src="/js/notifications.js?v=20260911-155838"></script>
-<script src="/js/color-engine.js?v=20260911-155838"></script>
-<script src="/js/matching.js?v=20260911-155838"></script>
-<script src="/js/admin.js?v=20260911-155838"></script>
+<script src="/js/supabase-client.js?v=20260911-163309"></script>
+<script src="/js/i18n/ko.js?v=20260911-163309"></script>
+<script src="/js/common.js?v=20260911-163309"></script>
+<script src="/js/auth.js?v=20260911-163309"></script>
+<script src="/js/notifications.js?v=20260911-163309"></script>
+<script src="/js/color-engine.js?v=20260911-163309"></script>
+<script src="/js/matching.js?v=20260911-163309"></script>
+<script src="/js/admin.js?v=20260911-163309"></script>
 
 </body>
 </html>
