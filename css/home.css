@@ -369,7 +369,11 @@
   .carousel-track-wrap{padding-left:16px;padding-right:16px;}
 }
 
-.projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0 32px 32px;}
+/* "All campaigns": the same 1240px centred frame as the campaign page, so on
+   a wide monitor the three columns stay ~380px wide instead of growing with
+   the viewport (a lone portrait card was 600px+ on 1920px, 2026-09-11). */
+.projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0 32px 32px;max-width:1240px;margin:0 auto;box-sizing:border-box;}
+#projectsPanel .carousel-header{max-width:1240px;}
 .project-card{
   position:relative;border:none;border-radius:var(--r-lg);overflow:hidden;cursor:pointer;min-width:0;
   background:var(--bg);box-shadow:var(--shadow-sm);
