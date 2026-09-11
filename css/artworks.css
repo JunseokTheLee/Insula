@@ -21,4 +21,4 @@
 
 /* "Load more" under the grid — also the IntersectionObserver sentinel that
    fetches the next page as it scrolls into view (js/artworks.js). */
-.artworks-more{display:flex;justify-content:center;padding:4px 32px 40px;}
+.artworks-more{display:flex;justify-content:center;padding:4px var(--gutter) 40px;}
