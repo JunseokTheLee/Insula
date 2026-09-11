@@ -572,6 +572,14 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // uploading a portfolio. Pieces don't count, only artworks.
   uploadLimitCount: 20,
   uploadLimitMinutes: 10,
+  // Web push (js/push.js, sw.js, supabase_push.sql). Off until an admin
+  // pastes the VAPID public key and the Edge Function URL — both are public
+  // values, so they live here rather than in the repo, and rotating a key
+  // needs no deploy. The matching PRIVATE key is a Supabase secret and is
+  // never in this repository (CLAUDE.md §3).
+  pushEnabled: false,
+  pushPublicKey: '',
+  pushEndpoint: '',
 });
 const SITE_SETTINGS_TTL_MS = 60 * 1000;
 const SITE_SETTINGS_CACHE_KEY = 'weavo.siteSettings';

@@ -814,6 +814,13 @@ html[lang="ko"] * {
   font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;color:var(--primary);padding:2px 4px;
 }
 .notif-mark-all:hover{text-decoration:underline;}
+/* Push switch (js/push.js), inserted before "mark all read". Only present
+   when the browser supports push AND an admin has configured the keys, so
+   the header is usually just title + mark-all as before. */
+.push-toggle{margin-left:auto;color:var(--muted);white-space:nowrap;}
+.push-toggle.on{color:var(--primary);}
+.push-toggle:disabled{cursor:default;opacity:.55;text-decoration:none;}
+.push-toggle:disabled:hover{text-decoration:none;}
 .notif-list{max-height:min(420px,70vh);overflow-y:auto;}
 .notif-item{
   display:flex;align-items:flex-start;gap:10px;padding:11px 14px;text-decoration:none;

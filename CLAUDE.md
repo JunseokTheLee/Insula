@@ -30,7 +30,8 @@
 | 호스팅 | **Cloudflare Pages** — `_headers`, `_redirects`, `functions/` (Pages Functions) |
 | 백엔드 | **Supabase** — Postgres(RLS), Auth, Storage(`artwork` 버킷). 별도 서버·크론 **없음** |
 | 다국어 | `/en/`, `/ko/` 페이지 트리 완전 분리 + `js/i18n/{en,ko}.js` (런타임 문자열만) |
-| Android | `.well-known/assetlinks.json` → `art.weavo.app` (TWA) |
+| Android | `.well-known/assetlinks.json` → `art.weavo.app` (TWA). 안드로이드 프로젝트는 이 저장소에 없다 |
+| 푸시 | 루트 `sw.js`(푸시 전용 서비스 워커) + `manifest.webmanifest` + `js/push.js`, 발송은 Supabase Edge Function `push` |
 | 로컬 도구 | `node_modules/` 에 wrangler·miniflare 포함 (아래 10절 참고) |
 
 **서버 로직은 `functions/` 에만 있다.**
@@ -44,6 +45,7 @@
 
 ### 절대 추가하지 말 것
 - 빌드 스텝(번들러, 트랜스파일러, CSS 전처리기). 캐시 무력화는 파일명 해시 대신 `?v=` 버전 쿼리로 한다 (12절).
+- **`sw.js` 에 fetch 핸들러·캐시를 넣지 않는다.** `/js`·`/css` 는 이미 1년 immutable + `?v=` 로 관리하는데(12절), 서비스 워커 캐시를 얹으면 그 위에 규칙이 다른 두 번째 캐시가 생긴다 — 2026.9.10 의 엣지 캐시 오염과 같은 종류의 버그를 눈에 보이지 않는 곳에 하나 더 만드는 셈이다. 서비스 워커의 일은 푸시가 올 때 살아 있는 것뿐이다.
 - 서버 상주 프로세스·크론에 기대는 기능. 매칭은 이벤트 시점에 브라우저에서 돌고 결과는 `commit_pool_matches` RPC 가 서버에서 재검증해 기록하며, 정리 작업은 DB 쪽 스로틀(`claim_rematch_slot`)로 동시 실행을 막는 구조다.
 - 새 외부 CDN·스크립트. 꼭 필요하면 `_headers` 의 CSP 미도입 사유 주석과 함께 사용자에게 먼저 확인한다.
 
@@ -91,6 +93,7 @@
 - 셀 점유는 `claim → attach → stale sweep(10분)` 상태 머신이다. `mosaic_pixels` 의 update 정책을 고칠 때는 이 세 단계가 모두 유지되는지 확인한다.
 - **2026.9.10 추가 SQL (실행 순서; 아래 3개와 `supabase_profiles_username_rules.sql` 모두 2026.9.10 운영 DB 적용 완료 — 사용자 확인)**: ① `supabase_mosaic_grid_image.sql`(`grid_image_url` 컬럼, 7인자 reshape RPC) → ② `supabase_mosaic_server_matching.sql`(Lab 컬럼·트리거·백필, `match_pool_artworks`·`release_poor_matches`·`admin_usage_stats`). 코드는 둘 다 **미적용 상태에서도 옛 경로로 동작**하도록 폴백을 두었으므로 push 순서와 무관하지만, 적용 전까지는 격자 이미지·서버 매칭·관리자 사용량 표시가 비활성이다. ③ `supabase_site_settings.sql`(사이트 옵션 테이블·RPC, 다른 둘과 독립)은 적용 전까지 모든 옵션이 기본값으로 동작하고 관리자 페이지의 옵션 섹션이 비활성이다 (16절). ④ `supabase_mosaic_micro_thumbs.sql`(`thumb/` 업로드 Storage 정책, `micro_thumb` 컬럼, `admin_set_submission_thumbs`)은 **미적용이면 썸네일 업로드가 계속 실패**하고(2026.8~9 전 작품이 그랬음) 관리자 "썸네일 생성" 이 비활성이다. ⑤ `supabase_mosaic_like_count.sql`(`like_count` 컬럼·가드·집계 트리거·백필)은 미적용이면 작품 탐색이 최신순만 되고 인기순이 최신순으로 폴백한다. ⑥ `supabase_mosaic_preview_image.sql`(`preview_image_url` 컬럼)은 미적용이면 공유 이미지가 로고로 나가고 관리자 "공유 이미지 생성" 이 실패한다. ⑦ `supabase_visit_stats.sql`(`visit_days` 테이블, `record_visit`·`admin_visit_stats` RPC; ③ 뒤에 실행, 2026.9.10 운영 DB 적용 완료 — 사용자 확인)은 미적용이면 방문이 기록되지 않고(브라우저당 하루 1회 실패 요청) 관리자 "방문 통계" 가 안내문만 보인다. ⑧ `supabase_mosaic_sponsor.sql`(캠페인별 기부 약정: `sponsor_name`·`sponsor_logo_url`·`sponsor_tagline`·`pledge_amount` 기본 500,000; 다른 파일과 독립, **적용 여부 확인 필요**)은 미적용이면 홈 히어로가 고정 문구·₩500,000 으로 표시되고, 캠페인 생성·관리자 수정 폼의 약정 필드는 저장되지 않는다(나머지는 저장, 토스트로 안내). ⑨ `supabase_mosaic_pieces.sql`(작품 조각: `parent_id`·`piece_row/col/n`·`home_project_id`·`match_tried_at` 컬럼, `cells_changed_at`, `set_submission_pieces` RPC, 매칭·해제·빼기·캠페인 삭제 RPC 와 통계 재정의; ②·③ 뒤에 실행, 2026.9.10 운영 DB 적용 완료 — 사용자 확인)은 미적용이면 작품이 예전처럼 통째로 한 칸에 매칭되고 관리자 "작품 조각" 이 안내문만 보인다. 적용 직후 관리자 "작품 조각 → 조각 생성" 으로 기존 작품을 일괄 전환한다. ⑩ `supabase_mosaic_pieces_retry.sql`(`admin_reset_piece_tries` RPC; ⑨ 뒤에 실행, 2026.9.10 운영 DB 적용 완료 — 사용자 확인)은 미적용이면 관리자 "색 기준 전체 적용" 버튼이 안내 토스트만 낸다. **주의: 옛 파일 `supabase_mosaic_rematch.sql`(`mosaic_meta`·`claim_rematch_slot`·`unmatch_submissions`)이 2026.9.10 까지 운영에 적용된 적이 없었다** — `release_poor_matches` 가 호출마다 42883 으로 실패했지만 `matching.js` 가 "함수 없음" 오류를 무시해 6시간 정리가 조용히 안 돌고 있었다. ⑩ 과 정리 작업 모두 이 파일이 필요하다(2026.9.10 운영 DB 적용 완료 — 사용자 확인).
 - **2026.9.11 재실행 필요**: `supabase_visit_stats.sql` — `admin_visit_stats` 의 "신규 작품" 이 조각 행까지 세어 업로드 1건이 약 50건으로 표시되던 버그를 고쳤다(`parent_id is null` 추가). 파일 전체가 멱등하고 데이터를 건드리지 않으므로 그대로 다시 실행하면 된다. ⑨ 뒤에 실행.
+- **2026.9.11 추가 SQL**: ⑫ `supabase_push.sql`(웹 푸시: `push_subscriptions` 테이블, `notifications.pushed_at`, `claim_push`·`drop_push_subscription` RPC(서비스 롤 전용), `pg_net` 으로 Edge Function 을 부르는 AFTER INSERT 트리거; `supabase_notifications.sql`·`supabase_site_settings.sql` 뒤에 실행, **적용 여부 확인 필요**). 미적용이면 알림 패널의 "알림 받기" 가 구독을 저장하지 못하고 푸시가 발송되지 않는다(화면은 그대로 동작). SQL 만으로는 부족하고 ⓐ `node tools/generate-vapid-keys.js` 로 만든 공개 키와 Edge Function 주소를 관리자 "사이트 옵션 → 푸시 알림" 에 넣고 ⓑ 비밀 키를 Supabase 비밀값으로 등록한 뒤 ⓒ `supabase functions deploy push --no-verify-jwt` 까지 해야 동작한다.
 - **2026.9.11 추가 SQL**: ⑪ `supabase_admin_moderation.sql`(관리자 모더레이션 — 댓글 삭제 정책에 관리자 추가, `admin_audit_log` 테이블과 `admin_log_action` RPC, `profiles.upload_blocked` 컬럼과 `admin_set_upload_blocked` RPC, 업로드 속도 제한을 사이트 옵션에서 읽도록 재정의, 관리자용 Storage list/delete 정책; ⑨ 와 ③ 뒤에 실행, **적용 여부 확인 필요**). 미적용이면 관리자 페이지에서 ⓐ 댓글 삭제가 조용히 거부되고(RLS 가 정책 없이 0행 삭제) ⓑ "기록" 탭이 안내문만 보이며 ⓒ 업로드 차단이 비활성이고 ⓓ 작품을 지워도 Storage 원본 파일이 남는다. 작품 행 삭제 자체는 기존 정책으로 동작한다. **주의: `enforce_mosaic_submission_rate_limit()` 이 세 파일(`supabase_mosaic_submissions_rate_limit.sql`·`supabase_mosaic_pieces.sql`·⑪)에 모두 있다** — ⑪ 이 최신이므로 앞의 둘을 다시 실행했다면 ⑪ 을 뒤이어 다시 실행한다.
 
 ---
@@ -119,6 +122,7 @@ $1(common.js)로 받는다.** Supabase 는 응답을 기본 1,000행에서 조�
   - **관리자 페이지는 글 페이지가 아니라 도구라서 프레임 전체를 쓴다** (2026.9.11). `.admin-page{max-width:var(--frame-max)}` 에 왼쪽 탭 레일 190px + 내용 열(`.admin-layout` 그리드) 구조이며, 로고와 맞는 것은 `h1` 과 탭 레일의 왼쪽 끝이다. 본문 글줄은 `.admin-help{max-width:78ch}` 로 따로 잡는다.
   - 모바일은 `--gutter` 가 16px 로 바뀌어 자동 처리되므로 미디어 쿼리에 16px 을 새로 적지 않는다. 캠페인·네트워크의 휴대폰 전체 화면 모드(`body[data-mobile-fs]`)만 여백 0 인 의도된 예외다.
   - **확인 방법**: 화면 폭 2560 / 1280 / 768 / 375 에서 `.logo` 의 left 와 그 페이지 본문 첫 요소의 left 가 같아야 한다(카드류는 카드 바깥 테두리 기준). 가로 스크롤이 생기지 않아야 한다.
+- **앱·브라우저가 닫혀 있을 때의 알림은 웹 푸시로 보낸다** (2026.9.11, `supabase_push.sql`). 기존 알림 피드(`notifications` 테이블 + 종 아이콘)는 Supabase Realtime 이라 **페이지가 열려 있을 때만** 닿는다 — 그래서 앱을 내리면 아무것도 오지 않았다. 경로는 한 줄이다: `notifications` INSERT → `pg_net` 이 Edge Function 주소로 `{id}` POST → `supabase/functions/push/index.ts` 가 `claim_push(id)` 로 행을 선점하고 기기별로 암호화 발송 → 루트 `sw.js` 가 표시. **엔드포인트에 비밀값을 두지 않는 이유**는 `claim_push` 가 읽는 문장 안에서 `pushed_at` 을 찍어 같은 알림이 두 번 나가지 않고, 행에 적힌 수신자 외에는 누구에게도 갈 수 없기 때문이다(그래서 `--no-verify-jwt`). VAPID 공개 키·함수 주소는 공개값이라 `site_settings` 에 두고(16절), **비밀 키는 Supabase 비밀값에만 둔다**(3절). 메시지 언어는 `push_subscriptions.lang`(구독한 기기의 언어)로 정한다 — 계정별 언어 설정이 없다.
 - **작품을 격자로 보여주는 화면은 클릭 시 라이트박스로 연다** (홈·프로필·컬렉션·캠페인·작품 탐색, 2026.9.11 에 작품 탐색 추가). 카드의 `href` 는 작품 상세 주소 그대로 두고 평범한 좌클릭만 `preventDefault()` 로 가로채 `openLightbox(sub)` 를 부른다 — 크롤러·가운데 클릭·Ctrl 클릭은 여전히 색인되는 실제 주소로 간다. 목록 조회는 `ARTWORK_ROW_COLS`(common.js)를 써서 라이트박스가 필요한 설명·링크·재료까지 한 번에 받는다(행당 약 +200바이트). 새로 만드는 작품 격자도 같은 방식을 쓴다.
 - UI 디자인 작업에는 `.claude/skills/superdesign` 스킬이 있다. 이 스킬은 외부(GitHub raw) 지침을 가져오므로, 디자인 작업을 명시적으로 요청받았을 때만 쓴다.
 
@@ -244,7 +248,7 @@ git config core.hooksPath tools/git-hooks
 - 기본값은 **`js/common.js` 의 `SITE_SETTING_DEFAULTS` 한 곳**에만 둔다. DB 행에는 관리자가 바꾼 키만 저장되므로 옵션을 추가해도 SQL 을 다시 실행할 필요가 없다.
 - 옵션 하나를 추가하는 절차 (세 곳):
   1. `SITE_SETTING_DEFAULTS` 에 키와 기본값 (camelCase, 예: `showCampaignPreview: false`).
-  2. `en/admin.html`·`ko/admin.html` 의 `#adminSettings` 에 `<input type="checkbox" data-setting="키" disabled>` 체크박스 한 줄씩 (문구는 HTML 에 언어별로 직접 — 4절). `admin.js` 가 `data-setting` 을 자동으로 묶어 읽고 저장한다. 숫자 옵션은 `type="range"`(또는 `number`)에 `min`·`max` 를 두면 같은 방식으로 묶이고, 색 옵션은 `type="color"`(값 `#RRGGBB`)로 묶이며, 옆의 `<output data-setting-output="키">` 에 값이 표시된다 (2026.9.10, `previewContrast`·`previewTint`).
+  2. `en/admin.html`·`ko/admin.html` 의 `#adminSettings` 에 `<input type="checkbox" data-setting="키" disabled>` 체크박스 한 줄씩 (문구는 HTML 에 언어별로 직접 — 4절). `admin.js` 가 `data-setting` 을 자동으로 묶어 읽고 저장한다. 숫자 옵션은 `type="range"`(또는 `number`)에 `min`·`max` 를 두면 같은 방식으로 묶이고, 문자열 옵션은 `type="text"`·`type="url"`(클래스 `admin-text`)로 묶여 포커스를 잃을 때 저장되고, 색 옵션은 `type="color"`(값 `#RRGGBB`)로 묶이며, 옆의 `<output data-setting-output="키">` 에 값이 표시된다 (2026.9.10, `previewContrast`·`previewTint`).
   3. 기능 코드에서 `getSiteSettings().then(s => …)` 로 읽는다. 절대 거부(reject)하지 않고 테이블이 없거나 오프라인이면 기본값을 준다. 페이지당 1회 조회, `sessionStorage` 60초 캐시, 관리자 자신의 저장은 캐시를 즉시 갱신한다.
 - 서버에서도 강제해야 하는 옵션(예: 업로드 잠금)은 RLS 정책·RPC 안에서 같은 `site_settings` 행을 읽어 검사한다. 화면 가림만으로 끝내지 않는다.
 - 현재 옵션: `showCampaignPreview` — 캠페인 페이지 오른쪽 "미리보기" 썸네일 표시, 기본 꺼짐.
@@ -252,6 +256,7 @@ git config core.hooksPath tools/git-hooks
 - 현재 옵션: `previewContrast`(대비 0~100, 기본 40)·`previewBrightness`(밝기 0~100, 기본 70)·`previewTint`(틴트 색 `#RRGGBB`, 기본 `#DCE4ED`) — 빈 칸 회색. `openCellGrayer(cells, settings)`(common.js)가 캠페인 기준 사진의 평균 명도를 밝기 수준으로 옮기고 편차를 대비만큼 줄이며, `openCellPainter()` 가 그 회색에 틴트 색의 채널별 비율(색조·채도만, 밝기는 쓰지 않음)을 곱해 `rgb()` 문자열로 돌려준다. 무채색 틴트는 순수 회색. 홈·캠페인 카드·캠페인 격자·공유 카드·관리자 미리보기가 모두 이 함수로 그린다. 공유 카드는 만들 때의 값이 구워지므로 바꾼 뒤에는 관리자 캠페인 목록의 "공유 이미지 다시 생성" 으로 다시 만든다 (2026.9.10).
 - 현재 옵션: `pieceGrid`(작품 분할 개수 2~12, 기본 7)·`pieceMatchDistance`(조각 색 일치 기준 5~60, 기본 20) — 조각은 `makeArtworkPieces()`(common.js)가 옵션대로 자르고, 서버 매칭 RPC 가 `site_settings` 를 직접 읽어 기준을 강제한다(`supabase_mosaic_pieces.sql`). 분할 개수 변경은 새 업로드부터 적용되고 기존 작품은 관리자 "전체 다시 생성" 으로 바꾼다. 색 기준 변경은 새 업로드부터 적용되며, 기존 조각까지 즉시 맞추려면 옵션 옆 "색 기준 전체 적용" 버튼(정리 즉시 실행 → 대기 조각 재시도 표시 초기화 → 매칭 반복, `supabase_mosaic_pieces_retry.sql`)을 쓴다.
 - 현재 옵션: `uploadLimitCount`(계정당 업로드 횟수 1~200, 기본 20)·`uploadLimitMinutes`(그 횟수를 세는 구간(분) 1~240, 기본 10) — `mosaic_submissions` 의 insert 트리거 `enforce_mosaic_submission_rate_limit()` 이 `site_settings` 를 직접 읽어 강제하므로 anon 키로 PostgREST 를 직접 두드려도 우회할 수 없다. 작품을 자른 조각 행(`parent_id is not null`)은 세지 않는다. 같은 트리거가 `profiles.upload_blocked` 도 검사한다 (`supabase_admin_moderation.sql`). 미적용이면 20건/10분 고정값으로 동작한다.
+- 현재 옵션: `pushEnabled`(웹 푸시 사용, 기본 꺼짐)·`pushPublicKey`(VAPID 공개 키)·`pushEndpoint`(Edge Function 주소) — 셋이 모두 채워져야 알림 패널에 "알림 받기" 버튼이 나오고, 트리거가 발송을 요청한다 (`supabase_push.sql`). 공개 키와 주소를 여기에 두는 덕분에 키를 바꿔도 배포가 필요 없다. **비밀 키는 이 화면에도 저장소에도 넣지 않는다** — `site_settings` 는 anon 도 읽을 수 있다.
 - DB 사용량(15절): 옵션을 읽는 페이지 뷰당 요청 1개·약 0.3KB(캠페인 상세 기준 요청 +6%), 옵션을 읽지 않는 페이지는 영향 없음.
 
 ---

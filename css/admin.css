@@ -109,6 +109,15 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
 .admin-range input:disabled+output{opacity:.55;}
 .admin-color input[type=color]{flex:0 0 auto;width:56px;height:32px;padding:2px;margin:0;border:1px solid var(--border-strong);border-radius:var(--r-xs);background:#fff;cursor:pointer;}
 .admin-color output{font-family:ui-monospace,Consolas,monospace;font-weight:600;}
+/* Free-text options (VAPID key, Edge Function URL) — long opaque strings,
+   so monospace and full width. */
+.admin-text{
+  width:100%;max-width:560px;box-sizing:border-box;
+  font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:var(--text);
+  padding:8px 10px;border:1px solid var(--border-strong);border-radius:var(--r-xs);
+  background:var(--bg);
+}
+.admin-text:disabled{opacity:.55;}
 .admin-range output{font-family:'Pretendard',sans-serif;font-weight:700;color:var(--primary);min-width:2.5em;}
 .admin-contrast-preview{display:block;width:180px;max-width:100%;height:auto;border:1px solid var(--border);border-radius:var(--r-xs);background:#fff;image-rendering:pixelated;}
 .admin-code{background:var(--gray-100);padding:10px 12px;border-radius:var(--r-xs);font-size:12.5px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;}

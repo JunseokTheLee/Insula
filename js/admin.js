@@ -695,7 +695,10 @@ async function loadAdminSettings() {
   const settings = { ...SITE_SETTING_DEFAULTS, ...((data && data.settings) || {}) };
   inputs.forEach(input => {
     const key = input.dataset.setting;
-    adminSettingApply(input, adminSettingIsNumber(input) ? adminSettingNumber(settings[key], key) : adminSettingIsColor(input) ? adminSettingColor(settings[key], key) : !!settings[key]);
+    adminSettingApply(input, adminSettingIsNumber(input) ? adminSettingNumber(settings[key], key)
+      : adminSettingIsColor(input) ? adminSettingColor(settings[key], key)
+      : adminSettingIsText(input) ? String(settings[key] ?? '')
+      : !!settings[key]);
     input.disabled = false;
     // Dragging a slider only updates its readout and preview; the save
     // happens on change (release), once.
@@ -710,6 +713,9 @@ async function loadAdminSettings() {
 // data-saved so a failed save can put the stored value back.
 function adminSettingIsNumber(input) { return input.type === 'range' || input.type === 'number'; }
 function adminSettingIsColor(input) { return input.type === 'color'; }
+// Free-text options (the VAPID public key, the push Edge Function URL):
+// stored as-is, trimmed, and saved when the field loses focus.
+function adminSettingIsText(input) { return input.type === 'text' || input.type === 'url'; }
 function adminSettingColor(v, key) {
   const raw = String(v || '').trim();
   return /^#[0-9a-f]{6}$/i.test(raw) ? raw.toUpperCase() : String(SITE_SETTING_DEFAULTS[key]).toUpperCase();
@@ -719,20 +725,21 @@ function adminSettingNumber(v, key) {
   return Number.isFinite(n) ? Math.round(n) : (Number(SITE_SETTING_DEFAULTS[key]) || 0);
 }
 function adminSettingValue(input) {
+  if (adminSettingIsText(input)) return input.value.trim();
   if (adminSettingIsColor(input)) return adminSettingColor(input.value, input.dataset.setting);
   if (!adminSettingIsNumber(input)) return input.checked;
   const min = Number(input.min || 0), max = Number(input.max || 100);
   return Math.min(max, Math.max(min, adminSettingNumber(input.value, input.dataset.setting)));
 }
 function adminSettingApply(input, value) {
-  if (adminSettingIsNumber(input)) input.value = String(value);
+  if (adminSettingIsNumber(input) || adminSettingIsText(input)) input.value = String(value ?? '');
   else if (adminSettingIsColor(input)) input.value = adminSettingColor(value, input.dataset.setting).toLowerCase(); // <input type=color> wants lowercase
   else input.checked = !!value;
   input.dataset.saved = JSON.stringify(value);
   syncAdminSettingOutput(input);
 }
 function syncAdminSettingOutput(input) {
-  if (!adminSettingIsNumber(input) && !adminSettingIsColor(input)) return;
+  if (!adminSettingIsNumber(input) && !adminSettingIsColor(input)) return; // text options have no readout
   const key = input.dataset.setting;
   const out = document.querySelector(`[data-setting-output="${key}"]`);
   if (out) out.textContent = adminSettingIsColor(input) ? String(input.value).toUpperCase() : String(input.value);

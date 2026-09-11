@@ -1,0 +1,19 @@
+{
+  "name": "Weavo",
+  "short_name": "Weavo",
+  "description": "Submit your artwork and become part of a collaborative mosaic where every artist and every piece remains visible.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1A3C2B",
+  "lang": "ko",
+  "dir": "ltr",
+  "categories": ["art", "social"],
+  "icons": [
+    { "src": "/logo-96.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "/logo.png", "sizes": "1200x1200", "type": "image/png", "purpose": "any" }
+  ]
+}

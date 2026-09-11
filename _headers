@@ -57,6 +57,17 @@
 /logo.ico
   Cache-Control: public, max-age=86400
 
+# The service worker has no ?v= to bust it (the browser fetches /sw.js by
+# that exact path), so it must never be cached hard — otherwise a fix to it
+# would take up to 24h to reach devices. Same for the manifest, which the
+# TWA/install prompt reads by a fixed path.
+/sw.js
+  Cache-Control: no-cache
+  Service-Worker-Allowed: /
+/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json
+
 # Security headers applied to every response. `x-content-type-options` and
 # `referrer-policy` are already set at the Cloudflare edge, so they're not
 # repeated here to avoid emitting them twice. Content-Security-Policy is

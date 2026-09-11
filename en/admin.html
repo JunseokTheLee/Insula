@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
 <link rel="icon" href="/logo.ico" type="image/x-icon">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1A3C2B">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260911-163309">
-<link rel="stylesheet" href="/css/admin.css?v=20260911-163309">
+<link rel="stylesheet" href="/css/base.css?v=20260911-205707">
+<link rel="stylesheet" href="/css/admin.css?v=20260911-205707">
 </head>
 <body>
 
@@ -254,6 +256,19 @@
             </div>
 
             <div class="admin-option-card">
+              <h3>Push notifications</h3>
+              <p class="admin-help">Delivers like / comment / reply / follow notifications while the app or browser is closed. Before switching it on: run <code>supabase_push.sql</code>, generate a key pair with <code>node tools/generate-vapid-keys.js</code>, paste the <strong>public</strong> key below, register the <strong>private</strong> one as a Supabase secret, and deploy the <code>push</code> Edge Function. While either field is empty no "Get notifications" button appears in the notification panel.</p>
+              <label class="admin-setting"><input type="checkbox" data-setting="pushEnabled" disabled><span>Use push notifications <em>(default: off — both fields below must be filled in for anything to be delivered)</em></span></label>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPushPublicKey">VAPID <strong>public key</strong> — the browser subscribes with it, so it is meant to be public. Changing it re-subscribes existing devices automatically.</label>
+                <input id="adminPushPublicKey" type="text" class="admin-text" data-setting="pushPublicKey" placeholder="BA2H0rQ2…" autocomplete="off" spellcheck="false" disabled>
+                <label for="adminPushEndpoint">Edge Function <strong>URL</strong> — the database asks this address to deliver every new notification. <code>https://&lt;project&gt;.supabase.co/functions/v1/push</code></label>
+                <input id="adminPushEndpoint" type="url" class="admin-text" data-setting="pushEndpoint" placeholder="https://…/functions/v1/push" autocomplete="off" spellcheck="false" disabled>
+                <p class="admin-help">The private key goes <strong>neither in this repository nor on this screen</strong> — it lives only as a Supabase secret.</p>
+              </div>
+            </div>
+
+            <div class="admin-option-card">
               <h3>Artwork pieces</h3>
               <div class="admin-setting admin-setting-range">
                 <label for="adminPieceGrid">Artwork pieces — <strong>grid</strong>: how many pieces across and down an artwork is cut into for the mosaic; 7 makes 49. Applies to new uploads; existing artwork changes with "Recut all" under "Artwork pieces" below. <em>(default: 7)</em></label>
@@ -455,13 +470,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260911-163309"></script>
-<script src="/js/i18n/en.js?v=20260911-163309"></script>
-<script src="/js/common.js?v=20260911-163309"></script>
-<script src="/js/auth.js?v=20260911-163309"></script>
-<script src="/js/notifications.js?v=20260911-163309"></script>
-<script src="/js/color-engine.js?v=20260911-163309"></script>
-<script src="/js/matching.js?v=20260911-163309"></script>
-<script src="/js/admin.js?v=20260911-163309"></script>
+<script src="/js/supabase-client.js?v=20260911-205707"></script>
+<script src="/js/i18n/en.js?v=20260911-205707"></script>
+<script src="/js/common.js?v=20260911-205707"></script>
+<script src="/js/auth.js?v=20260911-205707"></script>
+<script src="/js/notifications.js?v=20260911-205707"></script>
+<script src="/js/push.js?v=20260911-205707"></script>
+<script src="/js/color-engine.js?v=20260911-205707"></script>
+<script src="/js/matching.js?v=20260911-205707"></script>
+<script src="/js/admin.js?v=20260911-205707"></script>
 </body>
 </html>

@@ -2,14 +2,16 @@
 <html lang="ko">
 <head>
 <link rel="icon" href="/logo.ico" type="image/x-icon">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1A3C2B">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>관리자 | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260911-163309">
-<link rel="stylesheet" href="/css/admin.css?v=20260911-163309">
+<link rel="stylesheet" href="/css/base.css?v=20260911-205707">
+<link rel="stylesheet" href="/css/admin.css?v=20260911-205707">
 </head>
 
 <body>
@@ -255,6 +257,19 @@
                 <label for="adminUploadLimitMinutes">업로드 제한 — <strong>시간</strong>: 위 횟수를 세는 구간(분). 10분이면 "10분 동안 20건" 입니다. <em>(기본: 10분)</em></label>
                 <div class="admin-range"><input id="adminUploadLimitMinutes" type="range" min="1" max="240" step="1" data-setting="uploadLimitMinutes" disabled><output for="adminUploadLimitMinutes" data-setting-output="uploadLimitMinutes">10</output></div>
                 <p class="admin-help">실제 작가가 포트폴리오를 한꺼번에 올릴 때 걸리지 않도록 넉넉하게 두는 값입니다. 자동화된 스크립트를 막는 것이 목적입니다. <code>supabase_admin_moderation.sql</code> 이 적용되기 전에는 20건/10분 고정값으로 동작합니다.</p>
+              </div>
+            </div>
+
+            <div class="admin-option-card">
+              <h3>푸시 알림</h3>
+              <p class="admin-help">앱·브라우저를 닫아 둔 동안에도 좋아요·댓글·답글·팔로우 알림을 보냅니다. 켜기 전에 <code>supabase_push.sql</code> 을 실행하고, <code>node tools/generate-vapid-keys.js</code> 로 만든 키 한 쌍 중 <strong>공개 키</strong>를 아래에 넣고 <strong>비밀 키</strong>는 Supabase 비밀값으로 등록한 뒤 Edge Function <code>push</code> 를 배포하세요. 값이 비어 있으면 알림 패널에 "알림 받기" 버튼이 나타나지 않습니다.</p>
+              <label class="admin-setting"><input type="checkbox" data-setting="pushEnabled" disabled><span>푸시 알림 사용 <em>(기본: 끔 — 아래 두 값이 모두 채워져야 실제로 동작)</em></span></label>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPushPublicKey">VAPID <strong>공개 키</strong> — 브라우저가 구독할 때 쓰는 값이라 공개돼도 됩니다. 키를 바꾸면 기존 구독은 자동으로 다시 등록됩니다.</label>
+                <input id="adminPushPublicKey" type="text" class="admin-text" data-setting="pushPublicKey" placeholder="BA2H0rQ2…" autocomplete="off" spellcheck="false" disabled>
+                <label for="adminPushEndpoint">Edge Function <strong>주소</strong> — 알림이 생길 때마다 DB 가 이 주소로 발송을 요청합니다. <code>https://&lt;프로젝트&gt;.supabase.co/functions/v1/push</code></label>
+                <input id="adminPushEndpoint" type="url" class="admin-text" data-setting="pushEndpoint" placeholder="https://…/functions/v1/push" autocomplete="off" spellcheck="false" disabled>
+                <p class="admin-help">비밀 키는 <strong>저장소에도 이 화면에도 넣지 않습니다</strong> — Supabase 비밀값으로만 둡니다.</p>
               </div>
             </div>
 
@@ -561,14 +576,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260911-163309"></script>
-<script src="/js/i18n/ko.js?v=20260911-163309"></script>
-<script src="/js/common.js?v=20260911-163309"></script>
-<script src="/js/auth.js?v=20260911-163309"></script>
-<script src="/js/notifications.js?v=20260911-163309"></script>
-<script src="/js/color-engine.js?v=20260911-163309"></script>
-<script src="/js/matching.js?v=20260911-163309"></script>
-<script src="/js/admin.js?v=20260911-163309"></script>
+<script src="/js/supabase-client.js?v=20260911-205707"></script>
+<script src="/js/i18n/ko.js?v=20260911-205707"></script>
+<script src="/js/common.js?v=20260911-205707"></script>
+<script src="/js/auth.js?v=20260911-205707"></script>
+<script src="/js/notifications.js?v=20260911-205707"></script>
+<script src="/js/push.js?v=20260911-205707"></script>
+<script src="/js/color-engine.js?v=20260911-205707"></script>
+<script src="/js/matching.js?v=20260911-205707"></script>
+<script src="/js/admin.js?v=20260911-205707"></script>
 
 </body>
 </html>
