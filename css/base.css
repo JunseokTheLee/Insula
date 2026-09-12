@@ -49,7 +49,41 @@ body{
   background:var(--bg);
   color:var(--text);
 }
-body.no-scroll-lock{overflow:hidden;}
+/* ---------- iOS pull-to-refresh (2026-09-12) ----------
+   On a phone, scrolling or pinching sometimes reloaded the page, and the
+   reload took everything held in memory with it: the open profile dialog
+   (and whatever had been typed into it), the campaign's zoom and pan, how
+   far "Load more" had got. The reload was iOS's pull-to-refresh.
+
+   The document itself never scrolls here — html/body are height:100% and
+   every scroll happens inside .main-scroll, a dialog, a menu. But an
+   over-scroll at the top of an inner scroller CHAINS up to the document by
+   default, and iOS reads that chained pull as "refresh". overscroll-behavior
+   stops the chaining: the element still bounces, it just no longer hands the
+   gesture upward. (Safari 16+; older browsers simply keep the old
+   behaviour.) Every vertical scroller in the app is listed here rather than
+   in its own file, so the reason lives in one place. */
+html,body{overscroll-behavior:none;}
+.main-scroll,
+.modal-panel,
+.notif-list,
+.ep-disabilities-menu,
+.lb-exhibit-menu,
+#lightbox-caption,
+#lightbox-comments-list,
+#follow-list-content,
+#atc-list,
+#aa-list,
+.mfs-panel,
+.project-list-view{overscroll-behavior-y:contain;}
+
+/* A dialog used to leave the page behind it scrolling: a drag that missed
+   the panel moved the page under it, and reaching the top triggered the
+   refresh above. Nothing ever added the old body.no-scroll-lock class this
+   replaces — :has() needs no JS at every one of the scattered
+   classList.add('open') call sites, and a browser without :has() just keeps
+   the old behaviour. */
+body:has(.modal-overlay.open) .main-scroll{overflow:hidden;}
 
 @keyframes appIn{from{opacity:0;}to{opacity:1;}}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
