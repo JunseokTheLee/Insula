@@ -42,49 +42,55 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
 // per-account language setting to read. Browsers and the app share this
 // table so the wording is identical on both.
 //
-// TITLE IS A SHORT LABEL, NOT A SENTENCE. iOS gives the title one line and
-// cuts it; every type used to begin with the same "{name}님이 회원님의…" and
-// was truncated before the words that said what had actually happened, so a
-// like and a comment were indistinguishable on the lock screen (2026-09-12).
-// A two-or-three-word label never truncates, and the body — which gets more
-// room and wraps — carries who did it and what it was about.
-type NotifText = { title: string; body: (actor: string, preview: string) => string };
+// TITLE IS A LABEL, NOT A SENTENCE. iOS gives the title one line and cuts
+// it; every type used to begin with the same "{name}님이 회원님의…" and was
+// truncated before the words that said what had actually happened, so a like
+// and a comment were indistinguishable on the lock screen (2026-09-12). The
+// label goes first, where nothing can cut it off, then the artwork's name —
+// "which of my pieces is this about?" is the next thing the recipient wants
+// to know, and the body is already spending its room on who said what.
+// Nothing is appended when the artwork has no title or has been deleted.
+type NotifText = {
+  title: (artwork: string) => string;
+  body: (actor: string, preview: string) => string;
+};
+const withArtwork = (label: string) => (artwork: string) => (artwork ? `${label} · ${artwork}` : label);
 const TEXT: Record<string, Record<string, NotifText>> = {
   ko: {
     submission_like: {
-      title: "좋아요",
-      body: (a, p) => `${a}님이 내 작품을 좋아합니다${p ? ` · ${p}` : ""}`,
+      title: withArtwork("좋아요"),
+      body: (a) => `${a}님이 내 작품을 좋아합니다`,
     },
     // "이름: 댓글 내용" — the shape every messaging app uses, and it puts the
     // words the recipient actually wants to read as early as possible.
     submission_comment: {
-      title: "새 댓글",
+      title: withArtwork("새 댓글"),
       body: (a, p) => (p ? `${a}: ${p}` : `${a}님이 내 작품에 댓글을 남겼습니다`),
     },
     submission_reply: {
-      title: "새 답글",
+      title: withArtwork("새 답글"),
       body: (a, p) => (p ? `${a}: ${p}` : `${a}님이 내 댓글에 답글을 남겼습니다`),
     },
     follow: {
-      title: "새 팔로워",
+      title: () => "새 팔로워",
       body: (a) => `${a}님이 회원님을 팔로우하기 시작했습니다`,
     },
   },
   en: {
     submission_like: {
-      title: "Like",
-      body: (a, p) => `${a} liked your artwork${p ? ` · ${p}` : ""}`,
+      title: withArtwork("Like"),
+      body: (a) => `${a} liked your artwork`,
     },
     submission_comment: {
-      title: "New comment",
+      title: withArtwork("New comment"),
       body: (a, p) => (p ? `${a}: ${p}` : `${a} commented on your artwork`),
     },
     submission_reply: {
-      title: "New reply",
+      title: withArtwork("New reply"),
       body: (a, p) => (p ? `${a}: ${p}` : `${a} replied to your comment`),
     },
     follow: {
-      title: "New follower",
+      title: () => "New follower",
       body: (a) => `${a} started following you`,
     },
   },
@@ -96,6 +102,7 @@ type Claim = {
   preview: string | null;
   actor: string | null;
   submission_id: number | null;
+  artwork?: string | null;
   unread?: number;
   subscriptions?: { endpoint: string; p256dh: string; auth: string; lang: string }[];
   tokens?: { token: string; platform: string | null; lang: string }[];
@@ -106,10 +113,10 @@ function messageFor(claim: Claim, lang: string) {
   const l = lang === "en" ? "en" : "ko";
   const actor = claim.actor || ANON[l];
   const text = TEXT[l][claim.type];
-  const title = text ? text.title : "Weavo";
   // preview is the artwork's title for a like, the first ~140 characters of
-  // the comment for a comment or reply, and empty for a follow — each TEXT
-  // entry decides how to word itself around that.
+  // the comment for a comment or reply, and empty for a follow; artwork is
+  // the piece it all happened on. Each TEXT entry words itself around both.
+  const title = text ? text.title(claim.artwork || "") : "Weavo";
   const body = text ? text.body(actor, claim.preview || "") : "";
   const url = claim.submission_id
     ? `${SITE_URL}/${l}/artworks/${claim.submission_id}`

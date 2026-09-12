@@ -172,6 +172,11 @@ begin
     'preview',       v_row.preview,
     'actor',         v_actor,
     'submission_id', v_row.submission_id,
+    -- Which artwork this is about, so the notification can say so: a comment
+    -- alert that only reads "someone: nice!" leaves the recipient guessing
+    -- which of their pieces it landed on. Null for a follow, and null once
+    -- the artwork is deleted — the sender words around that.
+    'artwork',       (select s.art_title from public.mosaic_submissions s where s.id = v_row.submission_id),
     'unread',        v_unread,
     'subscriptions', v_subs,
     'tokens',        v_tokens

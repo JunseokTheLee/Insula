@@ -789,6 +789,7 @@ function toggleReplyForm(commentEl, parentId) {
     postBtn.disabled = false;
     if (comment) loadLightboxComments(lbCurrentSub);
   };
+  postOnShiftEnter(textarea, postBtn); // same shortcut as the comment box
   form.append(textarea, postBtn);
   commentEl.insertBefore(form, commentEl.querySelector('.lbc-replies'));
   textarea.focus();
@@ -814,6 +815,28 @@ document.getElementById('lb-comments-btn').onclick = () => {
   btn.classList.toggle('active', open);
   btn.setAttribute('aria-expanded', String(open));
 };
+// Shift+Enter posts, a plain Enter still breaks the line (these are
+// textareas, and a comment is often more than one line).
+//
+// isComposing / keyCode 229 is the IME guard, and it matters here: typing
+// Korean, the Enter that confirms a candidate arrives as a keydown too, so
+// without this a half-finished word would be sent the moment the user
+// pressed Enter to accept it. keyCode is the fallback for browsers that
+// don't set isComposing.
+//
+// It clicks the button rather than calling the handler, so a disabled button
+// (a post already in flight) swallows the repeat for free.
+function postOnShiftEnter(textarea, button) {
+  textarea.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || !e.shiftKey || e.isComposing || e.keyCode === 229) return;
+    e.preventDefault();
+    button.click();
+  });
+}
+postOnShiftEnter(
+  document.getElementById('lightbox-comment-input'),
+  document.getElementById('lightbox-comment-post'),
+);
 document.getElementById('lightbox-comment-post').onclick = async () => {
   if (!me.id) { openAuthModal(); return; }
   if (!lbCurrentSub) return;
