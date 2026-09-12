@@ -163,9 +163,20 @@ async function fcmAccessToken(sa: ServiceAccount) {
 }
 
 // The app displays notification.title/body and reads data.url to open the
-// page (internal hosts only, hence the https://weavo.art prefix) and
-// data.badge for the icon badge. Every data value must be a string. The
-// Android channel and icon are the app's own defaults — not set here.
+// page (internal hosts only, hence the https://weavo.art prefix).
+//
+// THE BADGE IS SENT TWICE, and both are needed:
+//   • data.badge — read by the app's own code, so it only lands while the app
+//     is running or its background handler is alive. On its own the icon
+//     stayed blank whenever the app had been quit (2026-09-12).
+//   • aps.badge / notification_count — the platform sets the icon badge from
+//     these without waking any app code, which is the only thing that works
+//     when the app is fully closed.
+// Sent even when unread is 0: that is how iOS is told to CLEAR the badge.
+//
+// Values under "data" must be strings; aps.badge and notification_count must
+// be numbers. The Android channel and icon are the app's own defaults — not
+// set here.
 async function sendFcm(token: string, msg: ReturnType<typeof messageFor>, unread: number, sa: ServiceAccount) {
   const bearer = await fcmAccessToken(sa);
   const res = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
@@ -176,6 +187,8 @@ async function sendFcm(token: string, msg: ReturnType<typeof messageFor>, unread
         token,
         notification: { title: msg.title, body: msg.body },
         data: { url: msg.url, badge: String(unread) },
+        apns: { payload: { aps: { badge: unread } } },
+        android: { notification: { notification_count: unread } },
       },
     }),
   });
