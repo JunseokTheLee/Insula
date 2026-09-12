@@ -989,6 +989,41 @@ async function toggleUserBlock(targetId, btn) {
   toast(wasBlocked ? tr('userUnblockedToast') : tr('userBlockedToast'));
 }
 
+// ---------- freeze the page behind an open dialog ----------
+// base.css locks .main-scroll with :has(), which covers the pages where that
+// element is the scroller. On the rest the DOCUMENT scrolls, and there
+// overflow:hidden would lose the reader's place — iOS snaps to the top and
+// stays there after the dialog closes. So the position is saved, the body is
+// pinned where it was, and the position restored on close.
+//
+// A MutationObserver rather than a call at every classList.add('open'):
+// dialogs are opened from a dozen places across auth.js, project.js,
+// profile-view.js, collection.js, lightbox.js and admin.js, and one of them
+// would eventually be missed. The observer's records already arrive batched
+// once per task, so no extra throttling is needed — and none that depends on
+// requestAnimationFrame, which does not run while the tab is hidden.
+(function () {
+  let lockedAt = null;
+  function apply() {
+    const open = !!document.querySelector('.modal-overlay.open');
+    if (open === (lockedAt !== null)) return;
+    if (open) {
+      lockedAt = document.scrollingElement.scrollTop;
+      document.body.style.top = `-${lockedAt}px`;
+      document.body.classList.add('modal-open');
+    } else {
+      const back = lockedAt;
+      lockedAt = null;
+      document.body.classList.remove('modal-open');
+      document.body.style.top = '';
+      document.scrollingElement.scrollTop = back;
+    }
+  }
+  new MutationObserver(apply).observe(document.documentElement, {
+    subtree: true, attributes: true, attributeFilter: ['class'],
+  });
+})();
+
 // ---------- "Back" links on standalone pages ----------
 // The artwork / profile / exhibition pages are shareable, indexable URLs, so
 // their back link needs a real href for anyone who arrived from outside

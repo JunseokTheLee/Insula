@@ -125,7 +125,7 @@
      description and colour-need list drop away. */
   body[data-mobile-fs] .main{overflow:hidden;}
   body[data-mobile-fs] .project-head{
-    position:fixed;left:12px;bottom:12px;z-index:150;margin:0;padding:0;width:auto;
+    position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:150;margin:0;padding:0;width:auto;
   }
   body[data-mobile-fs] .project-head h1,
   body[data-mobile-fs] .project-head > p,

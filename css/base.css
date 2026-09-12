@@ -45,6 +45,14 @@
 html,body{height:100%;}
 body{
   margin:0;
+  /* Double-tap zoom only. An accidental zoom on a phone is almost always a
+     double tap, and turning it off also removes the browser's 300 ms wait
+     before a tap counts. Pinch zoom stays — user-scalable=no is ignored by
+     iOS Safari anyway and would break WCAG 1.4.4 (text at 200%), which
+     matters more than usual for this audience. Descendants cannot re-enable
+     it: the effective touch-action is the intersection down the tree, so
+     .weavo-grid-wrap's touch-action:none still wins where it is set. */
+  touch-action:manipulation;
   font-family:'Pretendard','Noto Sans KR','Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
   background:var(--bg);
   color:var(--text);
@@ -84,6 +92,12 @@ html,body{overscroll-behavior:none;}
    classList.add('open') call sites, and a browser without :has() just keeps
    the old behaviour. */
 body:has(.modal-overlay.open) .main-scroll{overflow:hidden;}
+/* …and where the DOCUMENT is the scroller (the artwork grid, the legal
+   pages), CSS alone is not enough: overflow:hidden there loses the scroll
+   position and iOS jumps to the top. common.js freezes the body in place
+   instead and puts the position back on close — this class is what it
+   toggles. */
+body.modal-open{position:fixed;left:0;right:0;width:100%;}
 
 @keyframes appIn{from{opacity:0;}to{opacity:1;}}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
@@ -91,7 +105,13 @@ body:has(.modal-overlay.open) .main-scroll{overflow:hidden;}
 @keyframes shimmer{0%{background-position:-200% 0;}100%{background-position:200% 0;}}
 @keyframes popIn{from{opacity:0;transform:scale(.94);}to{opacity:1;transform:scale(1);}}
 
+/* viewport-fit=cover lets the page background reach the notch and the home
+   indicator; these keep the CONTENT out of them. Landscape side insets go on
+   the shell, the top/bottom ones on the bars that actually touch the edges.
+   env() falls back to 0px on everything that has no notch. */
 .app{
+  padding-left:env(safe-area-inset-left,0px);
+  padding-right:env(safe-area-inset-right,0px);
   width:100%;
   min-height:100vh;min-height:100dvh;
   margin:0;
@@ -109,6 +129,7 @@ body:has(.modal-overlay.open) .main-scroll{overflow:hidden;}
 .topnav{
   display:flex;align-items:center;flex-shrink:0;
   margin:0;padding:16px max(var(--gutter), calc((100% - var(--frame)) / 2));gap:28px;flex-wrap:wrap;
+  padding-top:calc(16px + env(safe-area-inset-top,0px));
   background:var(--gray-0);
 }
 .logo{
@@ -646,7 +667,7 @@ body.lb-img-fs-lock{overflow:hidden;}
 #legal-footer{
   flex-shrink:0;
   display:flex;align-items:center;justify-content:center;gap:10px;
-  padding:14px 32px;border-top:none;
+  padding:14px 32px calc(14px + env(safe-area-inset-bottom,0px));border-top:none;
   background:var(--surface);
 }
 #legal-footer a,#legal-footer button{
@@ -659,7 +680,7 @@ body.lb-img-fs-lock{overflow:hidden;}
 @media (max-width:640px){ #legal-footer{padding:12px 16px;} }
 
 #toast{
-  position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(8px);
+  position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(8px);
   background:var(--gray-900);color:#fff;font-family:'Pretendard',sans-serif;font-size:13px;padding:10px 16px;border-radius:var(--r-sm);
   opacity:0;pointer-events:none;transition:opacity .18s linear,transform .18s linear;z-index:300;
   box-shadow:var(--shadow-md);
@@ -694,7 +715,7 @@ html[lang="ko"] * {
      page's Projects / Network) expands to fill the viewport on demand; the
      injected "×" (top-right) collapses it back inline. */
 .mfs-close-btn{
-  display:none;position:fixed;top:12px;right:12px;z-index:401;
+  display:none;position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:12px;z-index:401;
   width:38px;height:38px;padding:0;border-radius:50%;
   align-items:center;justify-content:center;cursor:pointer;
   background:rgba(247,247,245,.95);border:1px solid var(--border-strong);
@@ -717,7 +738,7 @@ html[lang="ko"] * {
   body[data-mobile-fs] .network-page-title{display:none;}
   /* keep the "what is this?" explainer reachable on the fullscreen mobile
      graph — float its trigger into a corner instead of stacking it above. */
-  body[data-mobile-fs] .network-page .page-title-row{position:fixed;left:12px;bottom:12px;z-index:150;margin:0;}
+  body[data-mobile-fs] .network-page .page-title-row{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:150;margin:0;}
   body[data-mobile-fs] .network-page .info-btn{background:rgba(247,247,245,.95);box-shadow:0 2px 10px rgba(0,0,0,.14);}
   body[data-mobile-fs] .network-graph-panel{height:100dvh;margin:0;border:none;border-radius:0;}
 
