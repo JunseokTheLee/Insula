@@ -1,14 +1,16 @@
-// Landing page: hero (copy, campaign mosaic, pieces / pledge progress),
+// Landing page: hero (copy, campaign mosaic, pieces progress),
 // stats bar, and the latest-artworks / -exhibitions lists below the hero.
 // Needs js/project-preview.js (paintProjectPreview) loaded first.
 "use strict";
 
 // The hero shows one active campaign at a time — the newest first — and the
 // ‹ › buttons step through the others; every number on the page (pieces,
-// percent, pledge progress, the caption) follows the campaign on screen.
+// percent, the caption) follows the campaign on screen. Everything here is
+// counted in PIECES — the donation/pledge figures the hero used to show
+// were removed on 2026-09-12 (the sponsor columns themselves are untouched
+// and still editable in /admin, they simply are not displayed here).
 let heroProjects = [];
 let heroIndex = 0;
-let heroPledge = 500000; // the campaign on screen's pledge_amount (see renderHeroPreview)
 async function loadHeroPreview() {
   const { data: projects, error } = await sb.from('mosaic_projects')
     .select('*')
@@ -25,10 +27,6 @@ async function renderHeroPreview() {
   const link = document.getElementById('heroPreview');
   const featured = heroProjects[heroIndex];
   document.getElementById('heroArtNav').style.display = heroProjects.length > 1 ? '' : 'none';
-  // Pledge partner + amount follow the campaign on screen, defaults when
-  // there is none (or the DB predates supabase_mosaic_sponsor.sql).
-  heroPledge = typeof pledgeAmountOf === 'function' ? pledgeAmountOf(featured) : 500000;
-  renderHeroPartner(featured);
   if (!featured) {
     canvas.style.display = 'none';
     emptyEl.style.display = '';
@@ -63,10 +61,10 @@ async function renderHeroPreview() {
     console.error('hero preview error:', e);
   }
 }
-// "My contribution": the share of the pledge attributable to the signed-in
-// visitor's own pieces in the campaign on screen (their placed pieces ×
-// pledge / all cells). Hidden while signed out; re-evaluated when the
-// session changes (auth.js dispatches weavo:authchange).
+// "My pieces": how many of the campaign on screen's filled cells hold a
+// piece of the signed-in visitor's own work, and what share of the whole
+// mosaic that is. Hidden while signed out; re-evaluated when the session
+// changes (auth.js dispatches weavo:authchange).
 let heroMineFilled = null;
 let heroMineTotal = 0;
 function renderHeroMine(filled, total) {
@@ -75,33 +73,17 @@ function renderHeroMine(filled, total) {
   if (!me.id) { box.style.display = 'none'; return; }
   let mine = 0;
   for (const sub of filled.values()) if (sub.author_id === me.id) mine++;
-  const pledge = heroPledge;
   const fmt = n => n.toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US');
-  document.getElementById('heroMineAmount').textContent = fmt(total ? Math.round(pledge * mine / total) : 0);
-  document.getElementById('heroMineCount').textContent = fmt(mine);
+  const pct = total ? (mine / total) * 100 : 0;
+  // One piece of a 5,000-cell mosaic is 0.02% — a single decimal would
+  // round a real contribution down to "0.0%", so go finer below 0.1%.
+  // Separate keys rather than a plural rule: tr() has no pluralisation, and
+  // Korean needs none (both keys are the same string there).
+  document.getElementById('heroMineValue').textContent = tr(mine === 1 ? 'heroMinePiece' : 'heroMinePieces', { n: fmt(mine) });
+  document.getElementById('heroMinePercent').textContent = `${pct > 0 && pct < 0.1 ? pct.toFixed(2) : pct.toFixed(1)}%`;
   box.style.display = '';
 }
 document.addEventListener('weavo:authchange', () => { if (heroMineFilled) renderHeroMine(heroMineFilled, heroMineTotal); });
-// The pledging partner line (supabase_mosaic_sponsor.sql): the campaign's
-// own logo + name where the fixed "Pledging partner" label sits, its
-// tagline on the line under it, and its name inside the body copy. A
-// campaign without those falls back to the static copy in the HTML, kept
-// on each element's data-default so the fallback needs no i18n key.
-function renderHeroPartner(project) {
-  const name = String((project && project.sponsor_name) || '').trim();
-  const tagline = String((project && project.sponsor_tagline) || '').trim();
-  const logoUrl = project && project.sponsor_logo_url;
-  const nameEl = document.getElementById('heroPartnerName');
-  const logoEl = document.getElementById('heroPartnerLogo');
-  const titleEl = document.getElementById('heroPartnerTitle');
-  const inlineEl = document.getElementById('heroPartnerInline');
-  if (!nameEl || !logoEl || !titleEl || !inlineEl) return;
-  nameEl.textContent = name || nameEl.dataset.default;
-  if (logoUrl) { logoEl.src = cdnUrl(logoUrl); logoEl.alt = name; logoEl.style.display = ''; }
-  else { logoEl.removeAttribute('src'); logoEl.alt = ''; logoEl.style.display = 'none'; }
-  titleEl.textContent = tagline || titleEl.dataset.default;
-  inlineEl.textContent = name ? tr('heroPartnerNamed', { name }) : inlineEl.dataset.default;
-}
 function heroStep(delta) {
   if (heroProjects.length < 2) return;
   heroIndex = (heroIndex + delta + heroProjects.length) % heroProjects.length;
@@ -109,12 +91,8 @@ function heroStep(delta) {
 }
 document.getElementById('heroPrev').onclick = () => heroStep(-1);
 document.getElementById('heroNext').onclick = () => heroStep(1);
-// Pieces / percent / "donated so far" for the campaign on screen. The pledge
-// is the campaign's own pledge_amount (heroPledge, set in renderHeroPreview);
-// donated-so-far is the pledge × the exact filled share (so 71.5% of
-// ₩2,000,000 is ₩1,430,000).
+// Pieces and percent for the campaign on screen.
 function renderHeroProgress(filled, total) {
-  const pledge = heroPledge;
   const share = total ? filled / total : 0;
   const fmt = n => n.toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US');
   const set = (id, v) => { document.getElementById(id).textContent = v; };
@@ -126,9 +104,6 @@ function renderHeroProgress(filled, total) {
   set('heroTotalCaption', fmt(total));
   set('heroPercent', `${(share * 100).toFixed(1)}%`);
   document.getElementById('heroProgressFill').style.width = `${Math.round(share * 1000) / 10}%`;
-  set('heroDonation', fmt(Math.round(pledge * share)));
-  set('heroPledge', fmt(pledge));
-  document.querySelectorAll('.hero-pledge-inline').forEach(el => { el.textContent = fmt(pledge); });
 }
 async function renderStats() {
   const { data, error } = await sb.from('mosaic_stats').select('*').maybeSingle();

@@ -85,8 +85,8 @@
     #fff;}
 .hero-inner{max-width:var(--frame);margin:0 auto;display:grid;
   grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.9fr);
-  grid-template-rows:auto auto auto 1fr auto;
-  grid-template-areas:"copy copy art" "cta cta art" "phead phead art" "pbody pbody art" "prog don mine";
+  grid-template-rows:auto auto 1fr auto;
+  grid-template-areas:"copy copy art" "cta cta art" "pbody pbody art" "prog prog mine";
   column-gap:40px;row-gap:0;align-items:start;}
 .hero-card{display:contents;}
 .hero-copy{grid-area:copy;}
@@ -100,14 +100,6 @@
   box-shadow:0 10px 24px rgba(91,124,255,.32);transition:opacity .12s linear,transform .12s ease-out;}
 .cta-blue:hover{opacity:.93;transform:translateY(-1px);}
 .cta-blue:active{opacity:.85;transform:none;}
-.hero-partner-head{grid-area:phead;margin:0 0 6px;}
-.hero-partner-logos{display:flex;align-items:center;gap:12px;font-family:'Pretendard',sans-serif;font-weight:800;letter-spacing:.02em;margin:0 0 10px;}
-.hero-partner-name{color:#1F3BB3;font-size:17px;}
-/* The partner's logo (landing.js renderHeroPartner) sits before the name; hidden until a campaign has one. */
-.hero-partner-logo{display:block;height:30px;width:auto;max-width:160px;object-fit:contain;}
-.hero-partner-x{color:var(--muted);font-weight:500;font-size:15px;}
-.hero-partner-weavo{color:var(--hero-ink);font-size:17px;letter-spacing:.18em;}
-.hero-partner-title{font-family:'Pretendard',sans-serif;font-size:18px;font-weight:700;color:var(--hero-ink);margin:0;word-break:keep-all;}
 .hero-partner-body{grid-area:pbody;margin:0 0 26px;}
 .hero-partner-desc{font-family:'Pretendard',sans-serif;font-size:14px;line-height:1.7;color:var(--gray-700);margin:8px 0 10px;max-width:480px;word-break:keep-all;}
 .hero-partner-desc strong{color:var(--hero-ink);font-weight:800;}
@@ -171,7 +163,7 @@
 .hero-mine-k{font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;color:var(--muted);}
 .hero-mine-v{font-family:'Pretendard',sans-serif;font-size:22px;font-weight:800;color:var(--hero-ink);letter-spacing:-.01em;margin-top:2px;}
 .hero-mine-s{font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);margin-top:2px;}
-.hero-mine-s b{color:var(--gray-700);}
+.hero-mine-s b{color:var(--gray-700);font-weight:700;}
 .hero-art-nav{display:flex;gap:10px;}
 .hero-arrow{width:40px;height:40px;border-radius:50%;border:1px solid var(--border-strong);background:var(--gray-0);color:var(--gray-700);font-family:'Pretendard',sans-serif;font-size:22px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0 0 3px;transition:background .12s linear,transform .12s ease-out;}
 .hero-arrow.dark{background:var(--hero-ink);color:#fff;border-color:var(--hero-ink);}
@@ -179,7 +171,10 @@
 .hero-arrow:disabled{opacity:.35;cursor:default;transform:none;}
 .hero-art-caption{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--gray-700);line-height:1.6;text-align:left;}
 .hero-art-caption b{display:block;color:var(--hero-ink);font-weight:700;}
-.hero-progress{grid-area:prog;align-self:stretch;display:flex;flex-direction:column;justify-content:center;background:var(--gray-0);border-radius:var(--r-md) 0 0 var(--r-md);padding:18px 22px 16px;box-shadow:var(--shadow-sm);}
+/* Pieces placed so far, with the heart beside it — it used to sit on the
+   pledge card next door, which is gone (2026-09-12). */
+.hero-progress{grid-area:prog;align-self:stretch;display:flex;align-items:center;gap:14px;background:var(--gray-0);border-radius:var(--r-md);padding:18px 22px 16px;box-shadow:var(--shadow-sm);}
+.hero-progress-body{flex:1 1 auto;min-width:0;}
 .hero-pieces{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
 .hero-pieces-count{font-family:'Pretendard',sans-serif;font-size:15px;color:var(--muted);font-weight:600;}
 .hero-pieces-count b{font-size:28px;color:var(--hero-ink);font-weight:800;letter-spacing:-.02em;}
@@ -188,7 +183,6 @@
 .hero-bar .progress-fill{background:linear-gradient(90deg,var(--hero-blue),var(--hero-violet));}
 .hero-pieces-sub{display:flex;gap:8px;flex-wrap:wrap;font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);margin-top:10px;}
 .hero-pieces-sub b{color:var(--gray-700);font-weight:700;}
-.hero-donation{grid-area:don;align-self:stretch;background:var(--gray-0);border-radius:0 var(--r-md) var(--r-md) 0;padding:16px 22px;box-shadow:var(--shadow-sm);border-left:1px solid var(--border);display:flex;align-items:center;gap:14px;}
 /* Heart outline: the Feather icons "heart" path (MIT), symmetric — the
    first hand-drawn path was lopsided (its right lobe bulged out further).
    The heart sits centred in a roomy 44px box (no background). The beat animates the
@@ -201,11 +195,6 @@
 /* A quiet "lub-dub": two small swells, then rest. */
 @keyframes heroHeartbeat{0%,100%{transform:scale(1);}12%{transform:scale(1.1);}24%{transform:scale(1);}36%{transform:scale(1.06);}60%{transform:scale(1);}}
 @media (prefers-reduced-motion:reduce){.hero-heart-wrap{animation:none;}}
-.hero-donation > div{min-width:0;}
-.hero-donation-amount{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--muted);font-weight:600;}
-.hero-donation-of{white-space:nowrap;}
-.hero-donation-amount b{font-size:22px;color:var(--hero-ink);font-weight:800;letter-spacing:-.01em;}
-.hero-donation-note{font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:4px;word-break:keep-all;}
 .cta{
   display:inline-flex;align-items:center;gap:8px;
   background:var(--gradient-primary);color:#fff;border:none;padding:13px 26px;
@@ -254,9 +243,6 @@
   .hero-copy{margin-bottom:4px;}
   .hero h1{font-size:clamp(30px,8.5vw,40px);margin-bottom:12px;}
   .hero-lead{font-size:15px;margin:0;}
-  .hero-partner-head{text-align:center;margin:2px 0 14px;}
-  .hero-partner-logos{justify-content:center;margin-bottom:6px;}
-  .hero-partner-logo{height:26px;max-width:130px;}
   .hero-art{display:block;}
   .hero-art-main{display:block;}
   .hero-preview{display:block;margin:0 auto;border-radius:14px;box-shadow:none;} /* block + max-width:80% would sit left; centre it (2026-09-10) */
@@ -269,8 +255,7 @@
   .hero-sprout{width:30px;height:30px;}
   .hero-art-caption{display:none;}
   .hero-arrow{width:34px;height:34px;font-size:19px;}
-  .hero-progress{display:block;padding:12px 2px 2px;box-shadow:none;border-radius:0;}
-  .hero-donation{border-radius:20px;border-left:none;box-shadow:var(--shadow-md);padding:18px 20px;}
+  .hero-progress{padding:12px 2px 2px;box-shadow:none;border-radius:0;}
   .hero-heart-wrap{flex-basis:40px;width:40px;height:40px;}
   .hero-heart{width:30px;height:30px;}
   .hero-partner-body{margin:2px 4px 0;}
