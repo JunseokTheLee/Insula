@@ -430,7 +430,18 @@ body.modal-open{position:fixed;left:0;right:0;width:100%;}
 .mini-avatar.lb-artist-avatar{width:52px;height:52px;font-size:20px;}
 
 /* ---------- reusable zoom toolbar (lightbox + weavo grid + graphs) ---------- */
-.zoom-toolbar{position:absolute;top:16px;right:16px;display:flex;align-items:center;gap:6px;z-index:5;cursor:default;}
+/* The toolbar floats over whatever is being zoomed, so once the picture is
+   scaled up it sits ON the picture — and every label here is white
+   (var(--bg) is pure white), with the percentage readout carrying no
+   background at all. Over a light photo the glyphs simply disappeared.
+   A dark translucent pill holds them at 9.3:1 even against a pure white
+   image, while staying nearly invisible over the dark stage behind it.
+   top/right drop by the padding so the buttons stay exactly where they were.
+   No backdrop blur on purpose — same reason as .modal-overlay below. */
+.zoom-toolbar{
+  position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px;z-index:5;cursor:default;
+  padding:4px;border-radius:var(--r-full);background:rgba(15,20,17,.78);
+}
 .zoom-btn{
   width:32px;height:32px;border-radius:50%;border:1px solid rgba(247,247,245,.2);background:rgba(247,247,245,.08);color:var(--bg);
   font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;
