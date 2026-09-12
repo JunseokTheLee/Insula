@@ -22,24 +22,28 @@ const PREVIEW_CELL_PX = 24;
 // this cache means the grid image / filled-cell query happen once per
 // project per page load instead of twice.
 const previewGridCache = new Map();
-// Filled cells with their piece's average color and micro thumbnail; asked
-// again without micro_thumb while supabase_mosaic_micro_thumbs.sql hasn't
+// Filled cells with the piece's average color, micro thumbnail and the id
+// of the artwork it was cut from (the landing strip and "my pieces" count
+// artworks, not cells). The optional columns come from later SQL files, so
+// each retry drops the first one still in the list while that file hasn't
 // been applied (unknown column → schema mismatch).
-async function fetchPreviewFilled(project, withMicro) {
-  const cols = 'x,y,mosaic_submissions!mosaic_pixels_submission_id_fkey(avg_r,avg_g,avg_b,author_id' + (withMicro ? ',micro_thumb' : '') + ')';
+const PREVIEW_FILLED_EXTRAS = ['micro_thumb', 'parent_id'];
+async function fetchPreviewFilled(project, extras = PREVIEW_FILLED_EXTRAS) {
+  const cols = 'x,y,mosaic_submissions!mosaic_pixels_submission_id_fkey(id,avg_r,avg_g,avg_b,author_id'
+    + (extras.length ? ',' + extras.join(',') : '') + ')';
   const res = await fetchAllRows(
     () => sb.from('mosaic_pixels').select(cols)
       .eq('project_id', project.id).eq('filled', true).not('submission_id', 'is', null),
     { expected: project.width * project.height }
   );
-  if (res.error && withMicro && isSchemaMismatchError(res.error)) return fetchPreviewFilled(project, false);
+  if (res.error && extras.length && isSchemaMismatchError(res.error)) return fetchPreviewFilled(project, extras.slice(1));
   return res;
 }
 function getCachedProjectGrid(project) {
   if (!previewGridCache.has(project.id)) {
     previewGridCache.set(project.id, Promise.all([
       loadProjectCells(project),
-      fetchPreviewFilled(project, true),
+      fetchPreviewFilled(project),
     ]).then(([grid, filledRes]) => {
       if (filledRes.error) console.error('load preview filled cells error:', filledRes.error);
       const filled = new Map();

@@ -33,6 +33,7 @@ async function renderHeroPreview() {
     emptyEl.style.display = '';
     renderHeroProgress(0, 0);
     renderHeroMine(new Map(), 0);
+    renderHeroStrip(new Map(), null);
     return;
   }
   canvas.style.display = '';
@@ -58,6 +59,7 @@ async function renderHeroPreview() {
     for (const c of cells) if (filled.has(`${c.x},${c.y}`)) filledCount++;
     renderHeroProgress(filledCount, cells.length);
     renderHeroMine(filled, cells.length);
+    renderHeroStrip(filled, featured).catch(e => console.error('hero strip error:', e));
   } catch (e) {
     console.error('hero preview error:', e);
   }
@@ -72,19 +74,97 @@ function renderHeroMine(filled, total) {
   heroMineFilled = filled; heroMineTotal = total;
   const box = document.getElementById('heroMine');
   if (!me.id) { box.style.display = 'none'; return; }
+  // Pieces, and the artworks they were cut from: 49 pieces of one painting
+  // is one artwork, not 49. A piece points at its artwork through parent_id;
+  // a row placed whole (from before pieces existed) stands for itself.
   let mine = 0;
-  for (const sub of filled.values()) if (sub.author_id === me.id) mine++;
+  const myWorks = new Set();
+  for (const sub of filled.values()) {
+    if (sub.author_id !== me.id) continue;
+    mine++;
+    myWorks.add(sub.parent_id != null ? `p${sub.parent_id}` : `s${sub.id}`);
+  }
   const fmt = n => n.toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US');
   const pct = total ? (mine / total) * 100 : 0;
   // One piece of a 5,000-cell mosaic is 0.02% — a single decimal would
   // round a real contribution down to "0.0%", so go finer below 0.1%.
   // Separate keys rather than a plural rule: tr() has no pluralisation, and
   // Korean needs none (both keys are the same string there).
-  document.getElementById('heroMineValue').textContent = tr(mine === 1 ? 'heroMinePiece' : 'heroMinePieces', { n: fmt(mine) });
+  const works = tr(myWorks.size === 1 ? 'heroMineWork' : 'heroMineWorks', { n: fmt(myWorks.size) });
+  const pieces = tr(mine === 1 ? 'heroMinePiece' : 'heroMinePieces', { n: fmt(mine) });
+  document.getElementById('heroMineValue').textContent = tr('heroMineSummary', { works, pieces });
   document.getElementById('heroMinePercent').textContent = `${pct > 0 && pct < 0.1 ? pct.toFixed(2) : pct.toFixed(1)}%`;
   box.style.display = '';
 }
 document.addEventListener('weavo:authchange', () => { if (heroMineFilled) renderHeroMine(heroMineFilled, heroMineTotal); });
+
+// ---------- the artworks behind the mosaic on screen ----------
+// One horizontal strip of thumbnails under the hero. The filled cells hold
+// PIECES, so the distinct artworks are their parent_id's — fetched once per
+// campaign and cached, since the arrows come back to the same campaigns.
+// Batched at 200 ids like fetchPieceParents (project.js); a 10,000-cell
+// campaign cut 7x7 cannot hold more than ~204 artworks, so this is one
+// request in practice.
+const heroStripCache = new Map();
+let heroStripRun = 0;
+function heroArtworkIds(filled) {
+  const ids = new Set();
+  for (const sub of filled.values()) {
+    const id = sub.parent_id != null ? sub.parent_id : sub.id;
+    if (id != null) ids.add(id);
+  }
+  return [...ids];
+}
+function fetchHeroArtworks(projectId, ids) {
+  if (!heroStripCache.has(projectId)) {
+    heroStripCache.set(projectId, (async () => {
+      const out = [];
+      for (let i = 0; i < ids.length; i += 200) {
+        const { data, error } = await sb.from('mosaic_submissions')
+          .select('id,art_title,thumb_url,image_url,author_name,created_at')
+          .in('id', ids.slice(i, i + 200));
+        if (error) { console.error('load hero artworks error:', error); break; }
+        out.push(...(data || []));
+      }
+      // Newest first — the order the rest of the site lists artwork in.
+      out.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      return out;
+    })());
+  }
+  return heroStripCache.get(projectId);
+}
+async function renderHeroStrip(filled, project) {
+  const box = document.getElementById('heroStrip');
+  const track = document.getElementById('heroStripTrack');
+  if (!box || !track) return; // page HTML from before this strip existed
+  const run = ++heroStripRun;
+  const ids = project ? heroArtworkIds(filled) : [];
+  if (!ids.length) { box.style.display = 'none'; track.innerHTML = ''; return; }
+
+  const works = await fetchHeroArtworks(project.id, ids);
+  if (run !== heroStripRun) return; // stepped to another campaign meanwhile
+  track.innerHTML = '';
+  for (const w of works) {
+    const a = document.createElement('a');
+    a.className = 'hero-strip-item';
+    a.href = artworkUrl(w.id);
+    const name = w.author_name || tr('anonymous');
+    const img = document.createElement('img');
+    img.className = 'hero-strip-img'; img.loading = 'lazy';
+    img.src = cdnUrl(w.thumb_url || w.image_url);
+    img.alt = w.art_title ? tr('artworkThumbAlt', { title: w.art_title, name }) : tr('artworkImgAltFallback', { name });
+    const title = document.createElement('div');
+    title.className = 'hero-strip-title'; title.textContent = w.art_title || tr('untitledArtwork');
+    const by = document.createElement('div');
+    by.className = 'hero-strip-by'; by.textContent = name;
+    a.append(img, title, by);
+    track.appendChild(a);
+  }
+  const countEl = document.getElementById('heroStripCount');
+  if (countEl) countEl.textContent = works.length.toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US');
+  track.scrollLeft = 0;
+  box.style.display = works.length ? '' : 'none';
+}
 function heroStep(delta) {
   if (heroProjects.length < 2) return;
   heroIndex = (heroIndex + delta + heroProjects.length) % heroProjects.length;
