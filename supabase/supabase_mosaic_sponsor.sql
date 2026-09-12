@@ -1,3 +1,9 @@
+-- ⚠ REVERTED ON 2026-09-12 — DO NOT RUN THIS FILE.
+-- supabase_mosaic_sponsor_drop.sql removed these columns again and nothing
+-- in the site reads or writes them any more (the home hero counts pieces
+-- instead of money — CLAUDE.md §7). Running this would put four unused
+-- columns back. Kept only as the record of what the feature was.
+--
 -- Run this once in the Supabase SQL editor (after supabase_mosaic.sql; independent of the other 2026-09 files). Safe to re-run.
 --
 -- Donation pledge per campaign (2026-09-10): the pledging partner's name,

@@ -9,8 +9,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260912-123136">
-<link rel="stylesheet" href="/css/admin.css?v=20260912-123136">
+<link rel="stylesheet" href="/css/base.css?v=20260912-124106">
+<link rel="stylesheet" href="/css/admin.css?v=20260912-124106">
 </head>
 <body>
 
@@ -424,7 +424,7 @@
   </div>
 </div>
 
-<!-- Edit campaign modal: title / description / donation pledge. Size and reference image
+<!-- Edit campaign modal: title / description. Size and reference image
      are changed with Reshape on the campaign page (it re-places artwork). -->
 <div id="admin-edit-campaign-modal" class="modal-overlay">
   <div id="admin-edit-campaign-dialog" class="modal-panel" role="dialog" aria-labelledby="aec-heading">
@@ -437,28 +437,6 @@
       <label for="aec-desc">Description <span class="field-hint">(optional)</span></label>
       <textarea id="aec-desc" placeholder="What's this weavo about?" maxlength="300"></textarea>
     </div>
-    <!-- Donation pledge (supabase_mosaic_sponsor.sql) — shown on the landing hero. -->
-    <div class="field">
-      <label for="aec-sponsor">Pledging partner <span class="field-hint">(optional)</span></label>
-      <input type="text" id="aec-sponsor" placeholder="Company or organisation pledging the donation" maxlength="80">
-    </div>
-    <div class="field">
-      <label>Partner logo <span class="field-hint">(optional — ✕ removes it)</span></label>
-      <div class="img-upload-area logo-picker" id="aec-logo-picker">
-        <div class="img-placeholder"><span class="up-icon">🖼</span><span>Click or drag a logo image here</span></div>
-        <img class="img-preview" alt="">
-        <button type="button" class="img-remove" aria-label="Remove logo">✕</button>
-        <input type="file" class="img-input" accept="image/*">
-      </div>
-    </div>
-    <div class="field">
-      <label for="aec-tagline">Partner tagline <span class="field-hint">(optional — one line under the logo)</span></label>
-      <input type="text" id="aec-tagline" placeholder="e.g. A warmer tomorrow, woven through art" maxlength="200">
-    </div>
-    <div class="field">
-      <label for="aec-pledge">Pledged amount (₩)</label>
-      <input type="text" inputmode="numeric" id="aec-pledge" placeholder="500000">
-    </div>
     <p class="admin-help">Size and reference image are changed with <strong>Reshape</strong> on the campaign page itself, because that re-places the artwork.</p>
     <div class="field-error" id="aec-error"></div>
     <div class="modal-actions">
@@ -470,14 +448,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260912-123136"></script>
-<script src="/js/i18n/en.js?v=20260912-123136"></script>
-<script src="/js/common.js?v=20260912-123136"></script>
-<script src="/js/auth.js?v=20260912-123136"></script>
-<script src="/js/notifications.js?v=20260912-123136"></script>
-<script src="/js/push.js?v=20260912-123136"></script>
-<script src="/js/color-engine.js?v=20260912-123136"></script>
-<script src="/js/matching.js?v=20260912-123136"></script>
-<script src="/js/admin.js?v=20260912-123136"></script>
+<script src="/js/supabase-client.js?v=20260912-124106"></script>
+<script src="/js/i18n/en.js?v=20260912-124106"></script>
+<script src="/js/common.js?v=20260912-124106"></script>
+<script src="/js/auth.js?v=20260912-124106"></script>
+<script src="/js/notifications.js?v=20260912-124106"></script>
+<script src="/js/push.js?v=20260912-124106"></script>
+<script src="/js/color-engine.js?v=20260912-124106"></script>
+<script src="/js/matching.js?v=20260912-124106"></script>
+<script src="/js/admin.js?v=20260912-124106"></script>
 </body>
 </html>

@@ -55,8 +55,6 @@ const T = {
   archivedIterationLabel: '이전 버전(v{version})입니다 — 재구성 전 모습 그대로 보존되었습니다.',
   enlargePreview: '미리보기 확대', shrinkPreview: '미리보기 축소',
   couldNotLoadWeavo: 'Weavo를 불러올 수 없습니다',
-  pledgeAmountInvalid: '기부 약정 금액은 0 이상의 정수여야 합니다.', sponsorNotSaved: '약정 기업 정보는 저장되지 않았습니다 — supabase_mosaic_sponsor.sql 을 먼저 실행하세요.',
-  adminPledgeLine: '약정 ₩{amount}',
   heroMinePiece: '{n}조각', heroMinePieces: '{n}조각',
   titleRequired: '제목을 입력해주세요.', addReferenceImage: '참조 이미지를 추가해주세요.',
   widthHeightRange: '너비와 높이는 1~100 사이여야 하며, 전체 칸 수는 10,000칸을 넘을 수 없습니다.',

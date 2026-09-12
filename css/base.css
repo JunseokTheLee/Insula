@@ -351,8 +351,6 @@ body.no-scroll-lock{overflow:hidden;}
 .img-upload-area.has-img .img-input{pointer-events:none;}
 /* Smaller variant for a logo (campaign forms): a shorter box, and the
    preview letterboxed instead of cropped — cover would cut a wide wordmark's ends. */
-.logo-picker.img-upload-area{height:96px;}
-.logo-picker .img-preview{object-fit:contain;padding:8px;box-sizing:border-box;background:var(--bg);}
 
 .avatar-picker.img-upload-area{width:84px;height:84px;border-radius:50%;margin:0 auto;flex-shrink:0;overflow:visible;}
 .avatar-picker .img-placeholder{font-size:10px;padding:0 6px;}

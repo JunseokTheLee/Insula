@@ -6,9 +6,10 @@
 // The hero shows one active campaign at a time — the newest first — and the
 // ‹ › buttons step through the others; every number on the page (pieces,
 // percent, the caption) follows the campaign on screen. Everything here is
-// counted in PIECES — the donation/pledge figures the hero used to show
-// were removed on 2026-09-12 (the sponsor columns themselves are untouched
-// and still editable in /admin, they simply are not displayed here).
+// counted in PIECES. The donation/pledge figures the hero used to show were
+// removed on 2026-09-12, and the columns behind them were dropped the same
+// day (supabase_mosaic_sponsor_drop.sql) — no screen, form or column in
+// this site refers to money any more.
 let heroProjects = [];
 let heroIndex = 0;
 async function loadHeroPreview() {

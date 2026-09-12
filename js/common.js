@@ -644,25 +644,6 @@ async function uploadImage(file) {
   return sb.storage.from('artwork').getPublicUrl(path).data.publicUrl;
 }
 
-// ---------- campaign donation pledge (supabase_mosaic_sponsor.sql) ----------
-// Every campaign carries its pledging partner (name / logo / tagline) and
-// the pledged amount in KRW. Rows from before that file — or a DB where it
-// isn't applied yet — have no pledge_amount, so readers go through
-// pledgeAmountOf() and get the default rather than NaN.
-const PLEDGE_AMOUNT_DEFAULT = 500000;
-function pledgeAmountOf(project) {
-  const n = project ? Number(project.pledge_amount) : NaN;
-  return Number.isInteger(n) && n >= 0 ? n : PLEDGE_AMOUNT_DEFAULT;
-}
-// Admin form input → integer won, or null when it is not a whole number ≥ 0.
-// Typed thousands separators ("2,000,000") are accepted; blank = the default.
-function parsePledgeInput(text) {
-  const raw = String(text || '').trim();
-  if (raw === '') return PLEDGE_AMOUNT_DEFAULT;
-  if (!/^[\d,\s]+$/.test(raw)) return null;
-  const n = parseInt(raw.replace(/[^\d]/g, ''), 10);
-  return Number.isInteger(n) && n >= 0 && n <= 1000000000 ? n : null;
-}
 // Shrinks an image file so its longer side is ≤ maxDim (PNG, so a logo's
 // transparency survives); a file already that small is returned untouched.
 // Resolves to the original on any decode failure — never blocks an upload.

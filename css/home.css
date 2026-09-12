@@ -123,8 +123,8 @@
 .hero-art .hero-tagline span{font-family:'Caveat','Segoe Script','Brush Script MT',cursive !important;}
 .hero-art-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-top:16px;flex-shrink:0;}
 .hero-art-side{display:flex;flex-direction:column;align-items:flex-end;gap:12px;margin-left:auto;}
-/* Signed-in visitor's own share of the pledge: the third card on the
-   stats row (right column), level with the other two. */
+/* How many pieces the signed-in visitor has in this campaign: the second
+   card on the stats row (right column), level with the progress card. */
 .hero-mine{grid-area:mine;align-self:stretch;justify-self:start;min-width:260px;display:flex;align-items:center;gap:14px;background:var(--gray-0);border-radius:var(--r-md);padding:16px 22px;box-shadow:var(--shadow-sm);}
 /* Same icon slot as the donation card's heart, with a green sprout (Lucide
    "sprout", ISC) — a contribution that grows. */
@@ -172,7 +172,7 @@
 .hero-art-caption{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--gray-700);line-height:1.6;text-align:left;}
 .hero-art-caption b{display:block;color:var(--hero-ink);font-weight:700;}
 /* Pieces placed so far, with the heart beside it — it used to sit on the
-   pledge card next door, which is gone (2026-09-12). */
+   donation card next door, which is gone (2026-09-12). */
 .hero-progress{grid-area:prog;align-self:stretch;display:flex;align-items:center;gap:14px;background:var(--gray-0);border-radius:var(--r-md);padding:18px 22px 16px;box-shadow:var(--shadow-sm);}
 .hero-progress-body{flex:1 1 auto;min-width:0;}
 .hero-pieces{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
