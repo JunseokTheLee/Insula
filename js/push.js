@@ -6,11 +6,20 @@
 // needs sb/me/authReady from auth.js, getSiteSettings/toast from common.js
 // and tr from the i18n file.
 //
+// Two registrations live here, and they never both apply on one device:
+//
+//   • BROWSER — a Web Push subscription (service worker + VAPID). Needs
+//     serviceWorker/PushManager, so it is skipped in the app's WebView.
+//   • APP — the FCM token the Weavo mobile app (Flutter, art.weavo.app)
+//     hands over through window.WeavoAppBridge. A WebView has no Web Push
+//     API at all, which is why the app needs its own path.
+//
 // Nothing here can send a notification. Rows land in `notifications` from
 // the triggers in supabase_notifications.sql, an AFTER INSERT trigger asks
-// the Edge Function to deliver them (supabase_push.sql →
-// supabase/functions/push/index.ts), and sw.js shows what arrives. This
-// file only ever registers a subscription and stores it.
+// the Edge Function to deliver them (supabase_push.sql +
+// supabase_push_tokens.sql → supabase/functions/push/index.ts), and sw.js
+// (browser) or the app itself shows what arrives. This file only ever
+// registers a device and stores it.
 "use strict";
 
 (function () {
@@ -173,7 +182,62 @@
     } catch (e) { console.error('push sync error:', e); }
   }
 
+  // ---------- the app's FCM token ----------
+  // Only exists inside the Weavo app's WebView; a browser has no bridge and
+  // skips all of this. The app answers with
+  //   { enabled, permission, token }
+  // and `enabled: false` means the user turned notifications off there — not
+  // an error, just nothing to do. A token is issued even while permission is
+  // still 'notDetermined', so it is worth storing whenever one is present:
+  // the row is ready the moment they say yes.
+  function appBridge() {
+    return (typeof window !== 'undefined' && window.WeavoAppBridge) || null;
+  }
+  async function syncAppPushToken() {
+    const bridge = appBridge();
+    if (!bridge || !me.id) return;
+    let info = null;
+    try { info = await bridge.call('GET_PUSH_TOKEN'); }
+    catch (e) { console.error('app push token error:', e); return; }
+    if (!info || !info.enabled || !info.token) return;
+    const { error } = await sb.rpc('save_push_token', {
+      p_token: info.token,
+      p_platform: String(bridge.platform || '').slice(0, 20) || null,
+      p_lang: CURRENT_LANG === 'en' ? 'en' : 'ko',
+    });
+    if (error) console.error('save_push_token error:', error);
+  }
+  // Called from auth.js right before the session goes away, so a shared
+  // phone stops receiving the previous account's notifications. The row is
+  // still this user's at that point, so the plain row-owner delete policy
+  // covers it.
+  async function forgetAppPushToken() {
+    const bridge = appBridge();
+    if (!bridge || !me.id) return;
+    try {
+      const info = await bridge.call('GET_PUSH_TOKEN');
+      if (!info || !info.token) return;
+      const { error } = await sb.from('push_tokens').delete().eq('token', info.token);
+      if (error) console.error('remove push token error:', error);
+    } catch (e) { console.error('forget app push token error:', e); }
+  }
+  window.forgetAppPushToken = forgetAppPushToken;
+
   async function start() {
+    await authReady;
+
+    // The app path first, and outside the Web Push guards below: it needs
+    // neither a service worker nor a VAPID key, and inside the WebView the
+    // browser half never runs at all.
+    const syncApp = () => { syncAppPushToken().catch(e => console.error('app push sync error:', e)); };
+    syncApp();
+    document.addEventListener('weavo:authchange', syncApp);
+    // The app re-issues tokens on its own schedule and tells the page when
+    // it does.
+    window.addEventListener('weavoapp', e => {
+      if (e && e.detail && e.detail.type === 'PUSH_TOKEN') syncApp();
+    });
+
     if (!supported) return;
     const settings = await getSiteSettings();
     if (!settings.pushEnabled || !settings.pushPublicKey) return; // feature off, or no key yet
@@ -184,7 +248,6 @@
       mountSwitch();
       syncOnLoad();
     };
-    await authReady;
     apply();
     document.addEventListener('weavo:authchange', apply);
   }

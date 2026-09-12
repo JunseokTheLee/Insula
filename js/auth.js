@@ -20,7 +20,15 @@ async function signIn(provider = 'google') {
   if (provider === 'google') options.queryParams = { prompt: 'select_account' };
   await sb.auth.signInWithOAuth({ provider, options });
 }
-async function signOut() { await sb.auth.signOut(); }
+async function signOut() {
+  // Drop this device's app push token while the session still exists — on a
+  // shared phone the next person must not keep getting the previous
+  // account's notifications (js/push.js, loaded after this file).
+  if (typeof window.forgetAppPushToken === 'function') {
+    try { await window.forgetAppPushToken(); } catch (e) { console.error('forget app push token error:', e); }
+  }
+  await sb.auth.signOut();
+}
 function meFromUser(u) {
   const name = u.user_metadata.full_name || u.user_metadata.name || (u.email ? u.email.split('@')[0] : tr('anonymous'));
   return {
