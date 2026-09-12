@@ -10,8 +10,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260912-124106">
-<link rel="stylesheet" href="/css/admin.css?v=20260912-124106">
+<link rel="stylesheet" href="/css/base.css?v=20260912-132102">
+<link rel="stylesheet" href="/css/admin.css?v=20260912-132102">
 </head>
 
 <body>
@@ -83,10 +83,10 @@
 
         <section class="admin-section" id="adminUsageSection" style="display:none;">
           <h2>사용량</h2>
-          <p class="admin-help">DB 용량과 Storage(파일) 사용량입니다. <strong>월 전송량(egress)은 DB 에서 알 수 없어</strong> Supabase 대시보드 → Reports → Usage 에서 확인합니다. 참고 한도 — Free: DB 500MB · Storage 1GB · 전송량 5GB/월, Pro: DB 8GB · Storage 100GB · 전송량 250GB/월.</p>
+          <p class="admin-help">DB 용량과 Storage(파일) 사용량, 그리고 요금제 한도 대비 사용률입니다. 한도는 아래 "사이트 옵션 → 용량 한도" 에서 바꾸며, 기본값은 현재 쓰는 <strong>Supabase Pro Plan</strong> 기준(DB 8GB · Storage 100GB)입니다. <strong>월 전송량(egress)은 DB 에서 알 수 없어</strong> 여기에 표시하지 못합니다 — Supabase 대시보드 → Reports → Usage 에서 확인하세요(Pro 250GB/월).</p>
           <div class="admin-usage">
-            <div class="admin-usage-tile"><div class="admin-usage-k">DB 용량</div><div class="admin-usage-v" id="adminDbSize">—</div></div>
-            <div class="admin-usage-tile"><div class="admin-usage-k">Storage 사용량</div><div class="admin-usage-v" id="adminStorageSize">—</div><div class="admin-usage-s">파일 <span id="adminStorageFiles">—</span>개</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">DB 용량</div><div class="admin-usage-v" id="adminDbSize">—</div><div class="admin-usage-s"><span class="admin-usage-share" id="adminDbShare">—</span></div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Storage 사용량</div><div class="admin-usage-v" id="adminStorageSize">—</div><div class="admin-usage-s">파일 <span id="adminStorageFiles">—</span>개 · <span class="admin-usage-share" id="adminStorageShare">—</span></div></div>
             <div class="admin-usage-tile"><div class="admin-usage-k">작품 (대기 조각)</div><div class="admin-usage-v" id="adminCountSubmissions">—</div></div>
             <div class="admin-usage-tile"><div class="admin-usage-k">캠페인 칸 합계</div><div class="admin-usage-v" id="adminCountPixels">—</div><div class="admin-usage-s">진행 중 캠페인 <span id="adminCountProjects">—</span>개</div></div>
             <div class="admin-usage-tile"><div class="admin-usage-k">회원</div><div class="admin-usage-v" id="adminCountProfiles">—</div></div>
@@ -247,6 +247,17 @@
               <h3>일반</h3>
               <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>캠페인 페이지 오른쪽에 "미리보기"(기준 색상) 썸네일 표시 <em>(기본: 끔)</em></span></label>
               <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>방문자 수 집계 — 브라우저마다 하루(한국 시간) 한 번, 회원·게스트를 구분해 "대시보드" 의 방문 통계에 표시 <em>(기본 켜짐; 끄면 서버의 record_visit() 도 기록하지 않음)</em></span></label>
+            </div>
+
+            <div class="admin-option-card">
+              <h3>용량 한도</h3>
+              <p class="admin-help">위 "사용량" 의 사용률을 계산할 때 쓰는 요금제 한도입니다. 요금제를 바꾸면 이 두 값만 고치면 되고 배포는 필요 없습니다. 사용량 자체가 바뀌지는 않습니다.</p>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminDbLimitGb">DB 디스크 한도 (GB) — Supabase Pro 기본은 프로젝트당 8GB 입니다. 실제 값은 프로젝트 Settings → Compute and Disk 에서 확인합니다. <em>(기본: 8)</em></label>
+                <div class="admin-range"><input id="adminDbLimitGb" type="number" min="1" max="1000" step="1" data-setting="dbLimitGb" disabled></div>
+                <label for="adminStorageLimitGb">Storage 한도 (GB) — Pro 기준 100GB 입니다. <em>(기본: 100)</em></label>
+                <div class="admin-range"><input id="adminStorageLimitGb" type="number" min="1" max="10000" step="1" data-setting="storageLimitGb" disabled></div>
+              </div>
             </div>
 
             <div class="admin-option-card">
@@ -554,15 +565,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260912-124106"></script>
-<script src="/js/i18n/ko.js?v=20260912-124106"></script>
-<script src="/js/common.js?v=20260912-124106"></script>
-<script src="/js/auth.js?v=20260912-124106"></script>
-<script src="/js/notifications.js?v=20260912-124106"></script>
-<script src="/js/push.js?v=20260912-124106"></script>
-<script src="/js/color-engine.js?v=20260912-124106"></script>
-<script src="/js/matching.js?v=20260912-124106"></script>
-<script src="/js/admin.js?v=20260912-124106"></script>
+<script src="/js/supabase-client.js?v=20260912-132102"></script>
+<script src="/js/i18n/ko.js?v=20260912-132102"></script>
+<script src="/js/common.js?v=20260912-132102"></script>
+<script src="/js/auth.js?v=20260912-132102"></script>
+<script src="/js/notifications.js?v=20260912-132102"></script>
+<script src="/js/push.js?v=20260912-132102"></script>
+<script src="/js/color-engine.js?v=20260912-132102"></script>
+<script src="/js/matching.js?v=20260912-132102"></script>
+<script src="/js/admin.js?v=20260912-132102"></script>
 
 </body>
 </html>

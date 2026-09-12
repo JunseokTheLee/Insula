@@ -63,6 +63,8 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
 .admin-usage-k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
 .admin-usage-v{font-family:'Pretendard',sans-serif;font-weight:700;font-size:20px;color:var(--primary);margin-top:2px;}
 .admin-usage-s{font-size:12px;color:var(--muted);margin-top:2px;}
+/* Share of the plan limit — turns warm once it passes 80%. */
+.admin-usage-share.over{color:#C0522F;font-weight:700;}
 /* Visitors chart: one inline <svg> from admin.js (adminVisitsChartSvg); the
    legend swatches below it reuse the bar classes, hence fill AND background. */
 .admin-chart{margin-top:14px;}
@@ -106,6 +108,13 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
 .admin-setting-range label:not(:first-child){margin-top:8px;}
 .admin-range{display:flex;align-items:center;gap:12px;}
 .admin-range input[type=range]{flex:1 1 auto;max-width:360px;margin:0;accent-color:var(--primary);}
+/* Number options (the plan limits) — a slider makes no sense across 1–10,000. */
+.admin-range input[type=number]{
+  flex:0 0 auto;width:130px;margin:0;padding:7px 10px;
+  font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;color:var(--text);
+  border:1px solid var(--border-strong);border-radius:var(--r-xs);background:var(--bg);
+}
+.admin-range input[type=number]:disabled{opacity:.55;}
 .admin-range input:disabled+output{opacity:.55;}
 .admin-color input[type=color]{flex:0 0 auto;width:56px;height:32px;padding:2px;margin:0;border:1px solid var(--border-strong);border-radius:var(--r-xs);background:#fff;cursor:pointer;}
 .admin-color output{font-family:ui-monospace,Consolas,monospace;font-weight:600;}

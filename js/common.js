@@ -570,6 +570,11 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // anon key lets a script call PostgREST directly). Generous on purpose:
   // it exists to stop a runaway script, not to pace a real artist
   // uploading a portfolio. Pieces don't count, only artworks.
+  // Plan limits the admin Usage tiles show a percentage of. Supabase Pro:
+  // 8 GB of database disk per project, 100 GB of Storage. Options rather
+  // than constants so changing plan does not need a deploy.
+  dbLimitGb: 8,
+  storageLimitGb: 100,
   uploadLimitCount: 20,
   uploadLimitMinutes: 10,
   // Web push (js/push.js, sw.js, supabase_push.sql). Off until an admin

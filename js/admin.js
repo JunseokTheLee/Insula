@@ -542,6 +542,14 @@ async function loadAdminAdmins() {
 // database size and sums storage.objects. Monthly egress is a platform
 // metric that only the Supabase dashboard has — the page says so instead of
 // pretending. Section stays hidden until that SQL has been applied.
+// Usage as a share of the plan limit (dbLimitGb / storageLimitGb, site
+// options). Below 0.1% a single decimal would read "0.0%", so go finer —
+// 0.35 GB of 100 GB really is 0.35%, not nothing.
+function adminSharePct(used, limitBytes) {
+  if (used == null || !limitBytes) return null;
+  const pct = (used / limitBytes) * 100;
+  return pct > 0 && pct < 0.1 ? pct.toFixed(2) : pct.toFixed(1);
+}
 function adminBytes(n) {
   if (n == null) return '—';
   if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(2)} GB`;
@@ -566,6 +574,20 @@ async function loadAdminUsage() {
   set('adminCountPixels', String(data.pixels ?? '—'));
   set('adminCountProjects', String(data.projects ?? '—'));
   set('adminCountProfiles', String(data.profiles ?? '—'));
+
+  // Plan limits come from the site options, so an upgrade is a settings
+  // change rather than a deploy. getSiteSettings() never rejects.
+  const settings = await getSiteSettings();
+  const share = (id, used, limitGb) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const limitBytes = Number(limitGb) * 1024 ** 3;
+    const pct = adminSharePct(used, limitBytes);
+    el.textContent = pct == null ? '—' : tr('adminUsageShare', { pct, limit: adminBytes(limitBytes) });
+    el.classList.toggle('over', pct != null && Number(pct) >= 80);
+  };
+  share('adminDbShare', data.db_bytes, settings.dbLimitGb);
+  share('adminStorageShare', data.storage_bytes, settings.storageLimitGb);
 }
 
 // ---------- visitor statistics (visit_days) ----------

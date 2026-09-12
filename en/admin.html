@@ -9,8 +9,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260912-124106">
-<link rel="stylesheet" href="/css/admin.css?v=20260912-124106">
+<link rel="stylesheet" href="/css/base.css?v=20260912-132102">
+<link rel="stylesheet" href="/css/admin.css?v=20260912-132102">
 </head>
 <body>
 
@@ -78,10 +78,10 @@
 
         <section class="admin-section" id="adminUsageSection" style="display:none;">
           <h2>Usage</h2>
-          <p class="admin-help">Database size and Storage (file) usage. <strong>Monthly egress can't be read from the database</strong> — see the Supabase dashboard → Reports → Usage. Reference limits — Free: DB 500 MB · Storage 1 GB · egress 5 GB/mo; Pro: DB 8 GB · Storage 100 GB · egress 250 GB/mo.</p>
+          <p class="admin-help">Database and Storage (file) usage, and how much of the plan limit each one is. The limits are set under "Site options → Plan limits" below; the defaults match the <strong>Supabase Pro Plan</strong> this project runs on (8 GB database, 100 GB Storage). <strong>Monthly egress cannot be read from the database</strong>, so it is not shown here — see the Supabase dashboard → Reports → Usage (250 GB/mo on Pro).</p>
           <div class="admin-usage">
-            <div class="admin-usage-tile"><div class="admin-usage-k">Database</div><div class="admin-usage-v" id="adminDbSize">—</div></div>
-            <div class="admin-usage-tile"><div class="admin-usage-k">Storage</div><div class="admin-usage-v" id="adminStorageSize">—</div><div class="admin-usage-s"><span id="adminStorageFiles">—</span> files</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Database</div><div class="admin-usage-v" id="adminDbSize">—</div><div class="admin-usage-s"><span class="admin-usage-share" id="adminDbShare">—</span></div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Storage</div><div class="admin-usage-v" id="adminStorageSize">—</div><div class="admin-usage-s"><span id="adminStorageFiles">—</span> files · <span class="admin-usage-share" id="adminStorageShare">—</span></div></div>
             <div class="admin-usage-tile"><div class="admin-usage-k">Artworks (pieces waiting)</div><div class="admin-usage-v" id="adminCountSubmissions">—</div></div>
             <div class="admin-usage-tile"><div class="admin-usage-k">Campaign cells</div><div class="admin-usage-v" id="adminCountPixels">—</div><div class="admin-usage-s"><span id="adminCountProjects">—</span> active campaigns</div></div>
             <div class="admin-usage-tile"><div class="admin-usage-k">Members</div><div class="admin-usage-v" id="adminCountProfiles">—</div></div>
@@ -242,6 +242,17 @@
               <h3>General</h3>
               <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>Show the "Preview" thumbnail (the reference colors) in the corner of campaign pages <em>(default: off)</em></span></label>
               <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>Count visitors — once a day per browser (Asia/Seoul), members and guests separately, for the Visitors section on "Dashboard" <em>(default on; when off, record_visit() refuses on the server as well)</em></span></label>
+            </div>
+
+            <div class="admin-option-card">
+              <h3>Plan limits</h3>
+              <p class="admin-help">The limits the "Usage" section above measures against. Changing plan means changing these two numbers — no deploy needed. They do not change actual usage.</p>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminDbLimitGb">Database disk limit (GB) — Supabase Pro includes 8 GB per project. The real figure is under project Settings → Compute and Disk. <em>(default: 8)</em></label>
+                <div class="admin-range"><input id="adminDbLimitGb" type="number" min="1" max="1000" step="1" data-setting="dbLimitGb" disabled></div>
+                <label for="adminStorageLimitGb">Storage limit (GB) — 100 GB on Pro. <em>(default: 100)</em></label>
+                <div class="admin-range"><input id="adminStorageLimitGb" type="number" min="1" max="10000" step="1" data-setting="storageLimitGb" disabled></div>
+              </div>
             </div>
 
             <div class="admin-option-card">
@@ -448,14 +459,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260912-124106"></script>
-<script src="/js/i18n/en.js?v=20260912-124106"></script>
-<script src="/js/common.js?v=20260912-124106"></script>
-<script src="/js/auth.js?v=20260912-124106"></script>
-<script src="/js/notifications.js?v=20260912-124106"></script>
-<script src="/js/push.js?v=20260912-124106"></script>
-<script src="/js/color-engine.js?v=20260912-124106"></script>
-<script src="/js/matching.js?v=20260912-124106"></script>
-<script src="/js/admin.js?v=20260912-124106"></script>
+<script src="/js/supabase-client.js?v=20260912-132102"></script>
+<script src="/js/i18n/en.js?v=20260912-132102"></script>
+<script src="/js/common.js?v=20260912-132102"></script>
+<script src="/js/auth.js?v=20260912-132102"></script>
+<script src="/js/notifications.js?v=20260912-132102"></script>
+<script src="/js/push.js?v=20260912-132102"></script>
+<script src="/js/color-engine.js?v=20260912-132102"></script>
+<script src="/js/matching.js?v=20260912-132102"></script>
+<script src="/js/admin.js?v=20260912-132102"></script>
 </body>
 </html>
