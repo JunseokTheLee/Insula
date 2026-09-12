@@ -989,6 +989,38 @@ async function toggleUserBlock(targetId, btn) {
   toast(wasBlocked ? tr('userUnblockedToast') : tr('userBlockedToast'));
 }
 
+// ---------- "Back" links on standalone pages ----------
+// The artwork / profile / exhibition pages are shareable, indexable URLs, so
+// their back link needs a real href for anyone who arrived from outside
+// (search, a shared link) — that is the artwork's campaign, or the campaign
+// list. But when the visitor came from another Weavo page in this tab, back
+// means the page they were actually on: the home page, the artwork grid they
+// were scrolling halfway down, the profile they clicked from. Before
+// 2026-09-12 the artwork page always went to the campaign, so opening an
+// artwork from the home page had no way back to it.
+//
+// history.length > 1 matters for a link opened in a NEW TAB: the referrer is
+// set there too, but there is nothing behind the current entry, so
+// history.back() would leave the visitor stuck on the page.
+function cameFromThisSite() {
+  if (history.length <= 1) return false;
+  try { return !!document.referrer && new URL(document.referrer).origin === location.origin; }
+  catch (e) { return false; }
+}
+// onLeave runs only when the click really takes the page away — a
+// ctrl/cmd-click opens a new tab and must leave this page (and its running
+// graph, timers) alone.
+function setupBackLink(el, onLeave) {
+  if (!el) return;
+  el.addEventListener('click', e => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (typeof onLeave === 'function') onLeave();
+    if (!cameFromThisSite()) return; // follow the href
+    e.preventDefault();
+    history.back();
+  });
+}
+
 // ---------- reusable drag/drop image picker ----------
 const MAX_IMG_BYTES = 8 * 1024 * 1024;
 function setupPicker(containerId) {

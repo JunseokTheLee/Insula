@@ -233,6 +233,9 @@ function openEditCollectionModal(collection) {
   document.getElementById('ec-error').textContent = '';
   document.getElementById('edit-collection-modal').classList.add('open');
 }
+// Back to wherever on this site the visitor came from, else the href in
+// the markup (common.js setupBackLink).
+setupBackLink(document.getElementById('collectionBackBtn'));
 document.getElementById('ec-cancel').onclick = () => document.getElementById('edit-collection-modal').classList.remove('open');
 document.getElementById('edit-collection-modal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
 document.getElementById('ec-submit').onclick = async () => {

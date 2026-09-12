@@ -37,15 +37,10 @@ function renderProfileJsonLd(profile, displayName) {
   injectJsonLd([data, breadcrumb]);
 }
 
-document.getElementById('profileBackBtn').addEventListener('click', e => {
-  e.preventDefault();
-  stopGraph();
-  const sameOriginReferrer = document.referrer && (() => {
-    try { return new URL(document.referrer).origin === location.origin; } catch { return false; }
-  })();
-  if (sameOriginReferrer) history.back();
-  else location.href = `/${CURRENT_LANG}/campaigns`;
-});
+// Same rule as the artwork page (common.js setupBackLink): back to wherever
+// on this site the visitor came from, else the href in the markup. The graph
+// is stopped first — but only when the click actually leaves the page.
+setupBackLink(document.getElementById('profileBackBtn'), stopGraph);
 
 // Every piece this profile's owner has posted, whether or not it's made it
 // into a project yet — like a social feed, all of it lives on the profile;

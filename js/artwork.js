@@ -72,7 +72,11 @@ async function loadArtworkPage(id) {
   if (sub.parent_id) { location.replace(artworkUrl(sub.parent_id)); return; }
   const backBtn = document.getElementById('artworkBackBtn');
   const campaignId = sub.project_id || sub.home_project_id;
+  // Where "back" goes for someone who arrived from outside the site; a
+  // visitor who came from another Weavo page goes back to that page instead
+  // (common.js setupBackLink).
   backBtn.href = campaignId ? projectUrl(campaignId) : `/${CURRENT_LANG}/campaigns`;
+  setupBackLink(backBtn);
   renderArtworkBreadcrumb(sub);
   populateLightboxContent(sub); // also renders the piece usage line (lightbox.js)
   updateArtworkMeta(sub);
