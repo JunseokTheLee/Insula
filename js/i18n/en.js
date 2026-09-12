@@ -56,6 +56,7 @@ const T = {
   enlargePreview: 'Enlarge reference preview', shrinkPreview: 'Shrink reference preview',
   couldNotLoadWeavo: 'Could not load weavo',
   heroMinePiece: '{n} piece', heroMinePieces: '{n} pieces',
+  networkNoMeYet: 'Your profile is not on the network yet — finish setting it up first',
   heroMineWork: '{n} artwork', heroMineWorks: '{n} artworks', heroMineSummary: '{works} · {pieces}',
   titleRequired: 'Title is required.', addReferenceImage: 'Add a reference image.',
   widthHeightRange: 'Width and height must be 1-100, and no more than 10,000 cells total.',

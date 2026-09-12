@@ -56,6 +56,7 @@ const T = {
   enlargePreview: '미리보기 확대', shrinkPreview: '미리보기 축소',
   couldNotLoadWeavo: 'Weavo를 불러올 수 없습니다',
   heroMinePiece: '{n}조각', heroMinePieces: '{n}조각',
+  networkNoMeYet: '아직 네트워크에 표시할 내 프로필이 없습니다 — 프로필을 먼저 완성해 주세요',
   heroMineWork: '{n}작품', heroMineWorks: '{n}작품', heroMineSummary: '{works} {pieces}',
   titleRequired: '제목을 입력해주세요.', addReferenceImage: '참조 이미지를 추가해주세요.',
   widthHeightRange: '너비와 높이는 1~100 사이여야 하며, 전체 칸 수는 10,000칸을 넘을 수 없습니다.',

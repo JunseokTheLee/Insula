@@ -23,3 +23,25 @@
 @media (max-width:640px){
   .network-page{padding-left:16px;padding-right:16px;}
 }
+
+/* ---------- view switch (everyone / my network) ----------
+   Same pill shape as the campaign page's view tabs. It sits in
+   .page-title-row, which base.css already floats to the bottom-left corner
+   on a phone (body[data-mobile-fs]) — so the switch is at the top on the web
+   and at the bottom in the app without a second rule for it. */
+.network-view-tabs{display:inline-flex;background:var(--gray-100);border-radius:var(--r-full);padding:2px;gap:2px;flex-shrink:0;}
+.nv-tab{
+  appearance:none;border:none;background:transparent;cursor:pointer;
+  font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;
+  padding:7px 14px;border-radius:var(--r-full);color:var(--muted);white-space:nowrap;
+  transition:background .12s linear,color .12s linear;
+}
+.nv-tab:hover:not(.active){color:var(--text);}
+.nv-tab.active{background:var(--gradient-primary);color:#fff;}
+@media (max-width:640px){
+  /* Same breakpoint base.css uses for body[data-mobile-fs] — only there is
+     this row floated over the canvas, so only there does it need the same
+     readable backing the info button gets. */
+  body[data-mobile-fs] .network-view-tabs{background:rgba(247,247,245,.95);box-shadow:0 2px 10px rgba(0,0,0,.14);}
+  .nv-tab{padding:7px 12px;font-size:11.5px;}
+}

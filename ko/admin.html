@@ -12,8 +12,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260912-220207">
-<link rel="stylesheet" href="/css/admin.css?v=20260912-220207">
+<link rel="stylesheet" href="/css/base.css?v=20260912-233255">
+<link rel="stylesheet" href="/css/admin.css?v=20260912-233255">
 </head>
 
 <body>
@@ -249,6 +249,15 @@
               <h3>일반</h3>
               <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>캠페인 페이지 오른쪽에 "미리보기"(기준 색상) 썸네일 표시 <em>(기본: 끔)</em></span></label>
               <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>방문자 수 집계 — 브라우저마다 하루(한국 시간) 한 번, 회원·게스트를 구분해 "대시보드" 의 방문 통계에 표시 <em>(기본 켜짐; 끄면 서버의 record_visit() 도 기록하지 않음)</em></span></label>
+            </div>
+
+            <div class="admin-option-card">
+              <h3>네트워크</h3>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminNetworkOrbitSpeed">작가 아이콘이 떠도는 <strong>속도</strong>: 1 이면 5분에 한 바퀴, 3 이면 100초에 한 바퀴입니다. 올릴수록 화면이 살아 있어 보이지만 너무 빠르면 이름을 읽기 어렵습니다. <em>(기본: 3)</em></label>
+                <div class="admin-range"><input id="adminNetworkOrbitSpeed" type="range" min="1" max="10" step="1" data-setting="networkOrbitSpeed" disabled><output for="adminNetworkOrbitSpeed" data-setting-output="networkOrbitSpeed">3</output></div>
+                <p class="admin-help">네트워크 화면을 다시 열면 적용됩니다.</p>
+              </div>
             </div>
 
             <div class="admin-option-card">
@@ -567,15 +576,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260912-220207"></script>
-<script src="/js/i18n/ko.js?v=20260912-220207"></script>
-<script src="/js/common.js?v=20260912-220207"></script>
-<script src="/js/auth.js?v=20260912-220207"></script>
-<script src="/js/notifications.js?v=20260912-220207"></script>
-<script src="/js/push.js?v=20260912-220207"></script>
-<script src="/js/color-engine.js?v=20260912-220207"></script>
-<script src="/js/matching.js?v=20260912-220207"></script>
-<script src="/js/admin.js?v=20260912-220207"></script>
+<script src="/js/supabase-client.js?v=20260912-233255"></script>
+<script src="/js/i18n/ko.js?v=20260912-233255"></script>
+<script src="/js/common.js?v=20260912-233255"></script>
+<script src="/js/auth.js?v=20260912-233255"></script>
+<script src="/js/notifications.js?v=20260912-233255"></script>
+<script src="/js/push.js?v=20260912-233255"></script>
+<script src="/js/color-engine.js?v=20260912-233255"></script>
+<script src="/js/matching.js?v=20260912-233255"></script>
+<script src="/js/admin.js?v=20260912-233255"></script>
 
 </body>
 </html>

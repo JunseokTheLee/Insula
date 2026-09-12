@@ -570,13 +570,17 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // anon key lets a script call PostgREST directly). Generous on purpose:
   // it exists to stop a runaway script, not to pace a real artist
   // uploading a portfolio. Pieces don't count, only artworks.
+  uploadLimitCount: 20,
+  uploadLimitMinutes: 10,
+  // How fast the artist icons drift around the network page, as a multiple
+  // of the original speed (one turn every 5 minutes). 3 = a turn every 100
+  // seconds, which is what the page ships with.
+  networkOrbitSpeed: 3,
   // Plan limits the admin Usage tiles show a percentage of. Supabase Pro:
   // 8 GB of database disk per project, 100 GB of Storage. Options rather
   // than constants so changing plan does not need a deploy.
   dbLimitGb: 8,
   storageLimitGb: 100,
-  uploadLimitCount: 20,
-  uploadLimitMinutes: 10,
   // Web push (js/push.js, sw.js, supabase_push.sql). Off until an admin
   // pastes the VAPID public key and the Edge Function URL — both are public
   // values, so they live here rather than in the repo, and rotating a key

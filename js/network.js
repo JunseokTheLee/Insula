@@ -7,6 +7,47 @@ let globalGraphToken = 0; // guards against a stale fetch finishing after a newe
 let globalZoomBehavior = null; // set whenever the graph has nodes, so the toolbar buttons have something to drive
 let globalFitAllView = null; // set alongside globalZoomBehavior — what the reset button calls
 let globalRotationTimer = null;
+// Set while a graph is on screen, so the "everyone / my network" switch can
+// drive the same selection a node click makes. null before the first load
+// and whenever the graph is empty.
+let globalSelectNode = null;
+let globalGraphNodeIds = new Set();
+
+// ---------- everyone / my network ----------
+// "My network" is the selection a click on your own node already produces:
+// you and the people you are connected to, highlighted and zoomed to fit,
+// everyone else dimmed. Reusing that instead of filtering the data keeps one
+// code path — and keeps the rest of the site visible around the edges, which
+// is the point of a network view.
+function setNetworkViewTab(which) {
+  const all = document.getElementById('networkViewAll');
+  const mine = document.getElementById('networkViewMine');
+  if (!all || !mine) return;
+  all.classList.toggle('active', which === 'all');
+  mine.classList.toggle('active', which === 'mine');
+  // Both false is a real state: looking at someone else's local network is
+  // neither "everyone" nor "mine".
+  all.setAttribute('aria-pressed', String(which === 'all'));
+  mine.setAttribute('aria-pressed', String(which === 'mine'));
+}
+// Called from applySelection so the switch also reflects a plain node click:
+// selecting your own node IS "my network", selecting someone else's is
+// neither, and clearing the selection is "everyone".
+function syncNetworkViewTab(selectedId) {
+  setNetworkViewTab(selectedId == null ? 'all' : (selectedId === me.id ? 'mine' : null));
+}
+function showEveryoneNetwork() {
+  if (globalSelectNode) globalSelectNode(null);
+}
+function showMyNetwork() {
+  if (!me.id) { openAuthModal(); return; }
+  // No profile row yet (brand-new account mid-onboarding) — there is no node
+  // to centre on, so say so rather than silently doing nothing.
+  if (!globalSelectNode || !globalGraphNodeIds.has(me.id)) { toast(tr('networkNoMeYet')); return; }
+  globalSelectNode(me.id);
+}
+document.getElementById('networkViewAll').onclick = showEveryoneNetwork;
+document.getElementById('networkViewMine').onclick = showMyNetwork;
 function stopGlobalGraph() {
   if (globalGraphSim) { globalGraphSim.stop(); globalGraphSim = null; }
   if (globalRotationTimer) { globalRotationTimer.stop(); globalRotationTimer = null; }
@@ -89,12 +130,24 @@ async function loadGlobalNetwork() {
   zoomLevelEl.textContent = '100%';
   globalZoomBehavior = null;
   globalFitAllView = null;
+  globalSelectNode = null;
+  globalGraphNodeIds = new Set();
+  setNetworkViewTab('all');
 
-  const { nodes, links } = await fetchGlobalGraphData();
+  const [{ nodes, links }, orbitSettings] = await Promise.all([
+    fetchGlobalGraphData(),
+    // Options are a nice-to-have here — the graph must still draw if the
+    // settings row is unreachable, or if a cached older common.js has no
+    // getSiteSettings at all (CLAUDE.md 12: files can be mixed for a minute
+    // right after a deploy). Either way fall back to an empty object and the
+    // default speed below.
+    Promise.resolve().then(() => typeof getSiteSettings === 'function' ? getSiteSettings() : {}).catch(() => ({})),
+  ]);
   if (token !== globalGraphToken) return; // a newer load superseded this one
 
   empty.style.display = nodes.length ? 'none' : 'flex';
   if (!nodes.length) return;
+  globalGraphNodeIds = new Set(nodes.map(n => n.id));
 
   // Built while link.source/link.target are still plain ids (before
   // d3.forceLink below mutates them in place into node object references),
@@ -207,7 +260,11 @@ async function loadGlobalNetwork() {
   // settles (see the sim.on('end', ...) below and the restore path further
   // down); computing them off the transient spawn-cluster positions would
   // orbit around the wrong center entirely.
-  const ORBIT_BASE_RAD_PER_MS = (2 * Math.PI) / (5 * 60 * 1000); // ~one full turn every 5 min at 1x speed
+  // One turn every 5 minutes at 1x. The site option multiplies it — the
+  // page ships at 3x (a turn every 100 s), which reads as "alive" rather
+  // than "did that move?". Admin → Site options → Network.
+  const ORBIT_BASE_RAD_PER_MS = (2 * Math.PI) / (5 * 60 * 1000);
+  const orbitSpeed = Math.min(20, Math.max(0.25, Number(orbitSettings.networkOrbitSpeed) || 3));
   let orbitsInitialized = false;
   let orbitLastElapsed = 0;
   function initOrbitForNode(n, cx, cy) {
@@ -264,7 +321,7 @@ async function loadGlobalNetwork() {
     if (!orbitsInitialized || selectedId != null) return; // paused while zoomed in on a selection, so the fitted frame stays put
     const cx = width / 2, cy = height / 2;
     for (const n of nodes) {
-      n.orbitAngle += dt * ORBIT_BASE_RAD_PER_MS * n.orbitSpeedMul;
+      n.orbitAngle += dt * ORBIT_BASE_RAD_PER_MS * orbitSpeed * n.orbitSpeedMul;
       n.dispX = cx + n.orbitRadius * Math.cos(n.orbitAngle);
       n.dispY = cy + n.orbitRadius * Math.sin(n.orbitAngle);
     }
@@ -284,6 +341,7 @@ async function loadGlobalNetwork() {
     label.classed('pg-dimmed', d => selectedId != null && !isLocal(d.id));
     link.classed('pg-link-visible', l => selectedId != null && (l.source.id === selectedId || l.target.id === selectedId));
     if (selectedId) zoomToLocalNetwork(isLocal);
+    syncNetworkViewTab(selectedId);
   }
   // Shared "pan/scale to fit this set of points" math — pts are current
   // on-screen display positions (dispX/dispY ?? x/y), not raw simulation
@@ -317,6 +375,13 @@ async function loadGlobalNetwork() {
     svg.transition().duration(400).call(zoomBehavior.transform, fitTransformFor(pts));
   }
   globalFitAllView = zoomToFitAll;
+  // Clearing the selection only un-dims; the view also has to pull back out,
+  // which is what the toolbar's reset button does.
+  globalSelectNode = id => {
+    selectedId = id;
+    applySelection();
+    if (id == null) zoomToFitAll();
+  };
 
   node.on('click', (ev, d) => {
     ev.stopPropagation();
