@@ -12,8 +12,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-001933">
-<link rel="stylesheet" href="/css/admin.css?v=20260913-001933">
+<link rel="stylesheet" href="/css/base.css?v=20260913-010944">
+<link rel="stylesheet" href="/css/admin.css?v=20260913-010944">
 </head>
 
 <body>
@@ -61,6 +61,7 @@
           <button type="button" class="admin-tab" data-tab="campaigns" role="tab" aria-selected="false">캠페인</button>
           <button type="button" class="admin-tab" data-tab="tools" role="tab" aria-selected="false">작품 처리</button>
           <button type="button" class="admin-tab" data-tab="members" role="tab" aria-selected="false">회원</button>
+          <button type="button" class="admin-tab" data-tab="broadcast" role="tab" aria-selected="false">공지</button>
           <button type="button" class="admin-tab" data-tab="settings" role="tab" aria-selected="false">사이트 옵션</button>
           <button type="button" class="admin-tab" data-tab="log" role="tab" aria-selected="false">기록</button>
         </nav>
@@ -235,6 +236,36 @@
           <h3 class="admin-subhead">차단된 계정</h3>
           <div class="admin-list" id="adminBlockedList"></div>
           <p class="empty-note admin-empty" id="adminBlockedEmpty" style="display:none;">차단된 계정이 없습니다.</p>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="broadcast" role="tabpanel" hidden>
+        <section class="admin-section">
+          <h2>전체 공지</h2>
+          <p class="admin-help">모든 회원에게 알림을 한 번에 보냅니다. 알림 종에 쌓이고, 푸시를 켜 둔 기기에는 바로 뜹니다. <strong>보낸 뒤에는 취소할 수 없습니다</strong> — 내용을 먼저 확인하세요.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminBroadcastUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_admin_broadcast.sql</code> 을 먼저 실행하세요.</p>
+          <div class="field">
+            <label for="adminBroadcastTitle">제목</label>
+            <input type="text" id="adminBroadcastTitle" placeholder="공지 제목" maxlength="80" autocomplete="off" disabled>
+            <span class="field-hint"><output id="adminBroadcastTitleCount" for="adminBroadcastTitle">0</output>/80 — 휴대폰 잠금 화면에서는 제목 한 줄만 보입니다. 앞부분에 핵심을 적으세요.</span>
+          </div>
+          <div class="field">
+            <label for="adminBroadcastBody">내용 <span class="field-hint">(선택)</span></label>
+            <textarea id="adminBroadcastBody" placeholder="공지 내용" maxlength="500" disabled></textarea>
+            <span class="field-hint"><output id="adminBroadcastBodyCount" for="adminBroadcastBody">0</output>/500</span>
+          </div>
+          <h3 class="admin-subhead">미리보기</h3>
+          <div class="admin-broadcast-preview" id="adminBroadcastPreview">
+            <div class="abp-mark" aria-hidden="true">W</div>
+            <div class="abp-text">
+              <div class="abp-title" id="adminBroadcastPreviewTitle"></div>
+              <div class="abp-body" id="adminBroadcastPreviewBody"></div>
+            </div>
+          </div>
+          <div class="admin-toolbar">
+            <button type="button" class="admin-btn primary" id="adminBroadcastSendBtn" disabled>공지 발송</button>
+            <span class="admin-help" id="adminBroadcastTargets"></span>
+          </div>
         </section>
         </div>
 
@@ -576,15 +607,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-001933"></script>
-<script src="/js/i18n/ko.js?v=20260913-001933"></script>
-<script src="/js/common.js?v=20260913-001933"></script>
-<script src="/js/auth.js?v=20260913-001933"></script>
-<script src="/js/notifications.js?v=20260913-001933"></script>
-<script src="/js/push.js?v=20260913-001933"></script>
-<script src="/js/color-engine.js?v=20260913-001933"></script>
-<script src="/js/matching.js?v=20260913-001933"></script>
-<script src="/js/admin.js?v=20260913-001933"></script>
+<script src="/js/supabase-client.js?v=20260913-010944"></script>
+<script src="/js/i18n/ko.js?v=20260913-010944"></script>
+<script src="/js/common.js?v=20260913-010944"></script>
+<script src="/js/auth.js?v=20260913-010944"></script>
+<script src="/js/notifications.js?v=20260913-010944"></script>
+<script src="/js/push.js?v=20260913-010944"></script>
+<script src="/js/color-engine.js?v=20260913-010944"></script>
+<script src="/js/matching.js?v=20260913-010944"></script>
+<script src="/js/admin.js?v=20260913-010944"></script>
 
 </body>
 </html>

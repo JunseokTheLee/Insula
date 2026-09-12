@@ -98,11 +98,15 @@ const TEXT: Record<string, Record<string, NotifText>> = {
 const ANON = { ko: "누군가", en: "Someone" };
 
 type Claim = {
+  id?: number;
   type: string;
   preview: string | null;
   actor: string | null;
   submission_id: number | null;
   artwork?: string | null;
+  // Admin announcement only: the headline a person typed. Every other type
+  // leaves this null and assembles its words from TEXT above.
+  title?: string | null;
   unread?: number;
   subscriptions?: { endpoint: string; p256dh: string; auth: string; lang: string }[];
   tokens?: { token: string; platform: string | null; lang: string }[];
@@ -111,6 +115,20 @@ type Claim = {
 // One shape for both transports: a title, a body, and where tapping it goes.
 function messageFor(claim: Claim, lang: string) {
   const l = lang === "en" ? "en" : "ko";
+  // An announcement is the one notification whose words a person wrote, so
+  // it skips the template table — and it is NOT translated per device the
+  // way the others are: there is only the one text the admin typed, and
+  // inventing a second language for it would be making words up.
+  // Each announcement carries its own tag; two announcements are two
+  // separate messages, unlike a second like on the same artwork.
+  if (claim.type === "announcement") {
+    return {
+      title: claim.title || "Weavo",
+      body: claim.preview || "",
+      url: SITE_URL + "/" + l + "/",
+      tag: "announcement:" + (claim.id ?? ""),
+    };
+  }
   const actor = claim.actor || ANON[l];
   const text = TEXT[l][claim.type];
   // preview is the artwork's title for a like, the first ~140 characters of

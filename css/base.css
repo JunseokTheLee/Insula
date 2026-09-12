@@ -912,6 +912,21 @@ html[lang="ko"] * {
 }
 .notif-item-text strong{font-weight:600;}
 .notif-item-time{font-family:'Pretendard',sans-serif;font-size:11px;color:var(--muted);margin-top:3px;}
+/* ---------- admin announcement rows ----------
+   A message from the site rather than from a person: the Weavo mark instead
+   of an avatar, the admin's headline in place of "{name} did X", and the
+   body under it. supabase_admin_broadcast.sql. */
+.notif-announce-mark{background:var(--primary);color:var(--bg);font-weight:700;}
+/* Everything else in this panel is one short generated sentence, so it is
+   clamped to three lines. An announcement is the opposite: a person wrote
+   it, it can run to 500 characters, and this panel is the ONLY place the
+   full text exists — tapping it goes to the home page, not to the message.
+   So it is not clamped. The list scrolls. */
+.notif-announcement .notif-item-text{display:block;-webkit-line-clamp:none;overflow:visible;}
+.notif-announce-body{
+  margin-top:3px;color:var(--muted);font-size:12.5px;line-height:1.45;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
 .notif-item-dot{
   width:7px;height:7px;border-radius:50%;background:var(--accent-warm);flex-shrink:0;margin-top:6px;
 }

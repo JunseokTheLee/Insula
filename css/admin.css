@@ -221,3 +221,30 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
      once .admin-row goes column-wise. */
   .admin-row.admin-comment{flex-direction:row;}
 }
+
+/* ---------- announcement preview ----------
+   Shaped like the notification a phone will actually draw, not like another
+   form field: the title on ONE line that visibly truncates (iOS gives it one
+   line and cuts it — see the push text rules in CLAUDE.md 7), the body under
+   it. An admin should meet that limit here, before sending. */
+.admin-broadcast-preview{
+  display:flex;gap:12px;align-items:flex-start;max-width:420px;
+  padding:14px;border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--surface);
+}
+.admin-broadcast-preview.is-empty{opacity:.55;}
+.abp-mark{
+  width:38px;height:38px;border-radius:var(--r-sm);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--primary);color:var(--bg);font-family:'Pretendard',sans-serif;font-weight:700;font-size:16px;
+}
+.abp-text{min-width:0;flex:1;}
+.abp-title{
+  font-family:'Pretendard',sans-serif;font-weight:700;font-size:13.5px;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.abp-body{
+  margin-top:2px;font-size:12.5px;line-height:1.45;color:var(--muted);
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.abp-body:empty{display:none;}

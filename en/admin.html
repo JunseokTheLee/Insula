@@ -11,8 +11,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-001933">
-<link rel="stylesheet" href="/css/admin.css?v=20260913-001933">
+<link rel="stylesheet" href="/css/base.css?v=20260913-010944">
+<link rel="stylesheet" href="/css/admin.css?v=20260913-010944">
 </head>
 <body>
 
@@ -56,6 +56,7 @@
           <button type="button" class="admin-tab" data-tab="campaigns" role="tab" aria-selected="false">Campaigns</button>
           <button type="button" class="admin-tab" data-tab="tools" role="tab" aria-selected="false">Maintenance</button>
           <button type="button" class="admin-tab" data-tab="members" role="tab" aria-selected="false">Members</button>
+          <button type="button" class="admin-tab" data-tab="broadcast" role="tab" aria-selected="false">Announce</button>
           <button type="button" class="admin-tab" data-tab="settings" role="tab" aria-selected="false">Site options</button>
           <button type="button" class="admin-tab" data-tab="log" role="tab" aria-selected="false">Log</button>
         </nav>
@@ -230,6 +231,36 @@
           <h3 class="admin-subhead">Blocked accounts</h3>
           <div class="admin-list" id="adminBlockedList"></div>
           <p class="empty-note admin-empty" id="adminBlockedEmpty" style="display:none;">No blocked accounts.</p>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="broadcast" role="tabpanel" hidden>
+        <section class="admin-section">
+          <h2>Announcement</h2>
+          <p class="admin-help">Sends one notification to every member. It stays in their notification bell, and appears straight away on devices with push turned on. <strong>It cannot be taken back</strong> — read it over first.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminBroadcastUnavailable" style="display:none;">Not available yet — run <code>supabase_admin_broadcast.sql</code> in the Supabase SQL editor first.</p>
+          <div class="field">
+            <label for="adminBroadcastTitle">Title</label>
+            <input type="text" id="adminBroadcastTitle" placeholder="Announcement title" maxlength="80" autocomplete="off" disabled>
+            <span class="field-hint"><output id="adminBroadcastTitleCount" for="adminBroadcastTitle">0</output>/80 — a phone's lock screen shows one line of the title. Put what matters first.</span>
+          </div>
+          <div class="field">
+            <label for="adminBroadcastBody">Message <span class="field-hint">(optional)</span></label>
+            <textarea id="adminBroadcastBody" placeholder="Announcement text" maxlength="500" disabled></textarea>
+            <span class="field-hint"><output id="adminBroadcastBodyCount" for="adminBroadcastBody">0</output>/500</span>
+          </div>
+          <h3 class="admin-subhead">Preview</h3>
+          <div class="admin-broadcast-preview" id="adminBroadcastPreview">
+            <div class="abp-mark" aria-hidden="true">W</div>
+            <div class="abp-text">
+              <div class="abp-title" id="adminBroadcastPreviewTitle"></div>
+              <div class="abp-body" id="adminBroadcastPreviewBody"></div>
+            </div>
+          </div>
+          <div class="admin-toolbar">
+            <button type="button" class="admin-btn primary" id="adminBroadcastSendBtn" disabled>Send announcement</button>
+            <span class="admin-help" id="adminBroadcastTargets"></span>
+          </div>
         </section>
         </div>
 
@@ -470,14 +501,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-001933"></script>
-<script src="/js/i18n/en.js?v=20260913-001933"></script>
-<script src="/js/common.js?v=20260913-001933"></script>
-<script src="/js/auth.js?v=20260913-001933"></script>
-<script src="/js/notifications.js?v=20260913-001933"></script>
-<script src="/js/push.js?v=20260913-001933"></script>
-<script src="/js/color-engine.js?v=20260913-001933"></script>
-<script src="/js/matching.js?v=20260913-001933"></script>
-<script src="/js/admin.js?v=20260913-001933"></script>
+<script src="/js/supabase-client.js?v=20260913-010944"></script>
+<script src="/js/i18n/en.js?v=20260913-010944"></script>
+<script src="/js/common.js?v=20260913-010944"></script>
+<script src="/js/auth.js?v=20260913-010944"></script>
+<script src="/js/notifications.js?v=20260913-010944"></script>
+<script src="/js/push.js?v=20260913-010944"></script>
+<script src="/js/color-engine.js?v=20260913-010944"></script>
+<script src="/js/matching.js?v=20260913-010944"></script>
+<script src="/js/admin.js?v=20260913-010944"></script>
 </body>
 </html>

@@ -71,7 +71,7 @@
   async function loadFeed() {
     if (!me.id) return;
     const { data, error } = await sb.from('notifications')
-      .select('id,actor_id,type,submission_id,comment_id,preview,created_at,read_at')
+      .select('id,actor_id,type,submission_id,comment_id,title,preview,created_at,read_at')
       .eq('recipient_id', me.id)
       .order('created_at', { ascending: false })
       .limit(30);
@@ -133,11 +133,56 @@
   }
 
   function rowHref(row) {
+    // An announcement is about the site, not about one artwork or person.
+    if (row.type === 'announcement') return `/${CURRENT_LANG}/`;
     if (row.type === 'follow') return row.actor_id ? profileUrl(row.actor_id) : '#';
     return row.submission_id ? artworkUrl(row.submission_id) : '#';
   }
 
+  // Announcements are the one row an admin wrote by hand, so they read
+  // differently from the rest: no actor avatar or "{name} did X" sentence —
+  // the site's own mark, the headline the admin typed, and the body under
+  // it. Everything else in the panel keeps the actor-centred shape.
+  function announcementEl(row) {
+    const a = document.createElement('a');
+    a.className = 'notif-item notif-announcement' + (row.read_at ? '' : ' unread');
+    a.href = rowHref(row);
+
+    const mark = document.createElement('div');
+    mark.className = 'notif-avatar notif-avatar-fallback notif-announce-mark';
+    mark.textContent = 'W';
+    mark.setAttribute('aria-hidden', 'true');
+    a.appendChild(mark);
+
+    const body = document.createElement('div');
+    body.className = 'notif-item-body';
+    const text = document.createElement('div');
+    text.className = 'notif-item-text';
+    const strong = document.createElement('strong');
+    strong.textContent = row.title || tr('notifAnnouncement');
+    text.appendChild(strong);
+    if (row.preview) {
+      const p = document.createElement('div');
+      p.className = 'notif-announce-body';
+      p.textContent = row.preview;
+      text.appendChild(p);
+    }
+    const time = document.createElement('div');
+    time.className = 'notif-item-time';
+    time.textContent = fmtShortDate(row.created_at);
+    body.append(text, time);
+    a.appendChild(body);
+
+    if (!row.read_at) {
+      const dot = document.createElement('span');
+      dot.className = 'notif-item-dot';
+      a.appendChild(dot);
+    }
+    return a;
+  }
+
   function rowEl(row, actor) {
+    if (row.type === 'announcement') return announcementEl(row);
     const name = (actor && actor.username) || tr('anonymous');
     const a = document.createElement('a');
     a.className = 'notif-item' + (row.read_at ? '' : ' unread');
@@ -170,7 +215,9 @@
 
   async function prependLive(row) {
     let actor = null;
-    if (row.actor_id) {
+    // An announcement renders the site's own mark, never the admin who sent
+    // it — so skip the profile lookup entirely.
+    if (row.actor_id && row.type !== 'announcement') {
       const { data } = await sb.from('profiles')
         .select('id,username,avatar_url').eq('id', row.actor_id).maybeSingle();
       actor = data || null;

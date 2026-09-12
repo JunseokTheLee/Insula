@@ -819,7 +819,7 @@ async function adminLogAction(action, targetType, targetId, detail) {
   }
 }
 
-const ADMIN_LOG_ACTIONS = ['artwork_delete', 'comment_delete', 'upload_block', 'upload_unblock'];
+const ADMIN_LOG_ACTIONS = ['artwork_delete', 'comment_delete', 'upload_block', 'upload_unblock', 'broadcast'];
 
 async function loadAdminLog() {
   const list = document.getElementById('adminLog');
@@ -1179,6 +1179,108 @@ async function deleteSelectedComments() {
   await resetAdminComments();
 }
 
+// ---------- announcement tab: one message to every member ----------
+// The send itself is admin_broadcast_notification (supabase_admin_broadcast.sql),
+// which writes one notifications row per member and lets the EXISTING pg_net
+// trigger fan them out — the same path a like or a comment already takes. So
+// there is nothing here that can break per-event push.
+//
+// This cannot be undone: once the rows exist the trigger has already fired.
+// Hence the typed confirmation, the live preview of what a phone will show,
+// and the recipient count next to the button.
+let adminBroadcastAvailable = true;
+let adminBroadcastSending = false;
+
+function adminBroadcastFields() {
+  return {
+    title: document.getElementById('adminBroadcastTitle'),
+    body: document.getElementById('adminBroadcastBody'),
+    btn: document.getElementById('adminBroadcastSendBtn'),
+  };
+}
+
+// The preview is deliberately shaped like a notification rather than like a
+// form field: the title truncating to one line is exactly the failure we hit
+// on iOS in 2026-09, and an admin should see it here instead of afterwards.
+function renderAdminBroadcastPreview() {
+  const { title, body, btn } = adminBroadcastFields();
+  if (!title || !body || !btn) return;
+  const t = title.value.trim();
+  const b = body.value.trim();
+  document.getElementById('adminBroadcastPreviewTitle').textContent = t || tr('adminBroadcastPreviewEmpty');
+  document.getElementById('adminBroadcastPreviewBody').textContent = b;
+  document.getElementById('adminBroadcastTitleCount').textContent = title.value.length;
+  document.getElementById('adminBroadcastBodyCount').textContent = body.value.length;
+  document.getElementById('adminBroadcastPreview').classList.toggle('is-empty', !t);
+  btn.disabled = !adminBroadcastAvailable || adminBroadcastSending || !t;
+}
+
+async function loadAdminBroadcast() {
+  const { title, body } = adminBroadcastFields();
+  if (!title || !body) return;
+
+  // Probing for the notifications.title column tells us whether
+  // supabase_admin_broadcast.sql has been run — the same file adds the
+  // column and the RPC. Calling the RPC to find out is not an option: it
+  // would send the announcement.
+  const { error } = await sb.from('notifications').select('title').limit(1);
+  if (error && (error.code === '42703' || error.code === 'PGRST204' || error.code === 'PGRST205')) {
+    adminBroadcastAvailable = false;
+    adminShow('adminBroadcastUnavailable', true);
+  } else if (error) {
+    console.error('broadcast availability probe error:', error);
+  }
+
+  if (adminBroadcastAvailable) {
+    title.disabled = false;
+    body.disabled = false;
+    const { count, error: cErr } = await sb.from('profiles').select('id', { count: 'exact', head: true });
+    if (cErr) console.error('load member count error:', cErr);
+    else document.getElementById('adminBroadcastTargets').textContent = tr('adminBroadcastTargets', { n: count ?? 0 });
+  }
+
+  title.oninput = renderAdminBroadcastPreview;
+  body.oninput = renderAdminBroadcastPreview;
+  document.getElementById('adminBroadcastSendBtn').onclick = sendAdminBroadcast;
+  renderAdminBroadcastPreview();
+}
+
+async function sendAdminBroadcast() {
+  if (!adminBroadcastAvailable || adminBroadcastSending) return;
+  const { title, body, btn } = adminBroadcastFields();
+  const t = title.value.trim();
+  const b = body.value.trim();
+  if (!t) { toast(tr('adminBroadcastNeedTitle')); return; }
+
+  const word = tr('adminBroadcastConfirmWord');
+  const proceed = await confirmDialog(
+    tr('adminBroadcastMessage', { title: t, word }),
+    { title: tr('adminBroadcastTitleAsk'), okLabel: tr('adminBroadcastSendLabel'), confirmText: word }
+  );
+  if (!proceed) return;
+
+  // Guard against a second send while the first is in flight: a duplicate
+  // announcement reaches every member's lock screen twice and cannot be
+  // recalled.
+  adminBroadcastSending = true;
+  btn.disabled = true;
+  const { data, error } = await sb.rpc('admin_broadcast_notification', { p_title: t, p_body: b || null });
+  adminBroadcastSending = false;
+  if (error) {
+    console.error('broadcast error:', error);
+    toast(tr('adminBroadcastFailed'));
+    renderAdminBroadcastPreview();
+    return;
+  }
+  toast(tr('adminBroadcastSent', { n: data ?? 0 }));
+  title.value = '';
+  body.value = '';
+  renderAdminBroadcastPreview();
+  // The log tab reloads on its next visit anyway, but if it is already
+  // loaded this keeps it honest.
+  adminTabsLoaded.delete('log');
+}
+
 // ---------- members tab: upload block ----------
 let adminBlockAvailable = true;
 const ADMIN_PROFILE_COLS = 'id,username,name,avatar_url,upload_blocked';
@@ -1288,6 +1390,7 @@ const ADMIN_TAB_LOADERS = {
   campaigns: () => loadAdminCampaigns(),
   tools:     () => Promise.all([loadAdminPool(), loadAdminPieces(), loadAdminThumbs()]),
   members:   () => Promise.all([loadAdminAdmins(), loadAdminBlocked()]),
+  broadcast: () => loadAdminBroadcast(),
   settings:  () => loadAdminSettings(),
   log:       () => loadAdminLog(),
 };
