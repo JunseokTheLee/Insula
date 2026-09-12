@@ -36,6 +36,9 @@ function meFromUser(u) {
     isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: []
   };
 }
+// Whether profiles already has a row for this account — set by
+// loadMyProfile(), read by upsertBaseProfile() right after it.
+let myProfileRowExists = false;
 async function loadMyProfile() {
   if (!me.id) return;
   const { data } = await sb.from('profiles').select('is_admin,username,bio,links,avatar_url,country_id,disabilities').eq('id', me.id).maybeSingle();
@@ -45,10 +48,15 @@ async function loadMyProfile() {
   me.links = (data && data.links) || {};
   me.countryId = (data && data.country_id) || null;
   me.disabilities = (data && data.disabilities) || [];
-  // A custom uploaded avatar (if any) takes priority over the Google avatar
-  // meFromUser() set — otherwise upsertBaseProfile() below would clobber it
-  // back to the Google photo on every sign-in.
-  if (data && data.avatar_url) me.avatar = data.avatar_url;
+  myProfileRowExists = !!data;
+  // Once a profile row exists, ITS avatar wins — including when it is empty.
+  // meFromUser() seeded me.avatar from the Google/Apple photo, and the old
+  // rule here ("use the stored one only if there is one") meant deleting
+  // your picture silently came back: the row said null, so me.avatar stayed
+  // the OAuth photo, and upsertBaseProfile() below wrote that photo straight
+  // back into the row on the next page load. Removing it is a choice, and it
+  // has to stick. (2026-09-12)
+  if (data) me.avatar = data.avatar_url || '';
   // Read once per sign-in rather than per-render — see the file banner
   // comment on myBlockedIds in common.js for everywhere this feeds into.
   const { data: blocks, error: blocksErr } = await sb.from('user_blocks').select('blocked_id').eq('blocker_id', me.id);
@@ -59,9 +67,16 @@ async function loadMyProfile() {
 // been set — username and country) forces the edit-profile modal open in
 // onboarding mode until they finish.
 function maybeRequireProfileSetup() {
-  if (me.id && (!me.username || !me.countryId)) {
-    openEditProfileModal({ username: me.username, bio: me.bio, links: me.links, avatar_url: me.avatar, country_id: me.countryId, disabilities: me.disabilities }, true);
-  }
+  if (!me.id) return;
+  const forced = !me.username || !me.countryId;
+  // Reopen after an unrequested reload: the draft only carries wasOpen when
+  // the dialog was on screen as the page went away. openEditProfileModal
+  // consumes the draft, so the typed values come back with it.
+  let reopen = false;
+  try { reopen = !!JSON.parse(sessionStorage.getItem(EP_DRAFT_KEY) || 'null')?.wasOpen; }
+  catch (e) { reopen = false; }
+  if (!forced && !reopen) return;
+  openEditProfileModal({ username: me.username, bio: me.bio, links: me.links, avatar_url: me.avatar, country_id: me.countryId, disabilities: me.disabilities }, forced);
 }
 // Deliberately does NOT store the OAuth account name (me.name) any more: the
 // site identifies people by their chosen username everywhere, and profiles is
@@ -69,7 +84,12 @@ function maybeRequireProfileSetup() {
 // it through the API. Only the avatar is kept in sync here.
 async function upsertBaseProfile() {
   if (!me.id) return;
-  const { error } = await sb.from('profiles').upsert({ id: me.id, avatar_url: me.avatar || null });
+  // Seeds the avatar only when the row is BRAND NEW. On an existing row this
+  // upsert deliberately touches nothing but the primary key: it used to push
+  // me.avatar in every time, which is how a deleted profile picture came
+  // back as the OAuth photo (see loadMyProfile above).
+  const row = myProfileRowExists ? { id: me.id } : { id: me.id, avatar_url: me.avatar || null };
+  const { error } = await sb.from('profiles').upsert(row);
   if (error) console.error('upsertBaseProfile error:', error);
 }
 function updateIdentityUI() {
@@ -240,6 +260,11 @@ function stashEditProfileDraftIfOpen() {
   const links = {};
   for (const { key } of LINK_PLATFORMS) links[key] = document.getElementById(`ep-link-${key}`).value;
   sessionStorage.setItem(EP_DRAFT_KEY, JSON.stringify({
+    // wasOpen lets the boot path below put the dialog back after a reload we
+    // did not ask for — iOS drops and reloads a page for its own reasons
+    // (pull-to-refresh, memory pressure, a WebView host's refresh gesture),
+    // and losing half-typed onboarding to it is the part that actually hurt.
+    wasOpen: true,
     username: document.getElementById('ep-username').value,
     bio: document.getElementById('ep-bio').value,
     countryId: document.getElementById('ep-country').value,
@@ -247,6 +272,14 @@ function stashEditProfileDraftIfOpen() {
     disabilities: getCheckedDisabilities(),
   }));
 }
+// The page can go away without any of our code running first — a reload, a
+// tab discard, the app being swapped out. pagehide fires for all of those on
+// iOS (unload does not, reliably), so the draft is written there too.
+window.addEventListener('pagehide', stashEditProfileDraftIfOpen);
+// Safari fires this instead when the tab is backgrounded and may be discarded.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') stashEditProfileDraftIfOpen();
+});
 // ---------- blocked-users list (edit-profile modal) ----------
 // Small, secondary section tucked into the same modal as the danger zone —
 // this is the one surface that needs the *names* behind myBlockedIds (every
@@ -400,6 +433,8 @@ function openEditProfileModal(profile, forced) {
   document.getElementById('edit-profile-modal').classList.add('open');
 }
 function closeEditProfileModal() {
+  // Closed on purpose — nothing to restore next load.
+  try { sessionStorage.removeItem(EP_DRAFT_KEY); } catch (e) { /* private mode */ }
   if (profileEditRequired) return;
   document.getElementById('edit-profile-modal').classList.remove('open');
 }

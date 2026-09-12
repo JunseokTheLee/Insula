@@ -171,6 +171,7 @@ async function renderColorsNeeded(project) {
 async function renderWeavoGrid(project) {
   const grid = document.getElementById('weavoGrid');
   grid.innerHTML = '';
+  msRestoring = true;   // …until restoreMsView() below
   fitWeavoStage(project);
   resetMsZoom();
   // Cell colors come from the static grid image (or the pixel rows as a
@@ -254,6 +255,9 @@ async function renderWeavoGrid(project) {
     grid.appendChild(cell);
   }
   scheduleThumbLod(true);
+  // After the cells exist, so clampMsPan() has real dimensions to work with.
+  msRestoring = false;
+  restoreMsView(project);
   const filledCount = filledSubs.length;
   document.getElementById('projectProgress').textContent = filledText(filledCount, cells.length);
   renderProjectStats(filledSubs, cells.length);
@@ -412,8 +416,12 @@ function refreshThumbLod() {
     if (cell.dataset.cropSize) { cell.style.backgroundSize = cell.dataset.cropSize; cell.style.backgroundPosition = cell.dataset.cropPos; }
   }
 }
+let msSaveTimer = 0;
 function applyMsTransform() {
   msStage.style.transform = `translate(${msX}px, ${msY}px) scale(${msScale})`;
+  // Coalesced: a pinch or a drag fires this on every frame.
+  clearTimeout(msSaveTimer);
+  msSaveTimer = setTimeout(saveMsView, 250);
   scheduleThumbLod();
   msZoomLevelEl.textContent = `${Math.round(msScale * 100)}%`;
   msZoomOutBtn.disabled = msScale <= MS_MIN_ZOOM;
@@ -426,6 +434,38 @@ function setMsZoom(scale) {
   applyMsTransform();
 }
 function resetMsZoom() { msScale = 1; msX = 0; msY = 0; applyMsTransform(); }
+
+// Zoom and pan survive a reload. iOS reloads this page on its own (memory
+// pressure on a grid of thousands of cells, a pull-to-refresh gesture), and
+// coming back to 100% after working your way into a corner of the mosaic was
+// the part people noticed. Per campaign, per tab — sessionStorage, so it does
+// not follow you to a new visit.
+const MS_VIEW_KEY = 'weavo.msView';
+// Held while a campaign is being drawn: renderWeavoGrid() resets the view to
+// 100% before the cells exist, and that reset would otherwise save itself
+// over the very value restoreMsView() is about to read back.
+let msRestoring = false;
+function saveMsView() {
+  if (msRestoring || !currentProject) return;
+  try {
+    const all = JSON.parse(sessionStorage.getItem(MS_VIEW_KEY) || '{}');
+    if (msScale <= MS_MIN_ZOOM) delete all[currentProject.id];
+    else all[currentProject.id] = { s: msScale, x: msX, y: msY };
+    sessionStorage.setItem(MS_VIEW_KEY, JSON.stringify(all));
+  } catch (e) { /* private mode — the view just won't be remembered */ }
+}
+function restoreMsView(project) {
+  if (!project) return;
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem(MS_VIEW_KEY) || '{}')[project.id]; }
+  catch (e) { return; }
+  if (!saved || !(saved.s > MS_MIN_ZOOM)) return;
+  msScale = Math.min(MS_MAX_ZOOM, Math.max(MS_MIN_ZOOM, saved.s));
+  msX = saved.x || 0;
+  msY = saved.y || 0;
+  clampMsPan();          // the stage may be a different size than last time
+  applyMsTransform();
+}
 
 msZoomInBtn.onclick = () => setMsZoom(msScale + MS_ZOOM_STEP);
 msZoomOutBtn.onclick = () => setMsZoom(msScale - MS_ZOOM_STEP);

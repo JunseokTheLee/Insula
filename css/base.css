@@ -57,22 +57,26 @@ body{
   background:var(--bg);
   color:var(--text);
 }
-/* ---------- iOS pull-to-refresh (2026-09-12) ----------
-   On a phone, scrolling or pinching sometimes reloaded the page, and the
-   reload took everything held in memory with it: the open profile dialog
-   (and whatever had been typed into it), the campaign's zoom and pan, how
-   far "Load more" had got. The reload was iOS's pull-to-refresh.
+/* ---------- pull-to-refresh (2026-09-12) ----------
+   overscroll-behavior on the VIEWPORT is what stops a pull at the top from
+   being read as "refresh" — that is the html/body rule below, and it is the
+   one that matters here, because on most pages of this site the DOCUMENT is
+   the scroller.
 
-   The document itself never scrolls here — html/body are height:100% and
-   every scroll happens inside .main-scroll, a dialog, a menu. But an
-   over-scroll at the top of an inner scroller CHAINS up to the document by
-   default, and iOS reads that chained pull as "refresh". overscroll-behavior
-   stops the chaining: the element still bounces, it just no longer hands the
-   gesture upward. (Safari 16+; older browsers simply keep the old
-   behaviour.) Every vertical scroller in the app is listed here rather than
-   in its own file, so the reason lives in one place. */
+   It is deliberately NOT on .main-scroll. That element is declared
+   overflow-y:auto, so the browser treats it as a scroll container — but on
+   most pages its content fits and it has nothing of its own to scroll, and
+   the wheel/touch is supposed to CHAIN from it up to the document. Adding
+   contain there stopped that chaining and left the page unable to scroll at
+   all: the mouse wheel did nothing on desktop (regression, same day, found
+   by dispatching a real wheel event and watching scrollTop stay at 0).
+
+   contain belongs only on elements that really are their own scroller AND
+   should swallow the overscroll — a dialog, a menu, a comment list — where
+   not handing the gesture to the page behind is the whole point. Before
+   adding one here, ask: does it always have its own scrollable content? If
+   not, leave it off. */
 html,body{overscroll-behavior:none;}
-.main-scroll,
 .modal-panel,
 .notif-list,
 .ep-disabilities-menu,
@@ -82,8 +86,7 @@ html,body{overscroll-behavior:none;}
 #follow-list-content,
 #atc-list,
 #aa-list,
-.mfs-panel,
-.project-list-view{overscroll-behavior-y:contain;}
+.mfs-panel{overscroll-behavior-y:contain;}
 
 /* A dialog used to leave the page behind it scrolling: a drag that missed
    the panel moved the page under it, and reaching the top triggered the
