@@ -41,18 +41,52 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
 // per device, from the language that device was registered in — there is no
 // per-account language setting to read. Browsers and the app share this
 // table so the wording is identical on both.
-const TEXT: Record<string, Record<string, (actor: string) => string>> = {
+//
+// TITLE IS A SHORT LABEL, NOT A SENTENCE. iOS gives the title one line and
+// cuts it; every type used to begin with the same "{name}님이 회원님의…" and
+// was truncated before the words that said what had actually happened, so a
+// like and a comment were indistinguishable on the lock screen (2026-09-12).
+// A two-or-three-word label never truncates, and the body — which gets more
+// room and wraps — carries who did it and what it was about.
+type NotifText = { title: string; body: (actor: string, preview: string) => string };
+const TEXT: Record<string, Record<string, NotifText>> = {
   ko: {
-    submission_like: (a) => `${a}님이 회원님의 작품을 좋아합니다`,
-    submission_comment: (a) => `${a}님이 회원님의 작품에 댓글을 남겼습니다`,
-    submission_reply: (a) => `${a}님이 회원님의 댓글에 답글을 남겼습니다`,
-    follow: (a) => `${a}님이 회원님을 팔로우합니다`,
+    submission_like: {
+      title: "좋아요",
+      body: (a, p) => `${a}님이 내 작품을 좋아합니다${p ? ` · ${p}` : ""}`,
+    },
+    // "이름: 댓글 내용" — the shape every messaging app uses, and it puts the
+    // words the recipient actually wants to read as early as possible.
+    submission_comment: {
+      title: "새 댓글",
+      body: (a, p) => (p ? `${a}: ${p}` : `${a}님이 내 작품에 댓글을 남겼습니다`),
+    },
+    submission_reply: {
+      title: "새 답글",
+      body: (a, p) => (p ? `${a}: ${p}` : `${a}님이 내 댓글에 답글을 남겼습니다`),
+    },
+    follow: {
+      title: "새 팔로워",
+      body: (a) => `${a}님이 회원님을 팔로우하기 시작했습니다`,
+    },
   },
   en: {
-    submission_like: (a) => `${a} liked your artwork`,
-    submission_comment: (a) => `${a} commented on your artwork`,
-    submission_reply: (a) => `${a} replied to your comment`,
-    follow: (a) => `${a} started following you`,
+    submission_like: {
+      title: "Like",
+      body: (a, p) => `${a} liked your artwork${p ? ` · ${p}` : ""}`,
+    },
+    submission_comment: {
+      title: "New comment",
+      body: (a, p) => (p ? `${a}: ${p}` : `${a} commented on your artwork`),
+    },
+    submission_reply: {
+      title: "New reply",
+      body: (a, p) => (p ? `${a}: ${p}` : `${a} replied to your comment`),
+    },
+    follow: {
+      title: "New follower",
+      body: (a) => `${a} started following you`,
+    },
   },
 };
 const ANON = { ko: "누군가", en: "Someone" };
@@ -71,11 +105,12 @@ type Claim = {
 function messageFor(claim: Claim, lang: string) {
   const l = lang === "en" ? "en" : "ko";
   const actor = claim.actor || ANON[l];
-  const line = TEXT[l][claim.type];
-  const title = line ? line(actor) : "Weavo";
-  // A like carries the artwork title in `preview`, a comment the first ~140
-  // characters of the body — both are fine as the notification body.
-  const body = claim.type === "follow" ? "" : (claim.preview || "");
+  const text = TEXT[l][claim.type];
+  const title = text ? text.title : "Weavo";
+  // preview is the artwork's title for a like, the first ~140 characters of
+  // the comment for a comment or reply, and empty for a follow — each TEXT
+  // entry decides how to word itself around that.
+  const body = text ? text.body(actor, claim.preview || "") : "";
   const url = claim.submission_id
     ? `${SITE_URL}/${l}/artworks/${claim.submission_id}`
     : (claim.actor ? `${SITE_URL}/${l}/artists/${encodeURIComponent(claim.actor)}` : `${SITE_URL}/${l}/`);
