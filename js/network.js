@@ -1,5 +1,6 @@
 // Sitewide network page: every user, mapped by follow relationships.
-// Needs js/graph-common.js for truncateLabel.
+// Needs js/graph-common.js for truncateLabel and js/common.js for
+// fetchAllRows/getSiteSettings, both loaded first.
 "use strict";
 
 let globalGraphSim = null;
@@ -76,9 +77,28 @@ function globalNodeRadius(d) { return Math.max(9, Math.min(24, 9 + Math.sqrt(d.d
 // (independent facts, same as the per-profile graph) render as one mutual
 // link instead of two overlapping ones.
 async function fetchGlobalGraphData() {
+  // Both reads go through fetchAllRows: PostgREST caps a response at 1,000
+  // rows and reports no error, so past a thousand members (or follows) the
+  // graph would quietly drop people and links — and someone whose own node
+  // was dropped would find "My network" answering that they aren't on the
+  // network at all (CLAUDE.md 7).
+  //
+  // Sort keys have to be UNIQUE or rows repeat/vanish across page
+  // boundaries. profiles uses its primary key (the default orderBy 'id').
+  // user_saves has NO id column — its primary key is (saver_id, saved_id) —
+  // so .order('saved_id') here combines with fetchAllRows' own
+  // .order('saver_id') into order=saved_id,saver_id, which is exactly that
+  // key. Leaving the default 'id' would fail outright with 42703.
   const [{ data: rows, error }, { data: profiles, error: profErr }] = await Promise.all([
-    sb.from('user_saves').select('saver_id,saved_id'),
-    sb.from('profiles').select('id,username,avatar_url'),
+    fetchAllRows(
+      () => sb.from('user_saves')
+        .select('saver_id,saved_id', { count: 'exact' })
+        .order('saved_id', { ascending: true }),
+      { orderBy: 'saver_id' }
+    ),
+    fetchAllRows(
+      () => sb.from('profiles').select('id,username,avatar_url', { count: 'exact' })
+    ),
   ]);
   if (error) { console.error('load global network error:', error); return { nodes: [], links: [] }; }
   if (profErr) { console.error('load global network profiles error:', profErr); return { nodes: [], links: [] }; }

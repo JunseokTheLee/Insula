@@ -1,5 +1,6 @@
 // All Artists directory page: every profile with a completed username, with
 // a client-side name/username search filter.
+// Needs js/common.js for fetchAllRows/isUserBlocked/toast loaded first.
 "use strict";
 
 let allArtists = [];
@@ -38,10 +39,18 @@ async function loadArtists() {
   // complete account setup — see maybeRequireProfileSetup in auth.js) show
   // up here, same filter the [handle].js Function relies on to treat
   // username as a real, canonical handle.
-  const { data, error } = await sb.from('profiles')
-    .select('id,username,avatar_url,bio')
-    .not('username', 'is', null)
-    .order('username', { ascending: true });
+  // fetchAllRows because PostgREST stops at 1,000 rows WITHOUT an error:
+  // past a thousand members the later ones would simply stop appearing here
+  // and nobody would see a failure (CLAUDE.md 7). Ordered by username, which
+  // is case-insensitively unique (supabase_profiles.sql) — a unique sort key
+  // is what keeps rows from repeating or vanishing across page boundaries,
+  // and it is the order this page wants anyway.
+  const { data, error } = await fetchAllRows(
+    () => sb.from('profiles')
+      .select('id,username,avatar_url,bio', { count: 'exact' })
+      .not('username', 'is', null),
+    { orderBy: 'username' }
+  );
   if (error) { console.error('load artists error:', error); toast(tr('couldNotLoadArtists')); return; }
   allArtists = (data || []).filter(p => !isUserBlocked(p.id));
   renderArtists(filterArtists(document.getElementById('artistSearchInput').value));
