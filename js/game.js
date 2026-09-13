@@ -296,6 +296,7 @@
   // Site-wide standings, medals not times: a time only compares within one
   // artwork. Quietly stays hidden when the RPC isn't applied yet or nobody
   // has a podium finish — an empty podium says less than no podium.
+  const HALL_SIZE = 5;
   async function renderHall() {
     const box = $('gameHall');
     const list = $('gameHallList');
@@ -303,7 +304,7 @@
     if (settings.gameRankingEnabled === false) return;
     let rows = null;
     try {
-      const { data, error } = await sb.rpc('game_top_players', { p_limit: 3 });
+      const { data, error } = await sb.rpc('game_top_players', { p_limit: HALL_SIZE });
       if (error) {
         if (error.code !== 'PGRST202' && error.code !== '42883') console.error('game: top players error:', error);
         return;
@@ -341,18 +342,23 @@
       list.appendChild(li);
     });
     box.hidden = false;
-    renderHallMe();
+    // The rows are handed over so the line below knows whether the viewer
+    // is already standing on the board.
+    renderHallMe(rows);
   }
 
   // Where the signed-in player stands, under the podium. Someone who has
   // never finished a game has no standing to show — and a "0 medals, last
   // place" line would be a discouraging thing to greet them with — so the
   // row simply stays away until they have played once.
-  async function renderHallMe() {
+  async function renderHallMe(top) {
     const el = $('gameHallMe');
     if (!el) return;
     el.hidden = true;
     if (!me.id) return;
+    // Already on the board: repeating the same person underneath it would
+    // just say the thing the board already says.
+    if (Array.isArray(top) && top.some(p => p && p.user_id === me.id)) return;
     let s = null;
     try {
       const { data, error } = await sb.rpc('game_my_standing');
@@ -961,10 +967,20 @@
     restoreListPosition();
   }
 
+  // Returning from a game lands back on the card that was played; opening
+  // the page from the nav starts at the top, where the hall of fame is.
+  // The saved position is CONSUMED here — it belongs to the trip back from
+  // one game, not to every later visit in the same tab.
   function restoreListPosition() {
     let saved = null;
     try { saved = JSON.parse(sessionStorage.getItem(SS_KEY) || 'null'); } catch (e) {}
-    if (!saved || saved.projectId !== project.id) return;
+    try { sessionStorage.removeItem(SS_KEY); } catch (e) {}
+    if (!saved || saved.projectId !== project.id) {
+      // Nothing to return to — and the browser may have restored a scroll
+      // position of its own on a reload.
+      window.scrollTo(0, 0);
+      return;
+    }
     // In a shuffled list the artwork just played can sit past the first
     // page, so render forward until it exists (bounded by the list itself).
     while (!$('gameList').querySelector(`[data-artwork-id="${saved.artworkId}"]`)
