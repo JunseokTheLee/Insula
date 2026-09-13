@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="color-scheme" content="light dark">
+<title>Weavo 확장성 점검 보고서 (2026-09-13)</title>
+<style>
+  /* ── 테마: 라이트(기본) / 다크. 저장된 선택이 없으면 OS 설정을 따른다. ── */
+  :root{--ink:#1a1f2e;--muted:#5b6475;--line:#e3e6ec;--bg:#ffffff;--soft:#f5f7fa;--code:#f1f3f7;--bar:rgba(255,255,255,.96);
+        --crit:#b3261e;--high:#c2410c;--med:#b45309;--low:#2563eb;--ok:#15803d;--chk:#475569;--noteline:#94a3b8;--btn:#1a1f2e;--btnfg:#ffffff;}
+  @media (prefers-color-scheme: dark){
+    html:not([data-theme="light"]){--ink:#e6e8ee;--muted:#9aa3b5;--line:#2a3040;--bg:#0f1218;--soft:#171b24;--code:#1c212c;--bar:rgba(15,18,24,.96);
+        --crit:#e0534c;--high:#e07a3a;--med:#d09a2a;--low:#5b8dff;--ok:#3fbf6b;--chk:#64748b;--noteline:#475569;--btn:#e6e8ee;--btnfg:#0f1218;}
+  }
+  html[data-theme="dark"]{--ink:#e6e8ee;--muted:#9aa3b5;--line:#2a3040;--bg:#0f1218;--soft:#171b24;--code:#1c212c;--bar:rgba(15,18,24,.96);
+        --crit:#e0534c;--high:#e07a3a;--med:#d09a2a;--low:#5b8dff;--ok:#3fbf6b;--chk:#64748b;--noteline:#475569;--btn:#e6e8ee;--btnfg:#0f1218;}
+  html[data-theme="light"]{--ink:#1a1f2e;--muted:#5b6475;--line:#e3e6ec;--bg:#ffffff;--soft:#f5f7fa;--code:#f1f3f7;--bar:rgba(255,255,255,.96);
+        --crit:#b3261e;--high:#c2410c;--med:#b45309;--low:#2563eb;--ok:#15803d;--chk:#475569;--noteline:#94a3b8;--btn:#1a1f2e;--btnfg:#ffffff;}
+  /* ── 언어: 한국어 기본(JS 없이도 보임), data-lang="en" 이면 영어만 표시 ── */
+  .en{display:none}
+  html[data-lang="en"] .ko{display:none}
+  html[data-lang="en"] .en{display:block}
+  html[data-lang="en"] span.en, html[data-lang="en"] a.en, html[data-lang="en"] b.en{display:inline}
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.7;word-break:keep-all;transition:background .15s linear,color .15s linear}
+  .topbar{position:sticky;top:0;z-index:10;background:var(--bar);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 24px;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+  .topbar b{font-size:15px;margin-right:6px;color:var(--ink)}
+  .topbar a{color:var(--muted);text-decoration:none;font-size:13px}
+  .topbar a:hover{color:var(--ink);text-decoration:underline}
+  .topbar .spacer{flex:1 1 auto}
+  .tbtn{appearance:none;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+  .tbtn.primary{background:var(--btn);color:var(--btnfg);border-color:var(--btn)}
+  .tbtn:hover{filter:brightness(.95)}
+  main{max-width:1100px;margin:0 auto;padding:28px 24px 80px}
+  h1{font-size:28px;margin:0 0 6px;letter-spacing:-.02em}
+  h2{font-size:21px;margin:44px 0 12px;padding-top:12px;border-top:2px solid var(--ink)}
+  h3{font-size:17px;margin:26px 0 8px}
+  p{margin:8px 0}
+  .meta{color:var(--muted);font-size:13.5px;margin-bottom:18px}
+  .note{background:var(--soft);border-left:4px solid var(--noteline);padding:10px 14px;border-radius:6px;margin:12px 0;font-size:14px}
+  .note.crit{border-left-color:var(--crit)}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;vertical-align:top;text-align:left}
+  th{background:var(--soft);font-weight:700}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .wrap{overflow-x:auto}
+  code{background:var(--code);padding:1px 5px;border-radius:4px;font-family:Consolas,"D2Coding",monospace;font-size:13px}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;vertical-align:middle;white-space:nowrap}
+  .b-crit{background:var(--crit)} .b-high{background:var(--high)} .b-med{background:var(--med)} .b-low{background:var(--low)} .b-ok{background:var(--ok)} .b-chk{background:var(--chk)}
+  .finding{border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:16px 0;background:var(--bg)}
+  .finding h3{margin:0 0 8px;font-size:16.5px}
+  .finding .kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;margin-top:8px;font-size:14px}
+  .finding .kv b{color:var(--muted);font-weight:600}
+  ul{margin:6px 0 6px 22px;padding:0} li{margin:3px 0}
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:14px 0}
+  .card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--soft)}
+  .card .n{font-size:28px;font-weight:800;letter-spacing:-.02em}
+  .card .l{font-size:13px;color:var(--muted)}
+  .small{font-size:13px;color:var(--muted)}
+  .bar{display:block;height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:4px}
+  .bar i{display:block;height:100%;background:var(--low)}
+  .bar i.warn{background:var(--med)} .bar i.bad{background:var(--crit)}
+  @media (max-width:640px){ main{padding:18px 14px 60px} .finding .kv{grid-template-columns:1fr} .topbar{padding:8px 12px} }
+  @media print{ .topbar{position:static} .finding{break-inside:avoid} .tbtn{display:none} }
+</style>
+</head>
+<body>
+<nav class="topbar" aria-label="문서 내비게이션 / Document navigation">
+  <b class="ko">Weavo 확장성 점검</b><b class="en">Weavo Scalability Review</b>
+  <a class="ko" href="#summary">요약</a><a class="en" href="#summary">Summary</a>
+  <a class="ko" href="#method">측정 방법</a><a class="en" href="#method">Method</a>
+  <a class="ko" href="#members">회원 수</a><a class="en" href="#members">Members</a>
+  <a class="ko" href="#artworks">작품 수</a><a class="en" href="#artworks">Artworks</a>
+  <a class="ko" href="#network">네트워크 화면</a><a class="en" href="#network">Network view</a>
+  <a class="ko" href="#fixes">해결 방법</a><a class="en" href="#fixes">Fixes</a>
+  <a class="ko" href="#plan">언제 무엇을</a><a class="en" href="#plan">When to act</a>
+  <span class="spacer"></span>
+  <button type="button" class="tbtn primary" id="langBtn" aria-label="언어 전환 / Switch language">EN</button>
+  <button type="button" class="tbtn" id="themeBtn" aria-label="테마 전환 / Switch theme">다크</button>
+</nav>
+
+<!-- ============================== 한국어 (기본) ============================== -->
+<main class="ko" lang="ko">
+
+<h1>Weavo 확장성 점검 보고서</h1>
+<div class="meta">작성일 2026-09-13 · 대상 weavo.art (저장소 <code>Insula</code>) · 작성 Claude · 오른쪽 위 버튼으로 영어 번역과 라이트/다크 테마를 바꿀 수 있습니다.</div>
+
+<div class="note">이 문서는 <b>운영 데이터베이스의 실제 응답을 측정</b>하고(익명 키로 읽을 수 있는 범위, gzip 압축 후 전송 바이트), <b>브라우저에서 실제 연산 비용을 계측</b>하고(겹침 해소 알고리즘·SVG 갱신), <b>코드를 읽어</b> 작성했습니다. 데이터를 바꾸거나 코드를 수정하지 않았습니다. 전송량은 모두 <b>gzip 압축 후</b>, 즉 Supabase 요금제가 실제로 세는 기준입니다.</div>
+
+<h2 id="summary">0. 요약</h2>
+
+<p>지금 규모(회원 34명, 작품 28점)에서는 <b>어느 항목도 한계에 가깝지 않습니다.</b> 다만 한계가 오는 방식이 두 종류로 갈리며, 그중 하나가 위험합니다.</p>
+
+<div class="summary-grid">
+  <div class="card"><div class="n" style="color:var(--crit)">2</div><div class="l">조용히 깨짐 — 오류 없이 틀린 화면</div></div>
+  <div class="card"><div class="n" style="color:var(--high)">3</div><div class="l">눈에 보이는 성능 저하</div></div>
+  <div class="card"><div class="n" style="color:var(--med)">3</div><div class="l">운영으로 대응 가능</div></div>
+  <div class="card"><div class="n" style="color:var(--ok)">2</div><div class="l">여유 충분 — 용량</div></div>
+</div>
+
+<table>
+  <tr><th>축</th><th>실질 한계</th><th>먼저 오는 이유</th></tr>
+  <tr><td><b>회원 수</b></td><td class="num">약 500명</td><td>네트워크 화면의 <code>O(n²)</code> 연산. 1,000명에서는 목록·그래프가 <b>조용히 잘립니다</b></td></tr>
+  <tr><td><b>작품 수</b></td><td class="num">약 5,000점</td><td>용량이 아니라 캠페인 운영과 사이트맵. 용량 한계는 13만 점대</td></tr>
+  <tr><td><b>동시 트래픽</b></td><td class="num">하루 약 2,150뷰</td><td>캠페인이 꽉 찬 상태 기준, 월 전송량 75GB(한도의 30%)</td></tr>
+</table>
+
+<div class="note crit"><b>가장 중요한 한 가지</b> — 회원이 1,000명을 넘으면 작가 목록과 네트워크 그래프가 <b>오류 없이</b> 일부 회원을 빠뜨립니다. Supabase가 응답을 1,000행에서 말없이 자르기 때문입니다. 사용자는 고장이 났다고 인식하지 못하고 <b>자기 계정이 잘못됐다고 생각합니다.</b> 고치는 데는 두 줄이면 됩니다.</div>
+
+<h2 id="method">1. 측정 방법과 현재 규모</h2>
+
+<h3>현재 규모 (2026-09-13 실측)</h3>
+<table>
+  <tr><th>항목</th><th>값</th><th>비고</th></tr>
+  <tr><td>회원(프로필)</td><td class="num">34</td><td>아바타 보유 31명(91%)</td></tr>
+  <tr><td>작품(원작)</td><td class="num">28</td><td>조각 700 — 옵션 <code>pieceGrid=5</code> 이므로 작품당 25조각</td></tr>
+  <tr><td>캠페인 칸</td><td class="num">4,988</td><td>657칸 채워짐(13%)</td></tr>
+  <tr><td>팔로우 / 댓글 / 캠페인</td><td class="num">25 / 11 / 1</td><td></td></tr>
+</table>
+
+<h3>단위 원가</h3>
+<table>
+  <tr><th>단위</th><th>비용</th><th>측정 근거</th></tr>
+  <tr><td>작품 1점 — Storage</td><td class="num">약 727KB</td><td>원본 평균 649KB + 썸네일 78KB (실제 파일 3건 측정)</td></tr>
+  <tr><td>작품 1점 — DB</td><td class="num">약 36KB</td><td><code>micro_thumb</code> 1.2KB × 26행(원작 1 + 조각 25)</td></tr>
+  <tr><td>홈 화면 — 채워진 칸 1개</td><td class="num">171B</td><td>657칸 조회가 압축 후 113KB</td></tr>
+  <tr><td>캠페인 상세 — 채워진 칸 1개</td><td class="num">292B</td><td>657칸 조회가 압축 후 192KB (조인이 <code>(*)</code> 전체 컬럼)</td></tr>
+  <tr><td>회원 목록 — 1명</td><td class="num">86B</td><td>34명이 압축 후 2.9KB</td></tr>
+  <tr><td>작품 목록 — 1점</td><td class="num">134B</td><td>28점이 압축 후 3.7KB</td></tr>
+</table>
+<p class="small">압축 전 원본은 칸당 1.3~2.3KB이지만, <code>micro_thumb</code>(base64)가 잘 압축되어 실제 전송은 위 값입니다. 브라우저는 항상 gzip을 요청하므로 요금제가 세는 것도 이 값입니다.</p>
+
+<h2 id="members">2. 회원 수가 늘면</h2>
+
+<p>한계는 <b>용량이 아니라 네트워크 화면</b>에서 먼저 옵니다. 오는 순서대로 적습니다.</p>
+
+<div class="finding">
+  <h3><span class="badge b-high">높음</span> ① 네트워크 그래프가 느려진다 — 200명부터</h3>
+  <p><code>js/network.js</code>의 <code>resolveOrbitOverlaps()</code>는 모든 노드 쌍을 비교하는 <code>O(n²)</code> 연산을 <b>2회 반복해서, 매 프레임</b> 실행합니다. 여기에 SVG 갱신이 더해집니다.</p>
+  <div class="wrap"><table>
+    <tr><th>회원</th><th>겹침 계산</th><th>SVG 갱신</th><th>합계</th><th>60fps 예산(16.7ms) 대비</th></tr>
+    <tr><td class="num">34 (현재)</td><td class="num">0.07ms</td><td class="num">0.29ms</td><td class="num">0.4ms</td><td>2% <span class="bar"><i style="width:2%"></i></span></td></tr>
+    <tr><td class="num">200</td><td class="num">0.83ms</td><td class="num">2.4ms</td><td class="num">3.2ms</td><td>19% <span class="bar"><i style="width:19%"></i></span></td></tr>
+    <tr><td class="num">500</td><td class="num">4.3ms</td><td class="num">6.6ms</td><td class="num">10.9ms</td><td>65% <span class="bar"><i class="warn" style="width:65%"></i></span></td></tr>
+    <tr><td class="num">1,000</td><td class="num">12ms</td><td class="num">13.6ms</td><td class="num">25.6ms</td><td>153% → 39fps <span class="bar"><i class="bad" style="width:100%"></i></span></td></tr>
+    <tr><td class="num">2,000</td><td class="num">48ms</td><td class="num">약 28ms</td><td class="num">76ms</td><td>455% → 13fps <span class="bar"><i class="bad" style="width:100%"></i></span></td></tr>
+  </table></div>
+  <div class="kv">
+    <b>주의</b><span>이 값은 <b>PC에서, 화면에 보이지 않는 상태로</b>(페인트 비용 제외) 측정했습니다. 실제로는 더 듭니다 — <b>모바일 CPU는 3~5배 느리므로 500명이면 휴대폰에서 이미 예산을 넘습니다.</b></span>
+    <b>덧붙여</b><span>아바타가 있는 회원마다 <code>&lt;clipPath&gt;</code>를 하나씩 만들어 원형으로 잘라 그립니다. 현재 회원의 91%가 아바타를 가지고 있어, 노드 수만큼 클리핑 페인트가 발생합니다.</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-crit">조용히 깨짐</span> ② 1,000명에서 목록과 그래프가 말없이 잘린다</h3>
+  <p>Supabase(PostgREST)는 응답을 <b>기본 1,000행에서 자르고 오류를 내지 않습니다.</b> 저장소 규칙(<code>CLAUDE.md</code> 7절)이 <code>fetchAllRows</code>를 쓰도록 정해 두었지만, 두 곳이 쓰지 않고 있습니다.</p>
+  <ul>
+    <li><code>js/artists.js:41</code> — 작가 목록이 <code>profiles</code> 전체를 <code>limit</code> 없이 조회</li>
+    <li><code>js/network.js:80</code> — <code>user_saves</code>와 <code>profiles</code>를 둘 다 전체 조회</li>
+  </ul>
+  <div class="kv">
+    <b>사용자가 겪는 것</b><span>1,001번째 회원부터 작가 목록과 그래프에서 <b>사라집니다.</b> 연결선도 일부만 그려져 실제보다 <b>덜 연결된 것처럼</b> 보입니다. 무엇보다 <b>"내 네트워크" 버튼이 먹통</b>이 됩니다 — 내 노드가 잘려 나가면 "아직 네트워크에 표시할 내 프로필이 없습니다"라는 안내만 나옵니다. 가입도 했고 팔로우도 했는데 그렇게 나옵니다.</span>
+    <b>왜 위험한가</b><span>눈에 보이는 고장이 아니라 <b>잘못된 정보를 조용히 보여주는</b> 종류입니다. 겪는 사람은 서비스가 틀렸다고 생각하지 않고 자기 계정에 문제가 있다고 생각합니다. 운영자도 신고를 받기 전까지 알 수 없습니다.</span>
+    <b>전송량은?</b><span>문제가 아닙니다. 1,000명이라도 압축 후 86KB입니다.</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-med">중간</span> ③ 전체 공지 발송이 회원 수만큼 호출된다</h3>
+  <p>공지는 회원 한 명당 <code>notifications</code> 행 하나를 넣고, 기존 트리거가 행마다 Edge Function을 부릅니다(<code>for each row</code>). 기존 알림 경로를 그대로 재사용하는 설계라 안전하지만, 호출 수가 회원 수에 비례합니다.</p>
+  <div class="kv">
+    <b>현재</b><span>34명 → 34회. 월 한도 200만 회 대비 무시할 수준</span>
+    <b>1만 명이면</b><span>1만 회. 한도 자체는 여유가 있지만, <b>한 트랜잭션 안에서 pg_net 요청 1만 건이 큐에 쌓입니다.</b></span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-ok">여유</span> ④ Supabase MAU 한도</h3>
+  <p>Pro 요금제 월간 활성 사용자 100,000명. 위 항목들보다 훨씬 뒤에 오는 한계입니다.</p>
+</div>
+
+<h2 id="artworks">3. 작품 수가 늘면</h2>
+
+<div class="note"><b>핵심</b> — 전송량을 결정하는 것은 <b>작품 수가 아니라 "캠페인이 얼마나 찼는가"</b>입니다. 칸이 찰수록 홈과 캠페인 화면이 무거워지고, 다 차면 새 캠페인으로 넘어가므로 그 시점에 고정됩니다. 작품이 아무리 늘어도 <b>한 화면이 그리는 양은 캠페인 하나 분량</b>입니다.</div>
+
+<h3>화면별 전송량 (압축 후)</h3>
+<div class="wrap"><table>
+  <tr><th>화면</th><th>칸당</th><th>현재 657칸</th><th>만재 4,988칸</th><th>최대 10,000칸</th></tr>
+  <tr><td>홈 히어로</td><td class="num">171B</td><td class="num">113KB</td><td class="num">854KB</td><td class="num">1.71MB</td></tr>
+  <tr><td>캠페인 상세</td><td class="num">292B</td><td class="num">192KB</td><td class="num">1.46MB</td><td class="num">2.92MB</td></tr>
+</table></div>
+<p>캠페인 상세가 더 무거운 이유는 조인이 <code>mosaic_submissions(*)</code>로 <b>전체 컬럼</b>을 받기 때문입니다(<code>js/project.js:184</code>). 홈은 필요한 컬럼만 지정해 절반 수준입니다.</p>
+
+<h3>월 전송량 (만재 캠페인 기준, Pro 한도 250GB)</h3>
+<table>
+  <tr><th>하루 조회수</th><th>월 전송량</th><th>한도 대비</th></tr>
+  <tr><td class="num">1,000</td><td class="num">35GB</td><td>14% <span class="bar"><i style="width:14%"></i></span></td></tr>
+  <tr><td class="num">2,150</td><td class="num">75GB</td><td><b>30%</b> — <code>CLAUDE.md</code> 15절 기준선 <span class="bar"><i class="warn" style="width:30%"></i></span></td></tr>
+  <tr><td class="num">3,000</td><td class="num">105GB</td><td>42% <span class="bar"><i class="warn" style="width:42%"></i></span></td></tr>
+  <tr><td class="num">7,000</td><td class="num">245GB</td><td>98% — 한도 <span class="bar"><i class="bad" style="width:98%"></i></span></td></tr>
+</table>
+
+<h3>순서대로 오는 한계</h3>
+<div class="wrap"><table>
+  <tr><th>한계</th><th>시점</th><th>성격</th><th>증상</th></tr>
+  <tr><td>캠페인 1개 수용량</td><td class="num">199점</td><td><span class="badge b-med">운영</span></td><td>4,988칸 ÷ 25조각. 넘으면 새 캠페인을 만들어야 하고, 그전까지 작품은 풀에서 대기합니다</td></tr>
+  <tr><td>사이트맵 상한</td><td class="num">1,000점</td><td><span class="badge b-med">SEO</span></td><td>1,000점까지만 색인 신호가 나갑니다. 기능은 정상이고 검색 노출만 누락됩니다</td></tr>
+  <tr><td>작품 탐색 페이지</td><td class="num">수천 점</td><td><span class="badge b-low">성능</span></td><td><code>OFFSET</code> 방식이라 뒤쪽 페이지로 갈수록 느려집니다</td></tr>
+  <tr><td>Storage 100GB</td><td class="num">약 137,000점</td><td><span class="badge b-ok">여유</span></td><td>작품당 727KB 기준</td></tr>
+  <tr><td>DB 8GB</td><td class="num">약 222,000점</td><td><span class="badge b-ok">여유</span></td><td>작품당 36KB 기준</td></tr>
+</table></div>
+
+<div class="note"><b>옵션 하나가 수용량을 절반으로 바꿉니다</b> — 현재 <code>pieceGrid=5</code>(작품당 25조각)입니다. 기본값 7로 올리면 작품당 49조각이 되어 <b>캠페인 하나가 담는 작품이 199점에서 101점으로</b> 줄고, 작품당 DB 사용량도 36KB에서 약 70KB로 늘어납니다.</div>
+
+<h3>건전한 부분</h3>
+<p>인덱스는 잘 설계되어 있습니다. <code>(created_at desc, id desc) where parent_id is null</code> 부분 인덱스가 작품 목록 정렬을 정확히 덮고, <code>(project_id, x, y)</code> 유니크 인덱스가 칸 조회를 해당 캠페인 범위로 가둡니다. 격자 이미지(15KB PNG)는 <code>/img/</code> 엣지 캐시를 타므로 데이터베이스 전송량을 거의 쓰지 않습니다. <b>쿼리 성능은 병목이 아닙니다.</b></p>
+
+<h2 id="network">4. 네트워크 화면 — 사용자가 겪는 것</h2>
+
+<p>가장 먼저 한계가 오는 화면이므로 따로 정리합니다. 오는 순서대로입니다.</p>
+
+<ol>
+  <li><b>회전이 끊긴다</b> — 200명부터 미세하게, 모바일 500명·PC 1,000명에서 명확히. 부드럽게 도는 것이 이 화면의 전부인데 그게 깨집니다.</li>
+  <li><b>터치·클릭 반응이 늦다</b> — 계산이 메인 스레드를 점유해 노드를 눌러도 한 박자 늦게 반응합니다.</li>
+  <li><b>휴대폰이 뜨거워지고 배터리가 닳는다</b> — 화면을 켜 둔 내내 초당 60회 계산이 돕니다. 멈추는 것은 노드를 선택했을 때뿐입니다.</li>
+  <li><b>진입이 느리다</b> — 아바타를 회원 수만큼 동시에 요청합니다. 게다가 <b>31개 중 27개가 구글 등 외부 URL</b>이라 <code>/img/</code> 엣지 캐시를 타지 않습니다. 1,000명이면 외부 이미지 요청이 약 900개입니다. (파일 자체는 평균 2.4KB로 작습니다 — 문제는 크기가 아니라 요청 수입니다.)</li>
+  <li><b>화면이 의미를 잃는다</b> — 기술 문제 이전에, 1,400px 화면에 노드 500개를 그리면 서로 겹쳐 이름을 읽을 수 없습니다. <b>성능이 버텨도 볼 수 없는 그림</b>이 됩니다.</li>
+  <li><b>1,000명을 넘으면 틀린 그림을 조용히 보여준다</b> — 2장 ②에 적은 대로입니다.</li>
+</ol>
+
+<h2 id="fixes">5. 해결 방법</h2>
+
+<div class="finding">
+  <h3><span class="badge b-crit">1순위</span> 전체 조회에 <code>fetchAllRows</code> 적용</h3>
+  <div class="kv">
+    <b>해결</b><span>2장 ②의 조용한 잘림. 작가 목록과 네트워크가 1,000명 너머까지 정확해집니다</span>
+    <b>방법</b><span>이미 저장소에 있는 <code>fetchAllRows</code>(<code>common.js</code>)로 감싸면 됩니다. 캠페인 칸 조회가 이미 같은 방식을 씁니다</span>
+    <b>작업량</b><span><b>두 줄 수준.</b> 지금 해 두는 것을 권합니다 — 고치지 않으면 1,000명째부터 아무 신호 없이 틀린 화면이 시작됩니다</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-high">2순위</span> 겹침 해소를 공간 격자(grid bucket) 방식으로</h3>
+  <div class="kv">
+    <b>해결</b><span>회전 끊김, 반응 지연, 발열 — 2장 ①의 전부</span>
+    <b>방법</b><span>지금은 모든 쌍을 비교하지만, 노드를 화면 격자 칸에 나눠 담고 <b>같은 칸과 이웃 칸만</b> 비교하면 됩니다. 노드는 자기 반지름보다 먼 상대와는 어차피 겹칠 수 없습니다. <code>O(n²)</code> → <code>O(n)</code>, 1,000명 기준 12ms → 1ms 미만</span>
+    <b>작업량</b><span>함수 하나 교체. 바깥에서 보면 동작이 같으므로 영향 범위가 좁습니다</span>
+    <b>시점</b><span>회원 200명 전. 늦게 하면 "느려졌다"는 신고를 받은 뒤가 됩니다</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-high">3순위</span> 전체 보기의 범위를 바꾸기 — 가장 본질적</h3>
+  <div class="kv">
+    <b>해결</b><span>4장 ⑤. 성능과 가독성을 동시에</span>
+    <b>방법</b><span>전체 네트워크를 한 화면에 그리는 것은 수백 명이 넘으면 <b>성능과 무관하게</b> 쓸모가 없어집니다. 회원이 많아지면 기본을 "내 네트워크"로 두고, 전체 보기는 주요 연결자 중심의 개요로 바꾸는 편이 화면의 목적에도 맞습니다. <b>전환 버튼은 이미 있으므로</b> 기본값과 전체 보기의 범위만 정하면 됩니다</span>
+    <b>작업량</b><span>중간. 어디까지 보여줄지(상위 N명·2촌 이내 등)는 결정이 필요합니다</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-med">4순위</span> 캠페인 상세의 <code>(*)</code> 조인을 필요한 컬럼만으로</h3>
+  <div class="kv">
+    <b>해결</b><span>캠페인 상세 전송량. 칸당 292B → 홈과 같은 171B 수준이면 만재 기준 <b>1.46MB → 850KB</b></span>
+    <b>방법</b><span>홈(<code>project-preview.js</code>)이 이미 필요한 컬럼만 지정해 받고 있습니다. 같은 방식으로 바꾸되, 라이트박스가 쓰는 컬럼이 빠지지 않는지 확인이 필요합니다</span>
+    <b>시점</b><span>칸 사용률 50% 전</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-med">5순위</span> 사이트맵 페이지 분할</h3>
+  <div class="kv">
+    <b>해결</b><span>작품 1,000점 이후 검색 노출 누락</span>
+    <b>방법</b><span>사이트맵 색인(sitemap index)으로 나눠 여러 파일로 내보냅니다. 현재 코드에 <b>1,000행 상한이 주석으로 명시</b>되어 있어 의도된 임시 조치임이 기록돼 있습니다</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-low">6순위</span> 그 밖에</h3>
+  <ul>
+    <li><b>아바타를 <code>/img/</code> 프록시 경유로</b> — 외부 URL 요청 900개를 엣지 캐시로. 외부 도메인 프록시 정책 검토가 필요합니다</li>
+    <li><b>화면 밖 노드 갱신 생략</b>(뷰포트 컬링) — 확대 중일 때 SVG 비용이 크게 줄어듭니다</li>
+    <li><b>작품 탐색을 keyset 페이지네이션으로</b> — <code>OFFSET</code> 대신 "마지막으로 본 항목 이후"로 조회</li>
+    <li><b>SVG → Canvas 렌더링</b> — 수천 노드까지 가능해지지만 클릭 판정과 접근성을 다시 만들어야 합니다. <b>지금 하면 과잉</b>이고, 수천 명이 현실이 됐을 때 검토할 일입니다</li>
+  </ul>
+</div>
+
+<h2 id="plan">6. 언제 무엇을 해야 하나</h2>
+
+<table>
+  <tr><th>시점</th><th>할 일</th><th>안 하면</th></tr>
+  <tr><td><b>지금</b></td><td>1순위 — <code>fetchAllRows</code> 적용</td><td>1,000명째부터 조용히 틀린 화면. 두 줄이면 됩니다</td></tr>
+  <tr><td><b>회원 200명 전</b></td><td>2순위 — 겹침 해소 알고리즘</td><td>네트워크 화면이 느려지고 모바일에서 발열</td></tr>
+  <tr><td><b>회원 500명 전</b></td><td>3순위 — 전체 보기 범위</td><td>그래프가 빽빽해져 읽을 수 없게 됨</td></tr>
+  <tr><td><b>칸 사용률 50% 전</b></td><td>4순위 — 조인 컬럼 정리</td><td>캠페인 상세가 1.5MB에 육박</td></tr>
+  <tr><td><b>작품 1,000점 전</b></td><td>5순위 — 사이트맵 분할</td><td>새 작품이 검색에 노출되지 않음</td></tr>
+</table>
+
+<div class="note"><b>운영에서 함께 볼 것</b> — 캠페인 하나가 담는 작품은 199점입니다. 작품이 그보다 빨리 늘면 <b>새 캠페인을 만드는 일이 병목</b>이 됩니다. 관리자 화면의 "풀 대기 작품" 수를 지켜보다가, 계속 쌓이면 캠페인을 추가하면 됩니다.</div>
+
+<div class="note"><b>점검 중 발견한 별건</b> — 사이트 옵션이 <code>pushEnabled: false</code>입니다. 앱 알림은 트리거가 <code>pushEndpoint</code>만 보므로 정상 동작하지만, <b>브라우저 웹 푸시는 "알림 받기" 버튼이 나오지 않아 구독이 만들어지지 않습니다.</b> 전체 공지를 보내면 앱 사용자만 받고, 웹 브라우저 사용자는 알림 종에만 쌓입니다.</div>
+
+</main>
+
+<!-- ============================== English (translation) ============================== -->
+<main class="en" lang="en">
+
+<h1>Weavo Scalability Review</h1>
+<div class="meta">13 Sep 2026 · weavo.art (repository <code>Insula</code>) · by Claude · Use the buttons at top right to switch language and light/dark theme.</div>
+
+<div class="note">This report is based on <b>measuring the production database's actual responses</b> (what the anonymous key can read; bytes after gzip), <b>timing real work in the browser</b> (the overlap-resolution algorithm and SVG updates), and <b>reading the code</b>. No data was modified and no code was changed. All transfer figures are <b>after gzip</b> — the same thing the Supabase plan actually counts.</div>
+
+<h2>0. Summary</h2>
+
+<p>At today's size (34 members, 28 artworks) <b>nothing is anywhere near a limit.</b> But limits arrive in two different ways, and one of them is dangerous.</p>
+
+<div class="summary-grid">
+  <div class="card"><div class="n" style="color:var(--crit)">2</div><div class="l">Fails silently — wrong screen, no error</div></div>
+  <div class="card"><div class="n" style="color:var(--high)">3</div><div class="l">Visible slowdown</div></div>
+  <div class="card"><div class="n" style="color:var(--med)">3</div><div class="l">Manageable operationally</div></div>
+  <div class="card"><div class="n" style="color:var(--ok)">2</div><div class="l">Plenty of headroom — capacity</div></div>
+</div>
+
+<table>
+  <tr><th>Axis</th><th>Practical limit</th><th>Why it arrives first</th></tr>
+  <tr><td><b>Members</b></td><td class="num">~500</td><td>The network view's <code>O(n²)</code> work. At 1,000 the lists and graph <b>truncate silently</b></td></tr>
+  <tr><td><b>Artworks</b></td><td class="num">~5,000</td><td>Not capacity — campaign operations and the sitemap. Capacity limits sit around 137,000</td></tr>
+  <tr><td><b>Traffic</b></td><td class="num">~2,150 views/day</td><td>With a full campaign: 75GB/month, 30% of the allowance</td></tr>
+</table>
+
+<div class="note crit"><b>The one thing that matters most</b> — past 1,000 members the artist list and network graph start leaving people out <b>with no error at all</b>, because Supabase silently caps responses at 1,000 rows. Users don't read this as a bug; they conclude <b>something is wrong with their own account.</b> The fix is about two lines.</div>
+
+<h2>1. Method and current size</h2>
+
+<h3>Current size (measured 13 Sep 2026)</h3>
+<table>
+  <tr><th>Item</th><th>Value</th><th>Note</th></tr>
+  <tr><td>Members (profiles)</td><td class="num">34</td><td>31 have avatars (91%)</td></tr>
+  <tr><td>Artworks (originals)</td><td class="num">28</td><td>700 pieces — with <code>pieceGrid=5</code>, 25 pieces per artwork</td></tr>
+  <tr><td>Campaign cells</td><td class="num">4,988</td><td>657 filled (13%)</td></tr>
+  <tr><td>Follows / comments / campaigns</td><td class="num">25 / 11 / 1</td><td></td></tr>
+</table>
+
+<h3>Unit costs</h3>
+<table>
+  <tr><th>Unit</th><th>Cost</th><th>Evidence</th></tr>
+  <tr><td>One artwork — Storage</td><td class="num">~727KB</td><td>Original 649KB avg + thumbnail 78KB (3 real files measured)</td></tr>
+  <tr><td>One artwork — DB</td><td class="num">~36KB</td><td><code>micro_thumb</code> 1.2KB × 26 rows (1 original + 25 pieces)</td></tr>
+  <tr><td>Home — per filled cell</td><td class="num">171B</td><td>657 cells = 113KB compressed</td></tr>
+  <tr><td>Campaign detail — per filled cell</td><td class="num">292B</td><td>657 cells = 192KB compressed (the join asks for <code>(*)</code>)</td></tr>
+  <tr><td>Member list — per member</td><td class="num">86B</td><td>34 members = 2.9KB compressed</td></tr>
+  <tr><td>Artwork list — per artwork</td><td class="num">134B</td><td>28 artworks = 3.7KB compressed</td></tr>
+</table>
+<p class="small">Uncompressed those cells are 1.3–2.3KB each, but <code>micro_thumb</code> (base64) compresses well. Browsers always request gzip, so the figures above are what the plan bills.</p>
+
+<h2>2. As membership grows</h2>
+
+<p>The limit arrives in the <b>network view, not in capacity</b>. In the order it arrives:</p>
+
+<div class="finding">
+  <h3><span class="badge b-high">High</span> ① The network graph slows down — from 200 members</h3>
+  <p><code>resolveOrbitOverlaps()</code> in <code>js/network.js</code> compares every pair of nodes — <code>O(n²)</code>, twice, <b>on every frame</b> — and SVG updates are added on top.</p>
+  <div class="wrap"><table>
+    <tr><th>Members</th><th>Overlap pass</th><th>SVG update</th><th>Total</th><th>vs 16.7ms frame budget</th></tr>
+    <tr><td class="num">34 (today)</td><td class="num">0.07ms</td><td class="num">0.29ms</td><td class="num">0.4ms</td><td>2% <span class="bar"><i style="width:2%"></i></span></td></tr>
+    <tr><td class="num">200</td><td class="num">0.83ms</td><td class="num">2.4ms</td><td class="num">3.2ms</td><td>19% <span class="bar"><i style="width:19%"></i></span></td></tr>
+    <tr><td class="num">500</td><td class="num">4.3ms</td><td class="num">6.6ms</td><td class="num">10.9ms</td><td>65% <span class="bar"><i class="warn" style="width:65%"></i></span></td></tr>
+    <tr><td class="num">1,000</td><td class="num">12ms</td><td class="num">13.6ms</td><td class="num">25.6ms</td><td>153% → 39fps <span class="bar"><i class="bad" style="width:100%"></i></span></td></tr>
+    <tr><td class="num">2,000</td><td class="num">48ms</td><td class="num">~28ms</td><td class="num">76ms</td><td>455% → 13fps <span class="bar"><i class="bad" style="width:100%"></i></span></td></tr>
+  </table></div>
+  <div class="kv">
+    <b>Caveat</b><span>Measured <b>on a PC with the page hidden</b> (paint cost excluded). Real cost is higher — and <b>mobile CPUs are 3–5× slower, so 500 members already blows the budget on a phone.</b></span>
+    <b>Also</b><span>Every member with an avatar gets its own <code>&lt;clipPath&gt;</code> to draw the circle. 91% of members have one, so clipped painting scales with node count.</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-crit">Silent</span> ② At 1,000 members, lists and the graph truncate without a word</h3>
+  <p>PostgREST <b>caps responses at 1,000 rows and reports no error.</b> The repository rule (<code>CLAUDE.md</code> §7) says to use <code>fetchAllRows</code>, but two places don't.</p>
+  <ul>
+    <li><code>js/artists.js:41</code> — the artist list reads all of <code>profiles</code> with no <code>limit</code></li>
+    <li><code>js/network.js:80</code> — reads all of <code>user_saves</code> and all of <code>profiles</code></li>
+  </ul>
+  <div class="kv">
+    <b>What users see</b><span>From member 1,001 onward people simply <b>vanish</b> from the artist list and the graph. Some connection lines go missing, so the network looks <b>less connected than it is.</b> Worst of all, <b>the "My network" button stops working</b> — if your own node was cut off you get "Your profile is not on the network yet", even though you signed up and followed people.</span>
+    <b>Why it's dangerous</b><span>This is not a visible failure; it <b>quietly shows wrong information.</b> People don't conclude the service is broken — they conclude their account is. Operators won't know until someone complains.</span>
+    <b>Transfer size?</b><span>Not an issue: even 1,000 members is 86KB compressed.</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-med">Medium</span> ③ Announcements call out once per member</h3>
+  <p>An announcement writes one <code>notifications</code> row per member, and the existing trigger calls the Edge Function per row (<code>for each row</code>). Reusing the existing path is what makes it safe, but the call count scales with membership.</p>
+  <div class="kv">
+    <b>Today</b><span>34 members → 34 calls, against an allowance of 2,000,000/month — negligible</span>
+    <b>At 10,000</b><span>10,000 calls. The allowance is fine, but <b>10,000 pg_net requests queue inside a single transaction.</b></span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-ok">Headroom</span> ④ Supabase MAU allowance</h3>
+  <p>100,000 monthly active users on Pro — far beyond everything above.</p>
+</div>
+
+<h2>3. As artworks grow</h2>
+
+<div class="note"><b>The key point</b> — transfer size is driven by <b>how full the campaign is, not by how many artworks exist.</b> As cells fill, the home and campaign screens get heavier; once full, work moves to a new campaign and the figure settles. However many artworks accumulate, <b>one screen only ever draws one campaign's worth.</b></div>
+
+<h3>Transfer per screen (compressed)</h3>
+<div class="wrap"><table>
+  <tr><th>Screen</th><th>Per cell</th><th>Today, 657 cells</th><th>Full, 4,988 cells</th><th>Max, 10,000 cells</th></tr>
+  <tr><td>Home hero</td><td class="num">171B</td><td class="num">113KB</td><td class="num">854KB</td><td class="num">1.71MB</td></tr>
+  <tr><td>Campaign detail</td><td class="num">292B</td><td class="num">192KB</td><td class="num">1.46MB</td><td class="num">2.92MB</td></tr>
+</table></div>
+<p>Campaign detail is heavier because its join asks for <code>mosaic_submissions(*)</code> — <b>every column</b> (<code>js/project.js:184</code>). The home screen names only the columns it needs and costs about half.</p>
+
+<h3>Monthly transfer (full campaign; Pro allowance 250GB)</h3>
+<table>
+  <tr><th>Views per day</th><th>Per month</th><th>Of allowance</th></tr>
+  <tr><td class="num">1,000</td><td class="num">35GB</td><td>14% <span class="bar"><i style="width:14%"></i></span></td></tr>
+  <tr><td class="num">2,150</td><td class="num">75GB</td><td><b>30%</b> — the <code>CLAUDE.md</code> §15 threshold <span class="bar"><i class="warn" style="width:30%"></i></span></td></tr>
+  <tr><td class="num">3,000</td><td class="num">105GB</td><td>42% <span class="bar"><i class="warn" style="width:42%"></i></span></td></tr>
+  <tr><td class="num">7,000</td><td class="num">245GB</td><td>98% — at the limit <span class="bar"><i class="bad" style="width:98%"></i></span></td></tr>
+</table>
+
+<h3>Limits, in the order they arrive</h3>
+<div class="wrap"><table>
+  <tr><th>Limit</th><th>At</th><th>Kind</th><th>Symptom</th></tr>
+  <tr><td>Capacity of one campaign</td><td class="num">199 artworks</td><td><span class="badge b-med">Ops</span></td><td>4,988 cells ÷ 25 pieces. Beyond that a new campaign is needed; until then artworks wait in the pool</td></tr>
+  <tr><td>Sitemap cap</td><td class="num">1,000 artworks</td><td><span class="badge b-med">SEO</span></td><td>Only 1,000 are announced for indexing. Nothing breaks; search coverage just stops growing</td></tr>
+  <tr><td>Browse page</td><td class="num">a few thousand</td><td><span class="badge b-low">Perf</span></td><td><code>OFFSET</code> paging gets slower the deeper you go</td></tr>
+  <tr><td>Storage 100GB</td><td class="num">~137,000</td><td><span class="badge b-ok">Headroom</span></td><td>At 727KB per artwork</td></tr>
+  <tr><td>DB 8GB</td><td class="num">~222,000</td><td><span class="badge b-ok">Headroom</span></td><td>At 36KB per artwork</td></tr>
+</table></div>
+
+<div class="note"><b>One setting halves the capacity</b> — the site currently runs <code>pieceGrid=5</code> (25 pieces per artwork). Raising it to the default 7 makes 49 pieces, which cuts <b>a campaign's capacity from 199 artworks to 101</b> and raises DB cost per artwork from 36KB to roughly 70KB.</div>
+
+<h3>What's already sound</h3>
+<p>The indexes are well designed. A partial index on <code>(created_at desc, id desc) where parent_id is null</code> covers artwork listing exactly, and the <code>(project_id, x, y)</code> unique index confines cell reads to one campaign. The grid image (a 15KB PNG) is served through the <code>/img/</code> edge cache and costs almost no database transfer. <b>Query performance is not the bottleneck.</b></p>
+
+<h2>4. The network view — what users actually experience</h2>
+
+<p>This screen hits its limit first, so it gets its own section. In the order things arrive:</p>
+
+<ol>
+  <li><b>The rotation stutters</b> — faintly from 200 members, clearly at 500 on mobile and 1,000 on desktop. Turning smoothly is the entire point of this screen, and that is what breaks.</li>
+  <li><b>Taps and clicks lag</b> — the computation holds the main thread, so nodes respond a beat late.</li>
+  <li><b>Phones get warm and drain</b> — the work runs 60 times a second the whole time the screen is open. It only pauses while a node is selected.</li>
+  <li><b>Entering is slow</b> — avatars are requested one per member, and <b>27 of 31 are external URLs</b> (Google and the like) that bypass the <code>/img/</code> edge cache. At 1,000 members that is roughly 900 external image requests. (The files are small — 2.4KB on average. The problem is the number of requests, not their size.)</li>
+  <li><b>The picture stops meaning anything</b> — before performance even matters, 500 nodes on a 1,400px screen overlap into an unreadable mass. <b>Even if it ran smoothly, there would be nothing to see.</b></li>
+  <li><b>Past 1,000 it quietly shows a wrong picture</b> — as described in §2 ②.</li>
+</ol>
+
+<h2>5. Fixes</h2>
+
+<div class="finding">
+  <h3><span class="badge b-crit">First</span> Use <code>fetchAllRows</code> for the unbounded reads</h3>
+  <div class="kv">
+    <b>Fixes</b><span>The silent truncation in §2 ②. The artist list and graph stay correct past 1,000 members</span>
+    <b>How</b><span>Wrap them in <code>fetchAllRows</code>, which already exists in <code>common.js</code> — campaign cell reads use it already</span>
+    <b>Effort</b><span><b>About two lines.</b> Worth doing now: left alone, wrong screens begin at member 1,000 with no signal at all</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-high">Second</span> Replace overlap resolution with spatial bucketing</h3>
+  <div class="kv">
+    <b>Fixes</b><span>Stutter, input lag, heat — all of §2 ①</span>
+    <b>How</b><span>Instead of comparing every pair, sort nodes into grid cells and compare only <b>within a cell and its neighbours</b> — a node can't overlap anything further away than its own radius. <code>O(n²)</code> → <code>O(n)</code>; at 1,000 members, 12ms → under 1ms</span>
+    <b>Effort</b><span>One function swapped. Behaviour is identical from outside, so the blast radius is small</span>
+    <b>When</b><span>Before 200 members. Later means after the complaints</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-high">Third</span> Change what "Everyone" shows — the most fundamental fix</h3>
+  <div class="kv">
+    <b>Fixes</b><span>§4 ⑤ — performance and readability together</span>
+    <b>How</b><span>Drawing the whole network at once stops being useful past a few hundred people <b>regardless of performance.</b> As membership grows, default to "My network" and make "Everyone" an overview built around the main connectors. <b>The toggle already exists</b> — only the default and the scope of "Everyone" need deciding</span>
+    <b>Effort</b><span>Medium. How much to show (top N, within two hops…) is a product decision</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-med">Fourth</span> Narrow the campaign detail join from <code>(*)</code></h3>
+  <div class="kv">
+    <b>Fixes</b><span>Campaign transfer size: 292B per cell down toward the home screen's 171B — <b>1.46MB → ~850KB</b> when full</span>
+    <b>How</b><span>The home screen (<code>project-preview.js</code>) already names its columns. Copy that, checking that nothing the lightbox needs is dropped</span>
+    <b>When</b><span>Before cells are 50% full</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-med">Fifth</span> Split the sitemap</h3>
+  <div class="kv">
+    <b>Fixes</b><span>Search coverage stalling past 1,000 artworks</span>
+    <b>How</b><span>Emit a sitemap index pointing at several files. The current 1,000-row cap is <b>written into the code as a comment</b>, so it is a known, deliberate stopgap</span>
+  </div>
+</div>
+
+<div class="finding">
+  <h3><span class="badge b-low">Sixth</span> Everything else</h3>
+  <ul>
+    <li><b>Route avatars through <code>/img/</code></b> — turns ~900 external requests into edge-cached ones. Needs a decision about proxying third-party domains</li>
+    <li><b>Skip off-screen nodes</b> (viewport culling) — large saving while zoomed in</li>
+    <li><b>Keyset pagination for browsing</b> — "after the last item seen" instead of <code>OFFSET</code></li>
+    <li><b>SVG → Canvas</b> — would carry thousands of nodes, but click hit-testing and accessibility have to be rebuilt. <b>Overkill today</b>; revisit when thousands of members are real</li>
+  </ul>
+</div>
+
+<h2>6. When to do what</h2>
+
+<table>
+  <tr><th>When</th><th>Do</th><th>If not</th></tr>
+  <tr><td><b>Now</b></td><td>First — apply <code>fetchAllRows</code></td><td>Silently wrong screens from member 1,000. It's two lines</td></tr>
+  <tr><td><b>Before 200 members</b></td><td>Second — overlap algorithm</td><td>The network view stutters and phones heat up</td></tr>
+  <tr><td><b>Before 500 members</b></td><td>Third — scope of "Everyone"</td><td>The graph becomes too dense to read</td></tr>
+  <tr><td><b>Before cells are 50% full</b></td><td>Fourth — narrow the join</td><td>Campaign detail approaches 1.5MB</td></tr>
+  <tr><td><b>Before 1,000 artworks</b></td><td>Fifth — split the sitemap</td><td>New artworks stop appearing in search</td></tr>
+</table>
+
+<div class="note"><b>Watch this operationally too</b> — one campaign holds 199 artworks. If artworks arrive faster than that, <b>creating new campaigns becomes the bottleneck.</b> Watch the "artworks waiting in the pool" count on the admin page and add a campaign when it keeps growing.</div>
+
+<div class="note"><b>Noticed while reviewing</b> — the site option <code>pushEnabled</code> is <code>false</code>. App notifications still work (the trigger only checks <code>pushEndpoint</code>), but <b>browser web push never offers its "Enable notifications" button, so no browser subscriptions exist.</b> An announcement therefore reaches app users only; browser users see it in the bell alone.</div>
+
+</main>
+
+<script>
+(function () {
+  // 언어: 저장된 선택 → ?lang= → 기본 한국어. 테마: 저장된 선택 → ?theme= → OS 설정(CSS).
+  var root = document.documentElement;
+  var q = new URLSearchParams(location.search);
+  function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  var lang = q.get('lang') || read('weavoDocLang') || 'ko';
+  if (lang !== 'en') lang = 'ko';
+  var theme = q.get('theme') || read('weavoDocTheme') || '';
+  if (theme !== 'dark' && theme !== 'light') theme = '';
+
+  var langBtn = document.getElementById('langBtn');
+  var themeBtn = document.getElementById('themeBtn');
+  function applyLang(l) {
+    lang = l;
+    root.setAttribute('data-lang', l);
+    root.setAttribute('lang', l);
+    document.title = l === 'en' ? 'Weavo Scalability Review (2026-09-13)' : 'Weavo 확장성 점검 보고서 (2026-09-13)';
+    langBtn.textContent = l === 'en' ? '한국어' : 'EN';
+    applyThemeLabel();
+  }
+  function effectiveTheme() {
+    if (theme) return theme;
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  function applyThemeLabel() {
+    var dark = effectiveTheme() === 'dark';
+    themeBtn.textContent = lang === 'en' ? (dark ? 'Light' : 'Dark') : (dark ? '라이트' : '다크');
+  }
+  function applyTheme(t) {
+    theme = t;
+    if (t) root.setAttribute('data-theme', t); else root.removeAttribute('data-theme');
+    applyThemeLabel();
+  }
+  langBtn.addEventListener('click', function () { var l = lang === 'en' ? 'ko' : 'en'; save('weavoDocLang', l); applyLang(l); });
+  themeBtn.addEventListener('click', function () { var t = effectiveTheme() === 'dark' ? 'light' : 'dark'; save('weavoDocTheme', t); applyTheme(t); });
+  if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyThemeLabel);
+
+  applyTheme(theme);
+  applyLang(lang);
+})();
+</script>
+</body>
+</html>
