@@ -216,3 +216,36 @@
   .game-hud{display:none;}
   .game-sheet-handle{display:none;}
 }
+
+/* ---------- buttons ----------
+   This page loads only base.css and game.css. Neither gives .admin-btn a
+   size (that lives in admin.css), and .btn-primary carries colour ONLY — its
+   padding comes from `.modal-actions button`, which exists just inside
+   dialogs. Used outside one, as the result screen does, a button falls back
+   to the browser default: 22px tall, unreadable and hard to hit on a phone.
+   So the game's buttons are sized here, scoped to .game-page. */
+.game-page .admin-btn,
+.game-page .btn-primary{
+  appearance:none;cursor:pointer;font-family:'Pretendard',sans-serif;
+  font-size:13.5px;font-weight:600;line-height:1.2;
+  padding:10px 18px;border-radius:var(--r-full);
+  border:1px solid var(--border-strong);background:var(--bg);color:var(--text);
+  min-height:42px;
+  transition:background .12s linear,opacity .12s linear;
+}
+.game-page .admin-btn:hover{background:var(--surface);}
+.game-page .admin-btn.primary,
+.game-page .btn-primary{background:var(--gradient-primary);color:#fff;border-color:transparent;}
+.game-page .admin-btn.primary:hover,
+.game-page .btn-primary:hover{opacity:.92;}
+.game-page .admin-btn:disabled{opacity:.5;cursor:default;}
+/* The mute control is an icon, so it only needs to be a comfortable target. */
+.game-page .game-target-info .admin-btn{padding:8px 12px;min-height:38px;}
+
+/* The result screen's actions are the one thing a finished player reaches
+   for, and on a phone they were 22px tall. Full width, thumb-sized. */
+.game-page .game-result-actions button{font-size:15px;padding:14px 26px;min-height:52px;}
+@media (max-width:640px){
+  .game-result-actions{flex-direction:column;gap:10px;}
+  .game-page .game-result-actions button{width:100%;font-size:16px;min-height:56px;padding:16px 20px;}
+}
