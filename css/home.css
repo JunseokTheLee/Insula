@@ -452,3 +452,15 @@
 
 #new-project-dialog{width:380px;max-width:calc(100vw - 40px);padding:26px;}
 #new-project-dialog h3{font-family:'Pretendard',sans-serif;font-size:18px;font-weight:700;margin:0 0 10px;color:var(--primary);}
+
+/* ---------- campaigns page on a phone (2026-09-14) ----------
+   .snap-panel is a screen tall so the two sections snap like slides. That
+   works on a desktop, where the carousel card fills most of the screen. On a
+   phone the card is clamped to 42vh, so the panel was more than half empty
+   and "전체 캠페인" sat a full swipe below the fold for no reason.
+   Here the sections are as tall as what is in them. The chevron goes too:
+   it pointed at something that is now directly underneath. */
+@media (max-width:640px){
+  #currentProjectsPanel,#projectsPanel{min-height:0;}
+  .scroll-hint{display:none;}
+}
