@@ -26,7 +26,12 @@
 
 .game-list{display:flex;flex-direction:column;gap:12px;}
 .game-card{
-  display:grid;grid-template-columns:96px 1fr auto;gap:14px;align-items:center;
+  /* Columns are sized to their contents and pushed left: with 1fr on the
+     body the play button drifted to the far right of a wide card, an arm's
+     length from the artwork it belongs to. The text column is capped so a
+     long title cannot undo that. */
+  display:grid;grid-template-columns:96px auto auto;justify-content:start;
+  gap:14px;align-items:center;
   padding:12px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);
   transition:box-shadow .15s linear,border-color .15s linear;
 }
@@ -37,7 +42,10 @@
   width:96px;height:96px;object-fit:cover;border-radius:var(--r-sm);
   background:var(--gray-100);display:block;
 }
-.game-card-body{min-width:0;}
+/* auto columns size to content, so the button sits right next to the text
+   instead of at the far edge; the cap stops a long title from pushing it
+   back out again. */
+.game-card-body{min-width:0;max-width:460px;}
 .game-card-title{font-family:'Pretendard',sans-serif;font-weight:700;font-size:15px;color:var(--text);}
 .game-card-author{font-family:'Pretendard',sans-serif;font-size:13px;color:var(--muted);margin-top:1px;}
 .game-card-pieces{font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--text);margin-top:5px;}
