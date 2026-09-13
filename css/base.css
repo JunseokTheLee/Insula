@@ -274,9 +274,16 @@ body.modal-open{position:fixed;left:0;right:0;width:100%;}
   position:fixed;inset:0;background:rgba(15,36,23,.45);
   display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;
   opacity:0;visibility:hidden;pointer-events:none;
-  transition:opacity .15s linear,visibility .15s linear;
+  /* visibility is NOT interpolated — it flips at 0s. Transitioning it was
+     how a dialog could end up half-applied: hide the tab inside the .15s
+     and the browser parks the animation clock, leaving visibility stuck at
+     its start value while .open had already made the overlay cover the
+     page. The delay on the way OUT is the usual trick so the fade-out is
+     still visible; going IN it applies immediately, with nothing to stall.
+     common.js finishes any parked opacity transition when the tab returns. */
+  transition:opacity .15s linear,visibility 0s linear .15s;
 }
-.modal-overlay.open{opacity:1;visibility:visible;pointer-events:auto;}
+.modal-overlay.open{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .15s linear,visibility 0s;}
 .modal-panel{
   background:var(--bg);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);border:none;
   max-height:90vh;overflow-y:auto;position:relative;

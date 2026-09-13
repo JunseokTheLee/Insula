@@ -1267,6 +1267,54 @@ function weavoFreezeReport() {
   }
 })();
 
+
+// ---------- dialogs that were opening when the tab went away ----------
+// A dialog fades in over .15s. Hide the tab inside that window and the
+// browser parks the animation clock: the transition stays at currentTime 0
+// — computed opacity 0, nothing to see — while the overlay is already
+// .open, so it covers the viewport and swallows every click. Coming back
+// does not restart it; the page looks normal and answers nothing. Reported
+// 2026-09-13 after tapping a thumbnail on the home page and switching tabs.
+//
+// Two steps, because either alone leaves a hole:
+//   1. finish() any transition still parked on an open overlay, so a dialog
+//      that was genuinely on its way in simply completes.
+//   2. if it is STILL invisible afterwards, it is not a dialog anyone can
+//      see or dismiss — only an invisible lid. Take it off, which also
+//      releases body.modal-open and the :has() scroll lock through the
+//      observer above.
+function settleOpenOverlays() {
+  // Every overlay, not only the open ones: the same parked clock leaves a
+  // CLOSING dialog stuck on screen (it is already pointer-events:none, so it
+  // blocks nothing, but it sits there looking open until the fade finishes).
+  for (const el of document.querySelectorAll(".modal-overlay")) {
+    try {
+      if (typeof el.getAnimations === 'function') {
+        for (const a of el.getAnimations({ subtree: true })) {
+          try { a.finish(); } catch (e) { /* already finished, or not finishable */ }
+        }
+      }
+    } catch (e) { /* no Web Animations: fall through to the visibility check */ }
+    let visible = true;
+    try {
+      const cs = getComputedStyle(el);
+      visible = Number(cs.opacity) > 0.01 && cs.visibility !== 'hidden';
+    } catch (e) {}
+    // Only an OPEN overlay can be the invisible lid. A closed one that is
+    // still fading is finished by the step above and needs nothing more.
+    if (visible || !el.classList.contains("open")) continue;
+    // closeLightbox does more than drop the class (it leaves the blown-up
+    // image state), so prefer it for the one overlay that has it.
+    if (el.id === 'lightbox-modal' && typeof window.closeLightbox === 'function') window.closeLightbox();
+    else el.classList.remove('open');
+  }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') settleOpenOverlays();
+});
+// Coming back from the bfcache lands here instead of visibilitychange.
+addEventListener('pageshow', settleOpenOverlays);
+
 // ---------- "Back" links on standalone pages ----------
 // The artwork / profile / exhibition pages are shareable, indexable URLs, so
 // their back link needs a real href for anyone who arrived from outside
