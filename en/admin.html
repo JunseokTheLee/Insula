@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-220307">
-<link rel="stylesheet" href="/css/admin.css?v=20260913-220307">
+<link rel="stylesheet" href="/css/base.css?v=20260913-222349">
+<link rel="stylesheet" href="/css/admin.css?v=20260913-222349">
 </head>
 <body>
 
@@ -319,6 +319,9 @@
                 <div class="admin-range"><input id="adminGameHintPenalty" type="range" min="0" max="300" step="5" data-setting="gameHintPenaltySec" disabled><output for="adminGameHintPenalty" data-setting-output="gameHintPenaltySec">30</output></div>
               </div>
               <div class="admin-setting">
+                <label><input type="checkbox" data-setting="gameRandomOrder" disabled> <strong>Random artwork order</strong> — off means newest first. The order is reshuffled on every visit.</label>
+              </div>
+              <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameSoundDefault" disabled> <strong>Sound on by default</strong> — players can mute it at any time.</label>
               </div>
             </div>
@@ -547,14 +550,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-220307"></script>
-<script src="/js/i18n/en.js?v=20260913-220307"></script>
-<script src="/js/common.js?v=20260913-220307"></script>
-<script src="/js/auth.js?v=20260913-220307"></script>
-<script src="/js/notifications.js?v=20260913-220307"></script>
-<script src="/js/push.js?v=20260913-220307"></script>
-<script src="/js/color-engine.js?v=20260913-220307"></script>
-<script src="/js/matching.js?v=20260913-220307"></script>
-<script src="/js/admin.js?v=20260913-220307"></script>
+<script src="/js/supabase-client.js?v=20260913-222349"></script>
+<script src="/js/i18n/en.js?v=20260913-222349"></script>
+<script src="/js/common.js?v=20260913-222349"></script>
+<script src="/js/auth.js?v=20260913-222349"></script>
+<script src="/js/notifications.js?v=20260913-222349"></script>
+<script src="/js/push.js?v=20260913-222349"></script>
+<script src="/js/color-engine.js?v=20260913-222349"></script>
+<script src="/js/matching.js?v=20260913-222349"></script>
+<script src="/js/admin.js?v=20260913-222349"></script>
 </body>
 </html>

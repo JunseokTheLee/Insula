@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-220307">
-<link rel="stylesheet" href="/css/admin.css?v=20260913-220307">
+<link rel="stylesheet" href="/css/base.css?v=20260913-222349">
+<link rel="stylesheet" href="/css/admin.css?v=20260913-222349">
 </head>
 
 <body>
@@ -322,6 +322,9 @@
               <div class="admin-setting admin-setting-range">
                 <label for="adminGameHintPenalty">힌트 <strong>패널티</strong>: 구역 힌트 한 번마다 기록에 더해지는 초. 0이면 공짜입니다. <em>(기본: 30초, 최대 300초)</em></label>
                 <div class="admin-range"><input id="adminGameHintPenalty" type="range" min="0" max="300" step="5" data-setting="gameHintPenaltySec" disabled><output for="adminGameHintPenalty" data-setting-output="gameHintPenaltySec">30</output></div>
+              </div>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="gameRandomOrder" disabled> <strong>작품 목록 무작위 순서</strong> — 끄면 최신 등록순으로 보입니다. 접속할 때마다 순서가 새로 섞입니다.</label>
               </div>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameSoundDefault" disabled> <strong>효과음 기본 켜기</strong> — 사용자가 게임 화면에서 언제든 끌 수 있습니다.</label>
@@ -653,15 +656,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-220307"></script>
-<script src="/js/i18n/ko.js?v=20260913-220307"></script>
-<script src="/js/common.js?v=20260913-220307"></script>
-<script src="/js/auth.js?v=20260913-220307"></script>
-<script src="/js/notifications.js?v=20260913-220307"></script>
-<script src="/js/push.js?v=20260913-220307"></script>
-<script src="/js/color-engine.js?v=20260913-220307"></script>
-<script src="/js/matching.js?v=20260913-220307"></script>
-<script src="/js/admin.js?v=20260913-220307"></script>
+<script src="/js/supabase-client.js?v=20260913-222349"></script>
+<script src="/js/i18n/ko.js?v=20260913-222349"></script>
+<script src="/js/common.js?v=20260913-222349"></script>
+<script src="/js/auth.js?v=20260913-222349"></script>
+<script src="/js/notifications.js?v=20260913-222349"></script>
+<script src="/js/push.js?v=20260913-222349"></script>
+<script src="/js/color-engine.js?v=20260913-222349"></script>
+<script src="/js/matching.js?v=20260913-222349"></script>
+<script src="/js/admin.js?v=20260913-222349"></script>
 
 </body>
 </html>

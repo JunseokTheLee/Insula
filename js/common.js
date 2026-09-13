@@ -590,6 +590,8 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // target and the hunt is over before it starts. start_game enforces it
   // in the database too. 0 turns the check off.
   gameMinArtworks: 10,
+  // Artwork list order. Off = newest first, the old behaviour.
+  gameRandomOrder: true,
   // How far back the admin "New members" list reaches.
   adminNewMemberDays: 5,
   // Costs one interval a second and a few hundred bytes of localStorage.

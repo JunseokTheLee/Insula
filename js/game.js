@@ -54,6 +54,15 @@
     return tr('gameDurMin', { m, s: (total - m * 60).toFixed(2) });
   };
   const artworkKeyOf = sub => (sub.parent_id != null ? sub.parent_id : sub.id);
+  // Fisher-Yates: every ordering equally likely, in place, no copy of a
+  // few hundred rows.
+  function shuffleInPlace(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
 
   function show(name) {
     for (const el of root.querySelectorAll('[data-screen]')) {
@@ -920,6 +929,12 @@
     let saved = null;
     try { saved = JSON.parse(sessionStorage.getItem(SS_KEY) || 'null'); } catch (e) {}
     if (!saved || saved.projectId !== project.id) return;
+    // In a shuffled list the artwork just played can sit past the first
+    // page, so render forward until it exists (bounded by the list itself).
+    while (!$('gameList').querySelector(`[data-artwork-id="${saved.artworkId}"]`)
+           && listRendered < visibleArtworks().length) {
+      renderList(false);
+    }
     const card = $('gameList').querySelector(`[data-artwork-id="${saved.artworkId}"]`);
     if (card) {
       card.scrollIntoView({ block: 'center' });
@@ -1030,8 +1045,13 @@
     artworks = rows
       .filter(a => !isUserBlocked(a.author_id))
       .map(a => ({ ...a, _used: usedCount.get(a.id) || 0 }))
-      .filter(a => a._used > 0)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      .filter(a => a._used > 0);
+    // Shuffled, so the same few newest artworks are not what everyone plays
+    // — and so a second visit is a different list. Once per load, never
+    // mid-session: "더 보기" pages through this array, and reshuffling
+    // between pages would repeat some artworks and hide others.
+    if (settings.gameRandomOrder !== false) shuffleInPlace(artworks);
+    else artworks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     // Too few artworks to hunt in: say so instead of opening a list that
     // cannot produce a meaningful time. start_game refuses the same case,
