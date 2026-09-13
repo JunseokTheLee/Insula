@@ -113,7 +113,7 @@
   // per filled cell after gzip.
   async function loadFilledCells(p) {
     const cols = 'x,y,mosaic_submissions!mosaic_pixels_submission_id_fkey'
-      + '(id,parent_id,piece_row,piece_col,piece_n,avg_r,avg_g,avg_b,micro_thumb)';
+      + '(id,parent_id,piece_row,piece_col,piece_n,avg_r,avg_g,avg_b,micro_thumb,thumb_url,image_url)';
     const res = await fetchAllRows(
       () => sb.from('mosaic_pixels').select(cols)
         .eq('project_id', p.id).eq('filled', true).not('submission_id', 'is', null),
@@ -278,11 +278,16 @@
   function buildMosaic() {
     stage = $('gameStage');
     canvas = $('gameCanvas');
-    cellPx = Math.max(4, Math.min(12, Math.floor(4000 / Math.max(project.width, project.height))));
+    // Was 12px max, which turned to mush the moment anyone zoomed in — and
+    // zooming in is the whole game. 24px gives a 58x86 campaign a 1392x2064
+    // canvas, and refreshDetail() repaints visible cells from the real
+    // artwork thumbnails on top of that.
+    cellPx = Math.max(8, Math.min(24, Math.floor(8000 / Math.max(project.width, project.height))));
     canvas.width = project.width * cellPx;
     canvas.height = project.height * cellPx;
     ctx = canvas.getContext('2d');
 
+    detailDone.clear();
     const paint = typeof openCellPainter === 'function'
       ? openCellPainter(cells, settings)
       : (r, g, b) => `rgb(${r},${g},${b})`;
@@ -304,11 +309,60 @@
     fitAll();
   }
 
+  // ---------- detail pass ----------
+  // micro_thumb is 16x16 — fine while the whole mosaic is on screen, useless
+  // once someone zooms in to compare a cell against the artwork panel. Every
+  // piece row carries its parent's 480px thumb_url plus its own piece_row/col,
+  // so the real picture can be cropped straight onto the canvas. The artwork
+  // list already fetched these thumbnails, so they come from the browser cache.
+  const thumbCache = new Map();          // url -> Image
+  const detailDone = new Set();          // cells already repainted
+  let detailTimer = 0;
+  function thumbFor(url) {
+    if (thumbCache.has(url)) return thumbCache.get(url);
+    const img = new Image();
+    img.onload = () => { clearTimeout(detailTimer); detailTimer = setTimeout(refreshDetail, 0); };
+    img.onerror = () => { thumbCache.set(url, null); };
+    img.src = url;
+    thumbCache.set(url, img);
+    return img;
+  }
+  function scheduleDetail() {
+    clearTimeout(detailTimer);
+    detailTimer = setTimeout(refreshDetail, 90);
+  }
+  function refreshDetail() {
+    if (!ctx || !stage) return;
+    // Below this a cell is smaller than the micro thumb it already shows.
+    if (cellPx * scale < 10) return;
+    const r = stage.getBoundingClientRect();
+    const size = cellPx * scale;
+    for (const fc of filled) {
+      const key = fc.x + ',' + fc.y;
+      if (detailDone.has(key)) continue;
+      const left = panX + fc.x * cellPx * scale;
+      const top = panY + fc.y * cellPx * scale;
+      if (left + size < 0 || left > r.width || top + size < 0 || top > r.height) continue;
+      const url = fc.sub.thumb_url || fc.sub.image_url;
+      if (!url) { detailDone.add(key); continue; }
+      const img = thumbFor(cdnUrl(url));
+      if (!img || !img.complete || !img.naturalWidth) continue;   // repaints on load
+      const n = (fc.sub.piece_n && fc.sub.piece_n > 1) ? fc.sub.piece_n : 1;
+      const sw = img.naturalWidth / n, sh = img.naturalHeight / n;
+      const sx = (fc.sub.piece_col || 0) * sw, sy = (fc.sub.piece_row || 0) * sh;
+      try {
+        ctx.drawImage(img, sx, sy, sw, sh, fc.x * cellPx, fc.y * cellPx, cellPx, cellPx);
+        detailDone.add(key);
+      } catch (e) { detailDone.add(key); }   // broken image: keep the micro thumb
+    }
+  }
+
   function applyTransform() {
     canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
     const layer = $('gameMarks');
     layer.style.transform = canvas.style.transform;
     $('gameZoomLevel').textContent = Math.round(scale * 100) + '%';
+    scheduleDetail();
   }
   function fitAll() {
     const r = stage.getBoundingClientRect();
@@ -737,17 +791,54 @@
     this.textContent = on ? fmtTime(performance.now() - startedAt) : '––:––';
   };
   // The bottom sheet on phones: drag the handle, or tap it to toggle.
+  // ---------- bottom sheet: drag it, the way a sheet is expected to move ----------
+  // Sizes are set inline rather than by a class: the collapsed values live in
+  // game.css and these two are the only thing the sheet changes. A tap still
+  // toggles (it is the same gesture with no distance), so nothing is lost for
+  // someone using a keyboard or a mouse.
   const sheet = $('gameSheet');
-  if (sheet) {
-    // Sizes are set inline rather than by a class: the collapsed values live
-    // in game.css, and these two are the only thing the handle changes.
-    $('gameSheetHandle').onclick = () => {
-      const open = !sheet.classList.contains('expanded');
-      sheet.classList.toggle('expanded', open);
-      sheet.style.maxHeight = open ? '78vh' : '';
-      const img = $('gameTargetImg');
-      if (img) img.style.maxHeight = open ? '46vh' : '';
+  const handle = $('gameSheetHandle');
+  if (sheet && handle) {
+    const COLLAPSED = 34, EXPANDED = 78;    // vh
+    let dragging = false, startY = 0, startVh = COLLAPSED, movedPx = 0;
+    const vh = px => (px / window.innerHeight) * 100;
+
+    function setHeight(heightVh, animate) {
+      // Transitions fight a finger that is still moving, so they are only on
+      // for the release.
+      sheet.style.transition = animate ? '' : 'none';
+      sheet.style.maxHeight = heightVh + 'vh';
+      // The artwork's size is the .expanded rule's job (game.css): open means
+      // one column with a big picture, closed means artwork left / numbers right.
+      sheet.classList.toggle('expanded', heightVh > (COLLAPSED + EXPANDED) / 2);
+    }
+
+    handle.addEventListener('pointerdown', e => {
+      dragging = true; movedPx = 0;
+      startY = e.clientY;
+      startVh = sheet.classList.contains('expanded') ? EXPANDED : COLLAPSED;
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const dy = startY - e.clientY;            // up is positive
+      movedPx = Math.max(movedPx, Math.abs(dy));
+      setHeight(Math.min(EXPANDED, Math.max(COLLAPSED, startVh + vh(dy))), false);
+    });
+    const endDrag = e => {
+      if (!dragging) return;
+      dragging = false;
+      try { handle.releasePointerCapture(e.pointerId); } catch (err) {}
+      const dy = startY - e.clientY;
+      // Under ~6px of travel this was a tap, not a drag: toggle. Otherwise
+      // settle to whichever end the finger was heading for.
+      const open = movedPx < 6 ? !sheet.classList.contains('expanded') : dy > 0;
+      setHeight(open ? EXPANDED : COLLAPSED, true);
     };
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', () => { dragging = false; });
+    // The handle is a real button, so Enter/Space already fire a click.
+    handle.addEventListener('click', e => { if (movedPx >= 6) e.preventDefault(); });
   }
   addEventListener('keydown', e => {
     if (e.key === 'Escape' && document.body.classList.contains('game-playing')) quitGame();

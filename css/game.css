@@ -189,7 +189,23 @@
   }
   /* Collapsed sizes. The expanded ones are set inline by game.js so the
      sheet cannot be left half-open by a cascade surprise. */
-  .game-target-img{max-height:22vh;width:auto;margin:0 auto;transition:max-height .22s ease-out;}
+  /* Artwork on the left, everything else on the right: collapsed, the sheet
+     is short, and a player should not have to drag it open to see how many
+     pieces are left or what the clock says. */
+  .game-target{flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:12px;}
+  .game-sheet-handle{order:-1;flex-basis:100%;}
+  .game-target-head{display:none;}
+  .game-target-figure{flex:0 0 42%;max-width:42%;}
+  .game-target-img{max-height:none;width:100%;margin:0;transition:max-height .22s ease-out;}
+  .game-target-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;}
+  .game-target-info .game-stats{gap:8px;}
+  .game-target-info .game-stat-n{font-size:17px;}
+  /* Dragged open: back to one column so the artwork itself gets the room.
+     That is the only reason to open it now — the numbers are always visible. */
+  .game-target.expanded{flex-direction:column;align-items:stretch;}
+  .game-target.expanded .game-target-figure{flex:none;max-width:100%;width:auto;margin:0 auto;}
+  .game-target.expanded .game-target-img{max-height:52vh;width:auto;}
+  .game-target.expanded .game-target-info{width:100%;}
   /* Clear of the HUD bar above it (the two overlapped). */
   body.game-playing .game-zoom-toolbar{top:calc(62px + env(safe-area-inset-top,0px));}
   .game-card{grid-template-columns:72px 1fr;}
