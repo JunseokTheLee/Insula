@@ -966,16 +966,34 @@ html[lang="ko"] * {
    pages — which never load game.css. Both are hidden by common.js when the
    game site option is off. */
 .game-banner{
-  display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;
-  border:1px solid var(--border-strong);border-radius:var(--r-md);
-  background:var(--surface);text-decoration:none;color:var(--text);
-  transition:background .12s linear,border-color .12s linear;
+  display:flex;align-items:center;gap:14px;margin-top:16px;padding:16px 18px;
+  border:none;border-radius:var(--r-md);
+  background:var(--gradient-primary);color:#fff;text-decoration:none;
+  box-shadow:var(--shadow-md);
+  transition:transform .14s ease-out,box-shadow .14s ease-out,filter .14s linear;
 }
-.game-banner:hover{background:var(--primary-soft);border-color:var(--primary);}
-.game-banner-icon{font-size:22px;line-height:1;flex-shrink:0;}
-.game-banner-text{display:flex;flex-direction:column;min-width:0;flex:1;}
-.game-banner-text b{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:700;}
-.game-banner-text span{font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);}
-.game-banner-go{font-size:16px;color:var(--muted);flex-shrink:0;}
-/* Campaign header: matches the Share button beside it. */
+.game-banner:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(15,36,23,.22);filter:brightness(1.06);}
+.game-banner:active{transform:translateY(0);}
+/* The icon sits in its own translucent disc so it reads as a badge rather
+   than an emoji dropped into a sentence. */
+.game-banner-icon{
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,.18);font-size:20px;line-height:1;
+}
+.game-banner-text{display:flex;flex-direction:column;min-width:0;flex:1;gap:1px;}
+.game-banner-text b{font-family:'Pretendard',sans-serif;font-size:15px;font-weight:700;color:#fff;}
+.game-banner-text span{font-family:'Pretendard',sans-serif;font-size:12.5px;color:rgba(255,255,255,.82);}
+.game-banner-go{
+  font-size:15px;color:#fff;flex-shrink:0;
+  width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.18);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .14s ease-out;
+}
+.game-banner:hover .game-banner-go{transform:translateX(3px);}
+@media (prefers-reduced-motion: reduce){
+  .game-banner,.game-banner-go{transition:none;}
+  .game-banner:hover{transform:none;}
+  .game-banner:hover .game-banner-go{transform:none;}
+}
 .game-cta{text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
