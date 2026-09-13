@@ -101,6 +101,15 @@
         osc.frequency.setValueAtTime(784, t + 0.09);
         osc.frequency.setValueAtTime(1046, t + 0.18);
         peak = 0.26; stop = 0.36;
+      } else if (kind === 'tick') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(520, t);
+        peak = 0.16; stop = 0.1;
+      } else if (kind === 'go') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(880, t);
+        osc.frequency.setValueAtTime(1320, t + 0.08);
+        peak = 0.24; stop = 0.26;
       } else {
         // Wrong: a short falling buzz, well inside what a phone can produce.
         osc.type = 'square';
@@ -426,6 +435,34 @@
     return { x: Math.floor(x), y: Math.floor(y) };
   }
 
+  // ---------- sector hint ----------
+  // Splits the mosaic into a coarse grid and lights up one sector that still
+  // holds a piece. It narrows ~5,000 cells to a few hundred — enough to be
+  // findable, not enough to be given away. Everyone gets it on the same
+  // terms, so records stay comparable.
+  const HINT_COLS = 6, HINT_ROWS = 6;
+  let hintTimer = 0;
+  function showHint() {
+    if (!target || !startedAt) return;
+    const left = targetCells.filter(fc => !foundKeys.has(fc.x + ',' + fc.y));
+    if (!left.length) return;
+    const pick = left[(Math.random() * left.length) | 0];
+    const sw = project.width / HINT_COLS, sh = project.height / HINT_ROWS;
+    const sc = Math.min(HINT_COLS - 1, Math.floor(pick.x / sw));
+    const sr = Math.min(HINT_ROWS - 1, Math.floor(pick.y / sh));
+    const box = document.createElement('div');
+    box.className = 'game-hint-box';
+    box.style.left = (sc * sw * cellPx) + 'px';
+    box.style.top = (sr * sh * cellPx) + 'px';
+    box.style.width = (sw * cellPx) + 'px';
+    box.style.height = (sh * cellPx) + 'px';
+    $('gameMarks').appendChild(box);
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => box.remove(), 2600);
+    beep('tick');
+    toast(tr('gameHintShown'));
+  }
+
   function markCell(x, y, cls) {
     const el = document.createElement('div');
     el.className = 'game-mark ' + cls;
@@ -488,6 +525,7 @@
       const step = () => {
         if (i >= steps.length) { el.hidden = true; return resolve(); }
         el.textContent = steps[i];
+        beep(i === steps.length - 1 ? 'go' : 'tick');
         el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
         i++;
         setTimeout(step, 700);
@@ -816,6 +854,7 @@
   $('gameZoomIn').onclick = () => zoomBy(1.4);
   $('gameZoomOut').onclick = () => zoomBy(1 / 1.4);
   $('gameZoomReset').onclick = fitAll;
+  for (const b of root.querySelectorAll('[data-hint]')) b.onclick = showHint;
   for (const b of root.querySelectorAll('[data-mute]')) b.onclick = () => {
     const next = !muted;
     if (!next) unlockAudio();   // unmuting is a gesture: use it to open audio

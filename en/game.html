@@ -37,8 +37,8 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/en/","logo":"https://weavo.art/logo.png"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Find the Piece","item":"https://weavo.art/en/game"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/game.css?v=20260913-152648">
-<link rel="stylesheet" href="/css/base.css?v=20260913-152648">
+<link rel="stylesheet" href="/css/game.css?v=20260913-153531">
+<link rel="stylesheet" href="/css/base.css?v=20260913-153531">
 </head>
 <body>
 
@@ -88,6 +88,7 @@
           <button type="button" id="gameQuit" aria-label="Quit the game">&larr;</button>
           <span class="game-hud-stat"><span data-progress>0 / 0</span> · <span data-progress-pct>0%</span></span>
           <button type="button" class="game-timer" id="gameTimer" aria-label="Elapsed time (tap to hide)">00:00.00</button>
+          <button type="button" data-hint aria-label="Rough location hint">&#128269;</button>
           <button type="button" data-mute aria-label="Mute sound" aria-pressed="false">&#128266;</button>
         </div>
 
@@ -122,6 +123,7 @@
             <div class="game-progress"><i id="gameProgressBar"></i></div>
             <div class="game-stats">
               <button type="button" class="game-timer" id="gameTimerSide" aria-label="Elapsed time">00:00.00</button>
+              <button type="button" class="admin-btn" data-hint aria-label="Rough location hint">&#128269; Hint</button>
               <button type="button" class="admin-btn" data-mute aria-label="Mute sound" aria-pressed="false">&#128266;</button>
             </div>
             </div>
@@ -262,13 +264,13 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-152648"></script>
-<script src="/js/i18n/en.js?v=20260913-152648"></script>
-<script src="/js/color-engine.js?v=20260913-152648"></script>
-<script src="/js/common.js?v=20260913-152648"></script>
-<script src="/js/auth.js?v=20260913-152648"></script>
-<script src="/js/notifications.js?v=20260913-152648"></script>
-<script src="/js/push.js?v=20260913-152648"></script>
-<script src="/js/game.js?v=20260913-152648"></script>
+<script src="/js/supabase-client.js?v=20260913-153531"></script>
+<script src="/js/i18n/en.js?v=20260913-153531"></script>
+<script src="/js/color-engine.js?v=20260913-153531"></script>
+<script src="/js/common.js?v=20260913-153531"></script>
+<script src="/js/auth.js?v=20260913-153531"></script>
+<script src="/js/notifications.js?v=20260913-153531"></script>
+<script src="/js/push.js?v=20260913-153531"></script>
+<script src="/js/game.js?v=20260913-153531"></script>
 </body>
 </html>

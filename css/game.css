@@ -249,3 +249,17 @@
   .game-result-actions{flex-direction:column;gap:10px;}
   .game-page .game-result-actions button{width:100%;font-size:16px;min-height:56px;padding:16px 20px;}
 }
+
+/* ---------- sector hint ----------
+   A coarse box over the area that still holds a piece — never the cell
+   itself. It fades in, holds, and leaves on its own. */
+.game-hint-box{
+  position:absolute;box-sizing:border-box;pointer-events:none;
+  border:3px solid #E8B84B;
+  background:rgba(232,184,75,.16);
+  box-shadow:0 0 0 2px rgba(0,0,0,.35), 0 0 22px rgba(232,184,75,.55);
+  border-radius:2px;
+  animation:gameHint .4s ease-out;
+}
+@keyframes gameHint{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){ .game-hint-box{animation:none;} }

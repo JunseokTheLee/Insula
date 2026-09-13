@@ -966,7 +966,10 @@ html[lang="ko"] * {
    pages — which never load game.css. Both are hidden by common.js when the
    game site option is off. */
 .game-banner{
+  /* flex + fit-content: its own line (inline-flex would sit beside the
+     link above it), but only as wide as its contents. */
   display:flex;align-items:center;gap:10px;margin-top:12px;padding:9px 12px;
+  width:fit-content;max-width:100%;
   border:none;border-radius:var(--r-md);
   background:var(--gradient-primary);color:#fff;text-decoration:none;
   box-shadow:0 3px 12px rgba(15,36,23,.15);
@@ -997,3 +1000,7 @@ html[lang="ko"] * {
   .game-banner:hover .game-banner-go{transform:none;}
 }
 .game-cta{text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+@media (max-width:640px){
+  /* Phone: the column is already narrow, so let it fill. */
+  .game-banner{width:auto;display:flex;}
+}
