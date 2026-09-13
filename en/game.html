@@ -37,8 +37,8 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/en/","logo":"https://weavo.art/logo.png"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Find the Piece","item":"https://weavo.art/en/game"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/game.css?v=20260913-134002">
-<link rel="stylesheet" href="/css/base.css?v=20260913-134002">
+<link rel="stylesheet" href="/css/game.css?v=20260913-142420">
+<link rel="stylesheet" href="/css/base.css?v=20260913-142420">
 </head>
 <body>
 
@@ -51,7 +51,8 @@
       <a href="/en/artworks" class="nav-link">Explore</a>
       <a href="/en/artists" class="nav-link">Artists</a>
       <a href="/en/exhibitions" class="nav-link">Exhibitions</a>
-      <a href="/en/game" class="nav-link active">About</a>
+      <a href="/en/game" class="nav-link active" data-game-link>Game</a>
+      <a href="/en/about" class="nav-link">About</a>
     </nav>
     <div id="identity">
         <div class="lang-toggle" id="langToggle">
@@ -69,16 +70,9 @@
 
     <div class="game-page" id="gamePage">
 
-      <div data-screen="intro">
-        <h1>Find the Piece</h1>
-        <p class="game-lead">Choose an artwork, then find the pieces of it scattered through the mosaic. Finish and your time is recorded — the three fastest players are ranked on every artwork.</p>
-        <p class="game-campaign">Current campaign: <b id="gameCampaignTitle"></b></p>
-        <button type="button" class="btn-primary" id="gameStartBtn">Start playing</button>
-      </div>
-
       <div data-screen="list" hidden>
         <h1>Which artwork will you hunt?</h1>
-        <p class="game-campaign">Current campaign: <b id="gameCampaignTitle2"></b></p>
+        <p class="game-campaign">Current campaign: <b id="gameCampaignTitle"></b></p>
         <div class="game-toolbar">
           <label class="sr-only" for="gameSearch">Search artworks or artists</label>
           <input type="search" id="gameSearch" placeholder="Artwork title or artist name" autocomplete="off">
@@ -264,13 +258,13 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-134002"></script>
-<script src="/js/i18n/en.js?v=20260913-134002"></script>
-<script src="/js/color-engine.js?v=20260913-134002"></script>
-<script src="/js/common.js?v=20260913-134002"></script>
-<script src="/js/auth.js?v=20260913-134002"></script>
-<script src="/js/notifications.js?v=20260913-134002"></script>
-<script src="/js/push.js?v=20260913-134002"></script>
-<script src="/js/game.js?v=20260913-134002"></script>
+<script src="/js/supabase-client.js?v=20260913-142420"></script>
+<script src="/js/i18n/en.js?v=20260913-142420"></script>
+<script src="/js/color-engine.js?v=20260913-142420"></script>
+<script src="/js/common.js?v=20260913-142420"></script>
+<script src="/js/auth.js?v=20260913-142420"></script>
+<script src="/js/notifications.js?v=20260913-142420"></script>
+<script src="/js/push.js?v=20260913-142420"></script>
+<script src="/js/game.js?v=20260913-142420"></script>
 </body>
 </html>

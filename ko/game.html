@@ -67,8 +67,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/game.css?v=20260913-134002">
-<link rel="stylesheet" href="/css/base.css?v=20260913-134002">
+<link rel="stylesheet" href="/css/game.css?v=20260913-142420">
+<link rel="stylesheet" href="/css/base.css?v=20260913-142420">
 </head>
 
 <body>
@@ -83,7 +83,8 @@
       <a href="/ko/artworks" class="nav-link">작품 탐색</a>
       <a href="/ko/artists" class="nav-link">아티스트</a>
       <a href="/ko/exhibitions" class="nav-link">전시</a>
-      <a href="/ko/game" class="nav-link active">소개</a>
+      <a href="/ko/game" class="nav-link active" data-game-link>게임</a>
+      <a href="/ko/about" class="nav-link">소개</a>
     </nav>
 
     <div id="identity">
@@ -103,16 +104,9 @@
 
     <div class="game-page" id="gamePage">
 
-      <div data-screen="intro">
-        <h1>조각 찾기 게임</h1>
-        <p class="game-lead">작품 하나를 고른 뒤, 거대한 모자이크 속에 흩어진 그 작품의 조각을 찾아내세요. 조각을 모두 찾으면 기록이 남고, 작품마다 가장 빠른 세 명이 순위에 오릅니다.</p>
-        <p class="game-campaign">현재 캠페인: <b id="gameCampaignTitle"></b></p>
-        <button type="button" class="btn-primary" id="gameStartBtn">게임 시작하기</button>
-      </div>
-
       <div data-screen="list" hidden>
         <h1>어떤 작품을 찾을까요?</h1>
-        <p class="game-campaign">현재 캠페인: <b id="gameCampaignTitle2"></b></p>
+        <p class="game-campaign">현재 캠페인: <b id="gameCampaignTitle"></b></p>
         <div class="game-toolbar">
           <label class="sr-only" for="gameSearch">작품 또는 작가 검색</label>
           <input type="search" id="gameSearch" placeholder="작품 제목 또는 작가 이름" autocomplete="off">
@@ -399,14 +393,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-134002"></script>
-<script src="/js/i18n/ko.js?v=20260913-134002"></script>
-<script src="/js/color-engine.js?v=20260913-134002"></script>
-<script src="/js/common.js?v=20260913-134002"></script>
-<script src="/js/auth.js?v=20260913-134002"></script>
-<script src="/js/notifications.js?v=20260913-134002"></script>
-<script src="/js/push.js?v=20260913-134002"></script>
-<script src="/js/game.js?v=20260913-134002"></script>
+<script src="/js/supabase-client.js?v=20260913-142420"></script>
+<script src="/js/i18n/ko.js?v=20260913-142420"></script>
+<script src="/js/color-engine.js?v=20260913-142420"></script>
+<script src="/js/common.js?v=20260913-142420"></script>
+<script src="/js/auth.js?v=20260913-142420"></script>
+<script src="/js/notifications.js?v=20260913-142420"></script>
+<script src="/js/push.js?v=20260913-142420"></script>
+<script src="/js/game.js?v=20260913-142420"></script>
 
 </body>
 </html>

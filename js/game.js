@@ -716,11 +716,12 @@
 
     wireStage();
     renderList(true);
-    show('intro');
+    // Straight into the artwork list — the page itself is the introduction.
+    show('list');
+    restoreListPosition();
   }
 
   // ---------- controls ----------
-  $('gameStartBtn').onclick = () => { show('list'); renderList(true); restoreListPosition(); };
   $('gameListMore').onclick = () => renderList(false);
   $('gameSearch').oninput = e => { searchTerm = e.target.value.trim(); renderList(true); };
   $('gameQuit').onclick = quitGame;

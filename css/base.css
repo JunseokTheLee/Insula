@@ -960,3 +960,22 @@ html[lang="ko"] * {
 .hiw-steps-compact h4{font-family:'Pretendard',sans-serif;font-weight:700;font-size:14.5px;margin:0 0 4px;color:var(--primary);}
 .hiw-steps-compact p{font-family:'Pretendard',sans-serif;font-size:13px;line-height:1.55;color:var(--muted);margin:0;}
 @media (max-width:640px){ .feature-col{padding:22px 18px;} }
+
+/* ---------- entry banners (home hero, campaign header) ----------
+   Lives here, not in game.css, because these appear on the HOME and CAMPAIGN
+   pages — which never load game.css. Both are hidden by common.js when the
+   game site option is off. */
+.game-banner{
+  display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;
+  border:1px solid var(--border-strong);border-radius:var(--r-md);
+  background:var(--surface);text-decoration:none;color:var(--text);
+  transition:background .12s linear,border-color .12s linear;
+}
+.game-banner:hover{background:var(--primary-soft);border-color:var(--primary);}
+.game-banner-icon{font-size:22px;line-height:1;flex-shrink:0;}
+.game-banner-text{display:flex;flex-direction:column;min-width:0;flex:1;}
+.game-banner-text b{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:700;}
+.game-banner-text span{font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);}
+.game-banner-go{font-size:16px;color:var(--muted);flex-shrink:0;}
+/* Campaign header: matches the Share button beside it. */
+.game-cta{text-decoration:none;display:inline-flex;align-items:center;gap:6px;}

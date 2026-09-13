@@ -65,6 +65,11 @@ async function openProject(id) {
     refPreview.style.display = on ? '' : 'none';
     if (on) renderReferencePreview(project);
   });
+  // The game always plays the live campaign, so only offer it from one —
+  // on an archived campaign the button would promise the wrong mosaic.
+  const gameBtn = document.getElementById('projectGameBtn');
+  if (gameBtn && !project.is_archived) gameBtn.style.display = '';
+
   setProjectViewMode('weavo');
   if (!project.is_archived) await sweepStaleClaims(project.id);
   await renderWeavoGrid(project);

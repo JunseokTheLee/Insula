@@ -642,6 +642,19 @@ function getSiteSettings() {
   return siteSettingsPromise;
 }
 
+// ---------- game entry points ----------
+// The nav link and the home/campaign banners are static markup on every
+// page, so they would still be there after an admin turns the game off.
+// One settings read (already cached per page) hides them all. Hiding is the
+// right default: a link that leads to "not available" is worse than no link.
+(function hideGameLinksWhenOff() {
+  const links = document.querySelectorAll('[data-game-link]');
+  if (!links.length) return;
+  getSiteSettings().then(s => {
+    if (s.gameEnabled === false) for (const el of links) el.style.display = 'none';
+  }).catch(() => {});
+})();
+
 function routeParam(prefix, legacyQueryKey) {
   const parts = location.pathname.split('/').filter(Boolean);
   const idx = parts.indexOf(prefix);
