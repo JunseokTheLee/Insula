@@ -417,9 +417,9 @@ begin
   end if;
 
   -- Seconds added per hint, from the admin options (CLAUDE.md 16).
-  select coalesce((settings->>'gameHintPenaltySec')::integer, 10) into v_penalty
+  select coalesce((settings->>'gameHintPenaltySec')::integer, 30) into v_penalty
   from public.site_settings where id = true;
-  v_penalty := coalesce(v_penalty, 10);
+  v_penalty := coalesce(v_penalty, 30);
 
   if v_s.finished_at is not null then
     v_elapsed := v_s.elapsed_ms;              -- already closed: same answer again

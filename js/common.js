@@ -583,7 +583,7 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // ~5,000 cells to a few hundred, so it has to cost roughly what finding
   // one piece unaided costs — otherwise taking it every time is simply the
   // correct strategy and the leaderboard stops measuring anything.
-  gameHintPenaltySec: 10,
+  gameHintPenaltySec: 30,
   // How fast the artist icons drift around the network page, as a multiple
   // of the original speed (one turn every 5 minutes). 3 = a turn every 100
   // seconds, which is what the page ships with.

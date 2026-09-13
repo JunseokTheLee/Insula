@@ -523,9 +523,12 @@
     box.style.top = (oy * cellPx) + 'px';
     box.style.width = (sw * cellPx) + 'px';
     box.style.height = (sh * cellPx) + 'px';
+    // Clear any box still on screen first: clearTimeout alone cancelled the
+    // removal but left the element, so repeated hints piled up.
+    for (const old of $('gameMarks').querySelectorAll('.game-hint-box')) old.remove();
     $('gameMarks').appendChild(box);
     clearTimeout(hintTimer);
-    hintTimer = setTimeout(() => box.remove(), 4200);
+    hintTimer = setTimeout(() => box.remove(), 3500);
 
     // Move the view onto that sector and zoom so it fills the stage. Being
     // told where to look is no help if you then have to find it by hand.
@@ -539,6 +542,7 @@
     beep('tick');
     hintCount++;
     const cost = Math.max(0, Number(settings.gameHintPenaltySec) || 0);
+    paintTimers();   // the clock jumps by the penalty right away
     toast(cost ? tr('gameHintCost', { n: hintCount, sec: cost }) : tr('gameHintShown'));
     // The count that decides the penalty is the server's, not this one —
     // a number the browser reports could simply stay at zero.
@@ -620,15 +624,28 @@
     });
   }
 
+  // The HUD clock and the panel clock are two different elements — only the
+  // HUD one was being written, so on desktop the timer sat at 00:00.00 for
+  // the whole game. Both are updated, and both show the penalty already
+  // added: the number on screen is the number that will be recorded.
+  function penaltyMs() {
+    return hintCount * (Math.max(0, Number(settings.gameHintPenaltySec) || 0)) * 1000;
+  }
+  function paintTimers() {
+    const text = fmtTime(performance.now() - startedAt + penaltyMs());
+    for (const el of root.querySelectorAll('.game-timer')) {
+      if (el.dataset.hidden !== '1') el.textContent = text;
+    }
+  }
+  // setInterval, not requestAnimationFrame: rAF stops in a hidden tab, so the
+  // clock would freeze mid-game if someone switched away and came back to a
+  // stale number. 50ms is smooth enough for a 1/100s readout and a third of
+  // the work of 60fps. Elapsed time itself always comes from performance.now(),
+  // so the displayed value is right no matter how often this runs.
   function tick() {
-    cancelAnimationFrame(rafId);
-    const run = () => {
-      const ms = performance.now() - startedAt;
-      const el = $('gameTimer');
-      if (el && !el.dataset.hidden) el.textContent = fmtTime(ms);
-      rafId = requestAnimationFrame(run);
-    };
-    run();
+    clearInterval(rafId);
+    paintTimers();
+    rafId = setInterval(() => { if (startedAt) paintTimers(); }, 50);
   }
 
   function renderTargetPanel() {
@@ -701,7 +718,7 @@
 
   // ---------- finish ----------
   async function finish() {
-    cancelAnimationFrame(rafId);
+    clearInterval(rafId);
     const localMs = performance.now() - startedAt;
     beep('done');
     show('result');
@@ -800,7 +817,7 @@
     endPlay();
   }
   function endPlay() {
-    cancelAnimationFrame(rafId);
+    clearInterval(rafId);
     startedAt = 0;
     sessionId = null;
     show('list');
@@ -949,11 +966,13 @@
     if (!next) unlockAudio();   // unmuting is a gesture: use it to open audio
     setMuted(next);
   };
-  $('gameTimer').onclick = function () {
-    const on = this.dataset.hidden === '1';
-    this.dataset.hidden = on ? '' : '1';
-    this.textContent = on ? fmtTime(performance.now() - startedAt) : '––:––';
-  };
+  for (const el of root.querySelectorAll('.game-timer')) {
+    el.onclick = function () {
+      const showing = this.dataset.hidden !== '1';
+      this.dataset.hidden = showing ? '1' : '';
+      if (showing) this.textContent = '––:––'; else paintTimers();
+    };
+  }
   // The bottom sheet on phones: drag the handle, or tap it to toggle.
   // ---------- bottom sheet: drag it, the way a sheet is expected to move ----------
   // Sizes are set inline rather than by a class: the collapsed values live in
