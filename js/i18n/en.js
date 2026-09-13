@@ -191,6 +191,8 @@ const T = {
   adminBulkTooMany: 'At most {max} can be deleted at a time — narrow the selection',
   gameDurSec: '{s}s',
   gameDurMin: '{m}m {s}s',
+  gameHintCost: '{n} hints · +{sec}s on your time',
+  gameHintPenalty: '{n} hints (+{sec}s)',
   gameHintShown: 'A piece you have not found yet is in this area',
   gamePlay: 'Play',
   gameStart: 'Start',

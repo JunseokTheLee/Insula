@@ -336,6 +336,7 @@
     ctx = canvas.getContext('2d');
 
     detailDone.clear();
+    miniPainted = false;
     const paint = typeof openCellPainter === 'function'
       ? openCellPainter(cells, settings)
       : (r, g, b) => `rgb(${r},${g},${b})`;
@@ -401,8 +402,45 @@
       try {
         ctx.drawImage(img, sx, sy, sw, sh, fc.x * cellPx, fc.y * cellPx, cellPx, cellPx);
         detailDone.add(key);
+        miniPainted = false;   // canvas changed; the minimap is stale
       } catch (e) { detailDone.add(key); }   // broken image: keep the micro thumb
     }
+  }
+
+  // ---------- minimap ----------
+  // Zoomed in, the mosaic gives no sense of place. The minimap is the whole
+  // canvas shrunk down with a box showing what is on screen; it appears only
+  // when something is actually off screen, so the full view stays uncluttered.
+  let miniPainted = false;
+  function paintMinimap() {
+    const mm = $('gameMinimapCanvas');
+    if (!mm || !canvas.width) return;
+    const w = 92;
+    mm.width = w;
+    mm.height = Math.max(1, Math.round(w * (canvas.height / canvas.width)));
+    const mctx = mm.getContext('2d');
+    mctx.clearRect(0, 0, mm.width, mm.height);
+    mctx.drawImage(canvas, 0, 0, mm.width, mm.height);
+    miniPainted = true;
+  }
+  function updateMinimap() {
+    const box = $('gameMinimap');
+    const view = $('gameMinimapView');
+    if (!box || !view || !stage || !canvas.width) return;
+    const r = stage.getBoundingClientRect();
+    // Visible slice of the canvas, as a 0..1 fraction.
+    const vw = (r.width / scale) / canvas.width;
+    const vh = (r.height / scale) / canvas.height;
+    if (vw >= 1 && vh >= 1) { box.hidden = true; return; }   // all of it is on screen
+    if (!miniPainted) paintMinimap();
+    box.hidden = false;
+    const vx = (-panX / scale) / canvas.width;
+    const vy = (-panY / scale) / canvas.height;
+    const pct = n => (Math.max(0, Math.min(1, n)) * 100) + '%';
+    view.style.left = pct(vx);
+    view.style.top = pct(vy);
+    view.style.width = pct(Math.min(vw, 1 - Math.max(0, vx)));
+    view.style.height = pct(Math.min(vh, 1 - Math.max(0, vy)));
   }
 
   function applyTransform() {
@@ -410,6 +448,7 @@
     const layer = $('gameMarks');
     layer.style.transform = canvas.style.transform;
     $('gameZoomLevel').textContent = Math.round(scale * 100) + '%';
+    updateMinimap();
     scheduleDetail();
   }
   function fitAll() {
@@ -449,6 +488,7 @@
   // terms, so records stay comparable.
   const HINT_COLS = 6, HINT_ROWS = 6;
   let hintTimer = 0;
+  let hintCount = 0;
   function showHint() {
     if (!target || !startedAt) return;
     const left = targetCells.filter(fc => !foundKeys.has(fc.x + ',' + fc.y));
@@ -465,9 +505,27 @@
     box.style.height = (sh * cellPx) + 'px';
     $('gameMarks').appendChild(box);
     clearTimeout(hintTimer);
-    hintTimer = setTimeout(() => box.remove(), 2600);
+    hintTimer = setTimeout(() => box.remove(), 4200);
+
+    // Move the view onto that sector and zoom so it fills the stage. Being
+    // told where to look is no help if you then have to find it by hand.
+    const r = stage.getBoundingClientRect();
+    const boxW = sw * cellPx, boxH = sh * cellPx;
+    const fit = Math.min(r.width / boxW, r.height / boxH) * 0.88;
+    scale = Math.max(0.2, Math.min(40, fit));
+    panX = r.width / 2 - (sc * sw + sw / 2) * cellPx * scale;
+    panY = r.height / 2 - (sr * sh + sh / 2) * cellPx * scale;
+    applyTransform();
     beep('tick');
-    toast(tr('gameHintShown'));
+    hintCount++;
+    const cost = Math.max(0, Number(settings.gameHintPenaltySec) || 0);
+    toast(cost ? tr('gameHintCost', { n: hintCount, sec: cost }) : tr('gameHintShown'));
+    // The count that decides the penalty is the server's, not this one —
+    // a number the browser reports could simply stay at zero.
+    if (sessionId) {
+      sb.rpc('use_hint', { p_session_id: sessionId })
+        .then(({ error }) => { if (error) console.error('game: use_hint error:', error); });
+    }
   }
 
   function markCell(x, y, cls) {
@@ -486,6 +544,7 @@
     target = a;
     foundKeys = new Set();
     sessionId = null;
+    hintCount = 0;
     targetCells = filled.filter(f => artworkKeyOf(f.sub) === a.id);
 
     show('play');
@@ -662,6 +721,9 @@
         confetti();
       } else if (data.personal_best || data.first_record) {
         confetti();
+      }
+      if (data.hints > 0 && data.penalty_ms > 0) {
+        bits.push(tr('gameHintPenalty', { n: data.hints, sec: Math.round(data.penalty_ms / 1000) }));
       }
       if (rankingOn) bits.push(tr('gameRankOf', { rank: data.rank, players: data.players }));
       note.textContent = bits.join(' · ');

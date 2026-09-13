@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-154401">
-<link rel="stylesheet" href="/css/admin.css?v=20260913-154401">
+<link rel="stylesheet" href="/css/base.css?v=20260913-154713">
+<link rel="stylesheet" href="/css/admin.css?v=20260913-154713">
 </head>
 <body>
 
@@ -298,6 +298,10 @@
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameAnonymousPlayEnabled" disabled> <strong>Allow anonymous play</strong> — when off, signing in is required to start. Anonymous runs are never recorded either way.</label>
               </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminGameHintPenalty">Hint <strong>penalty</strong>: seconds added to the recorded time per sector hint. 0 makes hints free. <em>(default: 10s)</em></label>
+                <div class="admin-range"><input id="adminGameHintPenalty" type="range" min="0" max="60" step="1" data-setting="gameHintPenaltySec" disabled><output for="adminGameHintPenalty" data-setting-output="gameHintPenaltySec">10</output></div>
+              </div>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameSoundDefault" disabled> <strong>Sound on by default</strong> — players can mute it at any time.</label>
               </div>
@@ -527,14 +531,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-154401"></script>
-<script src="/js/i18n/en.js?v=20260913-154401"></script>
-<script src="/js/common.js?v=20260913-154401"></script>
-<script src="/js/auth.js?v=20260913-154401"></script>
-<script src="/js/notifications.js?v=20260913-154401"></script>
-<script src="/js/push.js?v=20260913-154401"></script>
-<script src="/js/color-engine.js?v=20260913-154401"></script>
-<script src="/js/matching.js?v=20260913-154401"></script>
-<script src="/js/admin.js?v=20260913-154401"></script>
+<script src="/js/supabase-client.js?v=20260913-154713"></script>
+<script src="/js/i18n/en.js?v=20260913-154713"></script>
+<script src="/js/common.js?v=20260913-154713"></script>
+<script src="/js/auth.js?v=20260913-154713"></script>
+<script src="/js/notifications.js?v=20260913-154713"></script>
+<script src="/js/push.js?v=20260913-154713"></script>
+<script src="/js/color-engine.js?v=20260913-154713"></script>
+<script src="/js/matching.js?v=20260913-154713"></script>
+<script src="/js/admin.js?v=20260913-154713"></script>
 </body>
 </html>

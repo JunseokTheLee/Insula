@@ -274,3 +274,22 @@
 }
 @keyframes gameHint{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:scale(1)}}
 @media (prefers-reduced-motion: reduce){ .game-hint-box{animation:none;} }
+
+/* ---------- minimap ----------
+   Only shown while something is off screen (game.js updateMinimap). The box
+   is where you are; the shrunk canvas is the whole mosaic. */
+.game-minimap{
+  position:absolute;right:12px;bottom:12px;z-index:5;
+  border:1px solid rgba(247,247,245,.35);border-radius:4px;overflow:hidden;
+  background:rgba(15,20,17,.6);box-shadow:0 2px 10px rgba(0,0,0,.4);
+  line-height:0;pointer-events:none;
+}
+.game-minimap canvas{display:block;}
+.gm-view{
+  position:absolute;box-sizing:border-box;
+  border:2px solid #9EFFBF;background:rgba(158,255,191,.18);
+  min-width:3px;min-height:3px;
+}
+@media (max-width:640px){
+  .game-minimap{bottom:auto;top:calc(112px + env(safe-area-inset-top,0px));right:10px;}
+}

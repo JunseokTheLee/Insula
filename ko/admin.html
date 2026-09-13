@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-154401">
-<link rel="stylesheet" href="/css/admin.css?v=20260913-154401">
+<link rel="stylesheet" href="/css/base.css?v=20260913-154713">
+<link rel="stylesheet" href="/css/admin.css?v=20260913-154713">
 </head>
 
 <body>
@@ -302,6 +302,10 @@
               </div>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameAnonymousPlayEnabled" disabled> <strong>비로그인 게임 허용</strong> — 끄면 로그인해야 시작할 수 있습니다. 비로그인 기록은 어느 경우에도 저장되지 않습니다.</label>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminGameHintPenalty">힌트 <strong>패널티</strong>: 구역 힌트 한 번마다 기록에 더해지는 초. 0이면 공짜입니다. <em>(기본: 10초)</em></label>
+                <div class="admin-range"><input id="adminGameHintPenalty" type="range" min="0" max="60" step="1" data-setting="gameHintPenaltySec" disabled><output for="adminGameHintPenalty" data-setting-output="gameHintPenaltySec">10</output></div>
               </div>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameSoundDefault" disabled> <strong>효과음 기본 켜기</strong> — 사용자가 게임 화면에서 언제든 끌 수 있습니다.</label>
@@ -633,15 +637,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-154401"></script>
-<script src="/js/i18n/ko.js?v=20260913-154401"></script>
-<script src="/js/common.js?v=20260913-154401"></script>
-<script src="/js/auth.js?v=20260913-154401"></script>
-<script src="/js/notifications.js?v=20260913-154401"></script>
-<script src="/js/push.js?v=20260913-154401"></script>
-<script src="/js/color-engine.js?v=20260913-154401"></script>
-<script src="/js/matching.js?v=20260913-154401"></script>
-<script src="/js/admin.js?v=20260913-154401"></script>
+<script src="/js/supabase-client.js?v=20260913-154713"></script>
+<script src="/js/i18n/ko.js?v=20260913-154713"></script>
+<script src="/js/common.js?v=20260913-154713"></script>
+<script src="/js/auth.js?v=20260913-154713"></script>
+<script src="/js/notifications.js?v=20260913-154713"></script>
+<script src="/js/push.js?v=20260913-154713"></script>
+<script src="/js/color-engine.js?v=20260913-154713"></script>
+<script src="/js/matching.js?v=20260913-154713"></script>
+<script src="/js/admin.js?v=20260913-154713"></script>
 
 </body>
 </html>

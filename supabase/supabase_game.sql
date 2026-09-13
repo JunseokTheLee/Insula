@@ -343,3 +343,138 @@ $fn$;
 -- Public: a profile page is public, so its medal row is too.
 revoke execute on function public.game_medal_counts(uuid) from public;
 grant execute on function public.game_medal_counts(uuid) to anon, authenticated;
+
+-- ── 8. hint penalty ──────────────────────────────────────────────────────
+-- Added 2026-09-13. Re-running this file is safe.
+--
+-- A sector hint narrows ~5,000 cells to a few hundred, which is close to
+-- being handed the piece. Without a cost the best strategy is to spam it and
+-- every record converges on "who tapped hint fastest". The penalty is added
+-- by the SERVER at finish time for the same reason the clock lives here: a
+-- count the browser reports could simply be left at zero.
+alter table public.game_sessions
+  add column if not exists hint_count integer not null default 0;
+
+-- One call per hint actually taken. Returns the running count so the screen
+-- can show what it will cost.
+create or replace function public.use_hint(p_session_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_n integer;
+begin
+  if auth.uid() is null then
+    raise exception 'sign-in required';
+  end if;
+  update public.game_sessions
+     set hint_count = hint_count + 1
+   where id = p_session_id and user_id = auth.uid() and finished_at is null
+  returning hint_count into v_n;
+  if v_n is null then
+    raise exception 'session not found';
+  end if;
+  return v_n;
+end;
+$fn$;
+
+revoke execute on function public.use_hint(uuid) from public, anon;
+grant execute on function public.use_hint(uuid) to authenticated;
+
+-- finish_game, with the penalty folded in. Replaces section 6 above.
+-- The per-piece time floor is checked against the RAW time (what the player
+-- actually took); the penalty is then added to produce the recorded time.
+-- Checking the floor after adding it would let a scripted run buy its way
+-- past the check by taking hints.
+create or replace function public.finish_game(p_session_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_s        public.game_sessions;
+  v_raw      integer;
+  v_elapsed  integer;
+  v_floor    integer;
+  v_penalty  integer;
+  v_prev     integer;
+  v_best     integer;
+  v_rank     integer;
+  v_total    integer;
+  v_pb       boolean := false;
+begin
+  if auth.uid() is null then
+    raise exception 'sign-in required';
+  end if;
+
+  select * into v_s from public.game_sessions
+  where id = p_session_id and user_id = auth.uid();
+  if v_s.id is null then
+    raise exception 'session not found';
+  end if;
+
+  -- Seconds added per hint, from the admin options (CLAUDE.md 16).
+  select coalesce((settings->>'gameHintPenaltySec')::integer, 10) into v_penalty
+  from public.site_settings where id = true;
+  v_penalty := coalesce(v_penalty, 10);
+
+  if v_s.finished_at is not null then
+    v_elapsed := v_s.elapsed_ms;              -- already closed: same answer again
+  else
+    v_raw := greatest(1, (extract(epoch from (now() - v_s.started_at)) * 1000)::integer);
+
+    v_floor := v_s.target_pieces * 250;
+    if v_raw < v_floor then
+      raise exception 'implausible time';
+    end if;
+
+    v_elapsed := v_raw + (v_s.hint_count * v_penalty * 1000);
+
+    update public.game_sessions
+       set finished_at = now(), elapsed_ms = v_elapsed
+     where id = v_s.id;
+  end if;
+
+  select elapsed_ms into v_prev from public.game_best_records
+  where project_id = v_s.project_id and artwork_id = v_s.artwork_id and user_id = auth.uid();
+
+  if v_prev is null or v_elapsed < v_prev then
+    insert into public.game_best_records (project_id, artwork_id, user_id, elapsed_ms, completed_at)
+    values (v_s.project_id, v_s.artwork_id, auth.uid(), v_elapsed, now())
+    on conflict (project_id, artwork_id, user_id) do update
+      set elapsed_ms = excluded.elapsed_ms, completed_at = excluded.completed_at;
+    v_pb := v_prev is not null;
+  end if;
+
+  select elapsed_ms into v_best from public.game_best_records
+  where project_id = v_s.project_id and artwork_id = v_s.artwork_id and user_id = auth.uid();
+
+  select count(*)::integer + 1 into v_rank
+  from public.game_best_records r
+  where r.project_id = v_s.project_id and r.artwork_id = v_s.artwork_id
+    and (r.elapsed_ms, r.completed_at, r.user_id) <
+        (select b.elapsed_ms, b.completed_at, b.user_id from public.game_best_records b
+         where b.project_id = v_s.project_id and b.artwork_id = v_s.artwork_id and b.user_id = auth.uid());
+
+  select count(*)::integer into v_total
+  from public.game_best_records
+  where project_id = v_s.project_id and artwork_id = v_s.artwork_id;
+
+  return jsonb_build_object(
+    'elapsed_ms',    v_elapsed,
+    'hints',         v_s.hint_count,
+    'penalty_ms',    v_s.hint_count * v_penalty * 1000,
+    'best_ms',       v_best,
+    'personal_best', v_pb,
+    'rank',          v_rank,
+    'players',       v_total,
+    'first_record',  v_total = 1 and v_rank = 1
+  );
+end;
+$fn$;
+
+revoke execute on function public.finish_game(uuid) from public, anon;
+grant execute on function public.finish_game(uuid) to authenticated;
