@@ -180,3 +180,58 @@
 .pm-item{display:inline-flex;align-items:center;gap:4px;font-family:'Pretendard',sans-serif;font-size:13px;color:var(--muted);}
 .pm-ico{font-size:15px;line-height:1;}
 .pm-item strong{font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+
+/* ---------- medal-winning artworks (2026-09-13) ---------- */
+/* A horizontal strip rather than a grid: this is a side note on a profile,
+   and someone with 40 medals should not push the artist's own work off the
+   screen. Only the strip scrolls sideways — the page never does. */
+.pmw-track{
+  display:flex;gap:14px;overflow-x:auto;overflow-y:hidden;padding-bottom:10px;
+  scroll-snap-type:x proximity;overscroll-behavior-x:contain;
+}
+.pmw-track::-webkit-scrollbar{height:8px;}
+.pmw-track::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:var(--r-full);}
+.pmw-track::-webkit-scrollbar-track{background:transparent;}
+.pmw-card{flex:0 0 auto;width:150px;scroll-snap-align:start;display:flex;flex-direction:column;}
+.pmw-thumb-link{display:block;position:relative;line-height:0;border-radius:var(--r-sm);}
+.pmw-thumb-link:focus-visible{outline:2px solid var(--primary);outline-offset:2px;}
+.pmw-thumb{
+  display:block;width:150px;height:150px;object-fit:cover;border-radius:var(--r-sm);
+  background:var(--gray-100);box-shadow:var(--shadow-sm);cursor:zoom-in;
+  transition:transform .12s ease-out,box-shadow .12s ease-out;
+}
+.pmw-thumb-link:hover .pmw-thumb{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+/* The medal sits on the picture, so it needs its own dark disc — a bare
+   emoji vanishes on a bright artwork (same reason the lightbox zoom bar
+   got a pill). */
+.pmw-medal{
+  position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;
+  background:rgba(15,20,17,.72);
+}
+.pmw-title{
+  font-family:'Pretendard',sans-serif;font-size:12.5px;line-height:1.35;color:var(--text);
+  font-weight:600;margin-top:8px;
+  /* Two lines reserved whether or not the title needs them: without it a
+     one-line title and a two-line title put their start buttons at
+     different heights, and the row of buttons goes ragged. */
+  min-height:34px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all;
+}
+.pmw-by{
+  margin-bottom:8px;
+  font-family:'Pretendard',sans-serif;font-size:11.5px;color:var(--muted);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+/* Sized here because this page loads neither admin.css nor the modal
+   action styles that give .btn-primary its padding elsewhere. */
+.pmw-play{
+  display:block;margin-top:auto;padding:8px 10px;border-radius:var(--r-full);
+  font-family:'Pretendard',sans-serif;font-size:12.5px;font-weight:700;text-align:center;
+  background:var(--gradient-primary);color:#fff;text-decoration:none;
+}
+.pmw-play:hover{opacity:.92;}
+@media (max-width:640px){
+  .pmw-card{width:132px;}
+  .pmw-thumb{width:132px;height:132px;}
+}

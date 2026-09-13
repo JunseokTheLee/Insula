@@ -193,6 +193,7 @@ const T = {
   gameDurMin: '{m}분 {s}초',
   gameHintCost: '힌트 {n}회 · 기록에 +{sec}초',
   gameHintPenalty: '힌트 {n}회 (+{sec}초)',
+  gameArtworkNotHere: '그 작품은 지금 캠페인에 없습니다 — 다른 작품을 골라주세요',
   gameHintShown: '이 구역 안에 아직 찾지 않은 조각이 있어요',
   gamePlay: '게임 시작',
   gameStart: '게임 시작',

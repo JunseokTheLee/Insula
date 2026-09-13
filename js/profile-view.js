@@ -31,6 +31,76 @@ async function renderProfileMedals(userId) {
   } catch (e) { console.error('load game medals threw:', e); }
 }
 
+// The artworks behind those medals. A count is a score; this is the part
+// someone actually wants to look at — and the one place where wanting to
+// play a particular artwork is most likely, so each card carries its own
+// start button straight into the game.
+//
+// Additive like the counts above: no SQL applied, no RPC, or no medals
+// leaves the section hidden and the rest of the profile untouched.
+async function renderProfileMedalWorks(userId) {
+  const box = document.getElementById('profileMedalWorks');
+  const track = document.getElementById('profileMedalWorksTrack');
+  if (!box || !track || !userId) return;
+  box.style.display = 'none';
+  let rows = null;
+  try {
+    const { data, error } = await sb.rpc('game_medal_artworks', { p_user_id: userId, p_limit: 24 });
+    if (error) {
+      if (error.code !== 'PGRST202' && error.code !== '42883') console.error('load medal artworks error:', error);
+      return;
+    }
+    rows = data;
+  } catch (e) { console.error('load medal artworks threw:', e); return; }
+  if (!Array.isArray(rows) || !rows.length) return;
+
+  track.innerHTML = '';
+  for (const w of rows) {
+    const name = w.author_name || tr('anonymous');
+    const card = document.createElement('div');
+    card.className = 'pmw-card';
+
+    // The thumbnail is a real link to the artwork page; a plain left click
+    // opens the lightbox instead (same as every other artwork grid).
+    const link = document.createElement('a');
+    link.className = 'pmw-thumb-link';
+    link.href = artworkUrl(w.artwork_id);
+    const img = document.createElement('img');
+    img.className = 'pmw-thumb';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.src = cdnUrl(w.thumb_url || w.image_url);
+    img.alt = w.art_title ? tr('artworkThumbAlt', { title: w.art_title, name }) : tr('artworkImgAltFallback', { name });
+    const medal = document.createElement('span');
+    medal.className = 'pmw-medal';
+    const rank = Number(w.rank) || 1;
+    medal.textContent = ['\u{1F947}', '\u{1F948}', '\u{1F949}'][rank - 1] || '';
+    medal.title = tr(['gameGold', 'gameSilver', 'gameBronze'][rank - 1] || 'gameGold');
+    link.append(img, medal);
+    if (typeof bindArtworkLightbox === 'function') bindArtworkLightbox(link, w.artwork_id);
+
+    const title = document.createElement('div');
+    title.className = 'pmw-title';
+    title.textContent = w.art_title || tr('untitledArtwork');
+    const by = document.createElement('div');
+    by.className = 'pmw-by';
+    by.textContent = name;
+
+    // A link, not a button: middle-click and Ctrl-click open the game in a
+    // new tab, and the game page decides on its own whether that artwork is
+    // still in the live campaign.
+    const play = document.createElement('a');
+    play.className = 'pmw-play';
+    play.href = `/${CURRENT_LANG}/game?artwork=${encodeURIComponent(w.artwork_id)}`;
+    play.textContent = tr('gamePlay');
+
+    card.append(link, title, by, play);
+    track.appendChild(card);
+  }
+  track.scrollLeft = 0;
+  box.style.display = '';
+}
+
 // Client-side fallback for the tab title/social-preview tags, in case this
 // page is reached without going through the Pages Function that pre-renders
 // them server-side (see functions/[lang]/artists/[handle].js).
@@ -688,6 +758,7 @@ async function loadProfileView(userId) {
   document.getElementById('profileFollowersCount').onclick = () => openFollowListModal(userId, 'followers');
 
   renderProfileMedals(userId);
+  renderProfileMedalWorks(userId);
 
   renderProfileGraphFor(userId, true);
 

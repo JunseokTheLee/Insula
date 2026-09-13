@@ -193,6 +193,7 @@ const T = {
   gameDurMin: '{m}m {s}s',
   gameHintCost: '{n} hints · +{sec}s on your time',
   gameHintPenalty: '{n} hints (+{sec}s)',
+  gameArtworkNotHere: 'That artwork is not in the current campaign — pick another',
   gameHintShown: 'A piece you have not found yet is in this area',
   gamePlay: 'Play',
   gameStart: 'Start',

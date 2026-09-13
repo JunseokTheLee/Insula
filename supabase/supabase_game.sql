@@ -537,3 +537,54 @@ $fn$;
 -- same information added up.
 revoke execute on function public.game_top_players(integer) from public;
 grant execute on function public.game_top_players(integer) to anon, authenticated;
+
+-- ── 10. game_medal_artworks: which artworks a player holds a medal on ────
+-- Added 2026-09-13 for the profile page. Re-running this whole file is safe.
+--
+-- game_medal_counts says how many; this says which. Same ranking definition
+-- as everywhere else (elapsed → completed_at → user_id), so a medal shown
+-- here is the same medal the artwork's own leaderboard shows, and it
+-- disappears the moment someone beats the time.
+--
+-- The artwork columns are joined in rather than left to a second request:
+-- they are public rows either way, and a profile should not need two round
+-- trips to draw one strip.
+create or replace function public.game_medal_artworks(p_user_id uuid, p_limit integer default 24)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  with ranked as (
+    select r.user_id, r.project_id, r.artwork_id, r.elapsed_ms,
+           row_number() over (
+             partition by r.project_id, r.artwork_id
+             order by r.elapsed_ms, r.completed_at, r.user_id
+           ) as rn
+    from public.game_best_records r
+  )
+  select coalesce(
+    jsonb_agg(to_jsonb(t) order by t.rank, t.elapsed_ms, t.artwork_id),
+    '[]'::jsonb)
+  from (
+    select k.artwork_id,
+           k.project_id,
+           k.rn::integer       as rank,
+           k.elapsed_ms::bigint as elapsed_ms,
+           s.art_title,
+           s.author_id,
+           s.author_name,
+           s.thumb_url,
+           s.image_url
+    from ranked k
+    join public.mosaic_submissions s on s.id = k.artwork_id
+    where k.user_id = p_user_id and k.rn <= 3
+    order by k.rn, k.elapsed_ms, k.artwork_id
+    limit greatest(1, least(coalesce(p_limit, 24), 60))
+  ) t;
+$fn$;
+
+-- Public: a profile page is public, and so is every leaderboard this reads.
+revoke execute on function public.game_medal_artworks(uuid, integer) from public;
+grant execute on function public.game_medal_artworks(uuid, integer) to anon, authenticated;

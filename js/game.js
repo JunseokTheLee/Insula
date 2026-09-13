@@ -1012,9 +1012,24 @@
     wireStage();
     renderList(true);
     renderHall();   // its own request; the list never waits for it
+    // A ?artwork= link (from a profile's medal strip) opens that artwork's
+    // start dialog directly — but only if it is still in the live campaign,
+    // because a medal outlives the campaign it was won in.
     // Straight into the artwork list — the page itself is the introduction.
     show('list');
     restoreListPosition();
+    openRequestedArtwork();
+  }
+
+  // Runs after the list exists so the lookup uses the same rows the list
+  // was built from.
+  function openRequestedArtwork() {
+    let wanted = null;
+    try { wanted = new URLSearchParams(location.search).get('artwork'); } catch (e) {}
+    if (!wanted) return;
+    const a = artworks.find(x => String(x.id) === String(wanted));
+    if (!a) { toast(tr('gameArtworkNotHere')); return; }
+    confirmStart(a);
   }
 
   // ---------- controls ----------
