@@ -590,6 +590,8 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // target and the hunt is over before it starts. start_game enforces it
   // in the database too. 0 turns the check off.
   gameMinArtworks: 10,
+  // How far back the admin "New members" list reaches.
+  adminNewMemberDays: 5,
   // Costs one interval a second and a few hundred bytes of localStorage.
   // On by default: a freeze leaves no evidence any other way.
   freezeWatchdog: true,

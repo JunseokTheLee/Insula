@@ -446,15 +446,53 @@ function lbFmtMs(ms) {
   const m = Math.floor(total / 60);
   return tr('gameDurMin', { m, s: (total - m * 60).toFixed(2) });
 }
+// "Play this artwork" — the game page takes ?artwork= and opens the start
+// dialog for it. Shown only when the game is on AND at least one piece of
+// this artwork is actually sitting in a mosaic; without pieces there is
+// nothing to hunt, and the game page would only be able to apologise.
+// Built here rather than in markup because the lightbox markup is copied
+// across 14 pages.
+async function renderLightboxPlay(sub, usage) {
+  const actions = document.querySelector('.lightbox-actions');
+  if (!actions) return;
+  let btn = document.getElementById('lb-play-btn');
+  if (!btn) {
+    btn = document.createElement('a');
+    btn.id = 'lb-play-btn';
+    btn.className = 'lb-action-btn';
+    const ico = document.createElement('span'); ico.className = 'icon';
+    const label = document.createElement('span'); label.id = 'lb-play-label';
+    btn.append(ico, label);
+    actions.insertBefore(btn, document.getElementById('lb-delete-btn'));
+  }
+  btn.style.display = 'none';
+  const id = sub.parent_id != null ? sub.parent_id : sub.id;
+  if (!id) return;
+  let u = usage;
+  // usage is only handed in for a whole artwork; a piece opened from the
+  // campaign grid needs its parent looked up.
+  if (u == null && sub.parent_id != null && typeof fetchPieceUsage === 'function') {
+    u = await fetchPieceUsage(id);
+  }
+  if (!u || !(u.placed > 0)) return;
+  let on = true;
+  try { on = (await getSiteSettings()).gameEnabled !== false; } catch (e) {}
+  if (!on || lbCurrentSub !== sub) return;
+  document.getElementById('lb-play-label').textContent = tr('lbPlayGame');
+  btn.href = `/${CURRENT_LANG}/game?artwork=${encodeURIComponent(id)}`;
+  btn.style.display = '';
+}
 async function renderLightboxMedals(sub) {
   let el = document.getElementById('lightboxMedals');
   if (!el) {
     el = document.createElement('div'); el.id = 'lightboxMedals'; el.className = 'lb-medals';
-    const anchor = document.getElementById('artworkPieceUsage')
-      || document.getElementById('lightbox-cap-piece')
-      || document.getElementById('lightbox-cap-meta');
-    if (!anchor) return;
-    anchor.insertAdjacentElement('afterend', el);
+    // On the picture, bottom right — the records belong to the artwork you
+    // are looking at, and the caption column is already a long read. Same
+    // corner treatment as the zoom toolbar so it stays legible over a
+    // bright image.
+    const stage = document.getElementById('lightboxStage') || document.getElementById('artworkStage');
+    if (!stage) return;
+    stage.appendChild(el);
   }
   el.style.display = 'none'; el.textContent = '';
   // A piece has no records of its own — its artwork does.
@@ -512,6 +550,7 @@ async function renderLightboxPieceUsage(sub) {
   text.textContent = tr('artworkPieceUsage', { placed: u.placed, total: u.total, pct: u.pct });
   el.append(bar, text);
   el.style.display = '';
+  return u;
 }
 
 // The like/comments/exhibit buttons are the same for everyone, but Edit,
@@ -546,7 +585,7 @@ function populateLightboxContent(sub) {
   closeLbExhibitMenu();
   lbImg.src = cdnUrl(sub.image_url);
   applyArtDetailsToCaption(sub);
-  renderLightboxPieceUsage(sub);
+  renderLightboxPieceUsage(sub).then(u => renderLightboxPlay(sub, u));
   renderLightboxMedals(sub);
   renderLightboxArtistCard(sub);
   loadLightboxArtistDetails(sub);

@@ -521,6 +521,53 @@ async function runAdminPoolMatching() {
 document.getElementById('adminPoolRunBtn').onclick = runAdminPoolMatching;
 
 // ---------- admins ----------
+// ---------- new members ----------
+// profiles is publicly readable (the artists page lists it), so this needs
+// no RPC — just the rows created inside the window. Accounts with no
+// username are included on purpose: someone who signed in and never
+// finished onboarding is exactly the kind of row an admin wants to see,
+// and the artists page hides them.
+function adminDateTime(iso) {
+  return new Date(iso).toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US',
+    { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+async function loadAdminNewMembers() {
+  const list = document.getElementById('adminNewMembers');
+  const empty = document.getElementById('adminNewMembersEmpty');
+  const countEl = document.getElementById('adminNewMembersCount');
+  if (!list) return;
+  const settings = await getSiteSettings();
+  const days = Math.max(1, Math.min(30, Number(settings.adminNewMemberDays) || 5));
+  const since = new Date(Date.now() - days * 86400000).toISOString();
+  const { data, error } = await sb.from('profiles')
+    .select('id,username,name,avatar_url,created_at,is_admin')
+    .gte('created_at', since)
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) { console.error('load new members error:', error); return; }
+  const rows = data || [];
+  list.innerHTML = '';
+  countEl.textContent = tr('adminNewMembersCount', { n: adminNum(rows.length), days });
+  for (const p of rows) {
+    const name = p.username || p.name || tr('adminNoUsername');
+    const row = document.createElement('div'); row.className = 'admin-row admin-admin';
+    row.appendChild(miniAvatarEl(name, p.avatar_url, p.id));
+    const a = document.createElement('a'); a.className = 'admin-target-label';
+    a.href = profileUrl(p.username || p.id);
+    a.textContent = name;
+    if (p.is_admin) {
+      const badge = document.createElement('span'); badge.className = 'admin-badge';
+      badge.textContent = tr('adminRoleAdmin');
+      a.appendChild(document.createTextNode(' ')); a.appendChild(badge);
+    }
+    row.appendChild(a);
+    const when = document.createElement('span'); when.className = 'admin-row-sub';
+    when.textContent = adminDateTime(p.created_at);
+    row.appendChild(when);
+    list.appendChild(row);
+  }
+  empty.style.display = rows.length ? 'none' : '';
+}
 async function loadAdminAdmins() {
   const { data, error } = await sb.from('profiles').select('id,username,avatar_url').eq('is_admin', true).order('username');
   if (error) { console.error('load admins error:', error); return; }
@@ -1389,7 +1436,7 @@ const ADMIN_TAB_LOADERS = {
   comments:  () => resetAdminComments(),
   campaigns: () => loadAdminCampaigns(),
   tools:     () => Promise.all([loadAdminPool(), loadAdminPieces(), loadAdminThumbs()]),
-  members:   () => Promise.all([loadAdminAdmins(), loadAdminBlocked()]),
+  members:   () => Promise.all([loadAdminNewMembers(), loadAdminAdmins(), loadAdminBlocked()]),
   broadcast: () => loadAdminBroadcast(),
   settings:  () => loadAdminSettings(),
   log:       () => loadAdminLog(),

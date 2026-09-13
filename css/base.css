@@ -583,6 +583,8 @@ body.lb-img-fs-lock{overflow:hidden;}
 #lb-exhibit-btn .icon::before{content:"🗂";}
 #lb-edit-btn .icon::before{content:"✎";}
 #lb-delete-btn .icon::before{content:"🗑";}
+#lb-play-btn .icon::before{content:"🎮";}
+#lb-play-btn{text-decoration:none;}
 #lb-delete-btn:hover{background:var(--accent-warm);color:var(--primary-dark);border-color:var(--accent-warm);}
 #lb-report-btn .icon::before{content:"🚩";}
 #lb-report-btn:hover{background:rgba(247,247,245,.1);}
@@ -1012,11 +1014,16 @@ html[lang="ko"] * {
   .game-banner{width:auto;display:flex;}
 }
 
-/* Medal holders for the artwork on screen. Sits in the dark caption column,
-   so it follows the piece-usage row above it in palette. */
-.lb-medals{margin:10px 0 2px;font-family:'Pretendard',sans-serif;}
-.lb-medals-head{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:rgba(247,247,245,.55);margin-bottom:5px;}
-.lb-medal-row{display:flex;align-items:center;gap:8px;font-size:12.5px;line-height:1.9;}
+/* Medal holders, bottom-right corner of the picture. It floats over the
+   artwork, so it carries its own dark pill (a bare list vanishes on a
+   bright image) and never takes more than a third of the width. */
+.lb-medals{
+  position:absolute;right:12px;bottom:12px;z-index:2;max-width:min(46%,280px);
+  padding:8px 12px;border-radius:12px;background:rgba(15,20,17,.78);
+  font-family:'Pretendard',sans-serif;backdrop-filter:blur(3px);
+}
+.lb-medals-head{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:rgba(247,247,245,.6);margin-bottom:4px;}
+.lb-medal-row{display:flex;align-items:center;gap:8px;font-size:12.5px;line-height:1.75;}
 .lb-medal-ico{flex:0 0 auto;font-size:14px;}
 .lb-medal-name{color:rgba(247,247,245,.92);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .lb-medal-name:hover{text-decoration:underline;}

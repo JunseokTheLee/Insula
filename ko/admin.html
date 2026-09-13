@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-204304">
-<link rel="stylesheet" href="/css/admin.css?v=20260913-204304">
+<link rel="stylesheet" href="/css/base.css?v=20260913-211309">
+<link rel="stylesheet" href="/css/admin.css?v=20260913-211309">
 </head>
 
 <body>
@@ -225,6 +225,13 @@
         </div>
 
         <div class="admin-panel" data-panel="members" role="tabpanel" hidden>
+        <section class="admin-section" id="adminNewMembersSection">
+          <h2>신규 회원</h2>
+          <p class="admin-help">최근에 가입한 계정입니다. 사용자 이름을 아직 정하지 않은 계정(가입 절차를 끝내지 않은 경우)도 함께 보입니다. 기간은 "사이트 옵션"의 <strong>신규 회원 기간</strong>에서 바꿉니다.</p>
+          <p class="admin-help" id="adminNewMembersCount"></p>
+          <div class="admin-list" id="adminNewMembers"></div>
+          <p class="empty-note admin-empty" id="adminNewMembersEmpty" style="display:none;">이 기간에 가입한 회원이 없습니다.</p>
+        </section>
         <section class="admin-section">
           <h2>관리자</h2>
           <div id="adminAdmins" class="admin-list"></div>
@@ -303,6 +310,10 @@
               </div>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameAnonymousPlayEnabled" disabled> <strong>비로그인 게임 허용</strong> — 끄면 로그인해야 시작할 수 있습니다. 비로그인 기록은 어느 경우에도 저장되지 않습니다.</label>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminNewMemberDays">신규 회원 <strong>기간</strong>: "회원" 탭의 신규 회원 목록이 며칠 전까지 보여줄지. <em>(기본: 5일)</em></label>
+                <div class="admin-range"><input id="adminNewMemberDays" type="range" min="1" max="30" step="1" data-setting="adminNewMemberDays" disabled><output for="adminNewMemberDays" data-setting-output="adminNewMemberDays">5</output></div>
               </div>
               <div class="admin-setting admin-setting-range">
                 <label for="adminGameMinArtworks">게임 <strong>최소 작품 수</strong>: 캠페인에 이만큼 작품이 모여야 게임을 할 수 있습니다. 0이면 제한 없음. <em>(기본: 10개)</em></label>
@@ -642,15 +653,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-204304"></script>
-<script src="/js/i18n/ko.js?v=20260913-204304"></script>
-<script src="/js/common.js?v=20260913-204304"></script>
-<script src="/js/auth.js?v=20260913-204304"></script>
-<script src="/js/notifications.js?v=20260913-204304"></script>
-<script src="/js/push.js?v=20260913-204304"></script>
-<script src="/js/color-engine.js?v=20260913-204304"></script>
-<script src="/js/matching.js?v=20260913-204304"></script>
-<script src="/js/admin.js?v=20260913-204304"></script>
+<script src="/js/supabase-client.js?v=20260913-211309"></script>
+<script src="/js/i18n/ko.js?v=20260913-211309"></script>
+<script src="/js/common.js?v=20260913-211309"></script>
+<script src="/js/auth.js?v=20260913-211309"></script>
+<script src="/js/notifications.js?v=20260913-211309"></script>
+<script src="/js/push.js?v=20260913-211309"></script>
+<script src="/js/color-engine.js?v=20260913-211309"></script>
+<script src="/js/matching.js?v=20260913-211309"></script>
+<script src="/js/admin.js?v=20260913-211309"></script>
 
 </body>
 </html>
