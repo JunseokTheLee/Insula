@@ -93,6 +93,7 @@ async function releasePoorlyMatchedPieces() {
 // upload first, so the queue is fair) claims whatever still-open cell is
 // closest to it, one at a time. Keeps each match final and cheap to compute.
 async function runPoolMatchingClient() {
+  weavoMark('matching:client');
   await releasePoorlyMatchedPieces();
 
   const { data: pool, error: poolErr } = await sb.from('mosaic_submissions')
@@ -133,6 +134,7 @@ async function runPoolMatchingClient() {
 }
 
 async function runPoolMatchingOnce() {
+  weavoMark('matching:run');
   if (typeof me === 'undefined' || !me.id) return []; // both paths need a signed-in caller
   const server = await runPoolMatchingServer();
   if (!server.error) return server.assignments;

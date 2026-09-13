@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-162308">
-<link rel="stylesheet" href="/css/admin.css?v=20260913-162308">
+<link rel="stylesheet" href="/css/base.css?v=20260913-163032">
+<link rel="stylesheet" href="/css/admin.css?v=20260913-163032">
 </head>
 <body>
 
@@ -285,6 +285,7 @@
               <h3>General</h3>
               <label class="admin-setting"><input type="checkbox" data-setting="showCampaignPreview" disabled><span>Show the "Preview" thumbnail (the reference colors) in the corner of campaign pages <em>(default: off)</em></span></label>
               <label class="admin-setting"><input type="checkbox" data-setting="countVisits" disabled><span>Count visitors — once a day per browser (Asia/Seoul), members and guests separately, for the Visitors section on "Dashboard" <em>(default on; when off, record_visit() refuses on the server as well)</em></span></label>
+              <label class="admin-setting"><input type="checkbox" data-setting="freezeWatchdog" disabled><span>Freeze diagnostics — records the state just before a page stops responding (page, last action, memory) once a second, readable on the next visit with <code>weavoFreezeReport()</code> in the console <em>(default: on)</em></span></label>
             </div>
 
             <div class="admin-option-card">
@@ -531,14 +532,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-162308"></script>
-<script src="/js/i18n/en.js?v=20260913-162308"></script>
-<script src="/js/common.js?v=20260913-162308"></script>
-<script src="/js/auth.js?v=20260913-162308"></script>
-<script src="/js/notifications.js?v=20260913-162308"></script>
-<script src="/js/push.js?v=20260913-162308"></script>
-<script src="/js/color-engine.js?v=20260913-162308"></script>
-<script src="/js/matching.js?v=20260913-162308"></script>
-<script src="/js/admin.js?v=20260913-162308"></script>
+<script src="/js/supabase-client.js?v=20260913-163032"></script>
+<script src="/js/i18n/en.js?v=20260913-163032"></script>
+<script src="/js/common.js?v=20260913-163032"></script>
+<script src="/js/auth.js?v=20260913-163032"></script>
+<script src="/js/notifications.js?v=20260913-163032"></script>
+<script src="/js/push.js?v=20260913-163032"></script>
+<script src="/js/color-engine.js?v=20260913-163032"></script>
+<script src="/js/matching.js?v=20260913-163032"></script>
+<script src="/js/admin.js?v=20260913-163032"></script>
 </body>
 </html>

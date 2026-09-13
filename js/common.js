@@ -409,6 +409,7 @@ async function loadGridImageCells(project) {
 // the several renderers on one page share a single load.
 const projectCellsCache = new Map();
 function loadProjectCells(project) {
+  weavoMark('cells:load');
   const key = `${project.id}:${project.version_number || 0}:${project.grid_image_url || ''}`;
   if (!projectCellsCache.has(key)) {
     projectCellsCache.set(key, (async () => {
@@ -584,6 +585,9 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // one piece unaided costs — otherwise taking it every time is simply the
   // correct strategy and the leaderboard stops measuring anything.
   gameHintPenaltySec: 30,
+  // Costs one interval a second and a few hundred bytes of localStorage.
+  // On by default: a freeze leaves no evidence any other way.
+  freezeWatchdog: true,
   // How fast the artist icons drift around the network page, as a multiple
   // of the original speed (one turn every 5 minutes). 3 = a turn every 100
   // seconds, which is what the page ships with.
@@ -1095,6 +1099,167 @@ async function toggleUserBlock(targetId, btn) {
   new MutationObserver(apply).observe(document.documentElement, {
     subtree: true, attributes: true, attributeFilter: ['class'],
   });
+})();
+
+
+// ---------- freeze watchdog ----------
+// A page that locks up — no clicks, no text selection, F5 ignored, while
+// other tabs stay fine — is one renderer whose main thread stopped coming
+// back. Nothing can report that from inside: by the time it happens there
+// is no thread left to run the reporter. So the evidence is written BEFORE
+// the stall. A heartbeat drops a small snapshot once a second (what page,
+// what the visitor last did, what heavy work was last entered, how big the
+// JS heap is, the worst long task seen); whatever the final snapshot says
+// is what the page was doing as it died, and the next load turns an
+// abandoned snapshot into a report.
+//
+// Per tab, not per browser: a snapshot key carries a tab id and is refreshed
+// every second, so a snapshot nobody has touched for a minute belongs to a
+// tab that is gone — and a second tab open right now is never mistaken for
+// a crash. A clean exit deletes its own key, so only hard endings are left.
+//
+// Read the reports with weavoFreezeReport() in the console. Turn the whole
+// thing off in admin → site options ('freezeWatchdog').
+const WD_LIVE = 'weavo.wd.live.';
+const WD_REPORTS = 'weavo.wd.reports';
+// Longer than a browser throttles a background tab (intervals there are
+// clamped to about a minute), so a tab someone left open in the background
+// is never mistaken for one that died.
+const WD_DEAD_AFTER = 180000;
+const WD_STALL_MS = 3000;         // a heartbeat this late means the thread was blocked
+
+// Breadcrumb: call at the start of work heavy enough to be worth suspecting.
+// Kept in memory only — the heartbeat is what writes it out.
+let wdMark = '';
+function weavoMark(label) { wdMark = label; }
+
+function weavoFreezeReport() {
+  try { return JSON.parse(localStorage.getItem(WD_REPORTS) || '[]'); }
+  catch (e) { return []; }
+}
+
+(function () {
+  let enabled = true;             // runs from the first line; the option can stop it
+  const tabId = Math.random().toString(36).slice(2, 10) + '-' + Date.now().toString(36);
+  const key = WD_LIVE + tabId;
+  let lastAction = '';
+  let worstTask = 0;
+  let beat = Date.now();
+  // Same throttle, other direction: a hidden tab misses beats by design, and
+  // that must not be logged as the page freezing.
+  let sawHidden = document.hidden;
+  let timer = 0;
+
+  const store = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const drop = k => { try { localStorage.removeItem(k); } catch (e) {} };
+
+  // ---- turn abandoned snapshots into reports (runs once, at load) ----
+  function collect() {
+    const keys = [];
+    try { for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i)); }
+    catch (e) { return; }
+    const now = Date.now();
+    const reports = weavoFreezeReport();
+    let found = 0;
+    for (const k of keys) {
+      if (!k || k.indexOf(WD_LIVE) !== 0 || k === key) continue;
+      let snap = null;
+      try { snap = JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) {}
+      if (!snap || !snap.t) { drop(k); continue; }
+      if (now - snap.t < WD_DEAD_AFTER) continue;   // another tab, still alive
+      drop(k);
+      snap.endedHard = true;
+      reports.push(snap);
+      found++;
+    }
+    if (found) {
+      store(WD_REPORTS, JSON.stringify(reports.slice(-20)));
+      console.warn('weavo: a page ended without closing cleanly — weavoFreezeReport()', reports.slice(-found));
+    }
+  }
+
+  // ---- the heartbeat ----
+  function snapshot(extra) {
+    const mem = performance.memory;
+    const snap = {
+      t: Date.now(),
+      page: location.pathname,
+      did: lastAction,
+      mark: wdMark,
+      heapMB: mem ? Math.round(mem.usedJSHeapSize / 1048576) : null,
+      limitMB: mem ? Math.round(mem.jsHeapSizeLimit / 1048576) : null,
+      worstTaskMs: Math.round(worstTask),
+      nodes: document.getElementsByTagName('*').length,
+      hidden: document.hidden,
+      ua: navigator.userAgent.slice(0, 120),
+    };
+    if (extra) Object.assign(snap, extra);
+    store(key, JSON.stringify(snap));
+    return snap;
+  }
+
+  function tick() {
+    const now = Date.now();
+    const late = now - beat - 1000;
+    beat = now;
+    const wasHidden = sawHidden || document.hidden;
+    sawHidden = document.hidden;
+    // A stall the page RECOVERED from is worth keeping on its own: it is the
+    // same fault, just shorter, and it comes with an after-the-fact heap
+    // reading the fatal case never gets to write.
+    if (late > WD_STALL_MS && !wasHidden) {
+      const reports = weavoFreezeReport();
+      const snap = snapshot({ stalledMs: late, recovered: true });
+      reports.push(snap);
+      store(WD_REPORTS, JSON.stringify(reports.slice(-20)));
+      console.warn('weavo: main thread was blocked for ' + late + 'ms', snap);
+    } else {
+      snapshot(null);
+    }
+    worstTask = 0;
+  }
+
+  // ---- what the visitor last did (capture phase: before any handler) ----
+  function describe(el) {
+    if (!el || !el.tagName) return '';
+    let s = el.tagName.toLowerCase();
+    if (el.id) s += '#' + el.id;
+    else if (el.className && typeof el.className === 'string') s += '.' + el.className.trim().split(/\s+/)[0];
+    return s.slice(0, 60);
+  }
+  addEventListener('visibilitychange', () => { if (document.hidden) sawHidden = true; });
+
+  for (const type of ['pointerdown', 'keydown', 'wheel']) {
+    addEventListener(type, e => {
+      lastAction = type + ' ' + (type === 'keydown' ? e.key : describe(e.target));
+    }, { capture: true, passive: true });
+  }
+
+  function start() {
+    collect();
+    snapshot(null);
+    clearInterval(timer);
+    timer = setInterval(tick, 1000);
+    try {
+      new PerformanceObserver(list => {
+        for (const e of list.getEntries()) if (e.duration > worstTask) worstTask = e.duration;
+      }).observe({ entryTypes: ['longtask'] });
+    } catch (e) {}
+    // A clean exit removes its own snapshot, so anything left behind really
+    // was an ending the page had no say in.
+    addEventListener('pagehide', () => drop(key));
+  }
+  function stop() { clearInterval(timer); timer = 0; drop(key); }
+
+  start();
+  // The option arrives late (one request, 60s cache) — until then the watchdog
+  // is already running, which is the point: the first seconds are evidence too.
+  if (typeof getSiteSettings === 'function') {
+    getSiteSettings().then(s => {
+      enabled = s.freezeWatchdog !== false;
+      if (!enabled) stop();
+    }).catch(() => {});
+  }
 })();
 
 // ---------- "Back" links on standalone pages ----------

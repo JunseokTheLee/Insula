@@ -23,6 +23,7 @@ async function loadHeroPreview() {
   renderHeroPreview();
 }
 async function renderHeroPreview() {
+  weavoMark('home:hero');
   const canvas = document.getElementById('heroPreviewCanvas');
   const emptyEl = document.getElementById('heroPreviewEmpty');
   const link = document.getElementById('heroPreview');

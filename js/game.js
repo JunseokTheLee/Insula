@@ -387,6 +387,7 @@
   let scale = 1, panX = 0, panY = 0;
 
   function buildMosaic() {
+    weavoMark('game:buildMosaic');
     stage = $('gameStage');
     canvas = $('gameCanvas');
     // Was 12px max, which turned to mush the moment anyone zoomed in — and
@@ -444,6 +445,7 @@
     detailTimer = setTimeout(refreshDetail, 90);
   }
   function refreshDetail() {
+    weavoMark('game:detail');
     if (!ctx || !stage) return;
     // Below this a cell is smaller than the micro thumb it already shows.
     if (cellPx * scale < 10) return;

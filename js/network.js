@@ -77,6 +77,7 @@ function globalNodeRadius(d) { return Math.max(9, Math.min(24, 9 + Math.sqrt(d.d
 // (independent facts, same as the per-profile graph) render as one mutual
 // link instead of two overlapping ones.
 async function fetchGlobalGraphData() {
+  weavoMark('network:fetch');
   // Both reads go through fetchAllRows: PostgREST caps a response at 1,000
   // rows and reports no error, so past a thousand members (or follows) the
   // graph would quietly drop people and links — and someone whose own node
@@ -137,6 +138,7 @@ async function fetchGlobalGraphData() {
   return { nodes, links };
 }
 async function loadGlobalNetwork() {
+  weavoMark('network:build');
   const token = ++globalGraphToken;
   const panel = document.getElementById('globalGraphPanel');
   const svgEl = document.getElementById('globalGraphSvg');

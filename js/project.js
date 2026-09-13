@@ -174,6 +174,7 @@ async function renderColorsNeeded(project) {
   wrap.style.display = '';
 }
 async function renderWeavoGrid(project) {
+  weavoMark('project:grid');
   const grid = document.getElementById('weavoGrid');
   grid.innerHTML = '';
   msRestoring = true;   // …until restoreMsView() below
@@ -394,6 +395,7 @@ function clampMsPan() {
 // no request per piece. Decoding is async; older rows without one simply
 // keep the average colour until the admin page rebuilds their thumbnails.
 async function paintMicroThumbs(ctx, rows, cellPx, project) {
+  weavoMark('project:microThumbs');
   const withMicro = rows.filter(px => px.mosaic_submissions && px.mosaic_submissions.micro_thumb);
   await Promise.all(withMicro.map(px => loadImageEl(px.mosaic_submissions.micro_thumb).then(img => {
     if (currentProject !== project) return; // the page has moved on to another campaign
@@ -411,6 +413,7 @@ function scheduleThumbLod(immediate) {
   thumbLodTimer = setTimeout(refreshThumbLod, immediate ? 0 : 120);
 }
 function refreshThumbLod() {
+  weavoMark('project:lod');
   const wrapRect = weavoWrap.getBoundingClientRect();
   for (const cell of document.querySelectorAll('.weavo-cell.filled')) {
     if (cell.style.backgroundImage) continue; // already showing its thumbnail
