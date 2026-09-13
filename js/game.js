@@ -405,13 +405,17 @@
     // the worst case bounded whatever the shape. Phones get a smaller one —
     // 48MB of canvas is fine on a desktop and is not on a 3GB handset
     // (this site already had iOS reloading itself under memory pressure).
-    const cells = Math.max(1, project.width * project.height);
+    // NOT named cells: that is the module-level grid array this function
+    // hands to openCellPainter a few lines down, and shadowing it made the
+    // painter receive a number ("cells is not iterable") — buildMosaic threw
+    // and the game sat on "준비하고 있습니다" forever.
+    const cellCount = Math.max(1, project.width * project.height);
     // innerWidth can be 0 for a window that is hidden or not laid out yet,
     // and a 0 must not be read as "phone" — fall back to the screen width.
     const vw = window.innerWidth || screen.width || 1024;
     const smallDevice = (navigator.deviceMemory && navigator.deviceMemory < 4) || vw < 640;
     const budget = smallDevice ? 5e6 : 12e6;   // canvas pixels (x4 bytes)
-    cellPx = Math.max(8, Math.min(64, Math.floor(Math.sqrt(budget / cells))));
+    cellPx = Math.max(8, Math.min(64, Math.floor(Math.sqrt(budget / cellCount))));
     canvas.width = project.width * cellPx;
     canvas.height = project.height * cellPx;
     ctx = canvas.getContext('2d');
