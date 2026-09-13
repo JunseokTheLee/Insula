@@ -1004,3 +1004,15 @@ html[lang="ko"] * {
   /* Phone: the column is already narrow, so let it fill. */
   .game-banner{width:auto;display:flex;}
 }
+
+/* Medal holders for the artwork on screen. Sits in the dark caption column,
+   so it follows the piece-usage row above it in palette. */
+.lb-medals{margin:10px 0 2px;font-family:'Pretendard',sans-serif;}
+.lb-medals-head{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:rgba(247,247,245,.55);margin-bottom:5px;}
+.lb-medal-row{display:flex;align-items:center;gap:8px;font-size:12.5px;line-height:1.9;}
+.lb-medal-ico{flex:0 0 auto;font-size:14px;}
+.lb-medal-name{color:rgba(247,247,245,.92);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-medal-name:hover{text-decoration:underline;}
+/* Times pushed to the right edge so the three line up as a column of
+   numbers instead of drifting with the length of each name. */
+.lb-medal-time{margin-left:auto;flex:0 0 auto;font-variant-numeric:tabular-nums;color:rgba(247,247,245,.7);}

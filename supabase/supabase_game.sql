@@ -588,3 +588,50 @@ $fn$;
 -- Public: a profile page is public, and so is every leaderboard this reads.
 revoke execute on function public.game_medal_artworks(uuid, integer) from public;
 grant execute on function public.game_medal_artworks(uuid, integer) to anon, authenticated;
+
+-- ── 11. game_artwork_medals: who holds the medals on ONE artwork ─────────
+-- Added 2026-09-13 for the artwork lightbox. Re-running this file is safe.
+--
+-- game_artwork_stats answers the same question for a whole campaign at once
+-- (the game list needs every artwork); the lightbox opens one artwork from
+-- any page, so it needs the single-artwork version rather than pulling a
+-- campaign-wide table to read three rows out of it.
+--
+-- Ranked within (project, artwork) like everywhere else, so the names here
+-- are the same three the game list and the profile strip show.
+create or replace function public.game_artwork_medals(p_artwork_id bigint)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  with ranked as (
+    select r.project_id, r.artwork_id, r.user_id, r.elapsed_ms,
+           row_number() over (
+             partition by r.project_id, r.artwork_id
+             order by r.elapsed_ms, r.completed_at, r.user_id
+           ) as rn
+    from public.game_best_records r
+    where r.artwork_id = p_artwork_id
+  )
+  select coalesce(
+    jsonb_agg(to_jsonb(t) order by t.rank, t.elapsed_ms),
+    '[]'::jsonb)
+  from (
+    select k.rn::integer        as rank,
+           k.user_id,
+           k.elapsed_ms::bigint as elapsed_ms,
+           p.username,
+           p.avatar_url
+    from ranked k
+    left join public.profiles p on p.id = k.user_id
+    where k.rn <= 3
+    order by k.rn, k.elapsed_ms
+    limit 3
+  ) t;
+$fn$;
+
+-- Public: the same standings the game page already shows to everyone.
+revoke execute on function public.game_artwork_medals(bigint) from public;
+grant execute on function public.game_artwork_medals(bigint) to anon, authenticated;

@@ -432,6 +432,69 @@ function renderLightboxPieceNote(sub) {
 // small query per open (supabase_mosaic_pieces.sql), in the popup and on
 // the standalone artwork page alike. artwork.html carries the element;
 // the other pages get it made here, under the piece note.
+// Who holds this artwork's medals. Built in JS rather than added to the
+// lightbox markup because that markup is duplicated across 14 pages — the
+// piece-usage row above does the same for the same reason.
+//
+// Additive: no SQL applied, no records, or a request that fails leaves the
+// block hidden and the rest of the lightbox untouched.
+const LB_MEDAL_ICONS = ['\u{1F947}', '\u{1F948}', '\u{1F949}'];
+// Same shape the game screen uses, so a time reads the same everywhere.
+function lbFmtMs(ms) {
+  const total = Math.max(0, Number(ms) || 0) / 1000;
+  if (total < 60) return tr('gameDurSec', { s: total.toFixed(2) });
+  const m = Math.floor(total / 60);
+  return tr('gameDurMin', { m, s: (total - m * 60).toFixed(2) });
+}
+async function renderLightboxMedals(sub) {
+  let el = document.getElementById('lightboxMedals');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'lightboxMedals'; el.className = 'lb-medals';
+    const anchor = document.getElementById('artworkPieceUsage')
+      || document.getElementById('lightbox-cap-piece')
+      || document.getElementById('lightbox-cap-meta');
+    if (!anchor) return;
+    anchor.insertAdjacentElement('afterend', el);
+  }
+  el.style.display = 'none'; el.textContent = '';
+  // A piece has no records of its own — its artwork does.
+  const id = sub.parent_id != null ? sub.parent_id : sub.id;
+  if (!id) return;
+  let rows = null;
+  try {
+    const { data, error } = await sb.rpc('game_artwork_medals', { p_artwork_id: id });
+    if (error) {
+      if (error.code !== 'PGRST202' && error.code !== '42883') console.error('load artwork medals error:', error);
+      return;
+    }
+    rows = data;
+  } catch (e) { console.error('load artwork medals threw:', e); return; }
+  if (!Array.isArray(rows) || !rows.length) return;
+  if (lbCurrentSub !== sub) return;   // another artwork opened while this was in flight
+
+  const head = document.createElement('div');
+  head.className = 'lb-medals-head';
+  head.textContent = tr('lbMedalsHead');
+  el.appendChild(head);
+  for (const r of rows) {
+    const rank = Number(r.rank) || 1;
+    const row = document.createElement('div');
+    row.className = 'lb-medal-row';
+    const ico = document.createElement('span');
+    ico.className = 'lb-medal-ico';
+    ico.textContent = LB_MEDAL_ICONS[rank - 1] || '';
+    const name = document.createElement('a');
+    name.className = 'lb-medal-name';
+    name.href = profileUrl(r.username || r.user_id);
+    name.textContent = r.username || tr('anonymous');
+    const time = document.createElement('span');
+    time.className = 'lb-medal-time';
+    time.textContent = lbFmtMs(r.elapsed_ms);
+    row.append(ico, name, time);
+    el.appendChild(row);
+  }
+  el.style.display = '';
+}
 async function renderLightboxPieceUsage(sub) {
   let el = document.getElementById('artworkPieceUsage');
   if (!el) {
@@ -484,6 +547,7 @@ function populateLightboxContent(sub) {
   lbImg.src = cdnUrl(sub.image_url);
   applyArtDetailsToCaption(sub);
   renderLightboxPieceUsage(sub);
+  renderLightboxMedals(sub);
   renderLightboxArtistCard(sub);
   loadLightboxArtistDetails(sub);
   setupLightboxArtistFollow(sub);

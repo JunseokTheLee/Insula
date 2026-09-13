@@ -86,6 +86,12 @@ async function renderProfileMedalWorks(userId) {
     by.className = 'pmw-by';
     by.textContent = name;
 
+    // Which medal, spelled out. The badge on the thumbnail is small and
+    // sits on the picture; this line is the one that reads at a glance.
+    const medalLine = document.createElement('div');
+    medalLine.className = 'pmw-rank pmw-rank-' + rank;
+    medalLine.textContent = medal.textContent + ' ' + tr(['medalGold', 'medalSilver', 'medalBronze'][rank - 1] || 'medalGold');
+
     // A link, not a button: middle-click and Ctrl-click open the game in a
     // new tab, and the game page decides on its own whether that artwork is
     // still in the live campaign.
@@ -94,7 +100,7 @@ async function renderProfileMedalWorks(userId) {
     play.href = `/${CURRENT_LANG}/game?artwork=${encodeURIComponent(w.artwork_id)}`;
     play.textContent = tr('gamePlay');
 
-    card.append(link, title, by, play);
+    card.append(link, title, by, medalLine, play);
     track.appendChild(card);
   }
   track.scrollLeft = 0;
