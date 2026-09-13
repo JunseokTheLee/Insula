@@ -879,3 +879,63 @@ $fn$;
 
 revoke execute on function public.finish_game(uuid) from public, anon;
 grant execute on function public.finish_game(uuid) to authenticated;
+
+-- ── 13. game_my_standing: where the caller sits overall ─────────────────
+-- Added 2026-09-14 for the line under the hall of fame. Re-running this whole
+-- file is safe.
+--
+-- Same ordering as game_top_players (gold, silver, bronze, records, user_id),
+-- so the number here and the podium above it always agree.
+--
+-- Ranked among everyone who has FINISHED a game, not only medallists: a
+-- player with no medals still has a position, and that is the question this
+-- answers. Returns null when the caller has never finished one — the screen
+-- shows nothing at all rather than "last place, no medals", which is not a
+-- welcome for a first visit.
+create or replace function public.game_my_standing()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  with ranked as (
+    select r.user_id,
+           row_number() over (
+             partition by r.project_id, r.artwork_id
+             order by r.elapsed_ms, r.completed_at, r.user_id
+           ) as rn
+    from public.game_best_records r
+  ),
+  tally as (
+    select user_id,
+           count(*) filter (where rn = 1) as gold,
+           count(*) filter (where rn = 2) as silver,
+           count(*) filter (where rn = 3) as bronze,
+           count(*) as records
+    from ranked
+    group by user_id
+  ),
+  placed as (
+    select t.*,
+           row_number() over (
+             order by t.gold desc, t.silver desc, t.bronze desc, t.records desc, t.user_id
+           ) as rank,
+           count(*) over () as players
+    from tally t
+  )
+  select to_jsonb(x) from (
+    select p.rank::integer    as rank,
+           p.players::integer as players,
+           p.gold::integer    as gold,
+           p.silver::integer  as silver,
+           p.bronze::integer  as bronze,
+           p.records::integer as records
+    from placed p
+    where p.user_id = auth.uid()
+  ) x;
+$fn$;
+
+-- Signed-in only: it answers "where am I", and anon has no "I".
+revoke execute on function public.game_my_standing() from public, anon;
+grant execute on function public.game_my_standing() to authenticated;

@@ -341,6 +341,42 @@
       list.appendChild(li);
     });
     box.hidden = false;
+    renderHallMe();
+  }
+
+  // Where the signed-in player stands, under the podium. Someone who has
+  // never finished a game has no standing to show — and a "0 medals, last
+  // place" line would be a discouraging thing to greet them with — so the
+  // row simply stays away until they have played once.
+  async function renderHallMe() {
+    const el = $('gameHallMe');
+    if (!el) return;
+    el.hidden = true;
+    if (!me.id) return;
+    let s = null;
+    try {
+      const { data, error } = await sb.rpc('game_my_standing');
+      if (error) {
+        if (error.code !== 'PGRST202' && error.code !== '42883') console.error('game: my standing error:', error);
+        return;
+      }
+      s = data;
+    } catch (e) { console.error('game: my standing threw:', e); return; }
+    if (!s || !s.rank) return;   // never played
+    el.textContent = '';
+    const who = document.createElement('span');
+    who.className = 'gh-me-rank';
+    who.textContent = tr('gameHallMe', { rank: s.rank, players: s.players });
+    const medals = document.createElement('span');
+    medals.className = 'gh-medals';
+    for (const [icon, n] of [['\u{1F947}', s.gold], ['\u{1F948}', s.silver], ['\u{1F949}', s.bronze]]) {
+      const m = document.createElement('span');
+      m.className = 'gh-medal';
+      m.textContent = icon + ' ' + (Number(n) || 0);
+      medals.appendChild(m);
+    }
+    el.append(who, medals);
+    el.hidden = false;
   }
 
   function renderList(reset) {

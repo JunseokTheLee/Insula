@@ -340,3 +340,14 @@
   .game-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;}
   .game-card{grid-template-columns:96px minmax(0,1fr) auto;}
 }
+
+/* The signed-in player, under the podium. Same three-column rhythm as a
+   podium row so the medal counts stay in one line down the block, with a
+   rule above it to say "this part is about you". */
+.game-hall-me{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;
+  margin-top:8px;padding-top:8px;border-top:1px solid var(--border);
+  font-family:'Pretendard',sans-serif;font-size:13.5px;
+}
+.game-hall-me[hidden]{display:none;}
+.gh-me-rank{font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
