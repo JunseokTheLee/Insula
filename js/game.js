@@ -87,6 +87,22 @@
   let audioCtx = null;
   function unlockAudio() {
     try {
+      // iOS runs Web Audio in the "ambient" session by default, and ambient
+      // audio is silenced by the ring/silent switch — which is why the game
+      // was mute on iPhones whose switch was flipped, in Safari and inside
+      // the app alike. Declaring the session as playback is the one lever the
+      // web side has (the native AVAudioSession category belongs to the app
+      // shell, a separate repository this one does not touch). WebKit 16.4+;
+      // everywhere else the property simply is not there.
+      //
+      // Set BEFORE the context exists: WebKit picks the category up when the
+      // session starts, so doing it afterwards would only take effect on the
+      // next one.
+      try {
+        if (navigator.audioSession && navigator.audioSession.type !== 'playback') {
+          navigator.audioSession.type = 'playback';
+        }
+      } catch (e) { /* read-only or unsupported: nothing else to try */ }
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
       if (!audioCtx) audioCtx = new AC();
