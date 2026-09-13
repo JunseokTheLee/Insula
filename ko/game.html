@@ -67,8 +67,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/game.css?v=20260913-143340">
-<link rel="stylesheet" href="/css/base.css?v=20260913-143340">
+<link rel="stylesheet" href="/css/game.css?v=20260913-143833">
+<link rel="stylesheet" href="/css/base.css?v=20260913-143833">
 </head>
 
 <body>
@@ -141,10 +141,12 @@
           <aside class="game-target" id="gameSheet">
             <button type="button" class="game-sheet-handle" id="gameSheetHandle" aria-label="작품 패널 펼치기/접기"></button>
             <div class="game-target-head">찾는 작품</div>
-            <img class="game-target-img" id="gameTargetImg" src="" alt="">
+            <div class="game-target-figure">
+              <img class="game-target-img" id="gameTargetImg" src="" alt="">
+              <div class="game-target-grid" id="gameTargetGrid"></div>
+            </div>
             <div class="game-target-title" id="gameTargetTitle"></div>
             <div class="game-target-author" id="gameTargetAuthor"></div>
-            <div class="game-target-grid" id="gameTargetGrid"></div>
             <div class="game-stats">
               <span class="game-stat-n" data-progress>0 / 0</span>
               <span class="game-stat-l">찾은 조각</span>
@@ -393,14 +395,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-143340"></script>
-<script src="/js/i18n/ko.js?v=20260913-143340"></script>
-<script src="/js/color-engine.js?v=20260913-143340"></script>
-<script src="/js/common.js?v=20260913-143340"></script>
-<script src="/js/auth.js?v=20260913-143340"></script>
-<script src="/js/notifications.js?v=20260913-143340"></script>
-<script src="/js/push.js?v=20260913-143340"></script>
-<script src="/js/game.js?v=20260913-143340"></script>
+<script src="/js/supabase-client.js?v=20260913-143833"></script>
+<script src="/js/i18n/ko.js?v=20260913-143833"></script>
+<script src="/js/color-engine.js?v=20260913-143833"></script>
+<script src="/js/common.js?v=20260913-143833"></script>
+<script src="/js/auth.js?v=20260913-143833"></script>
+<script src="/js/notifications.js?v=20260913-143833"></script>
+<script src="/js/push.js?v=20260913-143833"></script>
+<script src="/js/game.js?v=20260913-143833"></script>
 
 </body>
 </html>
