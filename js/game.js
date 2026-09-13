@@ -390,14 +390,34 @@
     weavoMark('game:buildMosaic');
     stage = $('gameStage');
     canvas = $('gameCanvas');
-    // Was 12px max, which turned to mush the moment anyone zoomed in — and
-    // zooming in is the whole game. 24px gives a 58x86 campaign a 1392x2064
-    // canvas, and refreshDetail() repaints visible cells from the real
-    // artwork thumbnails on top of that.
-    cellPx = Math.max(8, Math.min(24, Math.floor(8000 / Math.max(project.width, project.height))));
+    // How many canvas pixels one cell gets. This is the ceiling on how
+    // sharp the mosaic can EVER be: zooming only scales this bitmap up, so
+    // a cell drawn at 24px stayed soft however far anyone zoomed — which is
+    // exactly what it was reported as ("확대해도 선명해지지 않는다").
+    //
+    // The detail pass has much more to work with than 24px: it crops a
+    // piece out of the parent's 480px thumbnail, so an n=5 cut leaves 96px
+    // and n=7 leaves 68px per piece. Anything under that was throwing
+    // source resolution away.
+    //
+    // Sized by AREA rather than a flat cap, because the cost is width x
+    // height x 4 bytes and a campaign can be 10,000 cells: a budget keeps
+    // the worst case bounded whatever the shape. Phones get a smaller one —
+    // 48MB of canvas is fine on a desktop and is not on a 3GB handset
+    // (this site already had iOS reloading itself under memory pressure).
+    const cells = Math.max(1, project.width * project.height);
+    // innerWidth can be 0 for a window that is hidden or not laid out yet,
+    // and a 0 must not be read as "phone" — fall back to the screen width.
+    const vw = window.innerWidth || screen.width || 1024;
+    const smallDevice = (navigator.deviceMemory && navigator.deviceMemory < 4) || vw < 640;
+    const budget = smallDevice ? 5e6 : 12e6;   // canvas pixels (x4 bytes)
+    cellPx = Math.max(8, Math.min(64, Math.floor(Math.sqrt(budget / cells))));
     canvas.width = project.width * cellPx;
     canvas.height = project.height * cellPx;
     ctx = canvas.getContext('2d');
+    // Every cell is a downscale from a 480px thumbnail; the default
+    // ('low') visibly muddies that.
+    ctx.imageSmoothingQuality = 'high';
 
     detailDone.clear();
     miniPainted = false;
@@ -447,8 +467,10 @@
   function refreshDetail() {
     weavoMark('game:detail');
     if (!ctx || !stage) return;
-    // Below this a cell is smaller than the micro thumb it already shows.
-    if (cellPx * scale < 10) return;
+    // Below this the cell is a few pixels on screen and the 16x16 micro
+    // thumb already covers it. Lowered from 10 so the real artwork appears
+    // while still zoomed out a fair way, not only once you are close.
+    if (cellPx * scale < 6) return;
     const r = stage.getBoundingClientRect();
     const size = cellPx * scale;
     for (const fc of filled) {

@@ -436,8 +436,36 @@ function applyMsTransform() {
   msZoomInBtn.disabled = msScale >= MS_MAX_ZOOM;
   weavoWrap.classList.toggle('zoomed', msScale > MS_MIN_ZOOM);
 }
-function setMsZoom(scale) {
-  msScale = Math.min(MS_MAX_ZOOM, Math.max(MS_MIN_ZOOM, scale));
+// Zoom keeps the point under the fingers (or the cursor) where it is.
+//
+// The transform is `translate(msX,msY) scale(msScale)` and the origin is
+// the default centre, so a point sitting u untransformed units from the
+// stage's centre is drawn at centre + u*s + t. Holding it still across
+// s -> s' means t has to move by -u*(s' - s). Without that term the mosaic
+// always grew about its own middle: pinching a corner walked the picture
+// out from under your fingers, and the wheel ignored the cursor entirely.
+//
+// anchorX/anchorY are viewport coordinates (clientX/clientY). Leave them
+// out — the +/- buttons do — to keep the old centre-anchored behaviour,
+// which is what a button should do.
+function setMsZoom(scale, anchorX, anchorY) {
+  const prev = msScale;
+  const next = Math.min(MS_MAX_ZOOM, Math.max(MS_MIN_ZOOM, scale));
+  if (anchorX != null && prev > 0 && next !== prev) {
+    // The untransformed centre is derived from the wrapper, NOT read back
+    // with getBoundingClientRect(): the stage carries a .15s transform
+    // transition, so a rect read during a wheel flurry is the half-animated
+    // position and the anchor would drift a little further with every notch.
+    // The stage is centred in the wrapper by flex — the same assumption
+    // clampMsPan() already makes — so the centre is the wrapper is centre,
+    // and the drawn centre is that plus the current translate.
+    const wr = weavoWrap.getBoundingClientRect();
+    const cx = wr.left + weavoWrap.clientWidth / 2 + msX;
+    const cy = wr.top + weavoWrap.clientHeight / 2 + msY;
+    msX -= ((anchorX - cx) / prev) * (next - prev);
+    msY -= ((anchorY - cy) / prev) * (next - prev);
+  }
+  msScale = next;
   if (msScale === MS_MIN_ZOOM) { msX = 0; msY = 0; } else { clampMsPan(); }
   applyMsTransform();
 }
@@ -501,7 +529,7 @@ document.getElementById('referencePreview').onclick = () => {
 };
 weavoWrap.addEventListener('wheel', e => {
   e.preventDefault();
-  setMsZoom(msScale + (e.deltaY < 0 ? MS_ZOOM_STEP : -MS_ZOOM_STEP));
+  setMsZoom(msScale + (e.deltaY < 0 ? MS_ZOOM_STEP : -MS_ZOOM_STEP), e.clientX, e.clientY);
 }, { passive: false });
 addEventListener('resize', () => { if (currentProject) fitWeavoStage(currentProject); });
 
@@ -553,7 +581,11 @@ weavoWrap.addEventListener('touchstart', e => {
 weavoWrap.addEventListener('touchmove', e => {
   if (e.touches.length === 2 && msPinchStartDist) {
     e.preventDefault();
-    setMsZoom(msPinchStartScale * (msTouchDist(e.touches) / msPinchStartDist));
+    // The midpoint is read fresh every move, so moving both fingers
+    // together pans as well as zooms — the gesture people expect.
+    const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+    const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    setMsZoom(msPinchStartScale * (msTouchDist(e.touches) / msPinchStartDist), mx, my);
   } else if (e.touches.length === 1 && msDragging) {
     e.preventDefault();
     const dx = e.touches[0].clientX - msStartX, dy = e.touches[0].clientY - msStartY;
