@@ -170,3 +170,13 @@
   .profile-head-actions{margin-left:0;}
   #collectionItemsGrid{padding-left:16px;padding-right:16px;}
 }
+
+/* ---------- game medals ----------
+   Podium finishes in the piece-finding game (supabase_game.sql).
+   A standing, not a trophy: lose the top time and the medal goes with it,
+   which is why the count is read live rather than stored. Hidden entirely
+   when the player has none — an empty medal row reads as a rebuke. */
+.profile-medals{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;}
+.pm-item{display:inline-flex;align-items:center;gap:4px;font-family:'Pretendard',sans-serif;font-size:13px;color:var(--muted);}
+.pm-ico{font-size:15px;line-height:1;}
+.pm-item strong{font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}

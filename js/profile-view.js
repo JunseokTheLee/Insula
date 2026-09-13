@@ -8,6 +8,29 @@ function openProject(id) { location.href = projectUrl(id); }
 
 let profileUserId = null;
 
+// Game medals (supabase_game.sql). Purely additive: if the SQL has not been
+// applied, or the RPC fails, the row simply stays hidden and nothing else on
+// the profile is affected.
+async function renderProfileMedals(userId) {
+  const box = document.getElementById('profileMedals');
+  if (!box || !userId) return;
+  box.style.display = 'none';
+  try {
+    const { data, error } = await sb.rpc('game_medal_counts', { p_user_id: userId });
+    if (error) {
+      if (error.code !== 'PGRST202' && error.code !== '42883') console.error('load game medals error:', error);
+      return;
+    }
+    const m = data || {};
+    const gold = Number(m.gold) || 0, silver = Number(m.silver) || 0, bronze = Number(m.bronze) || 0;
+    if (!gold && !silver && !bronze) return;   // no podium finishes: show nothing
+    document.getElementById('profileGold').textContent = gold;
+    document.getElementById('profileSilver').textContent = silver;
+    document.getElementById('profileBronze').textContent = bronze;
+    box.style.display = '';
+  } catch (e) { console.error('load game medals threw:', e); }
+}
+
 // Client-side fallback for the tab title/social-preview tags, in case this
 // page is reached without going through the Pages Function that pre-renders
 // them server-side (see functions/[lang]/artists/[handle].js).
@@ -663,6 +686,8 @@ async function loadProfileView(userId) {
   document.getElementById('profileFollowCounts').style.display = '';
   document.getElementById('profileFollowingCount').onclick = () => openFollowListModal(userId, 'following');
   document.getElementById('profileFollowersCount').onclick = () => openFollowListModal(userId, 'followers');
+
+  renderProfileMedals(userId);
 
   renderProfileGraphFor(userId, true);
 

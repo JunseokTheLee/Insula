@@ -57,35 +57,63 @@
   }
 
   // ---------- sound (synthesised; the repo ships no audio files) ----------
+  // Two things had to be fixed here after testing on a phone:
+  //
+  // 1. The wrong-answer blip was a 180 Hz sine. Phone speakers roll off hard
+  //    below ~300 Hz, so it was inaudible on exactly the device most people
+  //    play on. It is now a higher square tone, which also carries far more
+  //    harmonics than a sine at the same gain.
+  // 2. Mobile browsers only let an AudioContext start inside a user gesture,
+  //    and a context created outside one stays suspended forever. unlockAudio()
+  //    is called from the "start game" tap for that reason.
   let audioCtx = null;
+  function unlockAudio() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      // A silent one-sample buffer: iOS treats the context as genuinely
+      // started only once something has actually played through it.
+      const src = audioCtx.createBufferSource();
+      src.buffer = audioCtx.createBuffer(1, 1, 22050);
+      src.connect(audioCtx.destination);
+      src.start(0);
+    } catch (e) { console.error('game: audio unlock failed:', e); }
+  }
   function beep(kind) {
     if (muted) return;
     try {
-      if (!audioCtx) {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
-        audioCtx = new AC();
-      }
+      if (!audioCtx) unlockAudio();
+      if (!audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
       const t = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      // Correct: a short rising pair. Wrong: one low, quickly damped blip.
+      let peak = 0.22, stop = 0.18;
       if (kind === 'correct') {
+        osc.type = 'triangle';
         osc.frequency.setValueAtTime(660, t);
         osc.frequency.setValueAtTime(990, t + 0.07);
       } else if (kind === 'done') {
+        osc.type = 'triangle';
         osc.frequency.setValueAtTime(523, t);
         osc.frequency.setValueAtTime(784, t + 0.09);
         osc.frequency.setValueAtTime(1046, t + 0.18);
+        peak = 0.26; stop = 0.36;
       } else {
-        osc.frequency.setValueAtTime(180, t);
+        // Wrong: a short falling buzz, well inside what a phone can produce.
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(400, t);
+        osc.frequency.exponentialRampToValueAtTime(220, t + 0.16);
+        peak = 0.18;            // square is louder per unit gain than sine
+        stop = 0.2;
       }
       gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + (kind === 'done' ? 0.34 : 0.16));
+      gain.gain.exponentialRampToValueAtTime(peak, t + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + stop);
       osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(t); osc.stop(t + (kind === 'done' ? 0.36 : 0.18));
+      osc.start(t); osc.stop(t + stop + 0.02);
     } catch (e) { /* audio is a nicety; never break play for it */ }
   }
   function setMuted(on) {
@@ -256,6 +284,10 @@
       okLabel: tr('gameStart'),
     });
     if (!ok) return;
+
+    // Still inside the tap that confirmed the dialog — the only moment a
+    // mobile browser will let audio start.
+    unlockAudio();
 
     if (!me.id && settings.gameAnonymousPlayEnabled === false) {
       toast(tr('gameNeedSignIn'));
@@ -784,7 +816,11 @@
   $('gameZoomIn').onclick = () => zoomBy(1.4);
   $('gameZoomOut').onclick = () => zoomBy(1 / 1.4);
   $('gameZoomReset').onclick = fitAll;
-  for (const b of root.querySelectorAll('[data-mute]')) b.onclick = () => setMuted(!muted);
+  for (const b of root.querySelectorAll('[data-mute]')) b.onclick = () => {
+    const next = !muted;
+    if (!next) unlockAudio();   // unmuting is a gesture: use it to open audio
+    setMuted(next);
+  };
   $('gameTimer').onclick = function () {
     const on = this.dataset.hidden === '1';
     this.dataset.hidden = on ? '' : '1';

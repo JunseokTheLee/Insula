@@ -37,8 +37,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-151444">
-<link rel="stylesheet" href="/css/profile.css?v=20260913-151444">
+<link rel="stylesheet" href="/css/base.css?v=20260913-151823">
+<link rel="stylesheet" href="/css/profile.css?v=20260913-151823">
 </head>
 <body>
 
@@ -79,6 +79,11 @@
           <div class="profile-follow-counts" id="profileFollowCounts" style="display:none;">
             <button type="button" class="profile-follow-count-btn" id="profileFollowingCount"><strong id="profileFollowingN">0</strong> 팔로잉</button>
             <button type="button" class="profile-follow-count-btn" id="profileFollowersCount"><strong id="profileFollowersN">0</strong> 팔로워</button>
+          </div>
+          <div class="profile-medals" id="profileMedals" style="display:none;">
+            <span class="pm-item"><span class="pm-ico" aria-hidden="true">🥇</span><strong id="profileGold">0</strong><span class="pm-l">금</span></span>
+            <span class="pm-item"><span class="pm-ico" aria-hidden="true">🥈</span><strong id="profileSilver">0</strong><span class="pm-l">은</span></span>
+            <span class="pm-item"><span class="pm-ico" aria-hidden="true">🥉</span><strong id="profileBronze">0</strong><span class="pm-l">동</span></span>
           </div>
           <div class="profile-links" id="profileLinksList"></div>
         </div>
@@ -391,17 +396,17 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-151444"></script>
-<script src="/js/i18n/ko.js?v=20260913-151444"></script>
-<script src="/js/common.js?v=20260913-151444"></script>
-<script src="/js/color-engine.js?v=20260913-151444"></script>
-<script src="/js/project-preview.js?v=20260913-151444"></script>
-<script src="/js/matching.js?v=20260913-151444"></script>
-<script src="/js/auth.js?v=20260913-151444"></script>
-<script src="/js/notifications.js?v=20260913-151444"></script>
-<script src="/js/push.js?v=20260913-151444"></script>
-<script src="/js/lightbox.js?v=20260913-151444"></script>
-<script src="/js/graph-common.js?v=20260913-151444"></script>
-<script src="/js/profile-view.js?v=20260913-151444"></script>
+<script src="/js/supabase-client.js?v=20260913-151823"></script>
+<script src="/js/i18n/ko.js?v=20260913-151823"></script>
+<script src="/js/common.js?v=20260913-151823"></script>
+<script src="/js/color-engine.js?v=20260913-151823"></script>
+<script src="/js/project-preview.js?v=20260913-151823"></script>
+<script src="/js/matching.js?v=20260913-151823"></script>
+<script src="/js/auth.js?v=20260913-151823"></script>
+<script src="/js/notifications.js?v=20260913-151823"></script>
+<script src="/js/push.js?v=20260913-151823"></script>
+<script src="/js/lightbox.js?v=20260913-151823"></script>
+<script src="/js/graph-common.js?v=20260913-151823"></script>
+<script src="/js/profile-view.js?v=20260913-151823"></script>
 </body>
 </html>

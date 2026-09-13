@@ -305,3 +305,41 @@ $fn$;
 
 revoke execute on function public.finish_game(uuid) from public, anon;
 grant execute on function public.finish_game(uuid) to authenticated;
+
+-- ── 7. game_medal_counts: a player's podium finishes ────────────────────
+-- Added 2026-09-13 for the profile page. Re-running this whole file is safe
+-- (everything in it is idempotent), so this section can be applied by just
+-- running supabase_game.sql again.
+--
+-- A "medal" is a current standing, not a trophy handed out once: if someone
+-- beats your time you lose the gold, exactly as the leaderboard shows. The
+-- ordering is the same deterministic one the leaderboard and finish_game
+-- use, so the three places always agree.
+create or replace function public.game_medal_counts(p_user_id uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  with ranked as (
+    select r.user_id,
+           row_number() over (
+             partition by r.project_id, r.artwork_id
+             order by r.elapsed_ms, r.completed_at, r.user_id
+           ) as rn
+    from public.game_best_records r
+  )
+  select jsonb_build_object(
+    'gold',    count(*) filter (where rn = 1),
+    'silver',  count(*) filter (where rn = 2),
+    'bronze',  count(*) filter (where rn = 3),
+    'records', count(*)
+  )
+  from ranked
+  where user_id = p_user_id;
+$fn$;
+
+-- Public: a profile page is public, so its medal row is too.
+revoke execute on function public.game_medal_counts(uuid) from public;
+grant execute on function public.game_medal_counts(uuid) to anon, authenticated;
