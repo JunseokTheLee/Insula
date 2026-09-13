@@ -75,6 +75,13 @@ const TEXT: Record<string, Record<string, NotifText>> = {
       title: () => "새 팔로워",
       body: (a) => `${a}님이 회원님을 팔로우하기 시작했습니다`,
     },
+    // preview is the recipient's NEW rank, written by finish_game. A medal
+    // here is a standing, so losing one is normal — the wording says what
+    // changed rather than treating it as a loss.
+    medal_changed: {
+      title: withArtwork("메달 변동"),
+      body: (a, p) => (p ? `${a}님이 기록을 경신했습니다 — 이제 ${p}위` : `${a}님이 내 기록을 넘어섰습니다`),
+    },
   },
   en: {
     submission_like: {
@@ -92,6 +99,10 @@ const TEXT: Record<string, Record<string, NotifText>> = {
     follow: {
       title: () => "New follower",
       body: (a) => `${a} started following you`,
+    },
+    medal_changed: {
+      title: withArtwork("Medal change"),
+      body: (a, p) => (p ? `${a} beat your time — you are now #${p}` : `${a} beat your time`),
     },
   },
 };

@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-172653">
-<link rel="stylesheet" href="/css/admin.css?v=20260913-172653">
+<link rel="stylesheet" href="/css/base.css?v=20260913-183052">
+<link rel="stylesheet" href="/css/admin.css?v=20260913-183052">
 </head>
 <body>
 
@@ -300,6 +300,10 @@
                 <label><input type="checkbox" data-setting="gameAnonymousPlayEnabled" disabled> <strong>Allow anonymous play</strong> — when off, signing in is required to start. Anonymous runs are never recorded either way.</label>
               </div>
               <div class="admin-setting admin-setting-range">
+                <label for="adminGameMinArtworks">Game <strong>minimum artworks</strong>: a campaign needs this many artworks before it can be played. 0 removes the limit. <em>(default: 10)</em></label>
+                <div class="admin-range"><input id="adminGameMinArtworks" type="range" min="0" max="100" step="1" data-setting="gameMinArtworks" disabled><output for="adminGameMinArtworks" data-setting-output="gameMinArtworks">10</output></div>
+              </div>
+              <div class="admin-setting admin-setting-range">
                 <label for="adminGameHintPenalty">Hint <strong>penalty</strong>: seconds added to the recorded time per sector hint. 0 makes hints free. <em>(default: 30s, up to 300s)</em></label>
                 <div class="admin-range"><input id="adminGameHintPenalty" type="range" min="0" max="300" step="5" data-setting="gameHintPenaltySec" disabled><output for="adminGameHintPenalty" data-setting-output="gameHintPenaltySec">30</output></div>
               </div>
@@ -532,14 +536,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-172653"></script>
-<script src="/js/i18n/en.js?v=20260913-172653"></script>
-<script src="/js/common.js?v=20260913-172653"></script>
-<script src="/js/auth.js?v=20260913-172653"></script>
-<script src="/js/notifications.js?v=20260913-172653"></script>
-<script src="/js/push.js?v=20260913-172653"></script>
-<script src="/js/color-engine.js?v=20260913-172653"></script>
-<script src="/js/matching.js?v=20260913-172653"></script>
-<script src="/js/admin.js?v=20260913-172653"></script>
+<script src="/js/supabase-client.js?v=20260913-183052"></script>
+<script src="/js/i18n/en.js?v=20260913-183052"></script>
+<script src="/js/common.js?v=20260913-183052"></script>
+<script src="/js/auth.js?v=20260913-183052"></script>
+<script src="/js/notifications.js?v=20260913-183052"></script>
+<script src="/js/push.js?v=20260913-183052"></script>
+<script src="/js/color-engine.js?v=20260913-183052"></script>
+<script src="/js/matching.js?v=20260913-183052"></script>
+<script src="/js/admin.js?v=20260913-183052"></script>
 </body>
 </html>

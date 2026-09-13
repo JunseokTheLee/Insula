@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-172653">
-<link rel="stylesheet" href="/css/admin.css?v=20260913-172653">
+<link rel="stylesheet" href="/css/base.css?v=20260913-183052">
+<link rel="stylesheet" href="/css/admin.css?v=20260913-183052">
 </head>
 
 <body>
@@ -303,6 +303,10 @@
               </div>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameAnonymousPlayEnabled" disabled> <strong>비로그인 게임 허용</strong> — 끄면 로그인해야 시작할 수 있습니다. 비로그인 기록은 어느 경우에도 저장되지 않습니다.</label>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminGameMinArtworks">게임 <strong>최소 작품 수</strong>: 캠페인에 이만큼 작품이 모여야 게임을 할 수 있습니다. 0이면 제한 없음. <em>(기본: 10개)</em></label>
+                <div class="admin-range"><input id="adminGameMinArtworks" type="range" min="0" max="100" step="1" data-setting="gameMinArtworks" disabled><output for="adminGameMinArtworks" data-setting-output="gameMinArtworks">10</output></div>
               </div>
               <div class="admin-setting admin-setting-range">
                 <label for="adminGameHintPenalty">힌트 <strong>패널티</strong>: 구역 힌트 한 번마다 기록에 더해지는 초. 0이면 공짜입니다. <em>(기본: 30초, 최대 300초)</em></label>
@@ -638,15 +642,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-172653"></script>
-<script src="/js/i18n/ko.js?v=20260913-172653"></script>
-<script src="/js/common.js?v=20260913-172653"></script>
-<script src="/js/auth.js?v=20260913-172653"></script>
-<script src="/js/notifications.js?v=20260913-172653"></script>
-<script src="/js/push.js?v=20260913-172653"></script>
-<script src="/js/color-engine.js?v=20260913-172653"></script>
-<script src="/js/matching.js?v=20260913-172653"></script>
-<script src="/js/admin.js?v=20260913-172653"></script>
+<script src="/js/supabase-client.js?v=20260913-183052"></script>
+<script src="/js/i18n/ko.js?v=20260913-183052"></script>
+<script src="/js/common.js?v=20260913-183052"></script>
+<script src="/js/auth.js?v=20260913-183052"></script>
+<script src="/js/notifications.js?v=20260913-183052"></script>
+<script src="/js/push.js?v=20260913-183052"></script>
+<script src="/js/color-engine.js?v=20260913-183052"></script>
+<script src="/js/matching.js?v=20260913-183052"></script>
+<script src="/js/admin.js?v=20260913-183052"></script>
 
 </body>
 </html>

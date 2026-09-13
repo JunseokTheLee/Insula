@@ -1007,6 +1007,17 @@
       .filter(a => a._used > 0)
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+    // Too few artworks to hunt in: say so instead of opening a list that
+    // cannot produce a meaningful time. start_game refuses the same case,
+    // so this is the polite half of a rule the server also enforces.
+    const minWorks = Math.max(0, Number(settings.gameMinArtworks) || 0);
+    if (artworks.length < minWorks) {
+      const note = $('gameTooFewText');
+      if (note) note.textContent = tr('gameTooFew', { have: artworks.length, need: minWorks });
+      show('toofew');
+      return;
+    }
+
     statsByArtwork = settings.gameRankingEnabled === false ? {} : await loadStats(project.id);
 
     wireStage();

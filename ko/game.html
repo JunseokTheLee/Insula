@@ -67,8 +67,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/game.css?v=20260913-172653">
-<link rel="stylesheet" href="/css/base.css?v=20260913-172653">
+<link rel="stylesheet" href="/css/game.css?v=20260913-183052">
+<link rel="stylesheet" href="/css/base.css?v=20260913-183052">
 </head>
 
 <body>
@@ -192,6 +192,11 @@
         <p class="game-notice">현재 게임을 이용할 수 없습니다.</p>
       </div>
 
+      <div data-screen="toofew" hidden>
+        <h1>조각 찾기 게임</h1>
+        <p class="game-notice">이 캠페인은 아직 작품이 충분하지 않습니다. 작품이 더 모이면 게임이 열립니다.</p>
+        <p class="game-notice" id="gameTooFewText"></p>
+      </div>
       <div data-screen="nocampaign" hidden>
         <h1>조각 찾기 게임</h1>
         <p class="game-notice">아직 게임을 할 수 있는 캠페인이 없습니다. 모자이크에 작품이 채워지면 시작할 수 있습니다.</p>
@@ -461,15 +466,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-172653"></script>
-<script src="/js/i18n/ko.js?v=20260913-172653"></script>
-<script src="/js/color-engine.js?v=20260913-172653"></script>
-<script src="/js/common.js?v=20260913-172653"></script>
-<script src="/js/auth.js?v=20260913-172653"></script>
-<script src="/js/notifications.js?v=20260913-172653"></script>
-<script src="/js/push.js?v=20260913-172653"></script>
-<script src="/js/lightbox.js?v=20260913-172653"></script>
-<script src="/js/game.js?v=20260913-172653"></script>
+<script src="/js/supabase-client.js?v=20260913-183052"></script>
+<script src="/js/i18n/ko.js?v=20260913-183052"></script>
+<script src="/js/color-engine.js?v=20260913-183052"></script>
+<script src="/js/common.js?v=20260913-183052"></script>
+<script src="/js/auth.js?v=20260913-183052"></script>
+<script src="/js/notifications.js?v=20260913-183052"></script>
+<script src="/js/push.js?v=20260913-183052"></script>
+<script src="/js/lightbox.js?v=20260913-183052"></script>
+<script src="/js/game.js?v=20260913-183052"></script>
 
 </body>
 </html>

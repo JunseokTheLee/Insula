@@ -585,6 +585,11 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // one piece unaided costs — otherwise taking it every time is simply the
   // correct strategy and the leaderboard stops measuring anything.
   gameHintPenaltySec: 30,
+  // How many artworks a campaign needs before it can be played. With only
+  // a handful in the mosaic, almost everything on screen belongs to the
+  // target and the hunt is over before it starts. start_game enforces it
+  // in the database too. 0 turns the check off.
+  gameMinArtworks: 10,
   // Costs one interval a second and a few hundred bytes of localStorage.
   // On by default: a freeze leaves no evidence any other way.
   freezeWatchdog: true,

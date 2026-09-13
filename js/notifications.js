@@ -128,6 +128,8 @@
       case 'submission_reply': return row.preview
         ? tr('notifReplied', { preview: row.preview }) : tr('notifRepliedToComment');
       case 'follow': return tr('notifFollowedYou');
+      // preview carries the recipient's new rank, written by finish_game.
+      case 'medal_changed': return tr('notifMedalChanged', { rank: row.preview || '' });
       default: return '';
     }
   }

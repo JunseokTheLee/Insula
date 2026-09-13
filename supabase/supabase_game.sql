@@ -635,3 +635,247 @@ $fn$;
 -- Public: the same standings the game page already shows to everyone.
 revoke execute on function public.game_artwork_medals(bigint) from public;
 grant execute on function public.game_artwork_medals(bigint) to anon, authenticated;
+
+-- ── 12. minimum artworks per campaign, and medal-change notifications ────
+-- Added 2026-09-13. Re-running this whole file is safe.
+
+-- 12a. 'medal_changed' has to be an allowed notification type.
+--
+-- NOTE ON ORDERING: supabase_admin_broadcast.sql owns this same constraint
+-- and lists the types it knows about. Whichever file runs LAST wins, and the
+-- list below is a superset (it includes 'announcement'), so running this file
+-- last is always safe — but if supabase_admin_broadcast.sql is ever re-run
+-- afterwards, run this file again or medal notifications start failing.
+do $mig$
+declare
+  v_name text;
+begin
+  for v_name in
+    select conname from pg_constraint
+    where conrelid = 'public.notifications'::regclass
+      and contype = 'c'
+      and pg_get_constraintdef(oid) like '%submission_like%'
+  loop
+    execute format('alter table public.notifications drop constraint %I', v_name);
+  end loop;
+end
+$mig$;
+
+alter table public.notifications add constraint notifications_type_check
+  check (type in (
+    'submission_like', 'submission_comment', 'submission_reply', 'follow',
+    'announcement', 'medal_changed'
+  ));
+
+-- 12b. start_game: a campaign needs enough artworks to be worth hunting in.
+--
+-- WHY A MINIMUM: with three artworks in the mosaic, "find the pieces of this
+-- one" is nearly free — most of what is on screen belongs to the target — and
+-- the leaderboard fills with times that mean nothing. The admin option
+-- decides the number (site option gameMinArtworks, default 10); 0 turns the
+-- check off. Enforced here as well as on screen because the publishable key
+-- can call this RPC directly (CLAUDE.md 16).
+create or replace function public.start_game(p_project_id bigint, p_artwork_id bigint)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_used     integer;
+  v_enabled  boolean;
+  v_min      integer;
+  v_artworks integer;
+  v_id       uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'sign-in required';
+  end if;
+
+  select coalesce((settings->>'gameEnabled')::boolean, true) into v_enabled
+  from public.site_settings where id = true;
+  if v_enabled is false then
+    raise exception 'game disabled';
+  end if;
+
+  if not exists (
+    select 1 from public.mosaic_projects
+    where id = p_project_id and not is_archived
+  ) then
+    raise exception 'campaign not available';
+  end if;
+
+  select coalesce((settings->>'gameMinArtworks')::integer, 10) into v_min
+  from public.site_settings where id = true;
+  v_min := coalesce(v_min, 10);
+  if v_min > 0 then
+    -- Distinct ARTWORKS, not cells and not pieces: one painting cut into 49
+    -- pieces is one artwork, and counting pieces would clear any threshold
+    -- with a single upload.
+    select count(distinct coalesce(s.parent_id, s.id))::integer into v_artworks
+    from public.mosaic_pixels px
+    join public.mosaic_submissions s on s.id = px.submission_id
+    where px.project_id = p_project_id and px.filled and px.submission_id is not null;
+    if coalesce(v_artworks, 0) < v_min then
+      raise exception 'campaign has too few artworks';
+    end if;
+  end if;
+
+  v_used := public.game_used_piece_count(p_project_id, p_artwork_id);
+  if v_used < 1 then
+    raise exception 'artwork has no pieces in this campaign';
+  end if;
+
+  insert into public.game_sessions (user_id, project_id, artwork_id, target_pieces)
+  values (auth.uid(), p_project_id, p_artwork_id, v_used)
+  returning id into v_id;
+
+  return jsonb_build_object('session_id', v_id, 'target_pieces', v_used);
+end;
+$fn$;
+
+revoke execute on function public.start_game(bigint, bigint) from public, anon;
+grant execute on function public.start_game(bigint, bigint) to authenticated;
+
+-- 12c. finish_game: tell the people whose medal just moved.
+--
+-- Medals here are standings, not trophies — losing one is the normal way a
+-- medal ends, and until now it happened silently: the player who was passed
+-- found out only if they happened to reload the page. This inserts one
+-- notification per displaced medallist, and the AFTER INSERT trigger in
+-- supabase_push.sql then pushes it like any other notification.
+--
+-- Only people who HELD a medal (top 3) and whose rank got worse are told —
+-- moving from 7th to 8th is not a medal change — and the player who just
+-- finished is never told about themselves.
+--
+-- preview carries the recipient's NEW rank as text; the feed row and the
+-- push both word themselves around it.
+create or replace function public.finish_game(p_session_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_s        public.game_sessions;
+  v_raw      integer;
+  v_elapsed  integer;
+  v_floor    integer;
+  v_prev     integer;
+  v_best     integer;
+  v_rank     integer;
+  v_total    integer;
+  v_penalty  integer;
+  v_pb       boolean := false;
+  v_improved boolean := false;
+  v_before   jsonb;
+  v_uid      uuid;
+  v_old_rank integer;
+  v_new_rank integer;
+begin
+  if auth.uid() is null then
+    raise exception 'sign-in required';
+  end if;
+
+  select * into v_s from public.game_sessions
+  where id = p_session_id and user_id = auth.uid();
+  if v_s.id is null then
+    raise exception 'session not found';
+  end if;
+
+  select coalesce((settings->>'gameHintPenaltySec')::integer, 30) into v_penalty
+  from public.site_settings where id = true;
+  v_penalty := coalesce(v_penalty, 30);
+
+  if v_s.finished_at is not null then
+    v_elapsed := v_s.elapsed_ms;
+  else
+    v_raw := greatest(1, (extract(epoch from (now() - v_s.started_at)) * 1000)::integer);
+
+    -- The floor is checked on the RAW time: the penalty is bookkeeping, not
+    -- playing, and must not help an impossible run look possible.
+    v_floor := v_s.target_pieces * 250;
+    if v_raw < v_floor then
+      raise exception 'implausible time';
+    end if;
+
+    v_elapsed := v_raw + (v_s.hint_count * v_penalty * 1000);
+
+    update public.game_sessions
+       set finished_at = now(), elapsed_ms = v_elapsed
+     where id = v_s.id;
+  end if;
+
+  select elapsed_ms into v_prev from public.game_best_records
+  where project_id = v_s.project_id and artwork_id = v_s.artwork_id and user_id = auth.uid();
+
+  if v_prev is null or v_elapsed < v_prev then
+    -- Snapshot the podium BEFORE the write; afterwards, whoever moved down is
+    -- the person to tell.
+    select coalesce(jsonb_object_agg(t.user_id::text, t.rn), '{}'::jsonb) into v_before
+    from (
+      select user_id,
+             row_number() over (order by elapsed_ms, completed_at, user_id) as rn
+      from public.game_best_records
+      where project_id = v_s.project_id and artwork_id = v_s.artwork_id
+    ) t
+    where t.rn <= 3;
+
+    insert into public.game_best_records (project_id, artwork_id, user_id, elapsed_ms, completed_at)
+    values (v_s.project_id, v_s.artwork_id, auth.uid(), v_elapsed, now())
+    on conflict (project_id, artwork_id, user_id) do update
+      set elapsed_ms = excluded.elapsed_ms, completed_at = excluded.completed_at;
+    v_pb := v_prev is not null;
+    v_improved := true;
+  end if;
+
+  select elapsed_ms into v_best from public.game_best_records
+  where project_id = v_s.project_id and artwork_id = v_s.artwork_id and user_id = auth.uid();
+
+  select count(*)::integer + 1 into v_rank
+  from public.game_best_records r
+  where r.project_id = v_s.project_id and r.artwork_id = v_s.artwork_id
+    and (r.elapsed_ms, r.completed_at, r.user_id) <
+        (select b.elapsed_ms, b.completed_at, b.user_id from public.game_best_records b
+         where b.project_id = v_s.project_id and b.artwork_id = v_s.artwork_id and b.user_id = auth.uid());
+
+  select count(*)::integer into v_total
+  from public.game_best_records
+  where project_id = v_s.project_id and artwork_id = v_s.artwork_id;
+
+  if v_improved then
+    for v_uid, v_old_rank in
+      select key::uuid, value::integer from jsonb_each_text(v_before)
+    loop
+      if v_uid = auth.uid() then
+        continue;
+      end if;
+      select count(*)::integer + 1 into v_new_rank
+      from public.game_best_records r
+      where r.project_id = v_s.project_id and r.artwork_id = v_s.artwork_id
+        and (r.elapsed_ms, r.completed_at, r.user_id) <
+            (select b.elapsed_ms, b.completed_at, b.user_id from public.game_best_records b
+             where b.project_id = v_s.project_id and b.artwork_id = v_s.artwork_id and b.user_id = v_uid);
+      if v_new_rank > v_old_rank then
+        insert into public.notifications (recipient_id, actor_id, type, submission_id, preview)
+        values (v_uid, auth.uid(), 'medal_changed', v_s.artwork_id, v_new_rank::text);
+      end if;
+    end loop;
+  end if;
+
+  return jsonb_build_object(
+    'elapsed_ms',    v_elapsed,
+    'hints',         v_s.hint_count,
+    'penalty_ms',    v_s.hint_count * v_penalty * 1000,
+    'best_ms',       v_best,
+    'personal_best', v_pb,
+    'rank',          v_rank,
+    'players',       v_total,
+    'first_record',  v_total = 1 and v_rank = 1
+  );
+end;
+$fn$;
+
+revoke execute on function public.finish_game(uuid) from public, anon;
+grant execute on function public.finish_game(uuid) to authenticated;
