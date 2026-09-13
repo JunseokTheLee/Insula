@@ -189,6 +189,8 @@ const T = {
   adminNoTitle: '(제목 없음)', adminOpenArtwork: '새 창에서 열기', adminFilterByArtist: '이 작가의 작품만 보기',
   adminDeleteSelected: '선택 삭제', adminDeleteSelectedN: '선택 삭제 ({n})', adminShownSelected: '{shown}건 표시 · {selected}건 선택',
   adminBulkTooMany: '한 번에 최대 {max}건까지만 지울 수 있습니다 — 선택을 줄여 주세요',
+  gameDurSec: '{s}초',
+  gameDurMin: '{m}분 {s}초',
   gameHintShown: '이 구역 안에 아직 찾지 않은 조각이 있어요',
   gamePlay: '게임 시작',
   gameStart: '게임 시작',

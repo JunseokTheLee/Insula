@@ -189,6 +189,8 @@ const T = {
   adminNoTitle: '(untitled)', adminOpenArtwork: 'Open in a new tab', adminFilterByArtist: 'Show only this artist',
   adminDeleteSelected: 'Delete selected', adminDeleteSelectedN: 'Delete selected ({n})', adminShownSelected: '{shown} shown · {selected} selected',
   adminBulkTooMany: 'At most {max} can be deleted at a time — narrow the selection',
+  gameDurSec: '{s}s',
+  gameDurMin: '{m}m {s}s',
   gameHintShown: 'A piece you have not found yet is in this area',
   gamePlay: 'Play',
   gameStart: 'Start',

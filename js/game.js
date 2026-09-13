@@ -43,7 +43,14 @@
     const rest = (s - m * 60);
     return `${String(m).padStart(2, '0')}:${rest.toFixed(2).padStart(5, '0')}`;
   };
-  const fmtSec = ms => (Math.max(0, ms) / 1000).toFixed(2);
+  // A bare "533.06" is hard to read as a duration — past a minute people
+  // think in minutes. Under one it stays a plain seconds figure.
+  const fmtSec = ms => {
+    const total = Math.max(0, ms) / 1000;
+    if (total < 60) return tr('gameDurSec', { s: total.toFixed(2) });
+    const m = Math.floor(total / 60);
+    return tr('gameDurMin', { m, s: (total - m * 60).toFixed(2) });
+  };
   const artworkKeyOf = sub => (sub.parent_id != null ? sub.parent_id : sub.id);
 
   function show(name) {
@@ -620,7 +627,7 @@
     beep('done');
     show('result');
 
-    $('gameResultTime').textContent = fmtSec(localMs);
+    $('gameResultTime').textContent = fmtSec(localMs);   // includes its own unit
     $('gameResultArtwork').textContent = target.art_title || tr('untitledArtwork');
     $('gameResultNote').textContent = '';
     $('gameResultRetry').hidden = true;
