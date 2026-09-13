@@ -844,6 +844,50 @@ async function fetchPieceUsage(parentId) {
 // (unknown column → schema mismatch). Shared by the profile grid and the
 // collection picker.
 const ARTWORK_ROW_COLS = 'id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at';
+
+// One artwork row, for a grid that lists many but opens one. Artwork grids
+// normally select ARTWORK_ROW_COLS for the whole list so a click needs no
+// request — but the home strip and the game list run to a few hundred rows
+// on the two most-visited pages, and almost nobody clicks. Paying ~200
+// bytes per row per visit to save a request for the rare click is the wrong
+// trade there; one lookup on the click is ~1KB, cached per id.
+const artworkRowCache = new Map();
+function fetchArtworkRow(id) {
+  const key = String(id);
+  if (!artworkRowCache.has(key)) {
+    artworkRowCache.set(key, (async () => {
+      const { data, error } = await sb.from('mosaic_submissions')
+        .select(ARTWORK_ROW_COLS).eq('id', id).maybeSingle();
+      if (error) {
+        console.error('load artwork row error:', error);
+        artworkRowCache.delete(key);   // a network blip must not be cached as 'no such artwork'
+        return null;
+      }
+      return data;
+    })());
+  }
+  return artworkRowCache.get(key);
+}
+
+// Opens the artwork in the lightbox, falling back to its own page if the
+// row can't be read or the page never loaded lightbox.js.
+async function openArtworkById(id) {
+  let row = null;
+  try { row = await fetchArtworkRow(id); } catch (e) { console.error('open artwork error:', e); }
+  if (row && typeof openLightbox === 'function') { openLightbox(row); return; }
+  location.href = artworkUrl(id);
+}
+
+// Wires a card whose href already points at the artwork page: plain left
+// clicks open the lightbox, everything else (middle click, Ctrl/Cmd, and
+// crawlers) keeps the real indexable link.
+function bindArtworkLightbox(el, id) {
+  el.addEventListener('click', e => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    openArtworkById(id);
+  });
+}
 async function fetchOwnArtworkRows(userId) {
   const q = withPieces => {
     let s = sb.from('mosaic_submissions').select(ARTWORK_ROW_COLS + (withPieces ? ',piece_n,home_project_id' : '')).eq('author_id', userId);

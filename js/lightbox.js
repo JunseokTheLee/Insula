@@ -98,6 +98,10 @@ let lbCountryMapBuilt = false;
 async function renderLightboxCountryMap(countryId) {
   const wrap = document.getElementById('lightbox-country-map');
   if (!countryId) { wrap.style.display = 'none'; return; }
+  // The locator map is a nicety, and d3/topojson are 300KB — a page may
+  // reasonably skip them (the game page does). Without them the map is
+  // simply not shown; the lightbox itself must still open.
+  if (typeof d3 === 'undefined' || typeof topojson === 'undefined') { wrap.style.display = 'none'; return; }
   let worldData;
   try { worldData = await loadWorldTopo(); }
   catch (e) { console.error('world map load error:', e); wrap.style.display = 'none'; return; }

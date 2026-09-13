@@ -8,7 +8,11 @@
 "use strict";
 
 async function fetchArtwork(id) {
-  const base = 'id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at,mosaic_projects(id,title)';
+  // The campaign is read separately below, not embedded: game_best_records
+  // references both mosaic_submissions and mosaic_projects, which made a
+  // `mosaic_projects(...)` embed ambiguous (PGRST201) and broke this page
+  // outright on 2026-09-13.
+  const base = ARTWORK_ROW_COLS;
   // Piece columns (supabase_mosaic_pieces.sql) asked for first, dropped
   // while that file isn't applied.
   let { data, error } = await sb.from('mosaic_submissions').select(base + ',parent_id,piece_n,home_project_id').eq('id', id).maybeSingle();
@@ -16,8 +20,9 @@ async function fetchArtwork(id) {
   if (error) { console.error('load artwork error:', error); return null; }
   // A cut artwork's campaign is its home campaign (its pieces are placed
   // there); the row's own project_id stays null.
-  if (data && !data.mosaic_projects && data.home_project_id) {
-    const { data: p } = await sb.from('mosaic_projects').select('id,title').eq('id', data.home_project_id).maybeSingle();
+  const projectId = data && (data.project_id || data.home_project_id);
+  if (projectId) {
+    const { data: p } = await sb.from('mosaic_projects').select('id,title').eq('id', projectId).maybeSingle();
     if (p) data.mosaic_projects = p;
   }
   return data;

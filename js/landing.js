@@ -158,6 +158,11 @@ async function renderHeroStrip(filled, project) {
     const by = document.createElement('div');
     by.className = 'hero-strip-by'; by.textContent = name;
     a.append(img, title, by);
+    // Was a plain link to the artwork page, and that page had been 404ing
+    // since the game tables were added (an ambiguous PostgREST embed) — so
+    // clicking a piece of the mosaic showed nothing at all. The lightbox is
+    // also what the rest of the site's artwork grids do.
+    bindArtworkLightbox(a, w.id);
     track.appendChild(a);
   }
   const countEl = document.getElementById('heroStripCount');
