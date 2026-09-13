@@ -579,11 +579,50 @@ document.addEventListener('weavo:authchange', () => {
   if (lbCurrentSub) applyLightboxOwnerControls(lbCurrentSub);
 });
 
+// The <img> is one element reused by every artwork, so assigning a new src
+// does NOT clear the old picture — the browser keeps painting the previous
+// artwork until the new bytes arrive. On a big original that is seconds of
+// showing the wrong piece, and it reads as "the lightbox opened the thing I
+// clicked before".
+//
+// So: drop the old picture first, put the 480px thumbnail up immediately
+// (the grid that was just clicked already has it cached, so this is the
+// same frame), and swap in the original only once it has fully decoded in
+// a detached Image. The swap is then instant — the bytes are already in the
+// cache — and every frame in between shows the RIGHT artwork, just softer.
+// Artworks from before thumbnails existed have no thumb_url; those show the
+// empty placeholder until the original lands, which is still better than
+// the previous picture.
+let lbImgToken = 0;
+function setLightboxImage(sub) {
+  const token = ++lbImgToken;
+  const full = sub.image_url ? cdnUrl(sub.image_url) : null;
+  const thumb = sub.thumb_url ? cdnUrl(sub.thumb_url) : null;
+  // Whatever happens next, the previous artwork stops being on screen now.
+  lbImg.removeAttribute('src');
+  lbImg.classList.add('lb-img-loading');
+  const settle = () => {
+    if (token !== lbImgToken) return;
+    lbImg.classList.remove('lb-img-loading');
+  };
+  if (!full) { if (thumb) lbImg.src = thumb; settle(); return; }
+  if (thumb && thumb !== full) lbImg.src = thumb;
+  const pre = new Image();
+  pre.onload = () => {
+    if (token !== lbImgToken) return;   // another artwork was opened meanwhile
+    lbImg.src = full;
+    settle();
+  };
+  pre.onerror = settle;                 // broken original: keep the thumbnail
+  pre.src = full;
+  // Already cached (a re-open, or the browser had it): no wait at all.
+  if (pre.complete && pre.naturalWidth) { lbImg.src = full; settle(); }
+}
 function populateLightboxContent(sub) {
   lbCurrentSub = sub;
   setImgFullscreen(false); // a fresh piece always starts un-blown-up
   closeLbExhibitMenu();
-  lbImg.src = cdnUrl(sub.image_url);
+  setLightboxImage(sub);
   applyArtDetailsToCaption(sub);
   renderLightboxPieceUsage(sub).then(u => renderLightboxPlay(sub, u));
   renderLightboxMedals(sub);

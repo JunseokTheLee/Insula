@@ -1030,3 +1030,10 @@ html[lang="ko"] * {
 /* Times pushed to the right edge so the three line up as a column of
    numbers instead of drifting with the length of each name. */
 .lb-medal-time{margin-left:auto;flex:0 0 auto;font-variant-numeric:tabular-nums;color:rgba(247,247,245,.7);}
+
+/* While the original is on its way the <img> holds the 480px thumbnail (or
+   nothing, for artworks from before thumbnails). A faint ground keeps that
+   moment from looking like a broken image, and the thumbnail's softness is
+   left alone — blurring it would make a correct picture look worse. */
+.lightbox-overlay img.lb-img-loading,
+#artworkStage img.lb-img-loading{background:rgba(247,247,245,.06);min-width:120px;min-height:120px;}
