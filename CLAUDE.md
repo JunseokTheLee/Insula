@@ -27,6 +27,7 @@
 |---|---|
 | 프론트 | **빌드 스텝 없는 순수 정적 HTML/CSS/JS** (번들러·트랜스파일러·프레임워크 없음) |
 | 외부 라이브러리 | CDN 직접 로드 — `@supabase/supabase-js@2`, `d3@7`, `topojson-client@3` (jsdelivr) |
+| 분석 | Google Analytics(gtag.js, 측정 ID `G-NLXNX3C6KW`) — 34개 HTML 전부의 `<meta charset>` 바로 뒤 (2026.9.13 사용자 지시로 도입) |
 | 호스팅 | **Cloudflare Pages** — `_headers`, `_redirects`, `functions/` (Pages Functions) |
 | 백엔드 | **Supabase** — Postgres(RLS), Auth, Storage(`artwork` 버킷). 별도 서버·크론 **없음** |
 | 다국어 | `/en/`, `/ko/` 페이지 트리 완전 분리 + `js/i18n/{en,ko}.js` (런타임 문자열만) |
@@ -48,7 +49,7 @@
 - 빌드 스텝(번들러, 트랜스파일러, CSS 전처리기). 캐시 무력화는 파일명 해시 대신 `?v=` 버전 쿼리로 한다 (12절).
 - **`sw.js` 에 fetch 핸들러·캐시를 넣지 않는다.** `/js`·`/css` 는 이미 1년 immutable + `?v=` 로 관리하는데(12절), 서비스 워커 캐시를 얹으면 그 위에 규칙이 다른 두 번째 캐시가 생긴다 — 2026.9.10 의 엣지 캐시 오염과 같은 종류의 버그를 눈에 보이지 않는 곳에 하나 더 만드는 셈이다. 서비스 워커의 일은 푸시가 올 때 살아 있는 것뿐이다.
 - 서버 상주 프로세스·크론에 기대는 기능. 매칭은 이벤트 시점에 브라우저에서 돌고 결과는 `commit_pool_matches` RPC 가 서버에서 재검증해 기록하며, 정리 작업은 DB 쪽 스로틀(`claim_rematch_slot`)로 동시 실행을 막는 구조다.
-- 새 외부 CDN·스크립트. 꼭 필요하면 `_headers` 의 CSP 미도입 사유 주석과 함께 사용자에게 먼저 확인한다.
+- 새 외부 CDN·스크립트. 꼭 필요하면 `_headers` 의 CSP 미도입 사유 주석과 함께 사용자에게 먼저 확인한다. **예외 하나 — Google Analytics (2026.9.13 사용자 지시).** 구글이 준 gtag.js 조각을 그대로 34개 HTML 에 넣었다. `<head>` 맨 앞이 아니라 `<meta charset="UTF-8">` **바로 뒤**에 두는데, charset 선언은 문서 앞 1024바이트 안에 있어야 하므로 그것을 밀어내면 안 되기 때문이다(`async` 로 받으므로 이 위치 차이는 측정에 영향이 없다). 태그를 옮기거나 페이지를 새로 만들 때 이 순서를 지킨다. **GA 는 제3자 쿠키를 설정하므로 `{en,ko}/privacy.html` 의 "쿠키 및 세션" 절이 이를 명시한다 — 태그를 빼면 그 문구도 함께 되돌린다.**
 
 ---
 
