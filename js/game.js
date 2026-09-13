@@ -506,16 +506,21 @@
     const side = hintSectorSide();
     const cols = Math.max(1, Math.ceil(project.width / side));
     const rows = Math.max(1, Math.ceil(project.height / side));
+    // The mosaic rarely divides evenly by the side, so the last column and row
+    // would be stubs — and a stub is not square. Slide those back inside
+    // instead: every sector is side x side, the edge ones just overlap their
+    // neighbour. The piece is still inside the box either way, and "roughly
+    // here" is all this promises.
     const sc = Math.min(cols - 1, Math.floor(pick.x / side));
     const sr = Math.min(rows - 1, Math.floor(pick.y / side));
-    // The last column/row can be a stub; clamp so the box never runs past the
-    // mosaic edge.
-    const sw = Math.min(side, project.width - sc * side);
-    const sh = Math.min(side, project.height - sr * side);
+    const ox = Math.max(0, Math.min(sc * side, project.width - side));
+    const oy = Math.max(0, Math.min(sr * side, project.height - side));
+    const sw = Math.min(side, project.width);
+    const sh = Math.min(side, project.height);
     const box = document.createElement('div');
     box.className = 'game-hint-box';
-    box.style.left = (sc * side * cellPx) + 'px';
-    box.style.top = (sr * side * cellPx) + 'px';
+    box.style.left = (ox * cellPx) + 'px';
+    box.style.top = (oy * cellPx) + 'px';
     box.style.width = (sw * cellPx) + 'px';
     box.style.height = (sh * cellPx) + 'px';
     $('gameMarks').appendChild(box);
@@ -528,8 +533,8 @@
     const boxW = sw * cellPx, boxH = sh * cellPx;
     const fit = Math.min(r.width / boxW, r.height / boxH) * 0.88;
     scale = Math.max(0.2, Math.min(40, fit));
-    panX = r.width / 2 - (sc * side + sw / 2) * cellPx * scale;
-    panY = r.height / 2 - (sr * side + sh / 2) * cellPx * scale;
+    panX = r.width / 2 - (ox + sw / 2) * cellPx * scale;
+    panY = r.height / 2 - (oy + sh / 2) * cellPx * scale;
     applyTransform();
     beep('tick');
     hintCount++;
