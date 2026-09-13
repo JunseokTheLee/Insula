@@ -486,7 +486,16 @@
   // holds a piece. It narrows ~5,000 cells to a few hundred — enough to be
   // findable, not enough to be given away. Everyone gets it on the same
   // terms, so records stay comparable.
-  const HINT_COLS = 6, HINT_ROWS = 6;
+  // Sectors are SQUARE in cells, so the highlighted area reads as a square on
+  // screen and fills the stage evenly when the hint zooms to it. A fixed 6x6
+  // split made them as lopsided as the campaign itself (58x86 gave sectors
+  // half as wide as they were tall). Instead the side is fixed and the count
+  // follows the mosaic's own proportions.
+  const HINT_TARGET_SECTORS = 36;
+  function hintSectorSide() {
+    const area = project.width * project.height;
+    return Math.max(4, Math.round(Math.sqrt(area / HINT_TARGET_SECTORS)));
+  }
   let hintTimer = 0;
   let hintCount = 0;
   function showHint() {
@@ -494,13 +503,19 @@
     const left = targetCells.filter(fc => !foundKeys.has(fc.x + ',' + fc.y));
     if (!left.length) return;
     const pick = left[(Math.random() * left.length) | 0];
-    const sw = project.width / HINT_COLS, sh = project.height / HINT_ROWS;
-    const sc = Math.min(HINT_COLS - 1, Math.floor(pick.x / sw));
-    const sr = Math.min(HINT_ROWS - 1, Math.floor(pick.y / sh));
+    const side = hintSectorSide();
+    const cols = Math.max(1, Math.ceil(project.width / side));
+    const rows = Math.max(1, Math.ceil(project.height / side));
+    const sc = Math.min(cols - 1, Math.floor(pick.x / side));
+    const sr = Math.min(rows - 1, Math.floor(pick.y / side));
+    // The last column/row can be a stub; clamp so the box never runs past the
+    // mosaic edge.
+    const sw = Math.min(side, project.width - sc * side);
+    const sh = Math.min(side, project.height - sr * side);
     const box = document.createElement('div');
     box.className = 'game-hint-box';
-    box.style.left = (sc * sw * cellPx) + 'px';
-    box.style.top = (sr * sh * cellPx) + 'px';
+    box.style.left = (sc * side * cellPx) + 'px';
+    box.style.top = (sr * side * cellPx) + 'px';
     box.style.width = (sw * cellPx) + 'px';
     box.style.height = (sh * cellPx) + 'px';
     $('gameMarks').appendChild(box);
@@ -513,8 +528,8 @@
     const boxW = sw * cellPx, boxH = sh * cellPx;
     const fit = Math.min(r.width / boxW, r.height / boxH) * 0.88;
     scale = Math.max(0.2, Math.min(40, fit));
-    panX = r.width / 2 - (sc * sw + sw / 2) * cellPx * scale;
-    panY = r.height / 2 - (sr * sh + sh / 2) * cellPx * scale;
+    panX = r.width / 2 - (sc * side + sw / 2) * cellPx * scale;
+    panY = r.height / 2 - (sr * side + sh / 2) * cellPx * scale;
     applyTransform();
     beep('tick');
     hintCount++;
