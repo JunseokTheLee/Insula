@@ -17,22 +17,22 @@
   gtag('config', 'G-NLXNX3C6KW');
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Weavo 소개</title>
-<meta name="description" content="Weavo가 무엇인지, 왜 만들어졌는지, 그리고 각자의 작품이 모여 하나의 공동 모자이크를 완성해 가는 과정을 소개합니다.">
-<link rel="canonical" href="https://weavo.art/ko/about">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/about">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/about">
+<title>조각 찾기 게임 | Weavo</title>
+<meta name="description" content="진행 중인 캠페인 모자이크에서 작품의 조각을 찾아내는 게임입니다. 가장 빠른 기록에 도전해 보세요.">
+<link rel="canonical" href="https://weavo.art/ko/game">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/game">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/game">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Weavo 소개">
-<meta property="og:description" content="Weavo가 무엇인지, 왜 만들어졌는지, 그리고 각자의 작품이 모여 하나의 공동 모자이크를 완성해 가는 과정을 소개합니다.">
-<meta property="og:url" content="https://weavo.art/ko/about">
+<meta property="og:title" content="조각 찾기 게임 | Weavo">
+<meta property="og:description" content="진행 중인 캠페인 모자이크에서 작품의 조각을 찾아내는 게임입니다. 가장 빠른 기록에 도전해 보세요.">
+<meta property="og:url" content="https://weavo.art/ko/game">
 <meta property="og:image" content="https://weavo.art/logo.png">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Weavo 소개">
-<meta name="twitter:description" content="Weavo가 무엇인지, 왜 만들어졌는지, 그리고 각자의 작품이 모여 하나의 공동 모자이크를 완성해 가는 과정을 소개합니다.">
+<meta name="twitter:title" content="조각 찾기 게임 | Weavo">
+<meta name="twitter:description" content="진행 중인 캠페인 모자이크에서 작품의 조각을 찾아내는 게임입니다. 가장 빠른 기록에 도전해 보세요.">
 <meta name="twitter:image" content="https://weavo.art/logo.png">
 
 <script type="application/ld+json">
@@ -59,14 +59,15 @@
     {
       "@type":"ListItem",
       "position":2,
-      "name":"소개",
-      "item":"https://weavo.art/ko/about"
+      "name":"조각 찾기 게임",
+      "item":"https://weavo.art/ko/game"
     }
   ]
 }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="/css/game.css?v=20260913-134002">
 <link rel="stylesheet" href="/css/base.css?v=20260913-134002">
 </head>
 
@@ -82,7 +83,7 @@
       <a href="/ko/artworks" class="nav-link">작품 탐색</a>
       <a href="/ko/artists" class="nav-link">아티스트</a>
       <a href="/ko/exhibitions" class="nav-link">전시</a>
-      <a href="/ko/about" class="nav-link active">소개</a>
+      <a href="/ko/game" class="nav-link active">소개</a>
     </nav>
 
     <div id="identity">
@@ -99,87 +100,97 @@
   </header>
 
   <main class="main main-scroll">
-    <div class="backnav">
-      <a class="back" href="/ko/campaigns">&larr; 돌아가기</a>
-    </div>
 
-    <div class="legal-page">
-      <h1>소개</h1>
+    <div class="game-page" id="gamePage">
 
-      <div class="legal-body">
+      <div data-screen="intro">
+        <h1>조각 찾기 게임</h1>
+        <p class="game-lead">작품 하나를 고른 뒤, 거대한 모자이크 속에 흩어진 그 작품의 조각을 찾아내세요. 조각을 모두 찾으면 기록이 남고, 작품마다 가장 빠른 세 명이 순위에 오릅니다.</p>
+        <p class="game-campaign">현재 캠페인: <b id="gameCampaignTitle"></b></p>
+        <button type="button" class="btn-primary" id="gameStartBtn">게임 시작하기</button>
+      </div>
 
-        <h2>Weavo란?</h2>
-        <p>
-          Weavo는 함께 만들어가는 협업 예술 캠페인입니다.
-          누구나 자신의 작품을 제출하고, 그 작품이 더 큰 하나의 작품을 이루는 일부가 되는 과정을 볼 수 있습니다.
-          제출된 모든 작품은 작품의 대표 색상을 기준으로 공동 Weavo 안에 배치됩니다.
-          그렇게 한 사람 한 사람의 작품이 모여, 모두가 하나씩 기여했기에 비로소 완성될 수 있는 하나의 이미지를 만들어 갑니다.
-        </p>
+      <div data-screen="list" hidden>
+        <h1>어떤 작품을 찾을까요?</h1>
+        <p class="game-campaign">현재 캠페인: <b id="gameCampaignTitle2"></b></p>
+        <div class="game-toolbar">
+          <label class="sr-only" for="gameSearch">작품 또는 작가 검색</label>
+          <input type="search" id="gameSearch" placeholder="작품 제목 또는 작가 이름" autocomplete="off">
+          <span class="game-count" id="gameListCount"></span>
+        </div>
+        <div class="game-list" id="gameList"></div>
+        <p class="game-notice" id="gameListEmpty" hidden>찾는 작품이 없습니다.</p>
+        <div class="game-more"><button type="button" class="admin-btn" id="gameListMore" hidden>더 보기</button></div>
+      </div>
 
-        <h2>왜 만들었나요?</h2>
-        <p>
-          이 캠페인은 장애인 아티스트와 비장애인 아티스트가 서로 구분되지 않은 채 나란히 작품으로 연결되는 공간을 지향합니다.
-          누가 만들었는지, 또는 어떤 방식으로 만들었는지와 관계없이 모든 작품은 전체를 완성하는 데 동등한 하나의 조각으로 참여합니다.
-        </p>
-
-        <h2>모자이크가 완성되어 가는 방식</h2>
-        <p class="hiw-intro">작품을 제출하면 대표 색상이 자동으로 분석되어, 진행 중인 모든 캠페인의 빈 칸 가운데 가장 잘 어울리는 위치에 배치됩니다 — 더 많은 아티스트가 작품을 더할수록 전체 그림이 서서히 또렷해지고, 각 작품은 원래 크기로 아티스트의 이름과 함께 남습니다.</p>
-        <div class="feature-col about-hiw">
-          <span class="feature-tag">모자이크</span>
-          <h3>하나의 작품이 전체의 한 자리를 찾아가기까지.</h3>
-          <ol class="hiw-steps-compact">
-            <li>
-              <span class="hiw-num-sm">01</span>
-              <div>
-                <h4>작품 제출하기</h4>
-                <p>프로필에서 어떤 형식의 작품이든 업로드하고, 원한다면 제목과 설명을 추가하세요. 캠페인을 직접 선택할 필요는 없습니다.</p>
-              </div>
-            </li>
-            <li>
-              <span class="hiw-num-sm">02</span>
-              <div>
-                <h4>Weavo가 색상을 분석합니다</h4>
-                <p>작품을 제출하는 순간 대표 색상이 자동으로 분석됩니다. 별도의 태그를 입력할 필요가 없습니다.</p>
-              </div>
-            </li>
-            <li>
-              <span class="hiw-num-sm">03</span>
-              <div>
-                <h4>가장 잘 어울리는 캠페인에 배치됩니다</h4>
-                <p>현재 진행 중인 모든 캠페인의 빈 칸 가운데 색상이 가장 잘 어울리는 위치에 배치됩니다. 사람이 직접 작품의 위치나 소속 캠페인을 정하지 않습니다.</p>
-              </div>
-            </li>
-            <li>
-              <span class="hiw-num-sm">04</span>
-              <div>
-                <h4>하나의 이미지가 완성되어 갑니다</h4>
-                <p>작품이 하나씩 더해질 때마다 전체 이미지가 스스로 만들어지고, 충분히 모인 뒤에야 완전한 모습이 드러납니다. 모든 작품은 원래 크기로, 아티스트의 이름과 함께 영구히 남습니다.</p>
-              </div>
-            </li>
-          </ol>
+      <div data-screen="play" hidden>
+        <div class="game-hud">
+          <button type="button" id="gameQuit" aria-label="게임 종료">&larr;</button>
+          <span class="game-hud-stat"><span data-progress>0 / 0</span> · <span data-progress-pct>0%</span></span>
+          <button type="button" class="game-timer" id="gameTimer" aria-label="경과 시간 (눌러서 숨기기)">00:00.00</button>
+          <button type="button" data-mute aria-label="소리 끄기" aria-pressed="false">&#128266;</button>
         </div>
 
-        <p>
-          이것은 어떻게 보면 거꾸로 만들어지는 모자이크입니다.
-          일반적인 모자이크는 먼저 완성할 이미지를 정한 뒤 그 이미지에 맞도록 각각의 조각을 만들어 배치합니다.
-          하지만 Weavo는 색상의 규칙 외에는 아무것도 정하지 않은 채 시작합니다.
-          서로의 작품을 한 번도 본 적 없는 사람들이 먼저 각자의 작품을 만들고,
-          그 작품들이 모인 뒤에야 비로소 전체 이미지가 모습을 드러냅니다.
-          멀리서 바라보면 하나의 모자이크처럼 보이지만,
-          가까이 다가가면 각각의 '타일'이 사실 누군가가 완성한 하나의 독립된 작품이라는 것을 발견할 수 있습니다.
-        </p>
+        <div class="game-play">
+          <div class="game-stage" id="gameStage">
+            <canvas id="gameCanvas"></canvas>
+            <div class="game-marks" id="gameMarks"></div>
+            <div class="game-countdown" id="gameCountdown" hidden></div>
+            <div class="zoom-toolbar game-zoom-toolbar">
+              <button type="button" class="zoom-btn" id="gameZoomOut" aria-label="축소">&minus;</button>
+              <span class="zoom-level" id="gameZoomLevel">100%</span>
+              <button type="button" class="zoom-btn" id="gameZoomIn" aria-label="확대">+</button>
+              <button type="button" class="zoom-btn" id="gameZoomReset" aria-label="전체 보기">&#8634;</button>
+            </div>
+          </div>
 
-        <h2>누가 만들고 있나요?</h2>
-        <p>
-          Weavo는 <a href="https://abst.space/" target="_blank" rel="noopener">ABST</a>가 만든 이니셔티브입니다.
-          ABST는 제주도에 기반한 단체로, 고등학교 미술 전공 학생들과 지역의 자폐·장애 청년 예술가들이
-          실질적인 협업을 통해 전시를 만들어갑니다.
-          질문이나 의견, 새로운 아이디어가 있다면
-          <a href="mailto:jadyenthelee@gmail.com">jadyenthelee@gmail.com</a>으로 연락해 주세요.
-        </p>
-
+          <aside class="game-target" id="gameSheet">
+            <button type="button" class="game-sheet-handle" id="gameSheetHandle" aria-label="작품 패널 펼치기/접기"></button>
+            <div class="game-target-head">찾는 작품</div>
+            <img class="game-target-img" id="gameTargetImg" src="" alt="">
+            <div class="game-target-title" id="gameTargetTitle"></div>
+            <div class="game-target-author" id="gameTargetAuthor"></div>
+            <div class="game-target-grid" id="gameTargetGrid"></div>
+            <div class="game-stats">
+              <span class="game-stat-n" data-progress>0 / 0</span>
+              <span class="game-stat-l">찾은 조각</span>
+              <span class="game-stat-n" data-progress-pct>0%</span>
+            </div>
+            <div class="game-progress"><i id="gameProgressBar"></i></div>
+            <div class="game-stats">
+              <button type="button" class="game-timer" id="gameTimerSide" aria-label="경과 시간">00:00.00</button>
+              <button type="button" class="admin-btn" data-mute aria-label="소리 끄기" aria-pressed="false">&#128266;</button>
+            </div>
+          </aside>
+        </div>
       </div>
+
+      <div data-screen="result" hidden>
+        <div class="game-result">
+          <div class="game-confetti" id="gameConfetti" aria-hidden="true"></div>
+          <h1>완료!</h1>
+          <p class="game-campaign" id="gameResultArtwork"></p>
+          <div class="game-result-time"><span id="gameResultTime">0.00</span><span style="font-size:.4em"> 초</span></div>
+          <p class="game-result-note" id="gameResultNote"></p>
+          <div class="game-result-actions">
+            <button type="button" class="admin-btn" id="gameResultRetry" hidden>기록 다시 저장</button>
+            <button type="button" class="btn-primary" id="gameResultBack">작품 선택으로 돌아가기</button>
+          </div>
+        </div>
+      </div>
+
+      <div data-screen="off" hidden>
+        <h1>조각 찾기 게임</h1>
+        <p class="game-notice">현재 게임을 이용할 수 없습니다.</p>
+      </div>
+
+      <div data-screen="nocampaign" hidden>
+        <h1>조각 찾기 게임</h1>
+        <p class="game-notice">아직 게임을 할 수 있는 캠페인이 없습니다. 모자이크에 작품이 채워지면 시작할 수 있습니다.</p>
+      </div>
+
     </div>
+
   </main>
 
   <footer id="legal-footer">
@@ -390,10 +401,12 @@
 
 <script src="/js/supabase-client.js?v=20260913-134002"></script>
 <script src="/js/i18n/ko.js?v=20260913-134002"></script>
+<script src="/js/color-engine.js?v=20260913-134002"></script>
 <script src="/js/common.js?v=20260913-134002"></script>
 <script src="/js/auth.js?v=20260913-134002"></script>
 <script src="/js/notifications.js?v=20260913-134002"></script>
 <script src="/js/push.js?v=20260913-134002"></script>
+<script src="/js/game.js?v=20260913-134002"></script>
 
 </body>
 </html>

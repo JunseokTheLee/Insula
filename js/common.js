@@ -572,6 +572,13 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // uploading a portfolio. Pieces don't count, only artworks.
   uploadLimitCount: 20,
   uploadLimitMinutes: 10,
+  // "Find the piece" game (/{lang}/game, js/game.js, supabase_game.sql).
+  // gameEnabled is checked by start_game in the database too, not just by
+  // hiding the page — an RPC can be called directly with the public key.
+  gameEnabled: true,
+  gameRankingEnabled: true,
+  gameAnonymousPlayEnabled: true,
+  gameSoundDefault: true,
   // How fast the artist icons drift around the network page, as a multiple
   // of the original speed (one turn every 5 minutes). 3 = a turn every 100
   // seconds, which is what the page ships with.

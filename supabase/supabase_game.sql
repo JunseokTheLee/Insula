@@ -1,0 +1,307 @@
+-- Run this once in the Supabase SQL editor (Project → SQL Editor → New query).
+-- Run AFTER supabase_mosaic_pieces.sql (it reads parent_id / piece_n) and
+-- supabase_site_settings.sql (it reads the game options).
+--
+-- "Find the piece" game: a player picks an artwork that has at least one
+-- piece sitting in the current campaign's mosaic, then hunts those pieces
+-- down in the mosaic. Fastest completion per (campaign, artwork) is ranked.
+--
+-- WHY THE TIMING LIVES HERE, NOT IN THE BROWSER
+-- A time the browser reports can be edited in devtools before it is sent.
+-- So the browser never sends one: start_game stamps the server clock,
+-- finish_game reads the server clock again and subtracts. The on-screen
+-- timer is display only.
+--
+-- WHAT THIS CAN AND CANNOT VERIFY
+-- It verifies that the session exists, belongs to the caller, was not
+-- already finished, names a real artwork with pieces in a live campaign,
+-- and that the elapsed time is not physically impossible (a floor per
+-- piece). It CANNOT verify that the player truly located every piece —
+-- this is a static site with no trusted game server, and the client is what
+-- decides it is done. The time floor is the honest limit of the defence.
+
+-- ── 1. game_sessions ─────────────────────────────────────────────────────
+-- One row per started game. Anonymous players never get one (the client
+-- doesn't call start_game without a session), so user_id is not nullable.
+create table if not exists public.game_sessions (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references auth.users(id) on delete cascade,
+  project_id    bigint not null references public.mosaic_projects(id) on delete cascade,
+  artwork_id    bigint not null references public.mosaic_submissions(id) on delete cascade,
+  -- How many of this artwork's pieces were in the mosaic when play started.
+  -- Frozen here so a mosaic change mid-game cannot alter what "finished"
+  -- means, and so the time floor below has something to scale with.
+  target_pieces integer not null check (target_pieces > 0),
+  started_at    timestamptz not null default now(),
+  finished_at   timestamptz,
+  elapsed_ms    integer
+);
+
+create index if not exists game_sessions_user_idx
+  on public.game_sessions (user_id, started_at desc);
+
+alter table public.game_sessions enable row level security;
+
+drop policy if exists "Players read their own game sessions" on public.game_sessions;
+create policy "Players read their own game sessions"
+  on public.game_sessions for select
+  using (user_id = auth.uid());
+
+-- Sessions are created and closed ONLY by the RPCs below — a direct insert
+-- would let a client pick its own started_at, which is the whole thing this
+-- design exists to prevent. Supabase grants ALL on new public tables to
+-- anon/authenticated by default, so revoke first (CLAUDE.md §6).
+revoke all on public.game_sessions from anon, authenticated;
+grant select on public.game_sessions to authenticated;
+
+-- ── 2. game_best_records ────────────────────────────────────────────────
+-- One row per (campaign, artwork, player): their fastest run. Kept separate
+-- from the session history so the leaderboard is a simple indexed read.
+create table if not exists public.game_best_records (
+  project_id   bigint not null references public.mosaic_projects(id) on delete cascade,
+  artwork_id   bigint not null references public.mosaic_submissions(id) on delete cascade,
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  elapsed_ms   integer not null check (elapsed_ms > 0),
+  completed_at timestamptz not null default now(),
+  primary key (project_id, artwork_id, user_id)
+);
+
+-- The leaderboard's sort order, and it must be DETERMINISTIC: two players
+-- can finish on the same millisecond, and a tie that reorders between two
+-- reads would make ranks jump around. elapsed → completed_at → user_id is
+-- unique because user_id is unique within (project, artwork).
+create index if not exists game_best_records_rank_idx
+  on public.game_best_records (project_id, artwork_id, elapsed_ms, completed_at, user_id);
+
+alter table public.game_best_records enable row level security;
+
+-- Rankings are public: everyone sees the leaderboard on the game page.
+drop policy if exists "Anyone can read game records" on public.game_best_records;
+create policy "Anyone can read game records"
+  on public.game_best_records for select
+  using (true);
+
+-- Written only by finish_game. A client that could insert here could write
+-- any time it liked.
+revoke all on public.game_best_records from anon, authenticated;
+grant select on public.game_best_records to anon, authenticated;
+
+-- ── 3. helper: pieces of one artwork in one campaign ─────────────────────
+-- Counts the cells in project p_project_id that are filled by a piece of
+-- artwork p_artwork_id (or by the artwork row itself, for pre-piece data).
+create or replace function public.game_used_piece_count(p_project_id bigint, p_artwork_id bigint)
+returns integer
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select count(*)::integer
+  from public.mosaic_pixels px
+  join public.mosaic_submissions s on s.id = px.submission_id
+  where px.project_id = p_project_id
+    and px.filled
+    and px.submission_id is not null
+    and coalesce(s.parent_id, s.id) = p_artwork_id;
+$fn$;
+
+revoke execute on function public.game_used_piece_count(bigint, bigint) from public;
+grant execute on function public.game_used_piece_count(bigint, bigint) to anon, authenticated;
+
+-- ── 4. game_artwork_stats: the whole leaderboard in ONE request ──────────
+-- Returns, for every artwork with at least one piece in this campaign's
+-- mosaic: the top 3 records and the caller's own best plus rank. Doing this
+-- per artwork would be an N+1 across ~30 artworks on a page that already
+-- loads the mosaic.
+--
+-- Names come from profiles the same way the rest of the site resolves a
+-- display name (username first, then name) — never an email.
+create or replace function public.game_artwork_stats(p_project_id bigint)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  with ranked as (
+    select r.artwork_id, r.user_id, r.elapsed_ms, r.completed_at,
+           row_number() over (
+             partition by r.artwork_id
+             order by r.elapsed_ms, r.completed_at, r.user_id
+           ) as rn
+    from public.game_best_records r
+    where r.project_id = p_project_id
+  ),
+  top3 as (
+    select k.artwork_id,
+           jsonb_agg(jsonb_build_object(
+             'name', coalesce(p.username, p.name, ''),
+             'ms',   k.elapsed_ms
+           ) order by k.rn) as rows
+    from ranked k
+    left join public.profiles p on p.id = k.user_id
+    where k.rn <= 3
+    group by k.artwork_id
+  ),
+  mine as (
+    select k.artwork_id, k.elapsed_ms, k.rn
+    from ranked k
+    where auth.uid() is not null and k.user_id = auth.uid()
+  )
+  select coalesce(jsonb_object_agg(a.artwork_id::text, jsonb_build_object(
+           'top',     coalesce(t.rows, '[]'::jsonb),
+           'mine_ms', m.elapsed_ms,
+           'mine_rank', m.rn
+         )), '{}'::jsonb)
+  from (select distinct artwork_id from ranked) a
+  left join top3 t on t.artwork_id = a.artwork_id
+  left join mine m on m.artwork_id = a.artwork_id;
+$fn$;
+
+revoke execute on function public.game_artwork_stats(bigint) from public;
+grant execute on function public.game_artwork_stats(bigint) to anon, authenticated;
+
+-- ── 5. start_game ───────────────────────────────────────────────────────
+-- Opens a session and stamps the server clock. Everything the finish step
+-- needs to judge the run is decided HERE, while the player has not started.
+create or replace function public.start_game(p_project_id bigint, p_artwork_id bigint)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_used    integer;
+  v_enabled boolean;
+  v_id      uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'sign-in required';
+  end if;
+
+  -- The admin switch is enforced server-side too, not just by hiding the
+  -- button (CLAUDE.md §16).
+  select coalesce((settings->>'gameEnabled')::boolean, true) into v_enabled
+  from public.site_settings where id = true;
+  if v_enabled is false then
+    raise exception 'game disabled';
+  end if;
+
+  -- The campaign must be live, and the artwork must actually have pieces in
+  -- it — otherwise there is nothing to find and no honest record to set.
+  if not exists (
+    select 1 from public.mosaic_projects
+    where id = p_project_id and not is_archived
+  ) then
+    raise exception 'campaign not available';
+  end if;
+
+  v_used := public.game_used_piece_count(p_project_id, p_artwork_id);
+  if v_used < 1 then
+    raise exception 'artwork has no pieces in this campaign';
+  end if;
+
+  insert into public.game_sessions (user_id, project_id, artwork_id, target_pieces)
+  values (auth.uid(), p_project_id, p_artwork_id, v_used)
+  returning id into v_id;
+
+  return jsonb_build_object('session_id', v_id, 'target_pieces', v_used);
+end;
+$fn$;
+
+revoke execute on function public.start_game(bigint, bigint) from public, anon;
+grant execute on function public.start_game(bigint, bigint) to authenticated;
+
+-- ── 6. finish_game ──────────────────────────────────────────────────────
+-- Closes a session, computes the time from the server clock, and updates
+-- the player's best if it beat it.
+--
+-- IDEMPOTENT: calling it twice on one session returns the same result
+-- instead of recording a second run — the client retries this when the
+-- network drops after a finished game (a player who just set a record and
+-- lost it to a timeout would rightly be furious).
+create or replace function public.finish_game(p_session_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_s        public.game_sessions;
+  v_elapsed  integer;
+  v_floor    integer;
+  v_prev     integer;
+  v_best     integer;
+  v_rank     integer;
+  v_total    integer;
+  v_pb       boolean := false;
+begin
+  if auth.uid() is null then
+    raise exception 'sign-in required';
+  end if;
+
+  select * into v_s from public.game_sessions
+  where id = p_session_id and user_id = auth.uid();
+  if v_s.id is null then
+    raise exception 'session not found';
+  end if;
+
+  if v_s.finished_at is not null then
+    -- Already closed: report the same outcome rather than recording again.
+    v_elapsed := v_s.elapsed_ms;
+  else
+    v_elapsed := greatest(1, (extract(epoch from (now() - v_s.started_at)) * 1000)::integer);
+
+    -- A floor of 250 ms per piece. Finding a piece needs a look, a decision
+    -- and a tap; anything under this is a script, not a player. Rejecting
+    -- outright (rather than clamping) keeps a forged run out of the table.
+    v_floor := v_s.target_pieces * 250;
+    if v_elapsed < v_floor then
+      raise exception 'implausible time';
+    end if;
+
+    update public.game_sessions
+       set finished_at = now(), elapsed_ms = v_elapsed
+     where id = v_s.id;
+  end if;
+
+  select elapsed_ms into v_prev from public.game_best_records
+  where project_id = v_s.project_id and artwork_id = v_s.artwork_id and user_id = auth.uid();
+
+  if v_prev is null or v_elapsed < v_prev then
+    insert into public.game_best_records (project_id, artwork_id, user_id, elapsed_ms, completed_at)
+    values (v_s.project_id, v_s.artwork_id, auth.uid(), v_elapsed, now())
+    on conflict (project_id, artwork_id, user_id) do update
+      set elapsed_ms = excluded.elapsed_ms, completed_at = excluded.completed_at;
+    v_pb := v_prev is not null;   -- first-ever run is not a "personal best"
+  end if;
+
+  select elapsed_ms into v_best from public.game_best_records
+  where project_id = v_s.project_id and artwork_id = v_s.artwork_id and user_id = auth.uid();
+
+  -- Same ordering as the leaderboard index, so the rank shown here is the
+  -- rank the list will show.
+  select count(*)::integer + 1 into v_rank
+  from public.game_best_records r
+  where r.project_id = v_s.project_id and r.artwork_id = v_s.artwork_id
+    and (r.elapsed_ms, r.completed_at, r.user_id) <
+        (select b.elapsed_ms, b.completed_at, b.user_id from public.game_best_records b
+         where b.project_id = v_s.project_id and b.artwork_id = v_s.artwork_id and b.user_id = auth.uid());
+
+  select count(*)::integer into v_total
+  from public.game_best_records
+  where project_id = v_s.project_id and artwork_id = v_s.artwork_id;
+
+  return jsonb_build_object(
+    'elapsed_ms',    v_elapsed,
+    'best_ms',       v_best,
+    'personal_best', v_pb,
+    'rank',          v_rank,
+    'players',       v_total,
+    'first_record',  v_total = 1 and v_rank = 1
+  );
+end;
+$fn$;
+
+revoke execute on function public.finish_game(uuid) from public, anon;
+grant execute on function public.finish_game(uuid) to authenticated;

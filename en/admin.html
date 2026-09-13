@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260913-123305">
-<link rel="stylesheet" href="/css/admin.css?v=20260913-123305">
+<link rel="stylesheet" href="/css/base.css?v=20260913-134002">
+<link rel="stylesheet" href="/css/admin.css?v=20260913-134002">
 </head>
 <body>
 
@@ -287,6 +287,22 @@
             </div>
 
             <div class="admin-option-card">
+              <h3>Find the Piece game</h3>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="gameEnabled" disabled> <strong>Game enabled</strong> — when off, <code>/en/game</code> shows a notice only, and the server refuses to start a game.</label>
+              </div>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="gameRankingEnabled" disabled> <strong>Show rankings</strong> — when off, the top 3 and your rank are hidden. Play itself is unaffected.</label>
+              </div>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="gameAnonymousPlayEnabled" disabled> <strong>Allow anonymous play</strong> — when off, signing in is required to start. Anonymous runs are never recorded either way.</label>
+              </div>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="gameSoundDefault" disabled> <strong>Sound on by default</strong> — players can mute it at any time.</label>
+              </div>
+            </div>
+
+            <div class="admin-option-card">
               <h3>Network</h3>
               <div class="admin-setting admin-setting-range">
                 <label for="adminNetworkOrbitSpeed">How fast the artist icons <strong>drift</strong>: 1 is one turn every 5 minutes, 3 is one turn every 100 seconds. Higher feels alive; too high and the names are hard to read. <em>(default: 3)</em></label>
@@ -510,14 +526,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260913-123305"></script>
-<script src="/js/i18n/en.js?v=20260913-123305"></script>
-<script src="/js/common.js?v=20260913-123305"></script>
-<script src="/js/auth.js?v=20260913-123305"></script>
-<script src="/js/notifications.js?v=20260913-123305"></script>
-<script src="/js/push.js?v=20260913-123305"></script>
-<script src="/js/color-engine.js?v=20260913-123305"></script>
-<script src="/js/matching.js?v=20260913-123305"></script>
-<script src="/js/admin.js?v=20260913-123305"></script>
+<script src="/js/supabase-client.js?v=20260913-134002"></script>
+<script src="/js/i18n/en.js?v=20260913-134002"></script>
+<script src="/js/common.js?v=20260913-134002"></script>
+<script src="/js/auth.js?v=20260913-134002"></script>
+<script src="/js/notifications.js?v=20260913-134002"></script>
+<script src="/js/push.js?v=20260913-134002"></script>
+<script src="/js/color-engine.js?v=20260913-134002"></script>
+<script src="/js/matching.js?v=20260913-134002"></script>
+<script src="/js/admin.js?v=20260913-134002"></script>
 </body>
 </html>

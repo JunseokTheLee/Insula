@@ -1,0 +1,189 @@
+/* "Find the piece" game (/{lang}/game). Loaded only by game.html, so every
+   selector here is scoped under #gamePage or .game-* — nothing in this file
+   can reach another page's markup. */
+
+.game-page{
+  max-width:var(--frame-max);margin:0 auto;padding-inline:var(--gutter);
+}
+.game-page h1{margin-bottom:6px;}
+.game-lead{color:var(--muted);font-size:14.5px;max-width:70ch;margin:0 0 18px;}
+.game-campaign{
+  font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;color:var(--muted);
+  margin-bottom:18px;
+}
+.game-campaign b{color:var(--text);}
+
+/* ---------- artwork list ---------- */
+.game-toolbar{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0 14px;
+}
+.game-toolbar input[type="search"]{
+  flex:1 1 240px;max-width:360px;font-family:inherit;font-size:14px;
+  padding:9px 14px;border:1px solid var(--border-strong);border-radius:var(--r-full);
+  background:var(--bg);color:var(--text);
+}
+.game-count{font-family:'Pretendard',sans-serif;font-size:13px;color:var(--muted);}
+
+.game-list{display:flex;flex-direction:column;gap:12px;}
+.game-card{
+  display:grid;grid-template-columns:96px 1fr auto;gap:14px;align-items:center;
+  padding:12px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);
+  transition:box-shadow .15s linear,border-color .15s linear;
+}
+.game-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow-sm);}
+/* Brief highlight when coming back from a game you just played. */
+.game-card.just-played{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+.game-card-thumb{
+  width:96px;height:96px;object-fit:cover;border-radius:var(--r-sm);
+  background:var(--gray-100);display:block;
+}
+.game-card-body{min-width:0;}
+.game-card-title{font-family:'Pretendard',sans-serif;font-weight:700;font-size:15px;color:var(--text);}
+.game-card-author{font-family:'Pretendard',sans-serif;font-size:13px;color:var(--muted);margin-top:1px;}
+.game-card-pieces{font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--text);margin-top:5px;}
+.game-card-board{margin-top:7px;display:flex;flex-direction:column;gap:2px;}
+.gl-medal{display:flex;align-items:center;gap:7px;font-family:'Pretendard',sans-serif;font-size:12.5px;}
+.gl-m{width:16px;text-align:center;}
+.gl-n{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:14ch;}
+.gl-t{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:600;color:var(--text);}
+.game-card-mine{
+  margin-top:6px;font-family:'Pretendard',sans-serif;font-size:12.5px;font-weight:600;
+  color:var(--primary);
+}
+.game-card-play{white-space:nowrap;}
+
+.game-more{display:flex;justify-content:center;margin:18px 0;}
+
+/* ---------- play screen ---------- */
+.game-play{
+  display:grid;grid-template-columns:minmax(0,7fr) minmax(260px,3fr);gap:16px;
+  align-items:stretch;margin-top:12px;
+}
+.game-stage{
+  position:relative;overflow:hidden;background:var(--primary-dark);
+  border-radius:var(--r-lg);height:clamp(380px,70vh,780px);
+  touch-action:none;   /* the stage handles its own pan/pinch */
+  cursor:crosshair;
+}
+.game-stage canvas{
+  position:absolute;left:0;top:0;transform-origin:0 0;image-rendering:pixelated;
+}
+.game-marks{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;}
+.game-mark{position:absolute;box-sizing:border-box;}
+.game-mark.found{
+  border:2px solid #9EFFBF;box-shadow:0 0 0 2px rgba(0,0,0,.45),0 0 10px #9EFFBF;
+  animation:gameFound .35s ease-out;
+}
+.game-mark.wrong{border:2px solid #E0534C;animation:gameWrong .4s ease-out;}
+.game-mark.again{border:2px dashed rgba(247,247,245,.9);}
+@keyframes gameFound{from{transform:scale(2.2);opacity:.2}to{transform:scale(1);opacity:1}}
+@keyframes gameWrong{from{opacity:1}to{opacity:0}}
+
+/* Countdown / preparing overlay */
+.game-countdown{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(15,20,17,.72);color:var(--bg);z-index:6;
+  font-family:'Pretendard',sans-serif;font-weight:800;font-size:clamp(28px,9vw,84px);
+  letter-spacing:-.02em;text-align:center;padding:16px;
+}
+.game-countdown.pop{animation:gamePop .5s ease-out;}
+@keyframes gamePop{from{transform:scale(.6);opacity:.3}to{transform:scale(1);opacity:1}}
+
+/* Target artwork panel */
+.game-target{
+  display:flex;flex-direction:column;gap:10px;padding:14px;
+  border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);
+  min-width:0;
+}
+.game-target-head{font-family:'Pretendard',sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.game-target-img{width:100%;height:auto;border-radius:var(--r-sm);display:block;background:var(--gray-100);}
+.game-target-title{font-family:'Pretendard',sans-serif;font-weight:700;font-size:14.5px;color:var(--text);}
+.game-target-author{font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);}
+.game-target-grid{display:grid;gap:2px;width:100%;aspect-ratio:1;}
+/* Three states, never by colour alone: unused is faded and flat, in-use has
+   a dashed outline, found is solid with a check mark. */
+.gt-cell{border-radius:2px;background:var(--gray-200);position:relative;}
+.gt-cell.unused{opacity:.25;}
+.gt-cell.in-use{background:var(--gray-100);border:2px dashed var(--border-strong);}
+.gt-cell.found{background:var(--primary);border:2px solid var(--primary);opacity:1;}
+.gt-cell.found::after{
+  content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:11px;font-weight:700;line-height:1;
+}
+.game-stats{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;}
+.game-stat-n{font-family:'Pretendard',sans-serif;font-weight:800;font-size:20px;color:var(--text);font-variant-numeric:tabular-nums;}
+.game-stat-l{font-family:'Pretendard',sans-serif;font-size:12px;color:var(--muted);}
+.game-progress{height:8px;border-radius:4px;background:var(--gray-200);overflow:hidden;}
+.game-progress i{display:block;height:100%;background:var(--gradient-primary);width:0;transition:width .2s ease-out;}
+.game-timer{
+  font-family:'Pretendard',sans-serif;font-variant-numeric:tabular-nums;
+  font-weight:700;font-size:22px;color:var(--text);
+  background:none;border:none;padding:0;cursor:pointer;text-align:left;
+}
+
+/* ---------- result ---------- */
+.game-result{position:relative;text-align:center;padding:28px 16px 40px;}
+.game-result-time{
+  font-family:'Pretendard',sans-serif;font-weight:800;letter-spacing:-.02em;
+  font-size:clamp(40px,10vw,72px);color:var(--text);font-variant-numeric:tabular-nums;
+}
+.game-result-note{margin-top:8px;font-family:'Pretendard',sans-serif;font-weight:700;font-size:16px;color:var(--primary);min-height:24px;}
+.game-result-actions{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap;}
+.game-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.game-confetti canvas{position:absolute;left:0;top:0;}
+
+/* ---------- notice screens ---------- */
+.game-notice{
+  padding:40px 16px;text-align:center;color:var(--muted);
+  font-family:'Pretendard',sans-serif;font-size:15px;
+}
+
+/* ---------- phone: the mosaic gets the screen ---------- */
+@media (max-width:900px){
+  .game-play{grid-template-columns:1fr;gap:0;}
+}
+@media (max-width:640px){
+  body.game-playing .game-page{padding:0;max-width:none;}
+  body.game-playing .game-stage{
+    height:100dvh;border-radius:0;
+  }
+  /* HUD across the top of the mosaic. */
+  .game-hud{
+    position:fixed;left:0;right:0;top:0;z-index:160;
+    display:flex;align-items:center;gap:10px;padding:10px 12px;
+    padding-top:calc(10px + env(safe-area-inset-top,0px));
+    background:rgba(15,20,17,.78);color:var(--bg);
+  }
+  .game-hud .game-timer{color:var(--bg);font-size:16px;margin-left:auto;}
+  .game-hud-stat{font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;color:var(--bg);}
+  .game-hud button{
+    background:none;border:none;color:var(--bg);font-size:17px;cursor:pointer;padding:4px 6px;
+  }
+  /* Bottom sheet: small by default, dragged/tapped up to see the artwork. */
+  .game-target{
+    position:fixed;left:0;right:0;bottom:0;z-index:160;
+    border-radius:var(--r-lg) var(--r-lg) 0 0;border-bottom:none;
+    max-height:34vh;overflow-y:auto;overscroll-behavior-y:contain;
+    transition:max-height .22s ease-out;
+    padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  }
+  .game-sheet-handle{
+    position:sticky;top:0;align-self:center;width:44px;height:20px;
+    background:none;border:none;cursor:pointer;flex-shrink:0;
+  }
+  .game-sheet-handle::before{
+    content:'';display:block;width:40px;height:4px;border-radius:2px;
+    background:var(--border-strong);margin:6px auto;
+  }
+  /* Collapsed sizes. The expanded ones are set inline by game.js so the
+     sheet cannot be left half-open by a cascade surprise. */
+  .game-target-img{max-height:22vh;width:auto;margin:0 auto;transition:max-height .22s ease-out;}
+  body.game-playing .game-zoom-toolbar{bottom:auto;}
+  .game-card{grid-template-columns:72px 1fr;}
+  .game-card-thumb{width:72px;height:72px;}
+  .game-card-play{grid-column:1 / -1;width:100%;}
+}
+@media (min-width:641px){
+  .game-hud{display:none;}
+  .game-sheet-handle{display:none;}
+}
