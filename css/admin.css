@@ -248,3 +248,19 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
   white-space:pre-wrap;overflow-wrap:anywhere;
 }
 .abp-body:empty{display:none;}
+
+/* Member rows: avatar, name, joined date — one line each. The name takes
+   the slack and ellipses, so the date sits at a fixed right edge and the
+   column of dates reads straight down the list. Kept horizontal on narrow
+   screens too (the generic .admin-row stacks there, which would turn one
+   member into three lines for no gain — these three parts are short). */
+.admin-row.admin-member{align-items:center;gap:12px;padding:10px 0;}
+.admin-member .admin-target-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.admin-member-date{
+  flex:0 0 auto;margin-left:auto;color:var(--muted);font-size:12.5px;
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+@media (max-width:640px){
+  .admin-row.admin-member{flex-direction:row;gap:10px;}
+  .admin-member-date{font-size:11.5px;}
+}

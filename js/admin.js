@@ -527,6 +527,37 @@ document.getElementById('adminPoolRunBtn').onclick = runAdminPoolMatching;
 // username are included on purpose: someone who signed in and never
 // finished onboarding is exactly the kind of row an admin wants to see,
 // and the artists page hides them.
+// One member, one line: avatar, name, joined date. Both member lists use
+// it so the two read as the same thing — and the dates line up in a column
+// down the list instead of starting wherever each name happens to end.
+function adminMemberRow(p, opts) {
+  const o = opts || {};
+  const name = p.username || p.name || tr('adminNoUsername');
+  const row = document.createElement('div');
+  row.className = 'admin-row admin-member';
+  row.appendChild(miniAvatarEl(name, p.avatar_url, p.id));
+
+  const link = document.createElement('a');
+  link.className = 'admin-target-label';
+  link.href = profileUrl(p.username || p.id);
+  link.textContent = name;
+  if (o.badge) {
+    const badge = document.createElement('span');
+    badge.className = 'admin-badge';
+    badge.textContent = o.badge;
+    link.appendChild(document.createTextNode(' '));
+    link.appendChild(badge);
+  }
+  row.appendChild(link);
+
+  if (p.created_at) {
+    const when = document.createElement('span');
+    when.className = 'admin-member-date';
+    when.textContent = o.withTime ? adminDateTime(p.created_at) : adminDate(p.created_at);
+    row.appendChild(when);
+  }
+  return row;
+}
 function adminDateTime(iso) {
   return new Date(iso).toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US',
     { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -549,38 +580,19 @@ async function loadAdminNewMembers() {
   list.innerHTML = '';
   countEl.textContent = tr('adminNewMembersCount', { n: adminNum(rows.length), days });
   for (const p of rows) {
-    const name = p.username || p.name || tr('adminNoUsername');
-    const row = document.createElement('div'); row.className = 'admin-row admin-admin';
-    row.appendChild(miniAvatarEl(name, p.avatar_url, p.id));
-    const a = document.createElement('a'); a.className = 'admin-target-label';
-    a.href = profileUrl(p.username || p.id);
-    a.textContent = name;
-    if (p.is_admin) {
-      const badge = document.createElement('span'); badge.className = 'admin-badge';
-      badge.textContent = tr('adminRoleAdmin');
-      a.appendChild(document.createTextNode(' ')); a.appendChild(badge);
-    }
-    row.appendChild(a);
-    const when = document.createElement('span'); when.className = 'admin-row-sub';
-    when.textContent = adminDateTime(p.created_at);
-    row.appendChild(when);
-    list.appendChild(row);
+    // Time as well as date here: five days is a short window and "어제 밤"
+    // is the useful part of a brand-new sign-up.
+    list.appendChild(adminMemberRow(p, { withTime: true, badge: p.is_admin ? tr('adminRoleAdmin') : '' }));
   }
   empty.style.display = rows.length ? 'none' : '';
 }
 async function loadAdminAdmins() {
-  const { data, error } = await sb.from('profiles').select('id,username,avatar_url').eq('is_admin', true).order('username');
+  const { data, error } = await sb.from('profiles').select('id,username,name,avatar_url,created_at').eq('is_admin', true).order('username');
   if (error) { console.error('load admins error:', error); return; }
   const list = document.getElementById('adminAdmins');
   list.innerHTML = '';
   for (const p of data || []) {
-    const row = document.createElement('div'); row.className = 'admin-row admin-admin';
-    row.appendChild(miniAvatarEl(p.username || tr('anonymous'), p.avatar_url, p.id));
-    const a = document.createElement('a'); a.className = 'admin-target-label'; a.href = profileUrl(p.username || p.id);
-    a.textContent = p.username || tr('anonymous');
-    if (p.id === me.id) { const you = document.createElement('span'); you.className = 'admin-badge'; you.textContent = tr('adminYou'); a.appendChild(document.createTextNode(' ')); a.appendChild(you); }
-    row.appendChild(a);
-    list.appendChild(row);
+    list.appendChild(adminMemberRow(p, { badge: p.id === me.id ? tr('adminYou') : '' }));
   }
 }
 
