@@ -966,27 +966,27 @@ html[lang="ko"] * {
    pages — which never load game.css. Both are hidden by common.js when the
    game site option is off. */
 .game-banner{
-  display:flex;align-items:center;gap:14px;margin-top:16px;padding:16px 18px;
+  display:flex;align-items:center;gap:10px;margin-top:12px;padding:9px 12px;
   border:none;border-radius:var(--r-md);
   background:var(--gradient-primary);color:#fff;text-decoration:none;
-  box-shadow:var(--shadow-md);
+  box-shadow:0 3px 12px rgba(15,36,23,.15);
   transition:transform .14s ease-out,box-shadow .14s ease-out,filter .14s linear;
 }
-.game-banner:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(15,36,23,.22);filter:brightness(1.06);}
+.game-banner:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(15,36,23,.2);filter:brightness(1.06);}
 .game-banner:active{transform:translateY(0);}
 /* The icon sits in its own translucent disc so it reads as a badge rather
    than an emoji dropped into a sentence. */
 .game-banner-icon{
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  width:40px;height:40px;border-radius:50%;
-  background:rgba(255,255,255,.18);font-size:20px;line-height:1;
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.18);font-size:15px;line-height:1;
 }
 .game-banner-text{display:flex;flex-direction:column;min-width:0;flex:1;gap:1px;}
-.game-banner-text b{font-family:'Pretendard',sans-serif;font-size:15px;font-weight:700;color:#fff;}
-.game-banner-text span{font-family:'Pretendard',sans-serif;font-size:12.5px;color:rgba(255,255,255,.82);}
+.game-banner-text b{font-family:'Pretendard',sans-serif;font-size:13.5px;font-weight:700;color:#fff;}
+.game-banner-text span{font-family:'Pretendard',sans-serif;font-size:11.5px;color:rgba(255,255,255,.8);}
 .game-banner-go{
-  font-size:15px;color:#fff;flex-shrink:0;
-  width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.18);
+  font-size:13px;color:#fff;flex-shrink:0;
+  width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.18);
   display:flex;align-items:center;justify-content:center;
   transition:transform .14s ease-out;
 }
