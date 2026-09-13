@@ -478,3 +478,62 @@ $fn$;
 
 revoke execute on function public.finish_game(uuid) from public, anon;
 grant execute on function public.finish_game(uuid) to authenticated;
+
+-- ── 9. game_top_players: the site-wide podium ───────────────────────────
+-- Added 2026-09-13 for the top of the game page. Re-running this whole file
+-- is safe (everything in it is idempotent).
+--
+-- Ranked by medals, not by time: a time only means anything against the same
+-- artwork, so "the fastest player on the site" does not exist. Gold first,
+-- then silver, then bronze, then total records — and user_id last, so two
+-- players with identical medals never trade places between two reads.
+-- Medals are current standings (the same definition game_medal_counts uses),
+-- so losing a first place here costs the gold, exactly as the per-artwork
+-- leaderboard already shows.
+create or replace function public.game_top_players(p_limit integer default 3)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  with ranked as (
+    select r.user_id,
+           row_number() over (
+             partition by r.project_id, r.artwork_id
+             order by r.elapsed_ms, r.completed_at, r.user_id
+           ) as rn
+    from public.game_best_records r
+  ),
+  tally as (
+    select user_id,
+           count(*) filter (where rn = 1) as gold,
+           count(*) filter (where rn = 2) as silver,
+           count(*) filter (where rn = 3) as bronze,
+           count(*) as records
+    from ranked
+    group by user_id
+  )
+  select coalesce(
+    jsonb_agg(to_jsonb(t) order by t.gold desc, t.silver desc, t.bronze desc, t.records desc, t.user_id),
+    '[]'::jsonb)
+  from (
+    select t.user_id,
+           p.username,
+           p.avatar_url,
+           t.gold::integer   as gold,
+           t.silver::integer as silver,
+           t.bronze::integer as bronze,
+           t.records::integer as records
+    from tally t
+    left join public.profiles p on p.id = t.user_id
+    where t.gold + t.silver + t.bronze > 0
+    order by t.gold desc, t.silver desc, t.bronze desc, t.records desc, t.user_id
+    limit greatest(1, least(coalesce(p_limit, 3), 20))
+  ) t;
+$fn$;
+
+-- Public: the per-artwork leaderboards are already public, and this is the
+-- same information added up.
+revoke execute on function public.game_top_players(integer) from public;
+grant execute on function public.game_top_players(integer) to anon, authenticated;

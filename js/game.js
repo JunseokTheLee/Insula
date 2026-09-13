@@ -3,8 +3,10 @@
 //
 // Needs js/color-engine.js (luminance, which common.js's openCellPainter
 // calls), js/common.js (sb, loadProjectCells, openCellPainter, fetchAllRows,
-// cdnUrl, toast, getSiteSettings, confirmDialog, isUserBlocked) and
-// js/auth.js (me, authReady, openAuthModal) — in that order.
+// cdnUrl, toast, getSiteSettings, confirmDialog, isUserBlocked,
+// bindArtworkLightbox, miniAvatarEl), js/auth.js (me, authReady,
+// openAuthModal) and js/lightbox.js (openLightbox, for the artwork a card
+// links to) — in that order.
 //
 // The campaign page has its own zoom/pan, but it is bound to #weavoStage and
 // that file opens a campaign on load — so this page carries its own copy of
@@ -224,13 +226,23 @@
     card.className = 'game-card';
     card.dataset.artworkId = a.id;
 
+    // The thumbnail opens the artwork the way every other grid on the site
+    // does — you should be able to look at what you are about to hunt for
+    // without leaving the list. The link is real so it still indexes and
+    // still works with Ctrl-click.
+    const thumbLink = document.createElement('a');
+    thumbLink.className = 'game-card-thumb-link';
+    thumbLink.href = artworkUrl(a.id);
+    thumbLink.setAttribute('aria-label', a.art_title || tr('untitledArtwork'));
     const thumb = document.createElement('img');
     thumb.className = 'game-card-thumb';
     thumb.loading = 'lazy';
     thumb.decoding = 'async';
     thumb.src = cdnUrl(a.thumb_url || a.image_url);
     thumb.alt = '';
-    card.appendChild(thumb);
+    thumbLink.appendChild(thumb);
+    bindArtworkLightbox(thumbLink, a.id);
+    card.appendChild(thumbLink);
 
     const body = document.createElement('div');
     body.className = 'game-card-body';
@@ -269,6 +281,57 @@
     play.onclick = () => confirmStart(a);
     card.appendChild(play);
     return card;
+  }
+
+  // ---------- hall of fame ----------
+  // Site-wide standings, medals not times: a time only compares within one
+  // artwork. Quietly stays hidden when the RPC isn't applied yet or nobody
+  // has a podium finish — an empty podium says less than no podium.
+  async function renderHall() {
+    const box = $('gameHall');
+    const list = $('gameHallList');
+    if (!box || !list) return;
+    if (settings.gameRankingEnabled === false) return;
+    let rows = null;
+    try {
+      const { data, error } = await sb.rpc('game_top_players', { p_limit: 3 });
+      if (error) {
+        if (error.code !== 'PGRST202' && error.code !== '42883') console.error('game: top players error:', error);
+        return;
+      }
+      rows = data;
+    } catch (e) { console.error('game: top players threw:', e); return; }
+    if (!Array.isArray(rows) || !rows.length) return;
+
+    list.innerHTML = '';
+    rows.forEach((p, i) => {
+      const li = document.createElement('li');
+      li.className = 'game-hall-row';
+      const rank = document.createElement('span');
+      rank.className = 'gh-rank';
+      rank.textContent = ['🥇', '🥈', '🥉'][i] || (i + 1);
+      const name = p.username || tr('anonymous');
+      const who = document.createElement('div');
+      who.className = 'gh-who';
+      who.appendChild(miniAvatarEl(name, p.avatar_url, p.user_id, 'gh-avatar'));
+      const link = document.createElement('a');
+      link.className = 'gh-name';
+      link.href = profileUrl(p.username || p.user_id);
+      link.textContent = name;
+      who.appendChild(link);
+      const medals = document.createElement('span');
+      medals.className = 'gh-medals';
+      for (const [icon, n, key] of [['🥇', p.gold, 'gameGold'], ['🥈', p.silver, 'gameSilver'], ['🥉', p.bronze, 'gameBronze']]) {
+        const m = document.createElement('span');
+        m.className = 'gh-medal';
+        m.title = tr(key);
+        m.textContent = icon + ' ' + (Number(n) || 0);
+        medals.appendChild(m);
+      }
+      li.append(rank, who, medals);
+      list.appendChild(li);
+    });
+    box.hidden = false;
   }
 
   function renderList(reset) {
@@ -946,6 +1009,7 @@
 
     wireStage();
     renderList(true);
+    renderHall();   // its own request; the list never waits for it
     // Straight into the artwork list — the page itself is the introduction.
     show('list');
     restoreListPosition();

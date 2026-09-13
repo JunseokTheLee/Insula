@@ -13,6 +13,35 @@
 }
 .game-campaign b{color:var(--text);}
 
+/* ---------- hall of fame ---------- */
+/* Site-wide standings, above the artwork list. Kept to one compact strip:
+   it is context for the list, not the point of the page. */
+.game-hall{
+  margin:0 0 18px;padding:12px 14px;
+  border:1px solid var(--border);border-radius:var(--r-md);background:var(--gray-50,var(--bg));
+}
+.game-hall h2{
+  font-family:'Pretendard',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 8px;
+}
+.game-hall-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.game-hall-row{
+  display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:10px;
+  font-family:'Pretendard',sans-serif;font-size:13.5px;
+}
+.gh-rank{text-align:center;font-size:15px;line-height:1;}
+.gh-who{display:flex;align-items:center;gap:8px;min-width:0;}
+.game-hall .mini-avatar{width:26px;height:26px;font-size:12px;}
+.gh-name{
+  color:var(--text);font-weight:600;text-decoration:none;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.gh-name:hover{text-decoration:underline;}
+/* Fixed-width medal cells so the three columns line up down the rows
+   instead of shifting with each number. */
+.gh-medals{display:flex;gap:10px;font-variant-numeric:tabular-nums;}
+.gh-medal{min-width:34px;text-align:right;color:var(--text);white-space:nowrap;}
+
 /* ---------- artwork list ---------- */
 .game-toolbar{
   display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0 14px;
@@ -38,9 +67,13 @@
 .game-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow-sm);}
 /* Brief highlight when coming back from a game you just played. */
 .game-card.just-played{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+/* The thumbnail is wrapped in a link (it opens the lightbox), so the link
+   is what fills the grid column now. */
+.game-card-thumb-link{display:block;line-height:0;border-radius:var(--r-sm);}
+.game-card-thumb-link:focus-visible{outline:2px solid var(--primary);outline-offset:2px;}
 .game-card-thumb{
   width:96px;height:96px;object-fit:cover;border-radius:var(--r-sm);
-  background:var(--gray-100);display:block;
+  background:var(--gray-100);display:block;cursor:zoom-in;
 }
 /* The text column is a FIXED width, not auto: with auto, every card sized
    itself to its own title and the play buttons landed at a different x on
