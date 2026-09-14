@@ -13,6 +13,9 @@ let globalRotationTimer = null;
 // and whenever the graph is empty.
 let globalSelectNode = null;
 let globalGraphNodeIds = new Set();
+// Re-labels the switch from the graph's current selection. Set alongside
+// globalSelectNode, for the auth listener at the bottom of this file.
+let globalSyncViewTab = null;
 
 // ---------- everyone / my network ----------
 // "My network" is the selection a click on your own node already produces:
@@ -42,9 +45,14 @@ function showEveryoneNetwork() {
 }
 function showMyNetwork() {
   if (!me.id) { openAuthModal(); return; }
+  // Graph not in yet (still loading, or nothing to draw). A member's page
+  // opens on their own network by itself once it arrives, so a tap now —
+  // the old habit of pressing this first — needs no answer, and "you're not
+  // on the network" would be wrong.
+  if (!globalSelectNode) return;
   // No profile row yet (brand-new account mid-onboarding) — there is no node
   // to centre on, so say so rather than silently doing nothing.
-  if (!globalSelectNode || !globalGraphNodeIds.has(me.id)) { toast(tr('networkNoMeYet')); return; }
+  if (!globalGraphNodeIds.has(me.id)) { toast(tr('networkNoMeYet')); return; }
   globalSelectNode(me.id);
 }
 document.getElementById('networkViewAll').onclick = showEveryoneNetwork;
@@ -56,8 +64,20 @@ function stopGlobalGraph() {
 // Stashed right before navigating to a profile from a node click below, and
 // consumed on the next load of this page (see loadGlobalNetwork) — lets the
 // profile page's "Back" button return here with that same person's local
-// network still selected/zoomed instead of the fully-zoomed-out default.
+// network still selected/zoomed instead of the default view.
 const NETWORK_SELECTION_KEY = 'weavoNetworkSelectedId';
+// The stash is only honoured when this load is a trip back through history —
+// the profile page's "Back" runs history.back(), as do the browser and app
+// back gestures. Someone who goes on from that profile any other way leaves
+// the stash behind, and their next visit from the nav bar must open on the
+// default view, not on whoever they clicked last time.
+function cameBackToNetworkPage() {
+  try {
+    const nav = performance.getEntriesByType('navigation')[0];
+    if (nav && nav.type) return nav.type === 'back_forward';
+    return !!performance.navigation && performance.navigation.type === 2; // TYPE_BACK_FORWARD, older WebKit
+  } catch (e) { return false; }
+}
 const GLOBAL_GRAPH_ZOOM_STEP = 1.4;
 document.getElementById('globalGraph-zoom-in').onclick = () => {
   if (!globalZoomBehavior) return;
@@ -153,8 +173,13 @@ async function loadGlobalNetwork() {
   globalZoomBehavior = null;
   globalFitAllView = null;
   globalSelectNode = null;
+  globalSyncViewTab = null;
   globalGraphNodeIds = new Set();
-  setNetworkViewTab('all');
+  // Nothing is drawn until the data arrives, so neither view is on yet —
+  // lighting "Everyone" here would flash the wrong one at a member, whose
+  // page opens on their own network (end of this function). The markup
+  // starts the same way.
+  setNetworkViewTab(null);
 
   const [{ nodes, links }, orbitSettings] = await Promise.all([
     fetchGlobalGraphData(),
@@ -166,6 +191,10 @@ async function loadGlobalNetwork() {
     Promise.resolve().then(() => typeof getSiteSettings === 'function' ? getSiteSettings() : {}).catch(() => ({})),
   ]);
   if (token !== globalGraphToken) return; // a newer load superseded this one
+  // The whole map, unless the start selection at the end of this function
+  // narrows it — that runs in this same synchronous pass, so this state is
+  // never painted on the way there.
+  setNetworkViewTab('all');
 
   empty.style.display = nodes.length ? 'none' : 'flex';
   if (!nodes.length) return;
@@ -182,10 +211,12 @@ async function loadGlobalNetwork() {
     neighborsOf.get(l.source).add(l.target);
     neighborsOf.get(l.target).add(l.source);
   }
-  // No one is selected on load, so no connection lines are shown at all —
-  // the first click on a node selects it (revealing its local network and
-  // zooming to fit); a second click, on that node or any node in its now-
-  // visible local network, navigates to that person's profile.
+  // Until something is selected no connection lines are shown at all. The
+  // page can open with a node already selected — a member's own, or the one
+  // being returned to (end of this function). Otherwise the first click on a
+  // node selects it (revealing its local network and zooming to fit), and a
+  // second click, on that node or any node in its now-visible local network,
+  // navigates to that person's profile.
   let selectedId = null;
 
   const width  = panel.clientWidth  || 900;
@@ -404,6 +435,7 @@ async function loadGlobalNetwork() {
     applySelection();
     if (id == null) zoomToFitAll();
   };
+  globalSyncViewTab = () => syncNetworkViewTab(selectedId);
 
   node.on('click', (ev, d) => {
     ev.stopPropagation();
@@ -425,39 +457,54 @@ async function loadGlobalNetwork() {
     applySelection();
   });
 
-  // Restore the local network we navigated away from, if this load is the
-  // profile page's "Back" button (or browser back) returning here — a
-  // fresh visit (nav-bar link, reload with nothing stashed) never has this
-  // set, so it only ever fires right after that specific hand-off.
-  const restoreId = sessionStorage.getItem(NETWORK_SELECTION_KEY);
-  if (restoreId) {
-    sessionStorage.removeItem(NETWORK_SELECTION_KEY);
-    if (nodes.some(n => n.id === restoreId)) {
-      // Right now the nodes are still sitting at their transient spawn
-      // positions (a small spiral near the origin) — the simulation's
-      // internal timer hasn't run a single frame yet, since that's
-      // scheduled async and this is still the same synchronous pass that
-      // just created it. Zooming to fit against those would frame the
-      // spawn cluster, not the actual laid-out graph, landing far off
-      // target. Fast-forward through the settle synchronously (same
-      // ~300-tick run the default alphaDecay converges in on its own) so
-      // the zoom below is computed against final positions instead —
-      // this also means returning here shows the already-settled,
-      // already-zoomed local network immediately, with no visible
-      // whole-graph spring-into-place first.
-      sim.stop();
-      for (let i = 0; i < 300 && sim.alpha() > sim.alphaMin(); i++) sim.tick();
-      render();
-      // Bypassing the normal async settle above means the sim.on('end', ...)
-      // listener never fires here — do its job explicitly so orbiting is
-      // ready (and paused, since selectedId is about to be set) same as it
-      // would be after an organic settle.
-      orbitsInitialized = true;
-      initOrbits();
-      selectedId = restoreId;
-      applySelection();
-    }
+  // Which local network the page opens on.
+  // 1. The profile page's "Back" button (or browser back) returning here
+  //    restores the one we navigated away from. Every load consumes the
+  //    stash, but only a trip back through history uses it (see
+  //    cameBackToNetworkPage).
+  // 2. Any other visit (nav-bar link, reload) opens a signed-in member on
+  //    their own network — what people come to this page to look at, with
+  //    "Everyone" one tap away. A stash whose person has since left the
+  //    graph (blocked, deleted) falls through to this too.
+  // 3. A guest, or a member with no profile row yet, has no node to centre
+  //    on and keeps the whole map.
+  let restoreId = null;
+  try {
+    const stashed = sessionStorage.getItem(NETWORK_SELECTION_KEY);
+    if (stashed) sessionStorage.removeItem(NETWORK_SELECTION_KEY);
+    if (stashed && cameBackToNetworkPage()) restoreId = stashed;
+  } catch (e) { /* storage blocked: nothing can have been stashed */ }
+  const startId = [restoreId, me.id].find(id => id && globalGraphNodeIds.has(id));
+  if (startId) {
+    // Right now the nodes are still sitting at their transient spawn
+    // positions (a small spiral near the origin) — the simulation's
+    // internal timer hasn't run a single frame yet, since that's
+    // scheduled async and this is still the same synchronous pass that
+    // just created it. Zooming to fit against those would frame the
+    // spawn cluster, not the actual laid-out graph, landing far off
+    // target. Fast-forward through the settle synchronously (same
+    // ~300-tick run the default alphaDecay converges in on its own) so
+    // the zoom below is computed against final positions instead —
+    // this also means the page shows the already-settled local network
+    // immediately, with no visible whole-graph spring-into-place first.
+    sim.stop();
+    for (let i = 0; i < 300 && sim.alpha() > sim.alphaMin(); i++) sim.tick();
+    render();
+    // Bypassing the normal async settle above means the sim.on('end', ...)
+    // listener never fires here — do its job explicitly so orbiting is
+    // ready (and paused, since selectedId is about to be set) same as it
+    // would be after an organic settle.
+    orbitsInitialized = true;
+    initOrbits();
+    selectedId = startId;
+    applySelection();
   }
 }
 
+// Signing out doesn't reload the page (auth.js), and a member's page opens on
+// their own network, so without this the switch would go on saying "My
+// network" to a guest. Only the label is re-read, never the view: auth.js
+// fires this on token refreshes and brief null sessions too, and pulling the
+// zoom back out on one of those would undo what the member was looking at.
+document.addEventListener('weavo:authchange', () => { if (globalSyncViewTab) globalSyncViewTab(); });
 authReady.then(() => loadGlobalNetwork());
