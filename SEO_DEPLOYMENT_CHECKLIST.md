@@ -39,7 +39,7 @@ routing, redirects, or `_headers`/`_redirects`.
       two URLs.
 - [ ] Social share preview: paste a real `/en/artworks/{id}` URL into
       Twitter/X's card validator and a Facebook/LinkedIn share debugger —
-      confirms `og:image` (the artwork itself) renders, not the fallback logo.
+      confirms `og:image` (the artwork itself) renders, not the fallback site card.
 - [ ] Hit a handful of the **old** `?id=`/`?user=` links (if any were ever
       shared) and confirm each lands on the new clean URL via a real 301/308,
       not a broken page.
@@ -61,10 +61,12 @@ routing, redirects, or `_headers`/`_redirects`.
 - [ ] `sitemap-artworks.xml` is capped at Supabase's default 1000-row
       PostgREST page size — once submissions exceed that, split it into
       paginated `sitemap-artworks-N.xml` files listed from `sitemap.xml`.
-- [ ] No dedicated 1200×630 social share image exists yet — OG/Twitter tags
-      fall back to `logo.png` (3840×3840) wherever a project/artwork has no
-      image of its own. A purpose-made share image would render better in
-      link previews.
+- [x] Dedicated 1200×630 social share cards — `og-image-en.png` /
+      `og-image-ko.png` (source: `tools/og-image.html`), declared with
+      `og:image:width/height/type/alt` on every static page and detail
+      template since 2026-09-16. Before that the tags pointed at the square
+      `logo.png`, and X/Facebook previews came out with no picture at all.
+      After changing a card, re-scrape it in Facebook's Sharing Debugger.
 - [ ] Terms of Service / Community Guidelines pages don't exist yet — when
       they're written, follow the same pattern as `about`/`privacy`/
       `disclaimer` (clean URL, full meta set, added to `sitemap-static.xml`).

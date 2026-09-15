@@ -115,7 +115,10 @@ function updateProfileMeta(profile, displayName) {
   const description = profile.bio
     ? profile.bio.slice(0, 300)
     : (CURRENT_LANG === 'ko' ? `Weavo의 작가 ${displayName}님의 프로필입니다.` : `${displayName}'s artist profile on Weavo.`);
-  updatePageMeta({ title, description, canonical: `${location.origin}${profileUrl(profile.username || profile.id)}`, image: profile.avatar_url });
+  // Same rule as the Function (isSiteUpload): only a picture uploaded here is
+  // big enough for a link preview; a sign-in avatar leaves the site card.
+  const shareImage = profile.avatar_url && profile.avatar_url.startsWith(SUPABASE_STORAGE_PREFIX) ? profile.avatar_url : null;
+  updatePageMeta({ title, description, canonical: `${location.origin}${profileUrl(profile.username || profile.id)}`, image: shareImage });
 }
 function renderProfileJsonLd(profile, displayName) {
   const url = `${location.origin}${profileUrl(profile.username || profile.id)}`;

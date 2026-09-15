@@ -23,3 +23,11 @@ export async function pgFetchOne(path) {
 export async function pgFetchMany(path) {
   return (await pgFetch(path)) || [];
 }
+
+// Whether `url` is a file uploaded to this site's Storage, as opposed to a
+// picture hosted elsewhere (a Google/Apple sign-in avatar). Share images
+// care: sign-in avatars are tiny — Google hands out 96x96 — below what
+// Facebook (200x200) and X (300x157) will show in a link preview.
+export function isSiteUpload(url) {
+  return typeof url === 'string' && url.startsWith(`${SUPABASE_URL}/storage/v1/object/public/`);
+}

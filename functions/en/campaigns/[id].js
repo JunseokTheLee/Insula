@@ -19,15 +19,22 @@ export async function onRequestGet({ params, request, env }) {
     ? project.description.slice(0, 300)
     : `A collaborative mosaic campaign on Weavo: ${project.title}.`;
 
+  // A campaign's share card (made on create/reshape, common.js
+  // previewImageBlob) is always 1200x630. Without one the template's own
+  // site card stays, size tags and all.
+  const shareCard = project.preview_image_url
+    ? { image: project.preview_image_url, imageWidth: 1200, imageHeight: 630 }
+    : {};
+
   return renderEntityPage(assetResponse, {
     title, description, canonical,
     hreflangEn: canonical,
     hreflangKo: `${SITE}/ko/campaigns/${encodeURIComponent(project.id)}`,
-    image: project.preview_image_url || `${SITE}/logo.png`,
+    ...shareCard,
     jsonld: [
       {
         '@context': 'https://schema.org', '@type': 'CreativeWork',
-        name: project.title, url: canonical, image: project.preview_image_url || `${SITE}/logo.png`,
+        name: project.title, url: canonical, image: project.preview_image_url || `${SITE}/og-image-en.png`,
         ...(project.description ? { description: project.description } : {}),
       },
       {

@@ -25,8 +25,11 @@ class AppendHtml {
   constructor(html) { this.html = html; }
   element(el) { el.append(this.html, { html: true }); }
 }
+class RemoveElement {
+  element(el) { el.remove(); }
+}
 
-// `page` = { title, description, canonical, hreflangEn, hreflangKo, image, locale, jsonld: [...] }
+// `page` = { title, description, canonical, hreflangEn, hreflangKo, image, imageWidth, imageHeight, locale, jsonld: [...] }
 export function renderEntityPage(assetResponse, page) {
   const jsonldHtml = (page.jsonld || [])
     .map(obj => `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`)
@@ -45,9 +48,19 @@ export function renderEntityPage(assetResponse, page) {
   if (page.hreflangEn) rewriter = rewriter.on('link[rel="alternate"][hreflang="en"]', new SetAttr('href', page.hreflangEn));
   if (page.hreflangKo) rewriter = rewriter.on('link[rel="alternate"][hreflang="ko"]', new SetAttr('href', page.hreflangKo));
   if (page.image) {
+    // The template declares the size and type of its own site share card
+    // (tools/og-image.html). Another picture keeps a size only when the
+    // caller knows it — Facebook lays the preview out by these numbers before
+    // it has fetched the image, so a wrong size is worse than none. The type
+    // always goes: the callers' pictures are whatever was uploaded.
     rewriter = rewriter
       .on('meta[property="og:image"]', new SetAttr('content', page.image))
-      .on('meta[name="twitter:image"]', new SetAttr('content', page.image));
+      .on('meta[name="twitter:image"]', new SetAttr('content', page.image))
+      .on('meta[property="og:image:alt"]', new SetAttr('content', page.title))
+      .on('meta[name="twitter:image:alt"]', new SetAttr('content', page.title))
+      .on('meta[property="og:image:width"]', page.imageWidth ? new SetAttr('content', String(page.imageWidth)) : new RemoveElement())
+      .on('meta[property="og:image:height"]', page.imageHeight ? new SetAttr('content', String(page.imageHeight)) : new RemoveElement())
+      .on('meta[property="og:image:type"]', new RemoveElement());
   }
   if (jsonldHtml) rewriter = rewriter.on('head', new AppendHtml(jsonldHtml));
 

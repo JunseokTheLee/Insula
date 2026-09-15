@@ -9,18 +9,25 @@ let currentFilledKeys = new Set();
 // Client-side fallback for the tab title/social-preview tags, in case this
 // page is reached without going through the Pages Function that pre-renders
 // them server-side (see functions/[lang]/campaigns/[id].js).
+// The site share card every page declares (tools/og-image.html) — what a
+// campaign shows until it has a share card of its own.
+function siteShareCardUrl() { return `${location.origin}/og-image-${CURRENT_LANG}.png`; }
 function updateProjectMeta(project) {
   const title = `${project.title} | Weavo`;
   const description = project.description
     ? project.description.slice(0, 300)
     : (CURRENT_LANG === 'ko' ? `Weavo의 공동 모자이크 프로젝트 '${project.title}'.` : `A collaborative mosaic project on Weavo: ${project.title}.`);
-  updatePageMeta({ title, description, canonical: `${location.origin}${projectUrl(project.id)}`, image: project.preview_image_url || `${location.origin}/logo.png` });
+  // Both pictures are 1200x630 (common.js previewImageBlob, tools/og-image.html).
+  updatePageMeta({
+    title, description, canonical: `${location.origin}${projectUrl(project.id)}`,
+    image: project.preview_image_url || siteShareCardUrl(), imageWidth: 1200, imageHeight: 630,
+  });
 }
 function renderProjectJsonLd(project) {
   const url = `${location.origin}${projectUrl(project.id)}`;
   const data = {
     '@context': 'https://schema.org', '@type': 'CreativeWork',
-    name: project.title, url, image: project.preview_image_url || `${location.origin}/logo.png`,
+    name: project.title, url, image: project.preview_image_url || siteShareCardUrl(),
   };
   if (project.description) data.description = project.description;
   const breadcrumb = {

@@ -270,8 +270,9 @@ function interceptClick(el, onPlainClick) {
 // ever reached without going through the Pages Function that pre-renders
 // these same tags server-side (see functions/[lang]/.../[id].js) — e.g.
 // local testing straight against project.html. `image`, when given, is an
-// absolute URL; canonical/title/description are required.
-function updatePageMeta({ title, description, canonical, image }) {
+// absolute URL, with `imageWidth`/`imageHeight` when its size is known;
+// canonical/title/description are required.
+function updatePageMeta({ title, description, canonical, image, imageWidth, imageHeight }) {
   document.title = title;
   const set = (selector, attr, value) => { const el = document.querySelector(selector); if (el) el.setAttribute(attr, value); };
   set('meta[name="description"]', 'content', description);
@@ -281,7 +282,18 @@ function updatePageMeta({ title, description, canonical, image }) {
   set('meta[property="og:url"]', 'content', canonical);
   set('meta[name="twitter:title"]', 'content', title);
   set('meta[name="twitter:description"]', 'content', description);
-  if (image) { set('meta[property="og:image"]', 'content', image); set('meta[name="twitter:image"]', 'content', image); }
+  if (image) {
+    set('meta[property="og:image"]', 'content', image); set('meta[name="twitter:image"]', 'content', image);
+    set('meta[property="og:image:alt"]', 'content', title); set('meta[name="twitter:image:alt"]', 'content', title);
+    // Same rule as functions/_lib/render.js: the template declares the size
+    // and type of the site share card, and a different picture keeps a size
+    // only when it is known — Facebook lays the preview out by these numbers,
+    // so a wrong one is worse than none.
+    const sizeOrDrop = (selector, value) => { const el = document.querySelector(selector); if (!el) return; if (value) el.setAttribute('content', String(value)); else el.remove(); };
+    sizeOrDrop('meta[property="og:image:width"]', imageWidth);
+    sizeOrDrop('meta[property="og:image:height"]', imageHeight);
+    sizeOrDrop('meta[property="og:image:type"]', null);
+  }
 }
 // Appends one JSON-LD <script> block per object, first removing whatever
 // this function itself previously injected (marked with data-dynamic-jsonld)
@@ -513,7 +525,7 @@ function previewImageBlob(cells, width, height, settings) {
   return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
 }
 // Renders + uploads the share image; resolves to its public URL, or null on
-// any failure (the page then falls back to the site logo).
+// any failure (the page then keeps the site share card, /og-image-{lang}.png).
 async function uploadPreviewImage(cells, width, height) {
   try {
     const blob = await previewImageBlob(cells, width, height, await getSiteSettings());

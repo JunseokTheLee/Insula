@@ -1,4 +1,4 @@
-import { pgFetchOne } from '../../_lib/supabase.js';
+import { pgFetchOne, isSiteUpload } from '../../_lib/supabase.js';
 import { renderEntityPage, notFoundResponse } from '../../_lib/render.js';
 
 const SITE = 'https://weavo.art';
@@ -34,7 +34,8 @@ export async function onRequestGet({ params, request, env }) {
     title, description, canonical,
     hreflangEn: canonical,
     hreflangKo: `${SITE}/ko/artists/${encodeURIComponent(profile.username || profile.id)}`,
-    image: profile.avatar_url,
+    // A sign-in avatar is too small for a link preview; the site card stays then.
+    image: isSiteUpload(profile.avatar_url) ? profile.avatar_url : null,
     jsonld: [
       {
         '@context': 'https://schema.org', '@type': 'Person', name: displayName, url: canonical,

@@ -81,7 +81,8 @@
 
 메타 형식·문구를 바꾸면 **양쪽을 함께** 고친다. 한쪽만 바꾸면 Function 을 거치지 않은 요청에서 다른 결과가 나온다.
 
-- **캠페인의 og:image·JSON-LD image 에 기준 사진(`reference_image_url`)을 쓰지 않는다** (2026.9.10 확정). `preview_image_url`(회색 1200×630 공유 카드 — 생성·reshape 때 브라우저가 만들고, 옛 캠페인은 관리자 "공유 이미지 생성")을 쓰고 없으면 `/logo.png`. Function 은 `select=*` 로 읽어 컬럼이 없어도 동작한다.
+- **캠페인의 og:image·JSON-LD image 에 기준 사진(`reference_image_url`)을 쓰지 않는다** (2026.9.10 확정). `preview_image_url`(회색 1200×630 공유 카드 — 생성·reshape 때 브라우저가 만들고, 옛 캠페인은 관리자 "공유 이미지 생성")을 쓰고 없으면 사이트 공유 카드(`/og-image-{lang}.png`)를 쓴다. Function 은 `select=*` 로 읽어 컬럼이 없어도 동작한다.
+- **사이트 공유 카드는 `/og-image-ko.png`·`/og-image-en.png`(1200×630, 원본 `tools/og-image.html` — 다시 만드는 명령은 그 파일 머리 주석)이고, 모든 정적 페이지와 상세 템플릿이 `og:image:width/height/type/alt`·`twitter:image:alt` 를 함께 선언한다** (2026.9.16). 크기 태그가 없으면 페이스북이 첫 공유에서 이미지를 비동기로 처리해 **이미지 없는 미리보기**를 내고, 예전 공유 이미지였던 `logo.png`(정사각형·투명 배경·1.77MB)는 X 에서도 회색 아이콘 카드로 나왔다. Function·클라이언트가 og:image 를 다른 그림으로 바꿀 때는 **크기를 아는 경우(캠페인 공유 카드 1200×630)에만 크기 태그를 남기고, 모르면(작품 원본·프로필 사진) 지운다** — 페이스북은 이 숫자로 미리보기 틀을 먼저 잡으므로 틀린 크기는 없는 것보다 나쁘다(`functions/_lib/render.js`·`updatePageMeta`). `logo.png` 는 JSON-LD Organization 로고와 앱 아이콘으로만 쓴다. 공유 카드를 바꾸면 페이스북 공유 디버거의 "다시 스크랩" 전까지 예전 미리보기가 남는다. 작가 페이지는 **사이트에 직접 올린 프로필 사진만** 공유 이미지로 쓰고, 구글 등 로그인 계정 사진이면 사이트 공유 카드를 둔다 — 구글은 96×96 을 주는데 두 플랫폼 최소 크기에 못 미친다(2026.9.16 기준 사진 있는 32명 중 28명). 판별은 서버 `isSiteUpload()`(`functions/_lib/supabase.js`)와 클라이언트 `updateProfileMeta` 가 같은 규칙으로 한다.
 
 ---
 

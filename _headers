@@ -56,6 +56,10 @@
   Cache-Control: public, max-age=86400
 /logo.ico
   Cache-Control: public, max-age=86400
+/og-image-en.png
+  Cache-Control: public, max-age=86400
+/og-image-ko.png
+  Cache-Control: public, max-age=86400
 
 # The service worker has no ?v= to bust it (the browser fetches /sw.js by
 # that exact path), so it must never be cached hard — otherwise a fix to it

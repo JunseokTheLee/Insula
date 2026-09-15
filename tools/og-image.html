@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!--
+  Source of the social share cards /og-image-ko.png and /og-image-en.png —
+  the og:image / twitter:image of every static page and of the detail-page
+  templates (CLAUDE.md 5). Not served on the site: functions/tools/[[path]].js
+  answers 404 for this folder.
+
+  Regenerate after an edit, from the repo root, with Chrome or Edge. The
+  throwaway user-data-dir keeps it from attaching to a browser that is
+  already open (which would silently skip the screenshot):
+
+    chrome --headless=new --hide-scrollbars --force-device-scale-factor=1
+           --window-size=1200,630 --virtual-time-budget=15000
+           --user-data-dir=<temp dir> --screenshot=og-image-ko.png
+           "file:///<repo>/tools/og-image.html?lang=ko"
+
+  and again with lang=en into og-image-en.png. Keep it 1200x630: every page
+  declares that size in og:image:width/height, and Facebook lays the preview
+  out by those numbers before it has fetched the picture.
+-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+    color: #F7F7F5;
+    /* The site's own greens (css/base.css --green-600 / --green-900), with a
+       faint cell grid for the mosaic the site is about. */
+    background-color: #1A3C2B;
+    background-image:
+      linear-gradient(rgba(158, 255, 191, .05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(158, 255, 191, .05) 1px, transparent 1px),
+      radial-gradient(circle at 50% 42%, #24513A 0%, #1A3C2B 48%, #0F2417 100%);
+    background-size: 42px 42px, 42px 42px, 100% 100%;
+    background-position: -1px -1px, -1px -1px, 0 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+  }
+  .lockup { display: flex; align-items: center; gap: 30px; }
+  .mark { width: 176px; height: 176px; display: block; }
+  .word { font-size: 150px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+  .tagline { margin: 46px 0 0; font-size: 48px; font-weight: 600; letter-spacing: -.01em; color: #9EFFBF; }
+  .sub { margin: 16px 0 0; font-size: 29px; font-weight: 500; color: rgba(247, 247, 245, .72); }
+</style>
+</head>
+<body>
+  <div class="lockup">
+    <img class="mark" src="../logo.png" alt="">
+    <span class="word">Weavo</span>
+  </div>
+  <p class="tagline" data-lang="ko">함께 만드는 예술 모자이크 커뮤니티</p>
+  <p class="tagline" data-lang="en">Collaborative Art Mosaic Community</p>
+  <p class="sub" data-lang="ko">모든 아티스트와 작품이 그대로 보존되는 공동 모자이크</p>
+  <p class="sub" data-lang="en">Where every artist and every piece remains visible</p>
+<script>
+  // ?lang=en renders the English card; anything else the Korean one.
+  const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ko';
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-lang]').forEach(el => { el.hidden = el.dataset.lang !== lang; });
+</script>
+</body>
+</html>
