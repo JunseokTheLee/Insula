@@ -117,7 +117,10 @@ async function renderProfileColoredWorks(userId) {
   box.style.display = 'none';
   let rows = null;
   try {
-    const { data, error } = await sb.rpc('pixel_user_completions', { p_user_id: userId, p_limit: 24 });
+    // Highest level finished per artwork (supabase_pixel_levels.sql); the
+    // older function while that file is not applied.
+    let { data, error } = await sb.rpc('pixel_user_levels', { p_user_id: userId, p_limit: 24 });
+    if (error && (error.code === 'PGRST202' || error.code === '42883')) ({ data, error } = await sb.rpc('pixel_user_completions', { p_user_id: userId, p_limit: 24 }));
     if (error) {
       if (error.code !== 'PGRST202' && error.code !== '42883') console.error('load colored artworks error:', error);
       return;
@@ -149,6 +152,12 @@ async function renderProfileColoredWorks(userId) {
     by.textContent = name;
     const play = document.createElement('a');
     play.className = 'pmw-play';
+    if (w.level) {
+      const lv = document.createElement('span');
+      lv.className = 'pmw-level';
+      lv.textContent = tr(w.level === 1 ? 'cgLevelEasy' : w.level === 3 ? 'cgLevelHard' : 'cgLevelNormal');
+      link.appendChild(lv);
+    }
     play.href = `/${CURRENT_LANG}/coloring?artwork=${encodeURIComponent(w.artwork_id)}`;
     play.textContent = tr('cgAgain');
     card.append(link, title, by, play);

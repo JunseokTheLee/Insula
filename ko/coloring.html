@@ -72,8 +72,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/coloring.css?v=20260920-163237">
-<link rel="stylesheet" href="/css/base.css?v=20260920-163237">
+<link rel="stylesheet" href="/css/coloring.css?v=20260920-222858">
+<link rel="stylesheet" href="/css/base.css?v=20260920-222858">
 </head>
 
 <body>
@@ -126,13 +126,20 @@
             <div class="cg-today-actions"><button type="button" class="admin-btn primary" id="cgTodayPlay">색칠하기</button></div>
           </div>
         </section>
+        <section class="cg-mine" id="cgMine" hidden>
+          <div class="cg-mine-block" id="cgResumeBlock" hidden>
+            <h2 class="cg-section-label">이어하기</h2>
+            <div class="cg-grid" id="cgResumeGrid"></div>
+          </div>
+          <div class="cg-mine-block" id="cgDoneBlock" hidden>
+            <h2 class="cg-section-label">완성한 작품</h2>
+            <div class="cg-grid" id="cgDoneGrid"></div>
+          </div>
+        </section>
+        <h2 class="cg-section-label">작품 둘러보기</h2>
         <div class="cg-toolbar">
           <label class="sr-only" for="cgSearch">작품이나 작가 검색</label>
           <input type="search" id="cgSearch" placeholder="작품 제목이나 작가 이름" autocomplete="off">
-          <div class="cg-filter" role="group" aria-label="보기">
-            <button type="button" class="active" data-filter="all">전체</button>
-            <button type="button" data-filter="mine">내 것</button>
-          </div>
           <span class="cg-count" id="cgCount"></span>
         </div>
         <div class="cg-grid" id="cgList"></div>
@@ -171,6 +178,7 @@
               <div style="min-width:0;">
                 <div class="cg-side-title" data-art-title></div>
                 <div class="cg-side-by" id="cgSideBy"></div>
+                <div class="cg-side-level" data-art-level></div>
               </div>
             </div>
             <div class="cg-progress"><i id="cgProgressBar"></i></div>
@@ -475,16 +483,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260920-163237"></script>
-<script src="/js/i18n/ko.js?v=20260920-163237"></script>
-<script src="/js/color-engine.js?v=20260920-163237"></script>
-<script src="/js/common.js?v=20260920-163237"></script>
-<script src="/js/auth.js?v=20260920-163237"></script>
-<script src="/js/notifications.js?v=20260920-163237"></script>
-<script src="/js/push.js?v=20260920-163237"></script>
-<script src="/js/lightbox.js?v=20260920-163237"></script>
-<script src="/js/pixel-board.js?v=20260920-163237"></script>
-<script src="/js/coloring.js?v=20260920-163237"></script>
+<script src="/js/supabase-client.js?v=20260920-222858"></script>
+<script src="/js/i18n/ko.js?v=20260920-222858"></script>
+<script src="/js/color-engine.js?v=20260920-222858"></script>
+<script src="/js/common.js?v=20260920-222858"></script>
+<script src="/js/auth.js?v=20260920-222858"></script>
+<script src="/js/notifications.js?v=20260920-222858"></script>
+<script src="/js/push.js?v=20260920-222858"></script>
+<script src="/js/lightbox.js?v=20260920-222858"></script>
+<script src="/js/pixel-board.js?v=20260920-222858"></script>
+<script src="/js/coloring.js?v=20260920-222858"></script>
 
 </body>
 </html>

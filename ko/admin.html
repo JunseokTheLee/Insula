@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260920-163237">
-<link rel="stylesheet" href="/css/admin.css?v=20260920-163237">
+<link rel="stylesheet" href="/css/base.css?v=20260920-222858">
+<link rel="stylesheet" href="/css/admin.css?v=20260920-222858">
 </head>
 
 <body>
@@ -421,12 +421,28 @@
                 <label><input type="checkbox" data-setting="pixelShowCompletions" disabled> <strong>완성 인원 표시</strong> — 목록 카드에 완성한 사람 수를 보여줍니다.</label>
               </div>
               <div class="admin-setting admin-setting-range">
-                <label for="adminPixelGrid">판 <strong>크기</strong>: 긴 변의 칸 수. 클수록 원작에 가깝고 오래 걸립니다. <em>(기본: 48)</em></label>
-                <div class="admin-range"><input id="adminPixelGrid" type="range" min="24" max="96" step="4" data-setting="pixelGridSize" disabled><output for="adminPixelGrid" data-setting-output="pixelGridSize">48</output></div>
+                <label for="adminPixelEasyGrid">쉬움 <strong>크기</strong>: 긴 변의 칸 수. <em>(기본: 24)</em></label>
+                <div class="admin-range"><input id="adminPixelEasyGrid" type="range" min="12" max="96" step="4" data-setting="pixelEasyGrid" disabled><output for="adminPixelEasyGrid" data-setting-output="pixelEasyGrid">24</output></div>
               </div>
               <div class="admin-setting admin-setting-range">
-                <label for="adminPixelColors">비슷한 색을 합치기 전의 <strong>색 수</strong>. <em>(기본: 16)</em></label>
-                <div class="admin-range"><input id="adminPixelColors" type="range" min="8" max="32" step="1" data-setting="pixelPaletteSize" disabled><output for="adminPixelColors" data-setting-output="pixelPaletteSize">16</output></div>
+                <label for="adminPixelEasyColors">쉬움 <strong>색 수</strong>(비슷한 색을 합치기 전). <em>(기본: 10)</em></label>
+                <div class="admin-range"><input id="adminPixelEasyColors" type="range" min="4" max="32" step="1" data-setting="pixelEasyColors" disabled><output for="adminPixelEasyColors" data-setting-output="pixelEasyColors">10</output></div>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPixelNormalGrid">보통 <strong>크기</strong>. <em>(기본: 40)</em></label>
+                <div class="admin-range"><input id="adminPixelNormalGrid" type="range" min="12" max="96" step="4" data-setting="pixelNormalGrid" disabled><output for="adminPixelNormalGrid" data-setting-output="pixelNormalGrid">40</output></div>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPixelNormalColors">보통 <strong>색 수</strong>. <em>(기본: 13)</em></label>
+                <div class="admin-range"><input id="adminPixelNormalColors" type="range" min="4" max="32" step="1" data-setting="pixelNormalColors" disabled><output for="adminPixelNormalColors" data-setting-output="pixelNormalColors">13</output></div>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPixelHardGrid">어려움 <strong>크기</strong> — 목록의 회색 미리보기 칸 수이기도 합니다. <em>(기본: 64)</em></label>
+                <div class="admin-range"><input id="adminPixelHardGrid" type="range" min="12" max="96" step="4" data-setting="pixelHardGrid" disabled><output for="adminPixelHardGrid" data-setting-output="pixelHardGrid">64</output></div>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPixelHardColors">어려움 <strong>색 수</strong>. <em>(기본: 16)</em></label>
+                <div class="admin-range"><input id="adminPixelHardColors" type="range" min="4" max="32" step="1" data-setting="pixelHardColors" disabled><output for="adminPixelHardColors" data-setting-output="pixelHardColors">16</output></div>
               </div>
               <div class="admin-setting admin-setting-range">
                 <label for="adminPixelMerge">이 거리(<strong>ΔE</strong>)보다 가까운 색은 한 번호로 합칩니다. <em>(기본: 8)</em></label>
@@ -763,16 +779,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260920-163237"></script>
-<script src="/js/i18n/ko.js?v=20260920-163237"></script>
-<script src="/js/common.js?v=20260920-163237"></script>
-<script src="/js/auth.js?v=20260920-163237"></script>
-<script src="/js/notifications.js?v=20260920-163237"></script>
-<script src="/js/push.js?v=20260920-163237"></script>
-<script src="/js/color-engine.js?v=20260920-163237"></script>
-<script src="/js/pixel-board.js?v=20260920-163237"></script>
-<script src="/js/matching.js?v=20260920-163237"></script>
-<script src="/js/admin.js?v=20260920-163237"></script>
+<script src="/js/supabase-client.js?v=20260920-222858"></script>
+<script src="/js/i18n/ko.js?v=20260920-222858"></script>
+<script src="/js/common.js?v=20260920-222858"></script>
+<script src="/js/auth.js?v=20260920-222858"></script>
+<script src="/js/notifications.js?v=20260920-222858"></script>
+<script src="/js/push.js?v=20260920-222858"></script>
+<script src="/js/color-engine.js?v=20260920-222858"></script>
+<script src="/js/pixel-board.js?v=20260920-222858"></script>
+<script src="/js/matching.js?v=20260920-222858"></script>
+<script src="/js/admin.js?v=20260920-222858"></script>
 
 </body>
 </html>

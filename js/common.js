@@ -665,8 +665,12 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // supabase_pixel_game.sql). The board options apply to boards made from
   // now on; existing boards are rebuilt from the admin page.
   pixelGameEnabled: true,
-  pixelGridSize: 48,
-  pixelPaletteSize: 16,
+  // Three difficulty levels (supabase_pixel_levels.sql): cells on the long
+  // side and palette size before merging, per level. pixel-board.js keeps
+  // the same defaults for when the settings row cannot be read.
+  pixelEasyGrid: 24, pixelEasyColors: 10,
+  pixelNormalGrid: 40, pixelNormalColors: 13,
+  pixelHardGrid: 64, pixelHardColors: 16,
   pixelMergeDistance: 8,
   pixelMinColors: 6,
   pixelAnonymousPlay: true,

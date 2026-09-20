@@ -262,3 +262,34 @@
   .cg-flash{animation:none;opacity:1;}
   .cg-result-figure img{transition:none;}
 }
+
+/* ---------- levels · pixel-board previews · sections (2026-09-20) ----------
+   A card shows the artwork as a pixel board, not the picture: grey at the
+   hard level until the player finished it, in colour at the highest level
+   they finished. The canvas holds one pixel per cell and is scaled up
+   without smoothing. */
+.cg-card-pix{width:100%;aspect-ratio:1/1;display:block;background:var(--gray-100);image-rendering:pixelated;object-fit:contain;cursor:zoom-in;}
+.cg-card-pix.done{background:var(--gray-50);}
+.cg-levels{display:flex;gap:4px;margin-top:6px;}
+.cg-level{
+  flex:1;min-width:0;appearance:none;cursor:pointer;
+  border:1px solid var(--border-strong);background:transparent;color:var(--muted);
+  font-family:'Pretendard',sans-serif;font-size:11px;font-weight:600;line-height:1.1;
+  padding:5px 2px;border-radius:var(--r-full);display:flex;flex-direction:column;align-items:center;gap:2px;
+  transition:border-color .12s linear,color .12s linear,background .12s linear;
+}
+.cg-level small{font-size:10px;font-weight:700;opacity:.85;}
+.cg-level:hover{border-color:var(--primary);color:var(--primary);}
+.cg-level.done{background:var(--primary-soft);color:var(--primary);border-color:transparent;}
+.cg-level.midway{border-color:var(--primary);color:var(--primary);}
+.cg-level:disabled{opacity:.5;cursor:default;}
+.cg-card-actions{display:flex;gap:6px;margin-top:auto;padding-top:8px;}
+.cg-card-actions .admin-btn{flex:1;min-width:0;}
+.cg-card-actions .cg-icon-btn{flex:0 0 38px;width:38px;padding:0;font-size:15px;}
+.cg-section-label{
+  font-family:'Pretendard',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin:18px 0 10px;
+}
+.cg-mine[hidden],.cg-mine-block[hidden]{display:none;}
+.cg-mine-block + .cg-mine-block{margin-top:6px;}
+.cg-side-level{font-family:'Pretendard',sans-serif;font-size:12px;font-weight:700;color:var(--primary);margin-top:2px;}

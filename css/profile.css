@@ -255,3 +255,10 @@
   font-family:'Pretendard',sans-serif;font-size:10px;font-weight:600;
   pointer-events:none;
 }
+
+/* Coloured-artworks strip: the highest level finished, on the thumbnail. */
+.pmw-level{
+  position:absolute;left:6px;bottom:6px;line-height:1;pointer-events:none;
+  font-family:'Pretendard',sans-serif;font-size:10.5px;font-weight:700;padding:3px 7px;border-radius:var(--r-full);
+  background:rgba(15,20,17,.75);color:#fff;
+}

@@ -131,9 +131,32 @@ create trigger mosaic_submissions_visibility_changed
 -- ── A4. who can read an artwork row ─────────────────────────────────────
 -- Replaces "viewable by everyone" (supabase_mosaic.sql). The portfolio
 -- clause is what lets a visitor of a public or link-only portfolio see the
--- private artworks in it — pieces included, through parent_id. The
--- subqueries run under the caller's own RLS on the portfolio tables, so a
--- PRIVATE portfolio never opens anything to anyone but its owner.
+-- private artworks in it — pieces included, through parent_id.
+--
+-- The portfolio lookup is a SECURITY DEFINER function, NOT a subquery in
+-- the policy. A subquery would run under the caller's RLS on
+-- mosaic_collection_items, and that table's own INSERT policy (B2) reads
+-- mosaic_submissions — Postgres then rejects every insert with 42P17
+-- "infinite recursion detected in policy" (what broke "add artwork" on
+-- 2026-09-20). The function only ever answers "is this artwork in a public
+-- or link-only portfolio", which is public information either way.
+create or replace function public.artwork_in_public_portfolio(p_artwork_id bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select exists (
+    select 1
+    from public.mosaic_collection_items ci
+    join public.mosaic_collections c on c.id = ci.collection_id
+    where c.is_public and ci.submission_id = p_artwork_id
+  );
+$fn$;
+revoke execute on function public.artwork_in_public_portfolio(bigint) from public;
+grant execute on function public.artwork_in_public_portfolio(bigint) to anon, authenticated;
+
 drop policy if exists "Mosaic submissions are viewable by everyone" on public.mosaic_submissions;
 drop policy if exists "Public artworks for everyone, private ones for the artist, admins and public-portfolio viewers" on public.mosaic_submissions;
 create policy "Public artworks for everyone, private ones for the artist, admins and public-portfolio viewers"
@@ -142,13 +165,7 @@ create policy "Public artworks for everyone, private ones for the artist, admins
     is_public
     or author_id = auth.uid()
     or exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin)
-    or exists (
-      select 1
-      from public.mosaic_collection_items ci
-      join public.mosaic_collections c on c.id = ci.collection_id
-      where c.is_public
-        and ci.submission_id = coalesce(mosaic_submissions.parent_id, mosaic_submissions.id)
-    )
+    or public.artwork_in_public_portfolio(coalesce(parent_id, id))
   );
 
 -- A colour-by-number board is a 48-pixel copy of the picture: readable
@@ -404,15 +421,31 @@ update public.mosaic_collections set end_date = null where end_date is not null;
 -- ── B2. a portfolio holds its owner's own artworks only ─────────────────
 -- Replaces "Owners can add items to their own collection": the row must be
 -- an artwork (not a piece) by the same person. The lightbox and the pickers
--- only offer those anyway; this is the rule the API enforces.
+-- only offer those anyway; this is the rule the API enforces. The artwork
+-- check is a SECURITY DEFINER function for the same reason as A4: a plain
+-- subquery on mosaic_submissions would pull that table's policy (which
+-- looks at portfolios) into this one and recurse.
+create or replace function public.artwork_is_own(p_artwork_id bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select exists (
+    select 1 from public.mosaic_submissions s
+    where s.id = p_artwork_id and s.author_id = auth.uid() and s.parent_id is null
+  );
+$fn$;
+revoke execute on function public.artwork_is_own(bigint) from public, anon;
+grant execute on function public.artwork_is_own(bigint) to authenticated;
 drop policy if exists "Owners can add items to their own collection" on public.mosaic_collection_items;
 drop policy if exists "Owners add their own artworks to their own portfolio" on public.mosaic_collection_items;
 create policy "Owners add their own artworks to their own portfolio"
   on public.mosaic_collection_items for insert
   with check (
     exists (select 1 from public.mosaic_collections c where c.id = collection_id and c.owner_id = auth.uid())
-    and exists (select 1 from public.mosaic_submissions s
-                where s.id = submission_id and s.author_id = auth.uid() and s.parent_id is null)
+    and public.artwork_is_own(submission_id)
   );
 
 -- Reordering = updating `position` on rows of one's own portfolio.

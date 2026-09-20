@@ -268,7 +268,8 @@ const T = {
   cgHintShown: '{n}번 색이 남은 칸이에요',
   cgShareCaption: '원작: {name} · weavo.art',
   cgShareText: 'Weavo 에서 "{title}" 를 숫자 색칠로 완성했어요',
-  cgShared: '그림을 저장했어요',
+  cgShared: '그림을 파일로 저장했어요',
+  cgCopied: '그림을 복사했어요 — 원하는 곳에 붙여 넣으세요 (파일로도 저장됨)',
   cgShareFailed: '그림을 공유하지 못했어요',
   cgNotHere: '그 작품은 색칠할 수 없어요',
   // 색칠: 스마트 드래그 / 이동 모드 (2026-09-20)
@@ -277,6 +278,12 @@ const T = {
   cgPanModeOn: '이동 모드 켜짐 — 탭으로만 칠하기 (눌러서 끄기)',
   cgPanModeOff: '이동 모드 — 켜면 드래그가 칠하지 않고 이동만 합니다',
   cgTipDrag: '같은 번호 칸을 누른 채 쓸면 이어서 칠해져요. 두 손가락(또는 다른 칸)을 끌면 이동합니다.',
+  // 색칠: 난이도 (2026-09-20)
+  cgLevelEasy: '쉬움', cgLevelNormal: '보통', cgLevelHard: '어려움',
+  cgLevelTitle: '{level} — 긴 변 {n}칸',
+  cgLevelDoneBadge: '{level} 완성',
+  cgLevelLine: '{level} · {w}×{h} · {colors}색',
+  cgViewOriginal: '원본 보기',
   lbColorGame: '색칠하기',
   editOptOutColoring: '이 작품을 숫자 색칠 게임에 쓰지 않음',
   notifColoredYourArtwork: '님이 회원님의 작품을 색칠로 완성했어요',

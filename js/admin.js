@@ -361,14 +361,19 @@ async function loadAdminPixel() {
   const btn = document.getElementById('adminPixelRunBtn');
   const regenBtn = document.getElementById('adminPixelRegenBtn');
   if (!btn) return;
-  const { data: boards, error } = await fetchAllRows(() => sb.from('pixel_boards').select('artwork_id', { count: 'exact' }), { orderBy: 'artwork_id' });
+  const { data: boards, error } = await fetchAllRows(() => sb.from('pixel_boards').select('artwork_id,level', { count: 'exact' }), { orderBy: 'artwork_id' });
   if (error) {
     if (!isPixelSchemaMissing(error)) console.error('load pixel boards error:', error);
     adminShow('adminPixelUnavailable', true);
     btn.disabled = true; regenBtn.disabled = true;
     return;
   }
-  const have = new Set((boards || []).map(b => b.artwork_id));
+  // Three levels per artwork (supabase_pixel_levels.sql): an artwork with
+  // fewer than three boards still needs work.
+  const per = new Map();
+  for (const b of (boards || [])) per.set(b.artwork_id, (per.get(b.artwork_id) || 0) + 1);
+  const levels = typeof PIXEL_LEVELS !== 'undefined' ? PIXEL_LEVELS.length : 3;
+  const have = { has: id => (per.get(id) || 0) >= levels };
   // Artworks only, minus the opted-out ones; asked again without the
   // filters while their SQL is not applied.
   const q = withOptOut => fetchAllRows(() => {

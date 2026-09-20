@@ -15,18 +15,26 @@ const PIXEL_EMPTY = 255;
 const PIXEL_MAX_SIDE = 128;
 const PIXEL_MAX_COLORS = 64;
 
-// The admin options, clamped to what the board format can hold. The
-// defaults here match SITE_SETTING_DEFAULTS (common.js) so an unreadable
-// settings row still gives a sensible board.
-function pixelBoardOptions(settings) {
+// Three difficulty levels per artwork (supabase_pixel_levels.sql): the same
+// picture as a smaller or larger board. Sizes and palette sizes are site
+// options (pixelEasyGrid … pixelHardColors); the defaults here match
+// SITE_SETTING_DEFAULTS (common.js) so an unreadable settings row still
+// gives a sensible board.
+const PIXEL_LEVELS = [1, 2, 3];   // easy · normal · hard
+const PIXEL_LEVEL_KEYS = { 1: 'Easy', 2: 'Normal', 3: 'Hard' };
+const PIXEL_LEVEL_DEFAULTS = { 1: { grid: 24, colors: 10 }, 2: { grid: 40, colors: 13 }, 3: { grid: 64, colors: 16 } };
+function pixelBoardOptions(settings, level) {
   const s = settings || {};
-  const clamp = (v, lo, hi, d) => {
+  const lv = PIXEL_LEVELS.includes(level) ? level : 2;
+  const k = PIXEL_LEVEL_KEYS[lv], d = PIXEL_LEVEL_DEFAULTS[lv];
+  const clamp = (v, lo, hi, dflt) => {
     const n = Math.round(Number(v));
-    return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d;
+    return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt;
   };
   return {
-    grid: clamp(s.pixelGridSize, 16, PIXEL_MAX_SIDE, 48),      // cells on the long side
-    colors: clamp(s.pixelPaletteSize, 4, PIXEL_MAX_COLORS, 16), // palette size before merging
+    level: lv,
+    grid: clamp(s['pixel' + k + 'Grid'], 12, PIXEL_MAX_SIDE, d.grid),        // cells on the long side
+    colors: clamp(s['pixel' + k + 'Colors'], 4, PIXEL_MAX_COLORS, d.colors), // palette size before merging
     merge: clamp(s.pixelMergeDistance, 0, 30, 8),               // Lab ΔE under which two colours are one
     minColors: clamp(s.pixelMinColors, 2, 32, 6),               // fewer → not a board
     maxShare: 0.9,                                              // one colour covering more → not a board
@@ -183,34 +191,35 @@ function isPixelSchemaMissing(error) {
 function pixelBoardFromRow(row) {
   if (!row) return null;
   return {
-    ok: true, w: row.w, h: row.h, palette: row.palette || [], colors: row.colors,
+    ok: true, w: row.w, h: row.h, palette: row.palette || [], colors: row.colors, level: row.level || 2,
     cells: pixelBase64ToBytes(row.cells), total: row.total, version: row.version || 1, source: 'db',
   };
 }
-// Boards for a batch of artworks: { boards: Map(artworkId → board), missing }.
-// `missing` = the table does not exist; callers then build boards on the
-// fly and keep progress on the device.
+// Every stored board (all levels) of a batch of artworks:
+// { boards: Map(`${artworkId}:${level}` → board), missing }. `missing` = the
+// table (or its level column) is not there; callers then build boards on
+// the fly and keep progress on the device.
 async function fetchPixelBoards(ids) {
   const boards = new Map();
   const list = [...new Set((ids || []).filter(id => id != null))];
   for (let i = 0; i < list.length; i += 200) {
     const { data, error } = await sb.from('pixel_boards')
-      .select('artwork_id,w,h,palette,cells,colors,total,version')
+      .select('artwork_id,level,w,h,palette,cells,colors,total,version')
       .in('artwork_id', list.slice(i, i + 200));
     if (error) {
       if (isPixelSchemaMissing(error)) return { boards, missing: true };
       console.error('load pixel boards error:', error);
       return { boards, missing: false, error };
     }
-    for (const row of (data || [])) boards.set(row.artwork_id, pixelBoardFromRow(row));
+    for (const row of (data || [])) boards.set(`${row.artwork_id}:${row.level || 2}`, pixelBoardFromRow(row));
   }
   return { boards, missing: false };
 }
-// Writes a board through set_pixel_board (artist or admin only — the RPC
-// checks). Resolves { version } | { missing: true } | { error }.
-async function savePixelBoard(artworkId, board) {
+// Writes one level's board through set_pixel_board (artist or admin only —
+// the RPC checks). Resolves { version } | { missing: true } | { error }.
+async function savePixelBoard(artworkId, level, board) {
   const { data, error } = await sb.rpc('set_pixel_board', {
-    p_artwork_id: artworkId, p_w: board.w, p_h: board.h,
+    p_artwork_id: artworkId, p_level: level, p_w: board.w, p_h: board.h,
     p_palette: board.palette, p_cells: pixelBytesToBase64(board.cells), p_colors: board.colors,
   });
   if (error) {
@@ -220,13 +229,25 @@ async function savePixelBoard(artworkId, board) {
   }
   return { version: Number(data) || 1 };
 }
-// Build + store in one go, from the upload preview or a /img/ image.
-// Resolves the savePixelBoard result plus { unsuitable, reason } when the
-// picture cannot be a board (blank, single colour, very low contrast).
+// Build + store every level in one go, from the upload preview or a /img/
+// image. Resolves { saved, boards, unsuitable, reason, missing, error }:
+// `unsuitable` when no level could be made (blank, single colour, very low
+// contrast), `missing` when the SQL is not applied, `error` the last save
+// failure. Levels a picture is too plain for are simply skipped.
 async function makePixelBoardFor(artworkId, img, settings) {
-  const opts = pixelBoardOptions(settings || await getSiteSettings().catch(() => null));
-  const board = buildPixelBoard(img, opts);
-  if (!board.ok) return { unsuitable: true, reason: board.reason };
-  const res = await savePixelBoard(artworkId, board);
-  return { ...res, board };
+  const s = settings || await getSiteSettings().catch(() => null);
+  const out = { saved: 0, boards: {}, unsuitable: false, reason: null, missing: false, error: null };
+  let built = 0;
+  for (const level of PIXEL_LEVELS) {
+    const board = buildPixelBoard(img, pixelBoardOptions(s, level));
+    if (!board.ok) { out.reason = board.reason; continue; }
+    built++;
+    const res = await savePixelBoard(artworkId, level, board);
+    if (res.missing) { out.missing = true; break; }
+    if (res.error) { out.error = res.error; continue; }
+    out.saved++;
+    out.boards[level] = { ...board, level, version: res.version };
+  }
+  out.unsuitable = built === 0;
+  return out;
 }

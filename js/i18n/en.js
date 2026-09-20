@@ -268,7 +268,8 @@ const T = {
   cgHintShown: 'A cell still waiting for color {n}',
   cgShareCaption: 'Original: {name} · weavo.art',
   cgShareText: 'I colored "{title}" on Weavo',
-  cgShared: 'Picture saved',
+  cgShared: 'Picture saved as a file',
+  cgCopied: 'Picture copied — paste it anywhere (a file was saved too)',
   cgShareFailed: "Couldn't share the picture",
   cgNotHere: 'That artwork is not available for coloring',
   // Colouring: smart drag / move mode (2026-09-20)
@@ -277,6 +278,12 @@ const T = {
   cgPanModeOn: 'Move mode on — paint by tap only (press to turn off)',
   cgPanModeOff: 'Move mode — when on, dragging only moves the board',
   cgTipDrag: 'Press a cell of the chosen number and swipe to keep painting. Drag with two fingers (or from another cell) to move.',
+  // Colouring: difficulty levels (2026-09-20)
+  cgLevelEasy: 'Easy', cgLevelNormal: 'Normal', cgLevelHard: 'Hard',
+  cgLevelTitle: '{level} — {n} cells on the long side',
+  cgLevelDoneBadge: '{level} ✓',
+  cgLevelLine: '{level} · {w}×{h} · {colors} colors',
+  cgViewOriginal: 'View the original',
   lbColorGame: 'Color it',
   editOptOutColoring: "Don't use this artwork in the coloring game",
   notifColoredYourArtwork: 'finished coloring your artwork',
