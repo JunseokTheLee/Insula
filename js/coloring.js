@@ -375,6 +375,28 @@
     actions.append(btn, orig);
     body.appendChild(actions);
     card.append(link, body);
+    // Small controls in the picture's top-left corner (the badge holds the
+    // top-right): ✕ drops an attempt under way, 📤 shares the finished
+    // picture. The action row below has no room for a third button.
+    if (done || going) {
+      const corners = document.createElement('div');
+      corners.className = 'cg-card-corners';
+      if (going) {
+        const x = document.createElement('button');
+        x.type = 'button'; x.className = 'cg-card-corner discard'; x.textContent = '✕';
+        x.title = tr('cgDiscard'); x.setAttribute('aria-label', tr('cgDiscard'));
+        x.onclick = () => discardProgress(a);
+        corners.appendChild(x);
+      }
+      if (done) {
+        const sh = document.createElement('button');
+        sh.type = 'button'; sh.className = 'cg-card-corner'; sh.textContent = '📤';
+        sh.title = tr('cgSharePicture'); sh.setAttribute('aria-label', tr('cgSharePicture'));
+        sh.onclick = () => shareFromCard(a, sh);
+        corners.appendChild(sh);
+      }
+      card.appendChild(corners);
+    }
     return card;
   }
   async function renderList(reset) {
@@ -453,6 +475,8 @@
     const going = inProgress(a.id);
     btn.textContent = going ? tr('cgResume', { pct: pct(a.id, going) }) : tr('cgStart');
     btn.onclick = () => openBoard(a, suggestedLevel(a.id));
+    const lv = $('cgTodayLevels');
+    if (lv) { lv.innerHTML = ''; for (const l of LEVELS) lv.appendChild(levelChip(a, l)); }
     box.hidden = false;
   }
   function refreshCard(id) {
@@ -548,6 +572,8 @@
     for (const el of root.querySelectorAll('[data-art-level]')) el.textContent = levelName(level);
     const thumb = $('cgSideThumb');
     if (thumb) thumb.src = cdnUrl(a.thumb_url || a.image_url);
+    const peek = $('cgPeek');
+    if (peek) peek.src = cdnUrl(a.thumb_url || a.image_url);
     const by = $('cgSideBy');
     if (by) {
       by.textContent = '';
@@ -597,6 +623,8 @@
     // Three layers (colour, highlight, numbers) share the budget.
     cellPx = Math.max(12, Math.min(40, Math.floor(Math.sqrt(budget / 3 / cells))));
     for (const cv of [baseCv, hlCv, numCv]) { cv.width = board.w * cellPx; cv.height = board.h * cellPx; }
+    const peek = $('cgPeek');
+    if (peek) { peek.style.width = baseCv.width + 'px'; peek.style.height = baseCv.height + 'px'; peek.hidden = true; }
     baseCtx = baseCv.getContext('2d'); hlCtx = hlCv.getContext('2d'); numCtx = numCv.getContext('2d');
     numCtx.font = `bold ${Math.round(cellPx * 0.46)}px Pretendard, sans-serif`;
     numCtx.textAlign = 'center'; numCtx.textBaseline = 'middle';
@@ -648,7 +676,7 @@
   }
   function applyTransform() {
     const t = `translate(${panX}px, ${panY}px) scale(${scale})`;
-    for (const el of [baseCv, hlCv, numCv, $('cgLayer')]) if (el) el.style.transform = t;
+    for (const el of [baseCv, hlCv, numCv, $('cgLayer'), $('cgPeek')]) if (el) el.style.transform = t;
     $('cgZoomLevel').textContent = Math.round(scale * 100) + '%';
     updateNumbersVisibility();
   }
@@ -855,47 +883,51 @@
     const m = Math.floor(total / 60);
     return tr('gameDurMin', { m, s: Math.round(total - m * 60) });
   }
-  function drawFinished(cv, px) {
-    cv.width = board.w * px; cv.height = board.h * px;
+  function drawFinished(cv, px) { drawFinishedBoard(cv, px, board); }
+  // Every cell in its palette colour — the finished picture of one board.
+  function drawFinishedBoard(cv, px, b) {
+    cv.width = b.w * px; cv.height = b.h * px;
     const ctx = cv.getContext('2d');
     ctx.clearRect(0, 0, cv.width, cv.height);
-    for (let i = 0; i < board.w * board.h; i++) {
-      const c = board.cells[i];
+    for (let i = 0; i < b.w * b.h; i++) {
+      const c = b.cells[i];
       if (c === PIXEL_EMPTY) continue;
-      const rgb = board.palette[c];
+      const rgb = b.palette[c];
       ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
-      ctx.fillRect((i % board.w) * px, Math.floor(i / board.w) * px, px, px);
+      ctx.fillRect((i % b.w) * px, Math.floor(i / b.w) * px, px, px);
     }
   }
   // A card to share: the finished board with the artist's credit under it.
-  function shareCardBlob() {
+  function shareCardBlob(a, b) {
     const px = 16, pad = 40, cap = 96;
-    const bw = board.w * px, bh = board.h * px;
+    const bw = b.w * px, bh = b.h * px;
     const cv = document.createElement('canvas');
     cv.width = bw + pad * 2; cv.height = bh + pad * 2 + cap;
     const ctx = cv.getContext('2d');
     ctx.fillStyle = '#F7F7F5'; ctx.fillRect(0, 0, cv.width, cv.height);
     const tmp = document.createElement('canvas');
-    drawFinished(tmp, px);
+    drawFinishedBoard(tmp, px, b);
     ctx.drawImage(tmp, pad, pad);
     ctx.fillStyle = '#1A3C2B';
     ctx.font = 'bold 30px Pretendard, sans-serif';
     ctx.textBaseline = 'top';
-    ctx.fillText((art.art_title || tr('untitledArtwork')).slice(0, 48), pad, pad + bh + 22);
+    ctx.fillText((a.art_title || tr('untitledArtwork')).slice(0, 48), pad, pad + bh + 22);
     ctx.fillStyle = '#5b6475';
     ctx.font = '22px Pretendard, sans-serif';
-    ctx.fillText(tr('cgShareCaption', { name: art.author_name || tr('anonymous') }), pad, pad + bh + 60);
+    ctx.fillText(tr('cgShareCaption', { name: a.author_name || tr('anonymous') }), pad, pad + bh + 60);
     return new Promise(resolve => cv.toBlob(resolve, 'image/png'));
   }
-  async function shareResult() {
-    const btn = $('cgShare');
-    btn.disabled = true;
+  // Shares one finished board as a picture: from the result screen (the
+  // board just coloured) or from a finished card in the list (the board of
+  // the highest level the player finished).
+  async function sharePicture(a, b, btn) {
+    if (btn) btn.disabled = true;
     try {
-      const blob = await shareCardBlob();
+      const blob = await shareCardBlob(a, b);
       if (!blob) throw new Error('no image');
-      const file = new File([blob], `weavo-coloring-${art.id}.png`, { type: 'image/png' });
-      const text = tr('cgShareText', { title: art.art_title || tr('untitledArtwork') });
-      const url = `${location.origin}${artworkUrl(art.id)}`;
+      const file = new File([blob], `weavo-coloring-${a.id}.png`, { type: 'image/png' });
+      const text = tr('cgShareText', { title: a.art_title || tr('untitledArtwork') });
+      const url = `${location.origin}${artworkUrl(a.id)}`;
       const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
       // Phones: the share sheet carries the picture to any app. Desktops:
       // the OS sheet (Windows) offers a "copy" that copies the text, not the
@@ -910,15 +942,71 @@
         try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); copied = true; }
         catch (e) { console.warn('coloring: clipboard image copy refused:', e); }
       }
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = file.name;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      // (named dl: 'a' is the artwork here)
+      const dl = document.createElement('a');
+      dl.href = URL.createObjectURL(blob);
+      dl.download = file.name;
+      document.body.appendChild(dl); dl.click(); dl.remove();
+      setTimeout(() => URL.revokeObjectURL(dl.href), 4000);
       toast(tr(copied ? 'cgCopied' : 'cgShared'));
     } catch (e) {
       if (!e || e.name !== 'AbortError') { console.error('coloring: share failed:', e); toast(tr('cgShareFailed')); }
-    } finally { btn.disabled = false; }
+    } finally { if (btn) btn.disabled = false; }
+  }
+  function shareResult() { return sharePicture(art, board, $('cgShare')); }
+  // The board of one level, for sharing from the list: in memory, else from
+  // the DB, else rebuilt from the thumbnail exactly as play does.
+  async function boardFor(a, level) {
+    let b = boards.get(key(a.id, level)) || null;
+    if (!b && !dbMissing) { await loadBoardsFor([a.id]); b = boards.get(key(a.id, level)) || null; }
+    if (!b) {
+      const img = await loadImageEl(cdnUrl(a.thumb_url || a.image_url));
+      const built = buildPixelBoard(img, pixelBoardOptions(settings, level));
+      if (!built.ok) return null;
+      b = { ...built, level, version: 0, source: 'local' };
+    }
+    return b;
+  }
+  async function shareFromCard(a, btn) {
+    const level = bestDone(a.id);
+    if (!level) return;
+    btn.disabled = true;
+    try {
+      const b = await boardFor(a, level);
+      if (!b) { toast(tr('cgShareFailed')); return; }
+      await sharePicture(a, b, btn);
+    } catch (e) { console.error('coloring: share from card failed:', e); toast(tr('cgShareFailed')); }
+    finally { btn.disabled = false; }
+  }
+  // Drops an attempt under way (the ✕ on a "continue" card): the copy on
+  // this device and, when signed in, the server row — through
+  // drop_pixel_progress, which only ever removes the caller's own unfinished
+  // row. Finished levels stay untouched.
+  async function discardProgress(a) {
+    const msg = tr('cgDiscardConfirm', { title: a.art_title || tr('untitledArtwork') });
+    const ok = (typeof confirmDialog === 'function' && document.getElementById('confirm-modal'))
+      ? await confirmDialog(msg, { okLabel: tr('cgDiscard') })
+      : confirm(msg);
+    if (!ok) return;
+    let serverFailed = false;
+    for (const l of LEVELS) {
+      const r = recOf(a.id, l);
+      if (!r || r.completed || !r.count) continue;
+      try { localStorage.removeItem(localKey(a.id, l)); } catch (e) {}
+      progress.delete(key(a.id, l));
+      if (me.id && !dbMissing) {
+        const { error } = await sb.rpc('drop_pixel_progress', { p_artwork_id: a.id, p_level: l });
+        if (error) { serverFailed = true; if (!isPixelSchemaMissing(error)) console.error('coloring: drop progress error:', error); }
+      }
+    }
+    // Back into the browse list when nothing of it is left under "mine".
+    if (!searchTerm && !bestDone(a.id) && !root.querySelector(`#cgList .cg-card[data-artwork-id="${a.id}"]`)) {
+      rows.unshift(a);
+      $('cgList').prepend(cardFor(a));
+      $('cgEmpty').hidden = true;
+    }
+    refreshCard(a.id); renderMine(); renderToday();
+    toast(tr(serverFailed ? 'cgDiscardPartly' : 'cgDiscarded'));
   }
   function renderNext() {
     const row = $('cgNextRow');
@@ -974,6 +1062,7 @@
     clearTimeout(saveTimer);
     const id = art && art.id;
     art = null; board = null; bits = null; cursor = null;
+    setPeek(false);
     show('list');
     if (id != null) { refreshCard(id); renderMine(); renderToday(); }
     restoreListPosition();
@@ -1175,6 +1264,32 @@
   $('cgZoomIn').onclick = () => zoomBy(1.4);
   $('cgZoomOut').onclick = () => zoomBy(1 / 1.4);
   $('cgZoomReset').onclick = fitAll;
+  // Hold to peek: the original picture lies over the cells only while the
+  // 👁 button or the side thumbnail is held down (pointer, or Space/Enter
+  // on the button) — a glance without leaving the board.
+  function setPeek(on) {
+    const p = $('cgPeek');
+    if (p) p.hidden = !(on && board);
+    const b = $('cgPeekBtn');
+    if (b) b.setAttribute('aria-pressed', on && board ? 'true' : 'false');
+  }
+  function wirePeek(el) {
+    if (!el) return;
+    el.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      e.preventDefault();
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      setPeek(true);
+    });
+    for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) el.addEventListener(ev, () => setPeek(false));
+    el.addEventListener('contextmenu', e => e.preventDefault());
+    el.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); setPeek(true); } });
+    el.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') setPeek(false); });
+    el.addEventListener('blur', () => setPeek(false));
+    el.addEventListener('click', e => e.preventDefault());
+  }
+  wirePeek($('cgPeekBtn'));
+  wirePeek($('cgSideThumb'));
   $('cgShare').onclick = shareResult;
   $('cgResultBack').onclick = endPlay;
 

@@ -72,8 +72,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/coloring.css?v=20260920-233357">
-<link rel="stylesheet" href="/css/base.css?v=20260920-233357">
+<link rel="stylesheet" href="/css/coloring.css?v=20260921-003213">
+<link rel="stylesheet" href="/css/base.css?v=20260921-003213">
 </head>
 
 <body>
@@ -124,6 +124,7 @@
             <p class="cg-today-label">오늘의 작품</p>
             <div class="cg-today-title" id="cgTodayTitle"></div>
             <div class="cg-today-by" id="cgTodayBy"></div>
+            <div class="cg-levels cg-today-levels" id="cgTodayLevels"></div>
             <div class="cg-today-actions"><button type="button" class="admin-btn primary" id="cgTodayPlay">색칠하기</button></div>
           </div>
         </section>
@@ -164,6 +165,7 @@
             <canvas id="cgBase"></canvas>
             <canvas id="cgHighlight"></canvas>
             <canvas id="cgNumbers"></canvas>
+            <img class="cg-peek" id="cgPeek" src="" alt="" draggable="false" hidden>
             <div class="cg-layer" id="cgLayer"><div class="cg-cursor" id="cgCursor" hidden></div></div>
             <div class="cg-loading" id="cgLoading">준비하고 있습니다…</div>
             <div class="cg-drag-note" id="cgDragNote" hidden>쓸어서 칠하기 · 두 손가락이나 다른 칸을 끌면 이동</div>
@@ -171,12 +173,13 @@
               <button type="button" class="zoom-btn" id="cgZoomOut" aria-label="축소">&minus;</button>
               <span class="zoom-level" id="cgZoomLevel">100%</span>
               <button type="button" class="zoom-btn" id="cgZoomIn" aria-label="확대">+</button>
-              <button type="button" class="zoom-btn" id="cgZoomReset" aria-label="화면에 맞춤">&#8634;</button>
+              <button type="button" class="zoom-btn" id="cgZoomReset" aria-label="화면에 맞춤">&#8634;</button>
+              <button type="button" class="zoom-btn cg-peek-btn" id="cgPeekBtn" aria-label="누르고 있는 동안 원본 보기" title="누르고 있는 동안 원본 보기" aria-pressed="false">&#128065;</button>
             </div>
           </div>
           <aside class="cg-side">
             <div class="cg-side-art">
-              <img class="cg-side-thumb" id="cgSideThumb" src="" alt="">
+              <img class="cg-side-thumb" id="cgSideThumb" src="" alt="" draggable="false" title="누르고 있는 동안 원본 보기">
               <div style="min-width:0;">
                 <div class="cg-side-title" data-art-title></div>
                 <div class="cg-side-by" id="cgSideBy"></div>
@@ -485,16 +488,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260920-233357"></script>
-<script src="/js/i18n/ko.js?v=20260920-233357"></script>
-<script src="/js/color-engine.js?v=20260920-233357"></script>
-<script src="/js/common.js?v=20260920-233357"></script>
-<script src="/js/auth.js?v=20260920-233357"></script>
-<script src="/js/notifications.js?v=20260920-233357"></script>
-<script src="/js/push.js?v=20260920-233357"></script>
-<script src="/js/lightbox.js?v=20260920-233357"></script>
-<script src="/js/pixel-board.js?v=20260920-233357"></script>
-<script src="/js/coloring.js?v=20260920-233357"></script>
+<script src="/js/supabase-client.js?v=20260921-003213"></script>
+<script src="/js/i18n/ko.js?v=20260921-003213"></script>
+<script src="/js/color-engine.js?v=20260921-003213"></script>
+<script src="/js/common.js?v=20260921-003213"></script>
+<script src="/js/auth.js?v=20260921-003213"></script>
+<script src="/js/notifications.js?v=20260921-003213"></script>
+<script src="/js/push.js?v=20260921-003213"></script>
+<script src="/js/lightbox.js?v=20260921-003213"></script>
+<script src="/js/pixel-board.js?v=20260921-003213"></script>
+<script src="/js/coloring.js?v=20260921-003213"></script>
 
 </body>
 </html>

@@ -323,3 +323,33 @@
   .cg-top .cg-mine-block .cg-grid{display:flex;gap:12px;flex:1;}
   .cg-top .cg-mine-block .cg-card{flex:0 0 184px;width:184px;scroll-snap-align:start;}
 }
+
+/* ---------- corner controls on a card (2026-09-21) ----------
+   Top-left of the picture (the progress badge holds the top-right): ✕ drops
+   an attempt under way, 📤 shares the finished picture. The action row
+   below cannot take a third button on a 168px card. */
+.cg-card{position:relative;}
+.cg-card-corners{position:absolute;left:8px;top:8px;display:flex;flex-direction:column;gap:6px;z-index:2;}
+.cg-card-corner{
+  appearance:none;cursor:pointer;width:30px;height:30px;padding:0;border-radius:50%;
+  border:1px solid rgba(255,255,255,.35);background:rgba(15,20,17,.72);color:#fff;
+  font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+.cg-card-corner:hover{background:rgba(15,20,17,.9);}
+.cg-card-corner.discard{font-size:13px;}
+.cg-card-corner:disabled{opacity:.5;cursor:default;}
+
+/* Level chips on the day's artwork (2026-09-21) — the same chips as a card. */
+.cg-today-levels{max-width:280px;}
+
+/* ---------- hold-to-peek (2026-09-21) ----------
+   The original picture laid over the cells: same pixel size as the canvases
+   (set in buildStage) and the same transform (applyTransform), shown only
+   while the 👁 toolbar button or the side thumbnail is held down. It sits
+   above the number layer and below the cursor layer by DOM order. */
+.cg-peek{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;object-fit:fill;}
+.cg-peek[hidden]{display:none;}
+.cg-peek-btn,.cg-side-thumb{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none;}
+.cg-side-thumb{cursor:pointer;}
+.cg-peek-btn[aria-pressed="true"]{background:var(--primary);color:#fff;}

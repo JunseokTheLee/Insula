@@ -42,8 +42,8 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/en/","logo":"https://weavo.art/logo.png"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Color by Number","item":"https://weavo.art/en/coloring"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/coloring.css?v=20260920-233357">
-<link rel="stylesheet" href="/css/base.css?v=20260920-233357">
+<link rel="stylesheet" href="/css/coloring.css?v=20260921-003213">
+<link rel="stylesheet" href="/css/base.css?v=20260921-003213">
 </head>
 <body>
 
@@ -90,6 +90,7 @@
             <p class="cg-today-label">Artwork of the day</p>
             <div class="cg-today-title" id="cgTodayTitle"></div>
             <div class="cg-today-by" id="cgTodayBy"></div>
+            <div class="cg-levels cg-today-levels" id="cgTodayLevels"></div>
             <div class="cg-today-actions"><button type="button" class="admin-btn primary" id="cgTodayPlay">Color it</button></div>
           </div>
         </section>
@@ -130,6 +131,7 @@
             <canvas id="cgBase"></canvas>
             <canvas id="cgHighlight"></canvas>
             <canvas id="cgNumbers"></canvas>
+            <img class="cg-peek" id="cgPeek" src="" alt="" draggable="false" hidden>
             <div class="cg-layer" id="cgLayer"><div class="cg-cursor" id="cgCursor" hidden></div></div>
             <div class="cg-loading" id="cgLoading">Preparing…</div>
             <div class="cg-drag-note" id="cgDragNote" hidden>Swipe to paint · two fingers or another cell to move</div>
@@ -137,12 +139,13 @@
               <button type="button" class="zoom-btn" id="cgZoomOut" aria-label="Zoom out">&minus;</button>
               <span class="zoom-level" id="cgZoomLevel">100%</span>
               <button type="button" class="zoom-btn" id="cgZoomIn" aria-label="Zoom in">+</button>
-              <button type="button" class="zoom-btn" id="cgZoomReset" aria-label="Fit to view">&#8634;</button>
+              <button type="button" class="zoom-btn" id="cgZoomReset" aria-label="Fit to view">&#8634;</button>
+              <button type="button" class="zoom-btn cg-peek-btn" id="cgPeekBtn" aria-label="Hold to see the original" title="Hold to see the original" aria-pressed="false">&#128065;</button>
             </div>
           </div>
           <aside class="cg-side">
             <div class="cg-side-art">
-              <img class="cg-side-thumb" id="cgSideThumb" src="" alt="">
+              <img class="cg-side-thumb" id="cgSideThumb" src="" alt="" draggable="false" title="Hold to see the original">
               <div style="min-width:0;">
                 <div class="cg-side-title" data-art-title></div>
                 <div class="cg-side-by" id="cgSideBy"></div>
@@ -350,15 +353,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260920-233357"></script>
-<script src="/js/i18n/en.js?v=20260920-233357"></script>
-<script src="/js/color-engine.js?v=20260920-233357"></script>
-<script src="/js/common.js?v=20260920-233357"></script>
-<script src="/js/auth.js?v=20260920-233357"></script>
-<script src="/js/notifications.js?v=20260920-233357"></script>
-<script src="/js/push.js?v=20260920-233357"></script>
-<script src="/js/lightbox.js?v=20260920-233357"></script>
-<script src="/js/pixel-board.js?v=20260920-233357"></script>
-<script src="/js/coloring.js?v=20260920-233357"></script>
+<script src="/js/supabase-client.js?v=20260921-003213"></script>
+<script src="/js/i18n/en.js?v=20260921-003213"></script>
+<script src="/js/color-engine.js?v=20260921-003213"></script>
+<script src="/js/common.js?v=20260921-003213"></script>
+<script src="/js/auth.js?v=20260921-003213"></script>
+<script src="/js/notifications.js?v=20260921-003213"></script>
+<script src="/js/push.js?v=20260921-003213"></script>
+<script src="/js/lightbox.js?v=20260921-003213"></script>
+<script src="/js/pixel-board.js?v=20260921-003213"></script>
+<script src="/js/coloring.js?v=20260921-003213"></script>
 </body>
 </html>
