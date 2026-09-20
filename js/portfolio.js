@@ -236,9 +236,14 @@ function renderWorks() {
   document.getElementById('pfLayouts').hidden = !isPfOwner();
   revealItems();
 }
+let pfRevealedOnce = false;
 function revealItems() {
   const items = [...document.querySelectorAll('.pf-item')];
   if (pfObserver) pfObserver.disconnect();
+  // The entrance plays once per page; a re-render while arranging or
+  // toggling a tool must not fade everything out and in again.
+  if (pfRevealedOnce) { items.forEach(el => el.classList.add('in')); return; }
+  pfRevealedOnce = true;
   if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     items.forEach(el => el.classList.add('in'));
     return;
@@ -255,10 +260,20 @@ function revealItems() {
 }
 
 // ---------- owner: order / cover / remove / add ----------
+// The whole order in one call (reorder_portfolio_items, supabase_portfolios.sql
+// B3). While that function is not applied, one small update per row: the
+// browser may set `position` (and only that) on its own rows. Not an
+// upsert — PostgREST rewrites every payload column on conflict, key
+// columns included, which the column grant rightly does not allow.
 async function persistOrder() {
-  const rows = pfItems.map((it, i) => ({ collection_id: pf.id, submission_id: it.submission_id, position: i }));
   pfItems.forEach((it, i) => { it.position = i; });
-  const { error } = await sb.from('mosaic_collection_items').upsert(rows, { onConflict: 'collection_id,submission_id' });
+  const ids = pfItems.map(it => it.submission_id);
+  let { error } = await sb.rpc('reorder_portfolio_items', { p_collection_id: pf.id, p_submission_ids: ids });
+  if (error && isSchemaMismatchError(error)) {
+    const results = await Promise.all(pfItems.map(it =>
+      sb.from('mosaic_collection_items').update({ position: it.position }).eq('collection_id', pf.id).eq('submission_id', it.submission_id)));
+    error = (results.find(r => r.error) || {}).error || null;
+  }
   if (error) { console.error('save portfolio order error:', error); toast(isSchemaMismatchError(error) ? tr('pfOrderUnavailable') : tr('couldNotUpdateCollection')); }
   scheduleShareCard();
 }

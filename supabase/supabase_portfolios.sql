@@ -422,3 +422,33 @@ create policy "Owners can reorder their own portfolio"
   using (exists (select 1 from public.mosaic_collections c where c.id = collection_id and c.owner_id = auth.uid()))
   with check (exists (select 1 from public.mosaic_collections c where c.id = collection_id and c.owner_id = auth.uid()));
 grant update (position) on public.mosaic_collection_items to authenticated;
+
+-- ── B3. the order, in one call ──────────────────────────────────────────
+-- The page sends every submission id in the new order; each row's position
+-- becomes its index. The browser cannot do this as one upsert: PostgREST
+-- rewrites every payload column on conflict, key columns included, and the
+-- column grant above (rightly) covers `position` only. The page falls back
+-- to one update per row while this function is missing.
+create or replace function public.reorder_portfolio_items(p_collection_id bigint, p_submission_ids bigint[])
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+  v_n integer := 0;
+begin
+  if auth.uid() is null then raise exception 'sign-in required'; end if;
+  if not exists (select 1 from public.mosaic_collections c where c.id = p_collection_id and c.owner_id = auth.uid()) then
+    raise exception 'only the owner can reorder a portfolio';
+  end if;
+  update public.mosaic_collection_items ci
+     set position = o.idx - 1
+    from unnest(coalesce(p_submission_ids, '{}'::bigint[])) with ordinality as o(sid, idx)
+   where ci.collection_id = p_collection_id and ci.submission_id = o.sid;
+  get diagnostics v_n = row_count;
+  return v_n;
+end;
+$fn$;
+revoke execute on function public.reorder_portfolio_items(bigint, bigint[]) from public, anon;
+grant execute on function public.reorder_portfolio_items(bigint, bigint[]) to authenticated;

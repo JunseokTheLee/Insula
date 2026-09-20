@@ -39,8 +39,16 @@
   let unsuitable = new Set();   // ids whose on-the-fly board could not be made
   try { unsuitable = new Set(JSON.parse(sessionStorage.getItem('weavo.coloring.unsuitable') || '[]')); } catch (e) {}
 
-  let prefs = { muted: false, numbers: false, drag: false };
-  try { prefs = { ...prefs, ...JSON.parse(localStorage.getItem(LS_PREFS) || '{}') }; } catch (e) {}
+  // panMode: paint by tap only, one finger moves the board (the old way).
+  // Off = smart drag (2026-09-20): a press on a cell of the chosen number
+  // paints and keeps painting as the finger moves; a press anywhere else
+  // moves. The old `drag` key is ignored — it was stored for everyone who
+  // ever touched another toggle, so it says nothing about a choice.
+  let prefs = { muted: false, numbers: false, panMode: false };
+  let storedPrefs = {};
+  try { storedPrefs = JSON.parse(localStorage.getItem(LS_PREFS) || '{}'); } catch (e) {}
+  delete storedPrefs.drag;
+  prefs = { ...prefs, ...storedPrefs };
   function savePrefs() { try { localStorage.setItem(LS_PREFS, JSON.stringify(prefs)); } catch (e) {} }
 
   // The board being played
@@ -102,9 +110,12 @@
       b.setAttribute('aria-label', prefs.muted ? tr('gameSoundOff') : tr('gameSoundOn'));
     }
     for (const b of root.querySelectorAll('[data-numbers]')) b.setAttribute('aria-pressed', String(prefs.numbers));
-    for (const b of root.querySelectorAll('[data-drag]')) b.setAttribute('aria-pressed', String(prefs.drag));
+    for (const b of root.querySelectorAll('[data-pan]')) {
+      b.setAttribute('aria-pressed', String(prefs.panMode));
+      b.setAttribute('aria-label', tr(prefs.panMode ? 'cgPanModeOn' : 'cgPanModeOff'));
+    }
     const note = $('cgDragNote');
-    if (note) note.hidden = !prefs.drag;
+    if (note) { note.hidden = false; note.textContent = tr(prefs.panMode ? 'cgHintPan' : 'cgHintDrag'); }
     if (numCv) updateNumbersVisibility();
   }
 
@@ -322,6 +333,8 @@
     const cur = $('cgCursor');
     if (cur) cur.hidden = true;
     show('play');
+    // Once: how the stroke and the move gestures split.
+    if (!prefs.tipShown && !prefs.panMode) { toast(tr('cgTipDrag')); prefs.tipShown = true; savePrefs(); }
     $('cgLoading').hidden = false;
     $('cgLoading').textContent = tr('gamePreparing');
     fillSidePanel(a);
@@ -565,13 +578,16 @@
   }
 
   // ---------- painting ----------
-  function paintCell(x, y) {
+  // `quiet` = part of a drag stroke: cells of another number are passed
+  // over without the wrong-number mark and beep a tap on them gets.
+  function paintCell(x, y, quiet) {
     if (!board) return;
     const i = y * board.w + x;
     const c = board.cells[i];
     if (c === PIXEL_EMPTY || pixelBitGet(bits, i)) return;
-    if (selected == null) { toast(tr('cgPickColor')); return; }
+    if (selected == null) { if (!quiet) toast(tr('cgPickColor')); return; }
     if (c !== selected) {
+      if (quiet) return;
       if (wrong.get(i) === selected) return;
       wrong.set(i, selected);
       drawCell(i);
@@ -875,23 +891,66 @@
   function wireStage() {
     stage = $('cgStage');
     if (!stage) return;
-    let down = false, moved = false, lastX = 0, lastY = 0, pinch = 0, lastCell = -1;
+    let down = false, moved = false, painting = false, lastX = 0, lastY = 0, pinch = 0, lastCell = -1;
+    let lastBx = 0, lastBy = 0;   // where the stroke last painted, in cells (fractional)
+    let spaceDown = false;         // Space + drag moves the board (desktop has no second finger)
+    addEventListener('keydown', e => { if (e.code === 'Space') spaceDown = true; });
+    addEventListener('keyup', e => { if (e.code === 'Space') spaceDown = false; });
+    addEventListener('blur', () => { spaceDown = false; });
+    function boardPoint(clientX, clientY) {
+      const r = stage.getBoundingClientRect();
+      return { x: (clientX - r.left - panX) / scale / cellPx, y: (clientY - r.top - panY) / scale / cellPx };
+    }
+    // Every cell the segment crosses — a fast swipe leaves no gaps.
+    function paintAlong(x0, y0, x1, y1) {
+      const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 2));
+      for (let k = 1; k <= steps; k++) {
+        const t = k / steps;
+        const cx = Math.floor(x0 + (x1 - x0) * t), cy = Math.floor(y0 + (y1 - y0) * t);
+        if (cx < 0 || cy < 0 || cx >= board.w || cy >= board.h) continue;
+        const i = cy * board.w + cx;
+        if (i === lastCell) continue;
+        lastCell = i;
+        paintCell(cx, cy, true);
+      }
+    }
+    function paintableStart(c) {
+      if (!c || selected == null) return false;
+      const i = c.y * board.w + c.x;
+      return board.cells[i] === selected && !pixelBitGet(bits, i);
+    }
     stage.addEventListener('pointerdown', e => {
       if (e.pointerType === 'touch' && e.isPrimary === false) return;
-      down = true; moved = false; lastX = e.clientX; lastY = e.clientY; lastCell = -1;
-      stage.setPointerCapture(e.pointerId);
-      if (prefs.drag && board) {
-        const c = cellAt(e.clientX, e.clientY);
-        if (c) { lastCell = c.y * board.w + c.x; paintCell(c.x, c.y); }
+      // The zoom toolbar sits on the stage: capturing the pointer here would
+      // swallow its buttons' clicks (the click needs the up on the button).
+      if (e.target.closest('button, .zoom-toolbar')) return;
+      down = true; moved = false; painting = false; lastX = e.clientX; lastY = e.clientY; lastCell = -1;
+      try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+      if (!board) return;
+      // Smart drag: a press on a cell of the chosen number starts a stroke;
+      // a press anywhere else (another number, a painted cell, the margin)
+      // moves the board. Middle/right button or a held Space always moves.
+      // Pan mode paints by tap only, like before.
+      const forcePan = e.button === 1 || e.button === 2 || spaceDown;
+      const c = cellAt(e.clientX, e.clientY);
+      if (!prefs.panMode && !forcePan && paintableStart(c)) {
+        painting = true;
+        const p = boardPoint(e.clientX, e.clientY); lastBx = p.x; lastBy = p.y;
+        lastCell = c.y * board.w + c.x;
+        cursor = null; $('cgCursor').hidden = true;
+        paintCell(c.x, c.y, true);
       }
     });
     stage.addEventListener('pointermove', e => {
       if (!down || !board) return;
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
-      if (prefs.drag && pinch === 0) {
-        const c = cellAt(e.clientX, e.clientY);
-        if (c) { const i = c.y * board.w + c.x; if (i !== lastCell) { lastCell = i; paintCell(c.x, c.y); } }
+      if (painting) {
+        const p = boardPoint(e.clientX, e.clientY);
+        // A second finger arrived: that is a zoom, not a stroke — follow the
+        // finger without painting so the stroke resumes from where it is.
+        if (!pinch) paintAlong(lastBx, lastBy, p.x, p.y);
+        lastBx = p.x; lastBy = p.y;
         return;
       }
       panX += dx; panY += dy; lastX = e.clientX; lastY = e.clientY;
@@ -901,13 +960,17 @@
       if (!down) return;
       down = false;
       try { stage.releasePointerCapture(e.pointerId); } catch (err) {}
-      if (!moved && !prefs.drag && board) {
+      // A tap that did not start a stroke (another number, a painted cell,
+      // pan mode): the plain tap, with the wrong-number mark when it is one.
+      if (!moved && !painting && board && e.button !== 1 && e.button !== 2) {
         const c = cellAt(e.clientX, e.clientY);
         if (c) { cursor = null; $('cgCursor').hidden = true; paintCell(c.x, c.y); }
       }
+      painting = false;
     };
     stage.addEventListener('pointerup', up);
-    stage.addEventListener('pointercancel', () => { down = false; });
+    stage.addEventListener('pointercancel', () => { down = false; painting = false; });
+    stage.addEventListener('contextmenu', e => e.preventDefault());   // right-drag moves
     stage.addEventListener('wheel', e => {
       e.preventDefault();
       const r = stage.getBoundingClientRect();
@@ -947,7 +1010,7 @@
   for (const b of root.querySelectorAll('[data-hint]')) b.onclick = hint;
   for (const b of root.querySelectorAll('[data-mute]')) b.onclick = () => { prefs.muted = !prefs.muted; if (!prefs.muted) unlockAudio(); savePrefs(); applyToggles(); };
   for (const b of root.querySelectorAll('[data-numbers]')) b.onclick = () => { prefs.numbers = !prefs.numbers; savePrefs(); applyToggles(); };
-  for (const b of root.querySelectorAll('[data-drag]')) b.onclick = () => { prefs.drag = !prefs.drag; savePrefs(); applyToggles(); };
+  for (const b of root.querySelectorAll('[data-pan]')) b.onclick = () => { prefs.panMode = !prefs.panMode; savePrefs(); applyToggles(); };
   $('cgZoomIn').onclick = () => zoomBy(1.4);
   $('cgZoomOut').onclick = () => zoomBy(1 / 1.4);
   $('cgZoomReset').onclick = fitAll;
@@ -975,7 +1038,10 @@
     lastUid = me.id || '';
     settings = await getSiteSettings().catch(() => ({}));
     if (settings.pixelGameEnabled === false) { show('off'); return; }
-    if (settings.gameSoundDefault === false && !('muted' in (JSON.parse(localStorage.getItem(LS_PREFS) || '{}')))) prefs.muted = true;
+    if (settings.gameSoundDefault === false && !('muted' in storedPrefs)) prefs.muted = true;
+    // Site option pixelDragDefault decides the mode for anyone who never
+    // chose one (admin → Site options → colouring game).
+    if (!('panMode' in storedPrefs)) prefs.panMode = settings.pixelDragDefault === false;
     wireStage();
     applyToggles();
     await loadMyProgress();

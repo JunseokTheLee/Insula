@@ -271,6 +271,12 @@ const T = {
   cgShared: 'Picture saved',
   cgShareFailed: "Couldn't share the picture",
   cgNotHere: 'That artwork is not available for coloring',
+  // Colouring: smart drag / move mode (2026-09-20)
+  cgHintDrag: 'Swipe to paint · two fingers or another cell to move',
+  cgHintPan: 'Tap to paint · one finger to move',
+  cgPanModeOn: 'Move mode on — paint by tap only (press to turn off)',
+  cgPanModeOff: 'Move mode — when on, dragging only moves the board',
+  cgTipDrag: 'Press a cell of the chosen number and swipe to keep painting. Drag with two fingers (or from another cell) to move.',
   lbColorGame: 'Color it',
   editOptOutColoring: "Don't use this artwork in the coloring game",
   notifColoredYourArtwork: 'finished coloring your artwork',

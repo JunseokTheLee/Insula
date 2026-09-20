@@ -271,6 +271,12 @@ const T = {
   cgShared: '그림을 저장했어요',
   cgShareFailed: '그림을 공유하지 못했어요',
   cgNotHere: '그 작품은 색칠할 수 없어요',
+  // 색칠: 스마트 드래그 / 이동 모드 (2026-09-20)
+  cgHintDrag: '쓸어서 칠하기 · 두 손가락이나 다른 칸을 끌면 이동',
+  cgHintPan: '탭으로 칠하기 · 한 손가락으로 이동',
+  cgPanModeOn: '이동 모드 켜짐 — 탭으로만 칠하기 (눌러서 끄기)',
+  cgPanModeOff: '이동 모드 — 켜면 드래그가 칠하지 않고 이동만 합니다',
+  cgTipDrag: '같은 번호 칸을 누른 채 쓸면 이어서 칠해져요. 두 손가락(또는 다른 칸)을 끌면 이동합니다.',
   lbColorGame: '색칠하기',
   editOptOutColoring: '이 작품을 숫자 색칠 게임에 쓰지 않음',
   notifColoredYourArtwork: '님이 회원님의 작품을 색칠로 완성했어요',

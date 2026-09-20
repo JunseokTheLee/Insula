@@ -72,8 +72,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/coloring.css?v=20260920-155724">
-<link rel="stylesheet" href="/css/base.css?v=20260920-155724">
+<link rel="stylesheet" href="/css/coloring.css?v=20260920-163237">
+<link rel="stylesheet" href="/css/base.css?v=20260920-163237">
 </head>
 
 <body>
@@ -147,7 +147,7 @@
           <span class="cg-hud-pct" data-cg-pct>0%</span>
           <button type="button" data-hint aria-label="다음 칸 보기">&#128269;</button>
           <button type="button" data-numbers aria-label="숫자 항상 보기" aria-pressed="false">#</button>
-          <button type="button" data-drag aria-label="드래그로 칠하기" aria-pressed="false">&#9998;</button>
+          <button type="button" data-pan aria-label="이동 모드 (탭으로만 칠하기)" aria-pressed="false">&#9995;</button>
           <button type="button" data-mute aria-label="소리 끄기" aria-pressed="false">&#128266;</button>
         </div>
         <div class="cg-play">
@@ -157,7 +157,7 @@
             <canvas id="cgNumbers"></canvas>
             <div class="cg-layer" id="cgLayer"><div class="cg-cursor" id="cgCursor" hidden></div></div>
             <div class="cg-loading" id="cgLoading">준비하고 있습니다…</div>
-            <div class="cg-drag-note" id="cgDragNote" hidden>드래그로 칠하기 · 두 손가락으로 이동</div>
+            <div class="cg-drag-note" id="cgDragNote" hidden>쓸어서 칠하기 · 두 손가락이나 다른 칸을 끌면 이동</div>
             <div class="zoom-toolbar cg-zoom-toolbar">
               <button type="button" class="zoom-btn" id="cgZoomOut" aria-label="축소">&minus;</button>
               <span class="zoom-level" id="cgZoomLevel">100%</span>
@@ -179,7 +179,7 @@
             <div class="cg-side-actions">
               <button type="button" class="admin-btn" data-hint>&#128269; 다음 칸</button>
               <button type="button" class="admin-btn" data-numbers aria-pressed="false"># 숫자</button>
-              <button type="button" class="admin-btn" data-drag aria-pressed="false">&#9998; 드래그로 칠하기</button>
+              <button type="button" class="admin-btn" data-pan aria-pressed="false">&#9995; 이동 모드</button>
               <button type="button" class="admin-btn" data-mute aria-pressed="false" aria-label="소리 끄기">&#128266;</button>
               <button type="button" class="admin-btn" data-quit>&larr; 목록</button>
             </div>
@@ -475,16 +475,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260920-155724"></script>
-<script src="/js/i18n/ko.js?v=20260920-155724"></script>
-<script src="/js/color-engine.js?v=20260920-155724"></script>
-<script src="/js/common.js?v=20260920-155724"></script>
-<script src="/js/auth.js?v=20260920-155724"></script>
-<script src="/js/notifications.js?v=20260920-155724"></script>
-<script src="/js/push.js?v=20260920-155724"></script>
-<script src="/js/lightbox.js?v=20260920-155724"></script>
-<script src="/js/pixel-board.js?v=20260920-155724"></script>
-<script src="/js/coloring.js?v=20260920-155724"></script>
+<script src="/js/supabase-client.js?v=20260920-163237"></script>
+<script src="/js/i18n/ko.js?v=20260920-163237"></script>
+<script src="/js/color-engine.js?v=20260920-163237"></script>
+<script src="/js/common.js?v=20260920-163237"></script>
+<script src="/js/auth.js?v=20260920-163237"></script>
+<script src="/js/notifications.js?v=20260920-163237"></script>
+<script src="/js/push.js?v=20260920-163237"></script>
+<script src="/js/lightbox.js?v=20260920-163237"></script>
+<script src="/js/pixel-board.js?v=20260920-163237"></script>
+<script src="/js/coloring.js?v=20260920-163237"></script>
 
 </body>
 </html>

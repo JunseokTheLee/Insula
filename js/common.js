@@ -672,6 +672,9 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   pixelAnonymousPlay: true,
   pixelNotifyArtist: true,
   pixelShowCompletions: true,
+  // Colouring input: true = swipe paints (a press on a cell of the chosen
+  // number starts a stroke); false = tap paints, one finger moves.
+  pixelDragDefault: true,
   // Plan limits the admin Usage tiles show a percentage of. Supabase Pro:
   // 8 GB of database disk per project, 100 GB of Storage. Options rather
   // than constants so changing plan does not need a deploy.
