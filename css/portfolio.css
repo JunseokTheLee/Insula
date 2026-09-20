@@ -48,6 +48,7 @@ body.pf-dark{
 .pf-btn:disabled{opacity:.5;cursor:default;}
 .pf-btn .ico{font-size:15px;line-height:1;}
 .pf-owner-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.pf-owner-tools[hidden],.pf-layouts[hidden],.pf-badge[hidden],.pf-btn[hidden]{display:none;}
 .pf-owner-tools .pf-btn{padding:9px 14px;font-size:12.5px;}
 
 /* ---------- hero ---------- */

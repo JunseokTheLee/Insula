@@ -117,6 +117,7 @@
 - 로그·에러 메시지 문자열은 영어.
 - 전역 함수·`const` 를 파일 간에 공유하는 구조다 (모듈 시스템 없음). 로드 순서가 곧 의존 순서이므로 각 파일 머리 주석의 "Needs … loaded first" 를 지키고, 새 파일도 같은 형식의 머리 주석을 단다.
 - 사용자 입력으로 만든 링크는 `safeHref()`, HTML 삽입은 `escapeHtml()` 을 거친다.
+- **`hidden` 속성으로 숨기는 요소에 클래스로 `display` 를 주면 `hidden` 이 무시된다** (2026.9.20 실제 발생 — 포트폴리오 소유자 도구·레이아웃 스위치가 로그인하지 않은 방문자에게도 보였다; 서버 RLS 가 실제 수정·삭제는 막았지만 화면 접근 제한이 뚫린 셈). 브라우저 기본 `[hidden]{display:none}` 은 어떤 작성자 규칙보다 약하다. 그래서 `css/base.css` 에 전역 `[hidden]{display:none !important}` 을 두었다 — **지우지 말 것.** 소유자·관리자 전용 UI 는 JS 의 `hidden`/`style.display` 로 가리되, 보이면 안 되는 동작은 반드시 DB 정책·RPC 가 다시 막아야 한다(이번에도 그 덕에 데이터는 안전했다).
 - Supabase Storage URL 은 `cdnUrl()` 로 감싸 `/img/` 프록시를 타게 한다.
 - **캠페인 칸의 색은 `loadProjectCells(project)`(common.js)로 읽는다.** 프로젝트에 `grid_image_url`(정적 PNG, `/img/` 캐시)이 있으면 그 이미지에서, 없거나 못 읽으면 `mosaic_pixels` 조회로 자동 폴백한다. 격자·미리보기·필요한 색상이 모두 이 경로를 쓰므로 `mosaic_pixels` 를 직접 전체 조회하지 않는다 (2026.9.10, `supabase_mosaic_grid_image.sql`). 이미지가 없는 옛 캠페인은 관리자 페이지의 "격자 이미지 생성" 버튼으로 한 번 만든다(업로드한 PNG 를 다시 읽어 칸과 일치하는지 검증한 뒤 `grid_image_url` 기록).
 - **매칭은 서버 RPC(`match_pool_artworks`·`release_poor_matches`)가 한다.** `matching.js` 는 RPC 를 먼저 부르고, 함수가 없을 때(PGRST202)만 옛 클라이언트 계산으로 폴백한다. 매칭 규칙(Lab 거리·가중치 0.2)을 바꾸면 **SQL 과 color-engine.js 를 함께** 고친다. 색 일치 한계는 사이트 옵션 `pieceMatchDistance`(기본 20)를 서버가 읽는다(클라이언트 폴백·reshape 는 옛 상수 30).

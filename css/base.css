@@ -221,6 +221,13 @@ body.modal-open{position:fixed;left:0;right:0;width:100%;}
 /* Visually hidden but present for screen readers/crawlers — used for a
    page's semantic <h1> where the visual design doesn't call for a separate
    heading on top of an already-descriptive section label. */
+/* The `hidden` attribute must win over any display rule a class sets —
+   the UA's [hidden]{display:none} loses to every author rule, so a
+   ".tools{display:flex}" element that JS hides with `hidden` stays visible.
+   That is how the portfolio owner tools showed for every visitor on
+   2026-09-20 (the server still refused the actions). Never override this. */
+[hidden]{display:none !important;}
+
 .sr-only{
   position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip:rect(0,0,0,0);white-space:nowrap;border:0;
