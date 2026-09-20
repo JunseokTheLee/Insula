@@ -293,3 +293,33 @@
 .cg-mine[hidden],.cg-mine-block[hidden]{display:none;}
 .cg-mine-block + .cg-mine-block{margin-top:6px;}
 .cg-side-level{font-family:'Pretendard',sans-serif;font-size:12px;font-weight:700;color:var(--primary);margin-top:2px;}
+
+/* ---------- desktop: today + "mine" on one line (2026-09-20) ----------
+   Above 900px the day's artwork stands on the left as a portrait card and
+   the player's own "continue" / "finished" cards run in ONE row to its
+   right — each block a horizontal strip that scrolls sideways when long
+   (overscroll-behavior-x only, like .hero-strip-track: the strip is not a
+   vertical scroller, so the wheel must keep reaching the page). Before,
+   four short rows stacked with the right half of the screen empty. Below
+   900px the sections stack as they did. */
+@media (min-width:901px){
+  .cg-top{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:stretch;margin:0 0 18px;}
+  .cg-top:has(> .cg-today[hidden]),.cg-top:has(> .cg-mine[hidden]){grid-template-columns:minmax(0,1fr);}
+  .cg-top:has(> .cg-today[hidden]):has(> .cg-mine[hidden]){display:none;}
+  /* Portrait card only while the strip stands beside it; alone it keeps the
+     wide thumb-left layout (a 100%-wide thumb would fill the frame). */
+  .cg-top:not(:has(> .cg-mine[hidden])) .cg-today{grid-template-columns:1fr;align-content:start;gap:12px;margin:0;}
+  .cg-top:not(:has(> .cg-mine[hidden])) .cg-today-thumb{width:100%;height:auto;aspect-ratio:1/1;}
+  .cg-top .cg-mine{
+    display:flex;align-items:stretch;min-width:0;
+    overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;
+    padding-bottom:6px;
+  }
+  .cg-top .cg-mine::-webkit-scrollbar{height:8px;}
+  .cg-top .cg-mine::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:var(--r-full);}
+  .cg-top .cg-mine-block{flex:0 0 auto;display:flex;flex-direction:column;}
+  .cg-top .cg-mine-block + .cg-mine-block{margin:0 0 0 18px;padding-left:18px;border-left:1px solid var(--border);}
+  .cg-top .cg-mine-block .cg-section-label{margin:0 0 10px;}
+  .cg-top .cg-mine-block .cg-grid{display:flex;gap:12px;flex:1;}
+  .cg-top .cg-mine-block .cg-card{flex:0 0 184px;width:184px;scroll-snap-align:start;}
+}
