@@ -44,8 +44,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260916-002025">
-<link rel="stylesheet" href="/css/home.css?v=20260916-002025">
+<link rel="stylesheet" href="/css/base.css?v=20260920-130739">
+<link rel="stylesheet" href="/css/home.css?v=20260920-130739">
 </head>
 <body>
 
@@ -135,11 +135,18 @@
           <div class="hero-partner-body">
             <p class="hero-partner-desc"><span id="heroTotalInline">0</span>개의 조각이 모두 채워지면 하나의 그림이 완성됩니다. 당신이 더한 조각은 그 그림의 일부로 남습니다.</p>
             <a class="hero-partner-link" id="heroCampaignLink" href="/ko/campaigns">캠페인 자세히 보기 <span aria-hidden="true">&rarr;</span></a>
-            <a class="game-banner" href="/ko/game" data-game-link>
-              <span class="game-banner-icon" aria-hidden="true">🔍</span>
-              <span class="game-banner-text"><b>조각 찾기 게임</b><span>이 모자이크에서 작품의 조각을 찾아보세요</span></span>
-              <span class="game-banner-go" aria-hidden="true">&rarr;</span>
-            </a>
+            <div class="game-banners">
+              <a class="game-banner" href="/ko/game?g=find" data-game-link="find">
+                <span class="game-banner-icon" aria-hidden="true">🔍</span>
+                <span class="game-banner-text"><b>조각 찾기 게임</b><span>이 모자이크에서 작품의 조각을 찾아보세요</span></span>
+                <span class="game-banner-go" aria-hidden="true">&rarr;</span>
+              </a>
+              <a class="game-banner game-banner-color" href="/ko/coloring" data-coloring-link>
+                <span class="game-banner-icon" aria-hidden="true">🎨</span>
+                <span class="game-banner-text"><b>숫자 색칠 게임</b><span>작가의 작품을 번호대로 색칠해 보세요</span></span>
+                <span class="game-banner-go" aria-hidden="true">&rarr;</span>
+              </a>
+            </div>
           </div>
 
           <div class="hero-cta">
@@ -365,16 +372,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260916-002025"></script>
-<script src="/js/i18n/ko.js?v=20260916-002025"></script>
-<script src="/js/common.js?v=20260916-002025"></script>
-<script src="/js/color-engine.js?v=20260916-002025"></script>
-<script src="/js/matching.js?v=20260916-002025"></script>
-<script src="/js/auth.js?v=20260916-002025"></script>
-<script src="/js/notifications.js?v=20260916-002025"></script>
-<script src="/js/push.js?v=20260916-002025"></script>
-<script src="/js/project-preview.js?v=20260916-002025"></script>
-<script src="/js/lightbox.js?v=20260916-002025"></script>
-<script src="/js/landing.js?v=20260916-002025"></script>
+<script src="/js/supabase-client.js?v=20260920-130739"></script>
+<script src="/js/i18n/ko.js?v=20260920-130739"></script>
+<script src="/js/common.js?v=20260920-130739"></script>
+<script src="/js/color-engine.js?v=20260920-130739"></script>
+<script src="/js/matching.js?v=20260920-130739"></script>
+<script src="/js/auth.js?v=20260920-130739"></script>
+<script src="/js/notifications.js?v=20260920-130739"></script>
+<script src="/js/push.js?v=20260920-130739"></script>
+<script src="/js/project-preview.js?v=20260920-130739"></script>
+<script src="/js/lightbox.js?v=20260920-130739"></script>
+<script src="/js/landing.js?v=20260920-130739"></script>
 </body>
 </html>

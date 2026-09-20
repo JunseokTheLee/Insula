@@ -42,8 +42,8 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/en/","logo":"https://weavo.art/logo.png"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Find the Piece","item":"https://weavo.art/en/game"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/game.css?v=20260916-002025">
-<link rel="stylesheet" href="/css/base.css?v=20260916-002025">
+<link rel="stylesheet" href="/css/game.css?v=20260920-130739">
+<link rel="stylesheet" href="/css/base.css?v=20260920-130739">
 </head>
 <body>
 
@@ -75,7 +75,31 @@
 
     <div class="game-page" id="gamePage">
 
+      <div data-screen="choose" hidden>
+        <h1>Games</h1>
+        <p class="game-lead">Two ways to play with the artworks on Weavo. Pick one.</p>
+        <div class="game-choose">
+          <button type="button" class="game-choice" id="gameChooseFind">
+            <span class="game-choice-icon" aria-hidden="true">&#128269;</span>
+            <span class="game-choice-title">Find the Piece</span>
+            <span class="game-choice-desc">Hunt an artwork's pieces inside the live campaign mosaic, against the clock.</span>
+            <span class="game-choice-status" id="gameChooseFindStatus"></span>
+          </button>
+          <a class="game-choice game-choice-color" id="gameChooseColoring" href="/en/coloring" data-coloring-link>
+            <span class="game-choice-icon" aria-hidden="true">&#127912;</span>
+            <span class="game-choice-title">Color by Number</span>
+            <span class="game-choice-desc">Fill the numbered cells and watch an artist's work appear, at your own pace.</span>
+            <span class="game-choice-status">No timer, no ranking</span>
+          </a>
+        </div>
+      </div>
+
+      <div data-screen="loading" hidden>
+        <p class="game-notice">Preparing…</p>
+      </div>
+
       <div data-screen="list" hidden>
+        <button type="button" class="game-back-choose" id="gameBackChoose">&larr; All games</button>
         <h1>Which artwork will you hunt?</h1>
         <p class="game-campaign">Current campaign: <b id="gameCampaignTitle"></b></p>
         <section class="game-hall" id="gameHall" hidden>
@@ -337,14 +361,14 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260916-002025"></script>
-<script src="/js/i18n/en.js?v=20260916-002025"></script>
-<script src="/js/color-engine.js?v=20260916-002025"></script>
-<script src="/js/common.js?v=20260916-002025"></script>
-<script src="/js/auth.js?v=20260916-002025"></script>
-<script src="/js/notifications.js?v=20260916-002025"></script>
-<script src="/js/push.js?v=20260916-002025"></script>
-<script src="/js/lightbox.js?v=20260916-002025"></script>
-<script src="/js/game.js?v=20260916-002025"></script>
+<script src="/js/supabase-client.js?v=20260920-130739"></script>
+<script src="/js/i18n/en.js?v=20260920-130739"></script>
+<script src="/js/color-engine.js?v=20260920-130739"></script>
+<script src="/js/common.js?v=20260920-130739"></script>
+<script src="/js/auth.js?v=20260920-130739"></script>
+<script src="/js/notifications.js?v=20260920-130739"></script>
+<script src="/js/push.js?v=20260920-130739"></script>
+<script src="/js/lightbox.js?v=20260920-130739"></script>
+<script src="/js/game.js?v=20260920-130739"></script>
 </body>
 </html>

@@ -50,6 +50,18 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
   </url>
   <url>
+    <loc>https://weavo.art/en/coloring</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/coloring"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/coloring"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
+  </url>
+  <url>
+    <loc>https://weavo.art/ko/coloring</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/coloring"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/coloring"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
+  </url>
+  <url>
     <loc>https://weavo.art/en/network</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/network"/>
     <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/network"/>

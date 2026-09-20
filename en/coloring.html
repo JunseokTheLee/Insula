@@ -17,17 +17,17 @@
   gtag('config', 'G-NLXNX3C6KW');
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Browse Artworks | Weavo</title>
-<meta name="description" content="Browse every artwork submitted to the Weavo community, searchable by title or artist.">
-<link rel="canonical" href="https://weavo.art/en/artworks">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/artworks">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/artworks">
+<title>Color by Number | Weavo</title>
+<meta name="description" content="Color an artist's work by number. Fill the numbered cells and the picture appears — no timer, no ranking.">
+<link rel="canonical" href="https://weavo.art/en/coloring">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/coloring">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/coloring">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Browse Artworks | Weavo">
-<meta property="og:description" content="Browse every artwork submitted to the Weavo community, searchable by title or artist.">
-<meta property="og:url" content="https://weavo.art/en/artworks">
+<meta property="og:title" content="Color by Number | Weavo">
+<meta property="og:description" content="Color an artist's work by number. Fill the numbered cells and the picture appears — no timer, no ranking.">
+<meta property="og:url" content="https://weavo.art/en/coloring">
 <meta property="og:image" content="https://weavo.art/og-image-en.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -35,17 +35,15 @@
 <meta property="og:image:alt" content="Weavo — Collaborative Art Mosaic Community">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Browse Artworks | Weavo">
-<meta name="twitter:description" content="Browse every artwork submitted to the Weavo community, searchable by title or artist.">
+<meta name="twitter:title" content="Color by Number | Weavo">
+<meta name="twitter:description" content="Color an artist's work by number. Fill the numbered cells and the picture appears — no timer, no ranking.">
 <meta name="twitter:image" content="https://weavo.art/og-image-en.png">
 <meta name="twitter:image:alt" content="Weavo — Collaborative Art Mosaic Community">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Artworks","item":"https://weavo.art/en/artworks"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/en/","logo":"https://weavo.art/logo.png"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Color by Number","item":"https://weavo.art/en/coloring"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<link rel="stylesheet" href="/css/coloring.css?v=20260920-130739">
 <link rel="stylesheet" href="/css/base.css?v=20260920-130739">
-<link rel="stylesheet" href="/css/home.css?v=20260920-130739">
-<link rel="stylesheet" href="/css/artworks.css?v=20260920-130739">
 </head>
 <body>
 
@@ -55,10 +53,10 @@
     <nav class="nav-links">
       <a href="/en/campaigns" class="nav-link">Campaigns</a>
       <a href="/en/network" class="nav-link">Network</a>
-      <a href="/en/artworks" class="nav-link active">Explore</a>
+      <a href="/en/artworks" class="nav-link">Explore</a>
       <a href="/en/artists" class="nav-link">Artists</a>
       <a href="/en/exhibitions" class="nav-link">Exhibitions</a>
-      <a href="/en/game" class="nav-link" data-game-link>Game</a>
+      <a href="/en/game" class="nav-link active" data-game-link>Game</a>
       <a href="/en/about" class="nav-link">About</a>
     </nav>
     <div id="identity">
@@ -74,27 +72,113 @@
   </header>
 
   <main class="main main-scroll">
-    <div class="backnav">
-      <a class="back" href="/en/campaigns">&larr; Back</a>
-    </div>
-    <div class="artworks-page">
-      <div class="page-title-row">
-        <h1 class="artworks-page-title">Browse Artworks</h1>
+
+    <div class="coloring-page" id="coloringPage">
+
+      <div data-screen="list" hidden>
+        <div class="cg-head">
+          <div>
+            <h1>Color by Number</h1>
+            <p class="cg-lead">Pick an artwork, fill the numbered cells with the matching colors, and watch the artist's picture appear. No timer, no ranking — your progress is saved as you go.</p>
+          </div>
+          <a class="cg-switch" href="/en/game?g=find" data-game-link="find">&#128269; Find the Piece &rarr;</a>
+        </div>
+        <section class="cg-today" id="cgToday" hidden>
+          <img class="cg-today-thumb" id="cgTodayThumb" src="" alt="">
+          <div>
+            <p class="cg-today-label">Artwork of the day</p>
+            <div class="cg-today-title" id="cgTodayTitle"></div>
+            <div class="cg-today-by" id="cgTodayBy"></div>
+            <div class="cg-today-actions"><button type="button" class="admin-btn primary" id="cgTodayPlay">Color it</button></div>
+          </div>
+        </section>
+        <div class="cg-toolbar">
+          <label class="sr-only" for="cgSearch">Search artworks or artists</label>
+          <input type="search" id="cgSearch" placeholder="Artwork title or artist name" autocomplete="off">
+          <div class="cg-filter" role="group" aria-label="Filter">
+            <button type="button" class="active" data-filter="all">All</button>
+            <button type="button" data-filter="mine">Mine</button>
+          </div>
+          <span class="cg-count" id="cgCount"></span>
+        </div>
+        <div class="cg-grid" id="cgList"></div>
+        <p class="cg-notice" id="cgEmpty" hidden>No artworks match.</p>
+        <div class="cg-more"><button type="button" class="admin-btn" id="cgMore" hidden>Load more</button></div>
       </div>
-      <div class="artworks-page-desc">Every artwork submitted to the Weavo community, newest first.</div>
-      <div class="artworks-toolbar">
-        <input type="text" id="artworkSearchInput" class="artworks-search" placeholder="Search by title or artist…" autocomplete="off" spellcheck="false">
-        <select id="artworkSortSelect" class="artworks-sort">
-          <option value="newest">Newest</option>
-          <option value="liked">Most Liked</option>
-        </select>
+
+      <div data-screen="play" hidden>
+        <div class="cg-hud">
+          <button type="button" data-quit aria-label="Back to the list">&larr;</button>
+          <span class="cg-hud-title" data-art-title></span>
+          <span class="cg-hud-pct" data-cg-pct>0%</span>
+          <button type="button" data-hint aria-label="Show the next cell">&#128269;</button>
+          <button type="button" data-numbers aria-label="Always show numbers" aria-pressed="false">#</button>
+          <button type="button" data-drag aria-label="Drag to paint" aria-pressed="false">&#9998;</button>
+          <button type="button" data-mute aria-label="Mute sound" aria-pressed="false">&#128266;</button>
+        </div>
+        <div class="cg-play">
+          <div class="cg-stage" id="cgStage">
+            <canvas id="cgBase"></canvas>
+            <canvas id="cgHighlight"></canvas>
+            <canvas id="cgNumbers"></canvas>
+            <div class="cg-layer" id="cgLayer"><div class="cg-cursor" id="cgCursor" hidden></div></div>
+            <div class="cg-loading" id="cgLoading">Preparing…</div>
+            <div class="cg-drag-note" id="cgDragNote" hidden>Drag to paint · two fingers to move</div>
+            <div class="zoom-toolbar cg-zoom-toolbar">
+              <button type="button" class="zoom-btn" id="cgZoomOut" aria-label="Zoom out">&minus;</button>
+              <span class="zoom-level" id="cgZoomLevel">100%</span>
+              <button type="button" class="zoom-btn" id="cgZoomIn" aria-label="Zoom in">+</button>
+              <button type="button" class="zoom-btn" id="cgZoomReset" aria-label="Fit to view">&#8634;</button>
+            </div>
+          </div>
+          <aside class="cg-side">
+            <div class="cg-side-art">
+              <img class="cg-side-thumb" id="cgSideThumb" src="" alt="">
+              <div style="min-width:0;">
+                <div class="cg-side-title" data-art-title></div>
+                <div class="cg-side-by" id="cgSideBy"></div>
+              </div>
+            </div>
+            <div class="cg-progress"><i id="cgProgressBar"></i></div>
+            <div class="cg-progress-text" data-cg-text>0 / 0</div>
+            <div class="cg-palette" id="cgPalette" role="group" aria-label="Colors"></div>
+            <div class="cg-side-actions">
+              <button type="button" class="admin-btn" data-hint>&#128269; Next cell</button>
+              <button type="button" class="admin-btn" data-numbers aria-pressed="false"># Numbers</button>
+              <button type="button" class="admin-btn" data-drag aria-pressed="false">&#9998; Drag to paint</button>
+              <button type="button" class="admin-btn" data-mute aria-pressed="false" aria-label="Mute sound">&#128266;</button>
+              <button type="button" class="admin-btn" data-quit>&larr; List</button>
+            </div>
+          </aside>
+        </div>
       </div>
+
+      <div data-screen="result" hidden>
+        <div class="cg-result">
+          <div class="game-confetti" id="cgConfetti" aria-hidden="true"></div>
+          <h1>Complete!</h1>
+          <div class="cg-result-figure" id="cgResultFigure"><canvas id="cgResultCanvas"></canvas><img id="cgResultImg" src="" alt=""></div>
+          <div class="cg-result-title" id="cgResultTitle"></div>
+          <div class="cg-result-by" id="cgResultBy"></div>
+          <p class="cg-result-note" id="cgResultNote"></p>
+          <div class="cg-result-actions">
+            <button type="button" class="admin-btn" id="cgShare">Share the picture</button>
+            <button type="button" class="btn-primary" id="cgResultBack">Back to the list</button>
+          </div>
+          <div class="cg-next" id="cgNext" hidden>
+            <h2>Color next</h2>
+            <div class="cg-next-row" id="cgNextRow"></div>
+          </div>
+        </div>
+      </div>
+
+      <div data-screen="off" hidden>
+        <h1>Color by Number</h1>
+        <p class="cg-notice">The coloring game isn't available right now.</p>
+      </div>
+
     </div>
-    <div class="artworks-grid" id="artworksGrid"></div>
-    <div class="artworks-more" id="artworksMore" style="display:none;">
-      <button type="button" class="cta-outline" id="artworksMoreBtn">Load more</button>
-    </div>
-    <div class="empty-note" id="artworksEmpty" style="display:none;">No artworks found.</div>
+
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>
@@ -165,7 +249,7 @@
   <div id="auth-dialog" class="modal-panel">
     <div class="auth-icon">🖼️</div>
     <h3>Join Weavo</h3>
-    <p>Sign in to contribute your artwork to a community mosaic.</p>
+    <p>Sign in to contribute your artwork to a community weavo.</p>
     <button id="google-signin-btn" class="oauth-signin-btn">
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
         <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2z"/>
@@ -254,16 +338,17 @@
   </div>
 </div>
 
-
 <div id="toast"></div>
 
 <script src="/js/supabase-client.js?v=20260920-130739"></script>
 <script src="/js/i18n/en.js?v=20260920-130739"></script>
+<script src="/js/color-engine.js?v=20260920-130739"></script>
 <script src="/js/common.js?v=20260920-130739"></script>
 <script src="/js/auth.js?v=20260920-130739"></script>
 <script src="/js/notifications.js?v=20260920-130739"></script>
 <script src="/js/push.js?v=20260920-130739"></script>
 <script src="/js/lightbox.js?v=20260920-130739"></script>
-<script src="/js/artworks.js?v=20260920-130739"></script>
+<script src="/js/pixel-board.js?v=20260920-130739"></script>
+<script src="/js/coloring.js?v=20260920-130739"></script>
 </body>
 </html>

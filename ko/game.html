@@ -72,8 +72,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/game.css?v=20260916-002025">
-<link rel="stylesheet" href="/css/base.css?v=20260916-002025">
+<link rel="stylesheet" href="/css/game.css?v=20260920-130739">
+<link rel="stylesheet" href="/css/base.css?v=20260920-130739">
 </head>
 
 <body>
@@ -109,7 +109,31 @@
 
     <div class="game-page" id="gamePage">
 
+      <div data-screen="choose" hidden>
+        <h1>게임</h1>
+        <p class="game-lead">Weavo 의 작품으로 즐기는 두 가지 게임입니다. 하나를 골라 주세요.</p>
+        <div class="game-choose">
+          <button type="button" class="game-choice" id="gameChooseFind">
+            <span class="game-choice-icon" aria-hidden="true">&#128269;</span>
+            <span class="game-choice-title">조각 찾기</span>
+            <span class="game-choice-desc">진행 중인 캠페인 모자이크 안에서 작품의 조각을 찾아냅니다. 기록을 겨룹니다.</span>
+            <span class="game-choice-status" id="gameChooseFindStatus"></span>
+          </button>
+          <a class="game-choice game-choice-color" id="gameChooseColoring" href="/ko/coloring" data-coloring-link>
+            <span class="game-choice-icon" aria-hidden="true">&#127912;</span>
+            <span class="game-choice-title">숫자 색칠</span>
+            <span class="game-choice-desc">번호대로 칸을 채우면 작가의 그림이 나타납니다. 시간 제한도 순위도 없습니다.</span>
+            <span class="game-choice-status">여유롭게, 순위 없이</span>
+          </a>
+        </div>
+      </div>
+
+      <div data-screen="loading" hidden>
+        <p class="game-notice">준비하고 있습니다…</p>
+      </div>
+
       <div data-screen="list" hidden>
+        <button type="button" class="game-back-choose" id="gameBackChoose">&larr; 게임 선택</button>
         <h1>어떤 작품을 찾을까요?</h1>
         <p class="game-campaign">현재 캠페인: <b id="gameCampaignTitle"></b></p>
         <section class="game-hall" id="gameHall" hidden>
@@ -472,15 +496,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260916-002025"></script>
-<script src="/js/i18n/ko.js?v=20260916-002025"></script>
-<script src="/js/color-engine.js?v=20260916-002025"></script>
-<script src="/js/common.js?v=20260916-002025"></script>
-<script src="/js/auth.js?v=20260916-002025"></script>
-<script src="/js/notifications.js?v=20260916-002025"></script>
-<script src="/js/push.js?v=20260916-002025"></script>
-<script src="/js/lightbox.js?v=20260916-002025"></script>
-<script src="/js/game.js?v=20260916-002025"></script>
+<script src="/js/supabase-client.js?v=20260920-130739"></script>
+<script src="/js/i18n/ko.js?v=20260920-130739"></script>
+<script src="/js/color-engine.js?v=20260920-130739"></script>
+<script src="/js/common.js?v=20260920-130739"></script>
+<script src="/js/auth.js?v=20260920-130739"></script>
+<script src="/js/notifications.js?v=20260920-130739"></script>
+<script src="/js/push.js?v=20260920-130739"></script>
+<script src="/js/lightbox.js?v=20260920-130739"></script>
+<script src="/js/game.js?v=20260920-130739"></script>
 
 </body>
 </html>

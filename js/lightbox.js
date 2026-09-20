@@ -231,6 +231,9 @@ lbEditModal.innerHTML = `
       <label for="lb-edit-link">${tr('artLinkLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
       <input type="text" id="lb-edit-link" placeholder="https://your-portfolio.com" maxlength="300">
     </div>
+    <div class="field" id="lb-edit-optout-row" style="display:none;">
+      <label class="lb-edit-check"><input type="checkbox" id="lb-edit-optout"> ${tr('editOptOutColoring')}</label>
+    </div>
     <div class="field-error" id="lb-edit-error"></div>
     <div class="modal-actions">
       <button type="button" id="lb-edit-cancel" class="btn-cancel">${tr('cancelLabel')}</button>
@@ -256,6 +259,16 @@ function openLbEditModal() {
   lbEditModal.querySelector('#lb-edit-desc').value = sub.art_description || '';
   lbEditModal.querySelector('#lb-edit-link').value = sub.art_link || '';
   lbEditModal.querySelector('#lb-edit-error').textContent = '';
+  // The opt-out column exists only once supabase_pixel_game.sql is applied;
+  // the row shows when it can be read.
+  const optRow = lbEditModal.querySelector('#lb-edit-optout-row');
+  optRow.style.display = 'none';
+  sb.from('mosaic_submissions').select('coloring_opt_out').eq('id', sub.id).maybeSingle().then(({ data, error }) => {
+    if (error || !data || lbCurrentSub !== sub) return;
+    sub.coloring_opt_out = !!data.coloring_opt_out;
+    lbEditModal.querySelector('#lb-edit-optout').checked = sub.coloring_opt_out;
+    optRow.style.display = '';
+  });
   lbEditModal.classList.add('open');
 }
 lbEditBtn.onclick = openLbEditModal;
@@ -282,6 +295,17 @@ lbEditModal.querySelector('#lb-edit-save').onclick = async () => {
   saveBtn.disabled = false;
   if (error) { console.error('edit artwork error:', error); errorEl.textContent = tr('couldNotUpdateArtwork'); return; }
   Object.assign(sub, patch);
+  // Opt-out is its own update: the column may not exist yet, and a failure
+  // here must not undo the details that were just saved.
+  const optRow = lbEditModal.querySelector('#lb-edit-optout-row');
+  if (optRow.style.display !== 'none') {
+    const optOut = lbEditModal.querySelector('#lb-edit-optout').checked;
+    if (optOut !== !!sub.coloring_opt_out) {
+      const { error: optErr } = await sb.from('mosaic_submissions').update({ coloring_opt_out: optOut }).eq('id', sub.id);
+      if (optErr) console.error('coloring opt-out update error:', optErr);
+      else { sub.coloring_opt_out = optOut; renderLightboxColoring(sub); }
+    }
+  }
   applyArtDetailsToCaption(sub);
   closeLbEditModal();
   toast(tr('artworkUpdatedToast'));
@@ -482,6 +506,32 @@ async function renderLightboxPlay(sub, usage) {
   btn.href = `/${CURRENT_LANG}/game?artwork=${encodeURIComponent(id)}`;
   btn.style.display = '';
 }
+// "Color this artwork" — the coloring page takes ?artwork=. Shown when the
+// coloring game is on and the artist has not opted this artwork out; the
+// page itself says so if the picture cannot be made into a board.
+async function renderLightboxColoring(sub) {
+  const actions = document.querySelector('.lightbox-actions');
+  if (!actions) return;
+  let btn = document.getElementById('lb-color-btn');
+  if (!btn) {
+    btn = document.createElement('a');
+    btn.id = 'lb-color-btn';
+    btn.className = 'lb-action-btn';
+    const ico = document.createElement('span'); ico.className = 'icon';
+    const label = document.createElement('span'); label.id = 'lb-color-label';
+    btn.append(ico, label);
+    actions.insertBefore(btn, document.getElementById('lb-delete-btn'));
+  }
+  btn.style.display = 'none';
+  const id = sub.parent_id != null ? sub.parent_id : sub.id;
+  if (!id || sub.coloring_opt_out) return;
+  let on = true;
+  try { on = (await getSiteSettings()).pixelGameEnabled !== false; } catch (e) {}
+  if (!on || lbCurrentSub !== sub) return;
+  document.getElementById('lb-color-label').textContent = tr('lbColorGame');
+  btn.href = `/${CURRENT_LANG}/coloring?artwork=${encodeURIComponent(id)}`;
+  btn.style.display = '';
+}
 async function renderLightboxMedals(sub) {
   let el = document.getElementById('lightboxMedals');
   if (!el) {
@@ -626,6 +676,7 @@ function populateLightboxContent(sub) {
   applyArtDetailsToCaption(sub);
   renderLightboxPieceUsage(sub).then(u => renderLightboxPlay(sub, u));
   renderLightboxMedals(sub);
+  renderLightboxColoring(sub);
   renderLightboxArtistCard(sub);
   loadLightboxArtistDetails(sub);
   setupLightboxArtistFollow(sub);

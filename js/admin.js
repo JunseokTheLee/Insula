@@ -350,6 +350,71 @@ async function runAdminThumbs() {
 }
 document.getElementById('adminThumbsRunBtn').onclick = runAdminThumbs;
 
+// ---------- pixel boards (colour-by-number, supabase_pixel_game.sql) ----------
+// A board is made in this browser from the artwork's thumbnail (same origin
+// via /img/) and stored through set_pixel_board (js/pixel-board.js).
+// Artworks without one are counted here; "Rebuild all" remakes every board
+// with the current options, which restarts players' progress on them.
+let adminPixelMissing = [];
+let adminPixelAll = [];
+async function loadAdminPixel() {
+  const btn = document.getElementById('adminPixelRunBtn');
+  const regenBtn = document.getElementById('adminPixelRegenBtn');
+  if (!btn) return;
+  const { data: boards, error } = await fetchAllRows(() => sb.from('pixel_boards').select('artwork_id', { count: 'exact' }), { orderBy: 'artwork_id' });
+  if (error) {
+    if (!isPixelSchemaMissing(error)) console.error('load pixel boards error:', error);
+    adminShow('adminPixelUnavailable', true);
+    btn.disabled = true; regenBtn.disabled = true;
+    return;
+  }
+  const have = new Set((boards || []).map(b => b.artwork_id));
+  // Artworks only, minus the opted-out ones; asked again without the
+  // filters while their SQL is not applied.
+  const q = withOptOut => fetchAllRows(() => {
+    const b = sb.from('mosaic_submissions').select('id,author_id,thumb_url,image_url' + (withOptOut ? ',coloring_opt_out' : ''), { count: 'exact' }).is('parent_id', null);
+    return withOptOut ? b.or('coloring_opt_out.is.null,coloring_opt_out.eq.false') : b;
+  });
+  let res = await q(true);
+  if (res.error && isSchemaMismatchError(res.error)) res = await q(false);
+  if (res.error) { console.error('load artworks for pixel boards error:', res.error); return; }
+  adminPixelAll = (res.data || []).filter(r => r.thumb_url || r.image_url);
+  adminPixelMissing = adminPixelAll.filter(r => !have.has(r.id));
+  document.getElementById('adminPixelMissing').textContent = String(adminPixelMissing.length);
+  document.getElementById('adminPixelDone').textContent = String(adminPixelAll.length - adminPixelMissing.length);
+  btn.disabled = !adminPixelMissing.length;
+  regenBtn.disabled = !adminPixelAll.length;
+}
+async function runAdminPixel(all) {
+  if (all) {
+    const ok = await confirmDialog(tr('adminPixelRegenConfirm'));
+    if (!ok) return;
+  }
+  const rows = all ? adminPixelAll : adminPixelMissing;
+  const btns = [document.getElementById('adminPixelRunBtn'), document.getElementById('adminPixelRegenBtn')];
+  btns.forEach(b => { b.disabled = true; });
+  const settings = await getSiteSettings();
+  let done = 0, failed = 0, skipped = 0;
+  for (const row of rows) {
+    toast(tr('adminPixelWorking', { done: done + failed + skipped, total: rows.length }));
+    try {
+      const img = await loadImageEl(cdnUrl(row.thumb_url || row.image_url));
+      const res = await makePixelBoardFor(row.id, img, settings);
+      if (res.unsuitable) { skipped++; continue; }
+      if (res.error) throw res.error;
+      if (res.missing) throw new Error('supabase_pixel_game.sql not applied');
+      done++;
+    } catch (e) {
+      console.error(`pixel board failed for #${row.id}:`, e);
+      failed++;
+    }
+  }
+  toast(failed ? tr('adminPixelFailed', { done, failed }) : tr('adminPixelDone', { n: done, skipped }));
+  loadAdminPixel();
+}
+document.getElementById('adminPixelRunBtn').onclick = () => runAdminPixel(false);
+document.getElementById('adminPixelRegenBtn').onclick = () => runAdminPixel(true);
+
 // ---------- artwork pieces (supabase_mosaic_pieces.sql) ----------
 // Artworks are cut into pieceGrid × pieceGrid pieces in the browser when
 // uploaded (common.js makeArtworkPieces). Artworks from before that — or
@@ -1447,7 +1512,7 @@ const ADMIN_TAB_LOADERS = {
   artworks:  () => resetAdminArtworks(),
   comments:  () => resetAdminComments(),
   campaigns: () => loadAdminCampaigns(),
-  tools:     () => Promise.all([loadAdminPool(), loadAdminPieces(), loadAdminThumbs()]),
+  tools:     () => Promise.all([loadAdminPool(), loadAdminPieces(), loadAdminThumbs(), loadAdminPixel()]),
   members:   () => Promise.all([loadAdminNewMembers(), loadAdminAdmins(), loadAdminBlocked()]),
   broadcast: () => loadAdminBroadcast(),
   settings:  () => loadAdminSettings(),

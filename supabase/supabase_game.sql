@@ -664,7 +664,7 @@ $mig$;
 alter table public.notifications add constraint notifications_type_check
   check (type in (
     'submission_like', 'submission_comment', 'submission_reply', 'follow',
-    'announcement', 'medal_changed'
+    'announcement', 'medal_changed', 'pixel_complete'
   ));
 
 -- 12b. start_game: a campaign needs enough artworks to be worth hunting in.

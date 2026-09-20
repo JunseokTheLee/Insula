@@ -34,6 +34,10 @@
   const LIST_PAGE = 24;
   let searchTerm = '';
   let muted = false;
+  // The page opens on a choice between the two games; the find-the-piece
+  // half keeps loading behind it and lands on `findScreen` (list, off,
+  // nocampaign, toofew), shown at once when nobody is looking at the chooser.
+  let chooserActive = false, findScreen = null;
 
   const SS_KEY = 'weavo.game';       // survives an iOS reload (see restoreShell)
 
@@ -1080,19 +1084,45 @@
   }
 
   // ---------- boot ----------
+  // ---------- game chooser ----------
+  function land(name) {
+    findScreen = name;
+    updateChooseStatus();
+    if (!chooserActive) show(name);
+  }
+  function updateChooseStatus() {
+    const el = $('gameChooseFindStatus');
+    if (!el) return;
+    const key = { list: 'gameChooseReady', nocampaign: 'gameChooseNoCampaign', toofew: 'gameChooseTooFew', off: 'gameChooseOff' }[findScreen];
+    el.textContent = key ? tr(key, { n: artworks.length }) : tr('gamePreparing');
+  }
+  const chooseFind = $('gameChooseFind');
+  if (chooseFind) chooseFind.onclick = () => { chooserActive = false; show(findScreen || 'loading'); window.scrollTo(0, 0); };
+  const backChoose = $('gameBackChoose');
+  if (backChoose) backChoose.onclick = () => { chooserActive = true; show('choose'); window.scrollTo(0, 0); };
+
   async function boot() {
     try { muted = localStorage.getItem('weavo.gameMuted') === '1'; } catch (e) {}
 
     settings = await getSiteSettings().catch(() => ({}));
     setMuted(settings.gameSoundDefault === false ? true : muted);
 
+    // A link that asked for this game directly (?artwork= from a profile or
+    // the lightbox, ?g=find from the coloring page or the home banner) skips
+    // the chooser; the nav link shows it.
+    const params = new URLSearchParams(location.search);
+    chooserActive = !(params.get('artwork') || params.get('g') === 'find');
+    const colorCard = $('gameChooseColoring');
+    if (colorCard && settings.pixelGameEnabled === false) colorCard.style.display = 'none';
+    if (chooserActive) { show('choose'); updateChooseStatus(); }
+
     if (settings.gameEnabled === false) {
-      show('off');
+      land('off');
       return;
     }
 
     project = await loadCampaign();
-    if (!project) { show('nocampaign'); return; }
+    if (!project) { land('nocampaign'); return; }
     $('gameCampaignTitle').textContent = project.title || '';
 
     const [cellsRes, filledRows] = await Promise.all([
@@ -1101,7 +1131,7 @@
     ]);
     cells = (cellsRes && cellsRes.cells) || [];
     filled = filledRows;
-    if (!filled.length) { show('nocampaign'); return; }
+    if (!filled.length) { land('nocampaign'); return; }
 
     // Artwork targets = the distinct artworks owning a filled cell.
     const usedCount = new Map();
@@ -1128,7 +1158,7 @@
     if (artworks.length < minWorks) {
       const note = $('gameTooFewText');
       if (note) note.textContent = tr('gameTooFew', { have: artworks.length, need: minWorks });
-      show('toofew');
+      land('toofew');
       return;
     }
 
@@ -1141,7 +1171,7 @@
     // start dialog directly — but only if it is still in the live campaign,
     // because a medal outlives the campaign it was won in.
     // Straight into the artwork list — the page itself is the introduction.
-    show('list');
+    land('list');
     restoreListPosition();
     openRequestedArtwork();
   }

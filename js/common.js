@@ -613,6 +613,17 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // of the original speed (one turn every 5 minutes). 3 = a turn every 100
   // seconds, which is what the page ships with.
   networkOrbitSpeed: 3,
+  // Colour-by-number game (/{lang}/coloring — js/coloring.js, js/pixel-board.js,
+  // supabase_pixel_game.sql). The board options apply to boards made from
+  // now on; existing boards are rebuilt from the admin page.
+  pixelGameEnabled: true,
+  pixelGridSize: 48,
+  pixelPaletteSize: 16,
+  pixelMergeDistance: 8,
+  pixelMinColors: 6,
+  pixelAnonymousPlay: true,
+  pixelNotifyArtist: true,
+  pixelShowCompletions: true,
   // Plan limits the admin Usage tiles show a percentage of. Supabase Pro:
   // 8 GB of database disk per project, 100 GB of Storage. Options rather
   // than constants so changing plan does not need a deploy.
@@ -677,11 +688,20 @@ function getSiteSettings() {
 // page, so they would still be there after an admin turns the game off.
 // One settings read (already cached per page) hides them all. Hiding is the
 // right default: a link that leads to "not available" is worse than no link.
+// data-game-link="find" marks a find-the-piece entry (home banner, campaign
+// CTA), data-coloring-link a colour-by-number one; the bare data-game-link
+// on the nav "Game" item stays as long as either game is on.
 (function hideGameLinksWhenOff() {
-  const links = document.querySelectorAll('[data-game-link]');
+  const links = document.querySelectorAll('[data-game-link],[data-coloring-link]');
   if (!links.length) return;
   getSiteSettings().then(s => {
-    if (s.gameEnabled === false) for (const el of links) el.style.display = 'none';
+    const findOff = s.gameEnabled === false, colorOff = s.pixelGameEnabled === false;
+    for (const el of links) {
+      const hide = el.hasAttribute('data-coloring-link') ? colorOff
+        : el.getAttribute('data-game-link') === 'find' ? findOff
+        : (findOff && colorOff);
+      if (hide) el.style.display = 'none';
+    }
   }).catch(() => {});
 })();
 

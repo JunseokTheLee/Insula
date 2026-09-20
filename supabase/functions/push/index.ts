@@ -82,6 +82,11 @@ const TEXT: Record<string, Record<string, NotifText>> = {
       title: withArtwork("메달 변동"),
       body: (a, p) => (p ? `${a}님이 기록을 경신했습니다 — 이제 ${p}위` : `${a}님이 내 기록을 넘어섰습니다`),
     },
+    // Someone finished colouring the recipient's artwork (save_pixel_progress).
+    pixel_complete: {
+      title: withArtwork("색칠 완성"),
+      body: (a) => `${a}님이 내 작품을 숫자 색칠로 완성했습니다`,
+    },
   },
   en: {
     submission_like: {
@@ -103,6 +108,10 @@ const TEXT: Record<string, Record<string, NotifText>> = {
     medal_changed: {
       title: withArtwork("Medal change"),
       body: (a, p) => (p ? `${a} beat your time — you are now #${p}` : `${a} beat your time`),
+    },
+    pixel_complete: {
+      title: withArtwork("Colored"),
+      body: (a) => `${a} finished coloring your artwork`,
     },
   },
 };

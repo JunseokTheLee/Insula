@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260916-002025">
-<link rel="stylesheet" href="/css/admin.css?v=20260916-002025">
+<link rel="stylesheet" href="/css/base.css?v=20260920-130739">
+<link rel="stylesheet" href="/css/admin.css?v=20260920-130739">
 </head>
 <body>
 
@@ -217,6 +217,21 @@
             <div class="admin-usage-tile"><div class="admin-usage-k">Missing micro thumbnail</div><div class="admin-usage-v" id="adminMicroMissing">—</div></div>
           </div>
         </section>
+        <section class="admin-section" id="adminPixelSection">
+          <div class="admin-section-head">
+            <h2>Pixel boards</h2>
+            <div class="admin-actions">
+              <button type="button" class="admin-btn primary" id="adminPixelRunBtn" disabled>Make boards</button>
+              <button type="button" class="admin-btn" id="adminPixelRegenBtn" disabled>Rebuild all</button>
+            </div>
+          </div>
+          <p class="admin-help">The color-by-number game paints a stored board per artwork (made here in the browser from the thumbnail). An artwork without one is converted for each player when opened and that player's progress stays on their device — <strong>Make boards</strong> stores the missing ones so everyone paints the same board. Artworks the artist opted out, and blank or single-color pictures, are skipped. <strong>Rebuild all</strong> remakes every board with the current options; progress on those boards starts over.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminPixelUnavailable" style="display:none;">Not available yet — run <code>supabase_pixel_game.sql</code> in the Supabase SQL editor first.</p>
+          <div class="admin-usage">
+            <div class="admin-usage-tile"><div class="admin-usage-k">Artworks without a board</div><div class="admin-usage-v" id="adminPixelMissing">—</div></div>
+            <div class="admin-usage-tile"><div class="admin-usage-k">Artworks with a board</div><div class="admin-usage-v" id="adminPixelDone">—</div></div>
+          </div>
+        </section>
         </div>
 
         <div class="admin-panel" data-panel="members" role="tabpanel" hidden>
@@ -326,6 +341,38 @@
               </div>
             </div>
 
+            <div class="admin-option-card">
+              <h3>Color by Number game</h3>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="pixelGameEnabled" disabled> <strong>Game enabled</strong> — when off, <code>/en/coloring</code> shows a notice only, the home and game-menu entries hide, and the server refuses to save progress.</label>
+              </div>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="pixelAnonymousPlay" disabled> <strong>Allow anonymous play</strong> — progress then stays in that browser only.</label>
+              </div>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="pixelNotifyArtist" disabled> <strong>Notify the artist</strong> when someone finishes their artwork (once per person and artwork; never for their own).</label>
+              </div>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="pixelShowCompletions" disabled> <strong>Show completion counts</strong> on the list cards.</label>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPixelGrid">Board <strong>size</strong>: cells on the long side. Bigger is closer to the original and takes longer. <em>(default: 48)</em></label>
+                <div class="admin-range"><input id="adminPixelGrid" type="range" min="24" max="96" step="4" data-setting="pixelGridSize" disabled><output for="adminPixelGrid" data-setting-output="pixelGridSize">48</output></div>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPixelColors">Number of <strong>colors</strong> before similar ones merge. <em>(default: 16)</em></label>
+                <div class="admin-range"><input id="adminPixelColors" type="range" min="8" max="32" step="1" data-setting="pixelPaletteSize" disabled><output for="adminPixelColors" data-setting-output="pixelPaletteSize">16</output></div>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPixelMerge">Colors closer than this <strong>(ΔE)</strong> become one number. <em>(default: 8)</em></label>
+                <div class="admin-range"><input id="adminPixelMerge" type="range" min="0" max="20" step="1" data-setting="pixelMergeDistance" disabled><output for="adminPixelMerge" data-setting-output="pixelMergeDistance">8</output></div>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPixelMinColors">Artworks with fewer colors than this are <strong>left out</strong> (blank scans, flat images). <em>(default: 6)</em></label>
+                <div class="admin-range"><input id="adminPixelMinColors" type="range" min="2" max="16" step="1" data-setting="pixelMinColors" disabled><output for="adminPixelMinColors" data-setting-output="pixelMinColors">6</output></div>
+              </div>
+              <p class="admin-help">Size and color settings apply to boards made from now on. Rebuild existing ones under Artwork tools → Pixel boards; everyone's progress on a rebuilt board starts over.</p>
+            </div>
             <div class="admin-option-card">
               <h3>Network</h3>
               <div class="admin-setting admin-setting-range">
@@ -550,14 +597,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260916-002025"></script>
-<script src="/js/i18n/en.js?v=20260916-002025"></script>
-<script src="/js/common.js?v=20260916-002025"></script>
-<script src="/js/auth.js?v=20260916-002025"></script>
-<script src="/js/notifications.js?v=20260916-002025"></script>
-<script src="/js/push.js?v=20260916-002025"></script>
-<script src="/js/color-engine.js?v=20260916-002025"></script>
-<script src="/js/matching.js?v=20260916-002025"></script>
-<script src="/js/admin.js?v=20260916-002025"></script>
+<script src="/js/supabase-client.js?v=20260920-130739"></script>
+<script src="/js/i18n/en.js?v=20260920-130739"></script>
+<script src="/js/common.js?v=20260920-130739"></script>
+<script src="/js/auth.js?v=20260920-130739"></script>
+<script src="/js/notifications.js?v=20260920-130739"></script>
+<script src="/js/push.js?v=20260920-130739"></script>
+<script src="/js/color-engine.js?v=20260920-130739"></script>
+<script src="/js/pixel-board.js?v=20260920-130739"></script>
+<script src="/js/matching.js?v=20260920-130739"></script>
+<script src="/js/admin.js?v=20260920-130739"></script>
 </body>
 </html>

@@ -55,7 +55,8 @@ $mig$;
 
 alter table public.notifications add constraint notifications_type_check
   check (type in (
-    'submission_like', 'submission_comment', 'submission_reply', 'follow', 'announcement'
+    'submission_like', 'submission_comment', 'submission_reply', 'follow', 'announcement',
+    'medal_changed', 'pixel_complete'
   ));
 
 -- ── 2. admin_broadcast_notification ─────────────────────────────────────

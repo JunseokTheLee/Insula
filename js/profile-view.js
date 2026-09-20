@@ -107,6 +107,57 @@ async function renderProfileMedalWorks(userId) {
   box.style.display = '';
 }
 
+// Artworks this person finished in the colour-by-number game, newest first
+// (supabase_pixel_game.sql pixel_user_completions). Hidden while that SQL
+// is not applied or nothing is finished yet.
+async function renderProfileColoredWorks(userId) {
+  const box = document.getElementById('profileColoredWorks');
+  const track = document.getElementById('profileColoredWorksTrack');
+  if (!box || !track || !userId) return;
+  box.style.display = 'none';
+  let rows = null;
+  try {
+    const { data, error } = await sb.rpc('pixel_user_completions', { p_user_id: userId, p_limit: 24 });
+    if (error) {
+      if (error.code !== 'PGRST202' && error.code !== '42883') console.error('load colored artworks error:', error);
+      return;
+    }
+    rows = data;
+  } catch (e) { console.error('load colored artworks threw:', e); return; }
+  if (!Array.isArray(rows) || !rows.length) return;
+  track.innerHTML = '';
+  for (const w of rows) {
+    const name = w.author_name || tr('anonymous');
+    const card = document.createElement('div');
+    card.className = 'pmw-card';
+    const link = document.createElement('a');
+    link.className = 'pmw-thumb-link';
+    link.href = artworkUrl(w.artwork_id);
+    const img = document.createElement('img');
+    img.className = 'pmw-thumb';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.src = cdnUrl(w.thumb_url || w.image_url);
+    img.alt = w.art_title ? tr('artworkThumbAlt', { title: w.art_title, name }) : tr('artworkImgAltFallback', { name });
+    link.appendChild(img);
+    if (typeof bindArtworkLightbox === 'function') bindArtworkLightbox(link, w.artwork_id);
+    const title = document.createElement('div');
+    title.className = 'pmw-title';
+    title.textContent = w.art_title || tr('untitledArtwork');
+    const by = document.createElement('div');
+    by.className = 'pmw-by';
+    by.textContent = name;
+    const play = document.createElement('a');
+    play.className = 'pmw-play';
+    play.href = `/${CURRENT_LANG}/coloring?artwork=${encodeURIComponent(w.artwork_id)}`;
+    play.textContent = tr('cgAgain');
+    card.append(link, title, by, play);
+    track.appendChild(card);
+  }
+  track.scrollLeft = 0;
+  box.style.display = '';
+}
+
 // Client-side fallback for the tab title/social-preview tags, in case this
 // page is reached without going through the Pages Function that pre-renders
 // them server-side (see functions/[lang]/artists/[handle].js).
@@ -768,6 +819,7 @@ async function loadProfileView(userId) {
 
   renderProfileMedals(userId);
   renderProfileMedalWorks(userId);
+  renderProfileColoredWorks(userId);
 
   renderProfileGraphFor(userId, true);
 
@@ -859,6 +911,11 @@ document.getElementById('ua-submit').onclick = async () => {
     // artwork itself matched, whole, as before.
     const pieces = typeof makeArtworkPieces === 'function' ? await makeArtworkPieces(inserted.id, previewImg) : { missing: true };
     if (pieces.error) toast(tr('piecesFailed'));
+    // The colour-by-number board, from the same preview image. Never blocks
+    // the upload: the admin page can make it later (supabase_pixel_game.sql).
+    if (typeof makePixelBoardFor === 'function') {
+      makePixelBoardFor(inserted.id, previewImg).catch(e => console.error('pixel board failed:', e));
+    }
     const assignments = await runPoolMatching();
     if (pieces.count) {
       const placed = assignments.filter(a => a.parent_id === inserted.id).length;

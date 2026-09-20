@@ -585,6 +585,8 @@ body.lb-img-fs-lock{overflow:hidden;}
 #lb-delete-btn .icon::before{content:"🗑";}
 #lb-play-btn .icon::before{content:"🎮";}
 #lb-play-btn{text-decoration:none;}
+#lb-color-btn .icon::before{content:"\1F3A8";}
+#lb-color-btn{text-decoration:none;}
 #lb-delete-btn:hover{background:var(--accent-warm);color:var(--primary-dark);border-color:var(--accent-warm);}
 #lb-report-btn .icon::before{content:"🚩";}
 #lb-report-btn:hover{background:rgba(247,247,245,.1);}
@@ -986,6 +988,12 @@ html[lang="ko"] * {
 }
 .game-banner:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(15,36,23,.2);filter:brightness(1.06);}
 .game-banner:active{transform:translateY(0);}
+/* Two banners side by side on the home hero (find the piece, colour by
+   number); they wrap to one column when the space runs out. */
+.game-banners{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+.game-banners .game-banner{margin-top:0;}
+.game-banner-color{background:linear-gradient(135deg,#2E5AAC,#1B3A73);box-shadow:0 3px 12px rgba(27,58,115,.18);}
+.game-banner-color:hover{box-shadow:0 6px 18px rgba(27,58,115,.24);}
 /* The icon sits in its own translucent disc so it reads as a badge rather
    than an emoji dropped into a sentence. */
 .game-banner-icon{

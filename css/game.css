@@ -351,3 +351,32 @@
 }
 .game-hall-me[hidden]{display:none;}
 .gh-me-rank{font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ---------- game chooser ----------
+   /{lang}/game opens on a choice between the two games (2026-09-20). One
+   card is a button (the find-the-piece half lives on this page), the other
+   a link to /coloring. Same card either way. */
+.game-choose{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0 28px;max-width:760px;}
+.game-choice{
+  appearance:none;cursor:pointer;text-align:left;text-decoration:none;
+  display:flex;flex-direction:column;gap:6px;padding:20px 20px 18px;
+  border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg);color:var(--text);
+  font-family:'Pretendard',sans-serif;
+  transition:box-shadow .15s linear,border-color .15s linear,transform .14s ease-out;
+}
+.game-choice:hover{border-color:var(--border-strong);box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.game-choice:focus-visible{outline:2px solid var(--primary);outline-offset:2px;}
+.game-choice-icon{
+  display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:14px;
+  background:var(--primary-soft);font-size:22px;line-height:1;margin-bottom:4px;
+}
+.game-choice-color .game-choice-icon{background:#E8ECFF;}
+.game-choice-title{font-size:18px;font-weight:800;letter-spacing:-.01em;}
+.game-choice-desc{font-size:13.5px;color:var(--muted);line-height:1.5;}
+.game-choice-status{margin-top:6px;font-size:12.5px;font-weight:700;color:var(--primary);min-height:18px;}
+.game-back-choose{
+  appearance:none;border:none;background:none;cursor:pointer;padding:0;margin:0 0 10px;
+  font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;color:var(--muted);
+}
+.game-back-choose:hover{color:var(--text);text-decoration:underline;}
+@media (prefers-reduced-motion: reduce){ .game-choice{transition:none;} .game-choice:hover{transform:none;} }
