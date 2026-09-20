@@ -508,6 +508,7 @@
     const cur = $('cgCursor');
     if (cur) cur.hidden = true;
     show('play');
+    playHistory.enter(['artwork', 'level']);
     // Once: how the stroke and the move gestures split.
     if (!prefs.tipShown && !prefs.panMode) { toast(tr('cgTipDrag')); prefs.tipShown = true; savePrefs(); }
     $('cgLoading').hidden = false;
@@ -1058,7 +1059,12 @@
     if (board && painted < board.total) await flushSave();
     endPlay();
   }
+  // Back (browser, phone gesture, app button) while playing or on the
+  // result screen returns to the list — saving first — instead of leaving
+  // the page (common.js screenHistory).
+  const playHistory = typeof screenHistory === 'function' ? screenHistory(leaveBoard) : { enter() {}, leave() {} };
   function endPlay() {
+    playHistory.leave();
     clearTimeout(saveTimer);
     const id = art && art.id;
     art = null; board = null; bits = null; cursor = null;

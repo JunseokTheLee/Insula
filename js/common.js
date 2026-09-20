@@ -1421,6 +1421,51 @@ function cameFromThisSite() {
 // onLeave runs only when the click really takes the page away — a
 // ctrl/cmd-click opens a new tab and must leave this page (and its running
 // graph, timers) alone.
+// ---------- Back button for an in-page screen (2026-09-21) ----------
+// A game board is a screen inside its page, so the browser's Back (and the
+// phone's back gesture, and the app's back button) used to leave the page
+// for the one before it — the game menu — instead of the list. enter()
+// pushes ONE history entry when such a screen opens; Back then pops it and
+// calls onBack, which returns to the list. When the page leaves the screen
+// through its own buttons it calls leave(), which pops that entry itself,
+// so the next Back goes where the visitor expects. onBack may return true
+// to stay on the screen (a cancelled "quit?" dialog): the entry is pushed
+// again. enter(params) also strips the given query keys (?artwork=…) from
+// the entry underneath, so a reload after Back shows the list, not the
+// board. Without history access (a sandboxed frame) Back keeps its old
+// meaning and nothing else changes.
+function screenHistory(onBack) {
+  let entry = false, popSelf = false, popTimer = 0;
+  addEventListener('popstate', () => {
+    if (popSelf) { popSelf = false; clearTimeout(popTimer); return; }
+    if (!entry) return;
+    entry = false;
+    Promise.resolve().then(onBack).then(stay => { if (stay) enter(); }, e => console.error('screenHistory: onBack failed:', e));
+  });
+  function enter(params) {
+    if (entry) return;
+    try {
+      if (params && params.length) {
+        const q = new URLSearchParams(location.search);
+        let changed = false;
+        for (const k of params) if (q.has(k)) { q.delete(k); changed = true; }
+        if (changed) { const rest = q.toString(); history.replaceState(history.state, '', location.pathname + (rest ? '?' + rest : '') + location.hash); }
+      }
+      history.pushState({ weavoScreen: true }, '', location.href);
+      entry = true;
+    } catch (e) { /* history unavailable: Back keeps its old meaning */ }
+  }
+  function leave() {
+    if (!entry) return;
+    entry = false; popSelf = true;
+    // If no popstate follows (nothing to go back to), the flag must not
+    // swallow the visitor's next real Back.
+    popTimer = setTimeout(() => { popSelf = false; }, 1000);
+    try { history.back(); } catch (e) { popSelf = false; clearTimeout(popTimer); }
+  }
+  return { enter, leave };
+}
+
 function setupBackLink(el, onLeave) {
   if (!el) return;
   el.addEventListener('click', e => {

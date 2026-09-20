@@ -38,6 +38,7 @@
   // half keeps loading behind it and lands on `findScreen` (list, off,
   // nocampaign, toofew), shown at once when nobody is looking at the chooser.
   let chooserActive = false, findScreen = null;
+  let screen = '';                   // the screen show() put up last
 
   const SS_KEY = 'weavo.game';       // survives an iOS reload (see restoreShell)
 
@@ -69,6 +70,7 @@
   }
 
   function show(name) {
+    screen = name;
     for (const el of root.querySelectorAll('[data-screen]')) {
       el.hidden = el.dataset.screen !== name;
     }
@@ -867,6 +869,7 @@
     targetCells = filled.filter(f => artworkKeyOf(f.sub) === a.id);
 
     show('play');
+    playHistory.enter(['artwork']);
     $('gameMarks').innerHTML = '';
     $('gameCountdown').hidden = false;
     $('gameCountdown').textContent = tr('gamePreparing');
@@ -1115,10 +1118,20 @@
     const ok = await confirmDialog(tr('gameQuitMessage'), {
       title: tr('gameQuitTitle'), okLabel: tr('gameQuitOk'),
     });
-    if (!ok) return;
+    if (!ok) return false;
     endPlay();
+    return true;
   }
+  // Back (browser, phone gesture, app button) during a game asks the same
+  // "quit?" as the ← button and stays when it is declined; on the result
+  // screen it simply returns to the list (common.js screenHistory).
+  const playHistory = typeof screenHistory === 'function' ? screenHistory(async () => {
+    if (screen === 'play') return !(await quitGame());
+    if (screen === 'result') endPlay();
+    return false;
+  }) : { enter() {}, leave() {} };
   function endPlay() {
+    playHistory.leave();
     clearInterval(rafId);
     startedAt = 0;
     sessionId = null;
