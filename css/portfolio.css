@@ -51,6 +51,20 @@ body.pf-dark{
 .pf-owner-tools[hidden],.pf-layouts[hidden],.pf-badge[hidden],.pf-btn[hidden]{display:none;}
 .pf-owner-tools .pf-btn{padding:9px 14px;font-size:12.5px;}
 
+/* ---------- Weavo home button (phone only — shown by the 640px block) ---------- */
+.pf-home{
+  display:none;align-items:center;gap:7px;height:38px;padding:0 14px 0 5px;
+  border-radius:var(--r-full);border:1px solid rgba(255,255,255,.18);
+  background:rgba(14,16,15,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  color:var(--text);font-family:'Pretendard',sans-serif;font-size:13.5px;font-weight:700;letter-spacing:-.01em;
+  text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.25);
+}
+.pf-home::before{
+  content:'';width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  background:url('../logo-96.png') center/cover;
+}
+.pf-home:active{opacity:.8;}
+
 /* ---------- hero ---------- */
 .pf-hero{
   position:relative;isolation:isolate;overflow:hidden;
@@ -300,6 +314,34 @@ body.pf-dark{
   .pf-show-cap{flex-direction:column;align-items:stretch;gap:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));}
   .pf-owner-tools .pf-btn .txt{display:none;}
   .pf-owner-tools .pf-btn{padding:9px 11px;}
+}
+/* Phone: the portfolio IS the screen (2026-09-20, user request). The site
+   header, the back bar and the footer go; what floats over the hero is the
+   Weavo home button (top-left) and — for the owner only; #pfOwnerTools stays
+   `hidden` for everyone else (applyOwnerUI) — the edit / add / arrange /
+   delete tools as glass circles (top-right). The bar is fixed so both stay
+   reachable however far the visitor scrolls; the hero gains top padding so
+   its eyebrow does not sit under them. Desktop keeps the normal chrome. */
+@media (max-width:640px){
+  body.pf-view .topnav,
+  body.pf-view #legal-footer,
+  body.pf-view .pf-backnav .back{display:none;}
+  body.pf-view .pf-backnav{
+    position:fixed;top:0;left:0;right:0;z-index:150;
+    flex-wrap:nowrap;gap:8px;border:0;background:transparent;pointer-events:none;
+    padding:calc(10px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) 10px calc(12px + env(safe-area-inset-left,0px));
+  }
+  body.pf-view .pf-backnav > *{pointer-events:auto;}
+  body.pf-view .pf-home{display:inline-flex;}
+  body.pf-view .pf-owner-tools{flex-wrap:nowrap;gap:6px;}
+  body.pf-view .pf-owner-tools .pf-btn{
+    width:38px;height:38px;padding:0;justify-content:center;
+    background:rgba(14,16,15,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    border-color:rgba(255,255,255,.18);box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  body.pf-view .pf-owner-tools .pf-btn.danger{border-color:rgba(255,140,105,.5);}
+  body.pf-view .pf-owner-tools .pf-btn.on{background:var(--text);}
+  body.pf-view .pf-hero{padding-top:calc(72px + env(safe-area-inset-top,0px));}
 }
 @media (hover:none){
   .pf-item-cap{opacity:1;transform:none;}
