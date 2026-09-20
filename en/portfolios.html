@@ -17,17 +17,17 @@
   gtag('config', 'G-NLXNX3C6KW');
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Weavo — Exhibition</title>
-<meta name="description" content="A curated mini-exhibition of artwork on Weavo.">
-<link rel="canonical" href="https://weavo.art/en/campaigns">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/campaigns">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/campaigns">
+<title>Portfolios | Weavo</title>
+<meta name="description" content="Public portfolios by Weavo artists — their own selections of their work, in their own order.">
+<link rel="canonical" href="https://weavo.art/en/portfolios">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/portfolios">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/portfolios">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Weavo — Exhibition">
-<meta property="og:description" content="A curated mini-exhibition of artwork on Weavo.">
-<meta property="og:url" content="https://weavo.art/en/campaigns">
+<meta property="og:title" content="Portfolios | Weavo">
+<meta property="og:description" content="Public portfolios by Weavo artists — their own selections of their work, in their own order.">
+<meta property="og:url" content="https://weavo.art/en/portfolios">
 <meta property="og:image" content="https://weavo.art/og-image-en.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -35,19 +35,16 @@
 <meta property="og:image:alt" content="Weavo — Collaborative Art Mosaic Community">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Weavo — Exhibition">
-<meta name="twitter:description" content="A curated mini-exhibition of artwork on Weavo.">
+<meta name="twitter:title" content="Portfolios | Weavo">
+<meta name="twitter:description" content="Public portfolios by Weavo artists — their own selections of their work, in their own order.">
 <meta name="twitter:image" content="https://weavo.art/og-image-en.png">
 <meta name="twitter:image:alt" content="Weavo — Collaborative Art Mosaic Community">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Portfolios","item":"https://weavo.art/en/portfolios"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260920-153727">
-<link rel="stylesheet" href="/css/project.css?v=20260920-153727">
-<link rel="stylesheet" href="/css/profile.css?v=20260920-153727">
+<link rel="stylesheet" href="/css/base.css?v=20260920-155724">
+<link rel="stylesheet" href="/css/portfolio.css?v=20260920-155724">
 </head>
-<body>
-
+<body class="pf-dark">
 <div class="app">
   <header class="topnav">
    <a class="logo" id="logoHome" href="/en/">Weavo</a>
@@ -56,7 +53,7 @@
       <a href="/en/network" class="nav-link">Network</a>
       <a href="/en/artworks" class="nav-link">Explore</a>
       <a href="/en/artists" class="nav-link">Artists</a>
-      <a href="/en/exhibitions" class="nav-link">Exhibitions</a>
+      <a href="/en/portfolios" class="nav-link">Portfolios</a>
       <a href="/en/game" class="nav-link" data-game-link>Game</a>
       <a href="/en/about" class="nav-link">About</a>
     </nav>
@@ -71,34 +68,33 @@
         <button id="logoutBtn" class="id-btn" style="display:none">Sign out</button>
       </div>
   </header>
-
   <main class="main main-scroll">
     <div class="backnav">
-      <a class="back" id="collectionBackBtn" href="/en/campaigns">&larr; Back</a>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <button class="btn-cancel" id="publishCollectionBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-          Publish
-        </button>
-        <button class="btn-cancel" id="addArtworkBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-          + Add artwork
-        </button>
-        <button class="btn-cancel" id="editCollectionBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-          Edit
-        </button>
-        <button class="btn-cancel" id="deleteCollectionBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--accent-warm);">
-          Delete
-        </button>
+      <a class="back" href="/en/campaigns">&larr; Back</a>
+    </div>
+    <div class="pf-dir">
+      <div class="pf-dir-eyebrow">Weavo</div>
+      <div class="page-title-row">
+        <h1 class="pf-dir-title">Portfolios</h1>
+        <button type="button" class="info-btn" data-info-open aria-haspopup="dialog">What is a portfolio?</button>
+      </div>
+      <p class="pf-dir-desc">Artists’ own selections of their work, in their own order — every public portfolio from the Weavo community.</p>
+      <div class="pf-dir-tabs">
+        <button type="button" class="pf-dir-tab active" id="pfTabRecent">Newest</button>
+        <button type="button" class="pf-dir-tab" id="pfTabMine">My portfolios</button>
       </div>
     </div>
-    <div class="project-head">
-      <h1 id="collectionTitle">Loading…</h1>
-      <div class="profile-meta" id="collectionMeta"></div>
-      <div class="collection-status" id="collectionStatus" style="display:none;"></div>
-      <p id="collectionDesc" style="display:none;"></p>
-      <div id="collectionOwnerByline"></div>
+    <div class="pf-dir-grid" id="portfoliosGrid"></div>
+    <div class="empty-note" id="portfoliosEmpty" style="display:none;"></div>
+    <div class="pf-dir-cta">
+      <div class="pf-dir-cta-inner">
+        <div>
+          <h3>Your work, on your own terms.</h3>
+          <p>Pick the pieces, set the order, choose who sees it — and share a single link.</p>
+        </div>
+        <button type="button" class="pf-btn primary" id="portfoliosCtaBtn">Create a portfolio <span aria-hidden="true">&rarr;</span></button>
+      </div>
     </div>
-    <div class="profile-art-grid" id="collectionItemsGrid"></div>
-    <div class="empty-note" id="collectionItemsEmpty" style="display:none;">Nothing added to this exhibition yet.</div>
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>
@@ -108,104 +104,6 @@
     <a href="/en/delete-account">Delete Account</a>
   </footer>
 </div>
-
-<!-- Edit exhibition modal -->
-<div id="edit-collection-modal" class="modal-overlay">
-  <div id="edit-collection-dialog" class="modal-panel">
-    <h3>Edit Exhibition</h3>
-    <div class="field">
-      <label for="ec-title">Title</label>
-      <input type="text" id="ec-title" maxlength="80">
-    </div>
-    <div class="field">
-      <label for="ec-desc">Description <span class="field-hint">(optional)</span></label>
-      <textarea id="ec-desc" maxlength="500"></textarea>
-    </div>
-    <div class="field">
-      <label for="ec-public" style="display:flex;align-items:center;gap:8px;font-weight:400;">
-        <input type="checkbox" id="ec-public" style="width:auto;">
-        Anyone can view this exhibition
-      </label>
-    </div>
-    <div class="field">
-      <label for="ec-enddate">End date <span class="field-hint">(optional — the exhibition unpublishes itself once this date passes)</span></label>
-      <input type="date" id="ec-enddate">
-    </div>
-    <div class="field-error" id="ec-error"></div>
-    <div class="modal-actions">
-      <button id="ec-cancel" class="btn-cancel">Cancel</button>
-      <button id="ec-submit" class="btn-primary">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- Add artwork picker -->
-<div id="add-artwork-modal" class="modal-overlay">
-  <div id="add-artwork-dialog" class="modal-panel">
-    <h3>Add Artwork</h3>
-    <div id="aa-list"></div>
-    <div class="empty-note" id="aa-empty" style="display:none;padding:16px;">Nothing in your saved pool yet — collect some artwork first.</div>
-    <div class="modal-actions">
-      <button id="aa-done" class="btn-primary">Done</button>
-    </div>
-  </div>
-</div>
-
-<!-- Lightbox -->
-<div id="lightbox-modal" class="modal-overlay lightbox-overlay">
-  <div class="lightbox-stage" id="lightboxStage">
-    <div class="zoom-toolbar">
-      <button type="button" class="zoom-btn" id="lightbox-zoom-out" aria-label="Zoom out">&minus;</button>
-      <span class="zoom-level" id="lightbox-zoom-level">100%</span>
-      <button type="button" class="zoom-btn" id="lightbox-zoom-in" aria-label="Zoom in">+</button>
-      <button type="button" class="zoom-btn" id="lightbox-close" aria-label="Close">&#10005;</button>
-    </div>
-    <img id="lightbox-img" src="" alt="">
-  </div>
-  <div id="lightbox-caption">
-    <div id="lightbox-cap-title"></div>
-    <div id="lightbox-cap-meta"></div>
-    <div id="lightbox-artist-card">
-      <div id="lightbox-artist-avatar-wrap"></div>
-      <div class="lb-artist-info">
-        <a id="lightbox-artist-name" class="lb-artist-name"></a>
-      </div>
-    <button type="button" id="lightbox-artist-follow-btn" class="lb-artist-follow-btn" style="display:none;">Follow</button>
-    </div>
-    <div id="lightbox-artist-about">
-      <div class="lb-artist-about-label">About the artist</div>
-      <div id="lightbox-artist-bio" class="lb-artist-bio"></div>
-    </div>
-    <div id="lightbox-cap-desc"></div>
-    <a id="lightbox-cap-link" target="_blank" rel="ugc nofollow noopener noreferrer"></a>
-    <div class="lightbox-actions">
-      <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="Like this artwork">
-        <span class="icon"></span><span id="lb-like-count">0</span>
-      </button>
-      <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="View comments" aria-expanded="true">
-        <span class="icon"></span><span id="lb-comments-count">0</span>
-      </button>
-      <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="Delete this artwork" style="display:none;">
-        <span class="icon"></span><span>Delete</span>
-      </button>
-      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="Remove from campaign" style="display:none;">
-        <span class="icon"></span><span>Remove from campaign</span>
-      </button>
-    </div>
-    <div id="lightbox-comments" class="lightbox-comments open">
-      <div id="lightbox-comments-list"></div>
-      <div id="lightbox-comment-form">
-        <textarea id="lightbox-comment-input" placeholder="Add a comment…" maxlength="1000"></textarea>
-        <button type="button" id="lightbox-comment-post">Post</button>
-      </div>
-    </div>
-    <div id="lightbox-country-map">
-      <div class="lb-country-map-label" id="lb-country-map-label"></div>
-      <svg id="lb-country-map-svg" viewBox="0 0 280 150" preserveAspectRatio="xMidYMid meet"></svg>
-    </div>
-  </div>
-</div>
-
 <!-- Edit profile modal -->
 <div id="edit-profile-modal" class="modal-overlay">
   <div id="edit-profile-dialog" class="modal-panel">
@@ -301,17 +199,52 @@
   </div>
 </div>
 
-<div id="toast"></div>
+<!-- "What is a portfolio?" info popup -->
+<div id="info-modal" class="modal-overlay">
+  <div id="info-dialog" class="modal-panel">
+    <button type="button" class="info-dialog-close" data-info-close aria-label="Close">&#10005;</button>
+    <span class="feature-tag">Portfolios</span>
+    <h3>Your work, the way you want it seen.</h3>
+    <p>A portfolio is a page of your own artworks — the ones you choose, in the order you set, with a cover and a short introduction. Private artworks can live in it too; they show only there. Make it public to list it here, keep it link-only to share it with just the people you send it to, or private while you arrange it. One link opens the whole thing, and social apps unfurl it with a proper preview card.</p>
+    <div class="feature-diagram">
+      <div class="feature-diagram-panel feature-diagram-light">
+        <svg viewBox="0 0 420 210" class="fd-collections" role="img" aria-label="Two portfolio cards, each holding a small grid of artwork swatches with a title and a public or link-only label, next to a dashed placeholder card for starting a new portfolio.">
+          <g class="fd-card">
+            <rect x="24" y="16" width="118" height="170" rx="2" class="fd-card-body"/>
+            <rect x="32" y="24" width="49" height="49" class="fd-swatch" fill="#FF8C69"/>
+            <rect x="85" y="24" width="49" height="49" class="fd-swatch" fill="#F4D35E"/>
+            <rect x="32" y="77" width="49" height="49" class="fd-swatch" fill="#1A3C2B"/>
+            <rect x="85" y="77" width="49" height="49" class="fd-swatch" fill="#9EFFBF"/>
+            <text x="32" y="146" class="fd-card-title">Quiet Blues</text>
+            <text x="32" y="161" class="fd-card-meta">12 pieces &middot; Public</text>
+          </g>
+          <g class="fd-card">
+            <rect x="162" y="16" width="118" height="170" rx="2" class="fd-card-body"/>
+            <rect x="170" y="24" width="49" height="49" class="fd-swatch" fill="#9EFFBF"/>
+            <rect x="223" y="24" width="49" height="49" class="fd-swatch" fill="#FF8C69"/>
+            <rect x="170" y="77" width="49" height="49" class="fd-swatch-empty"/>
+            <rect x="223" y="77" width="49" height="49" class="fd-swatch" fill="#F4D35E"/>
+            <text x="170" y="146" class="fd-card-title">Studio Sketches</text>
+            <text x="170" y="161" class="fd-card-meta">6 pieces &middot; Link only</text>
+          </g>
+          <g class="fd-card">
+            <rect x="300" y="16" width="118" height="170" rx="2" class="fd-card-new"/>
+            <text x="359" y="98" class="fd-card-plus" text-anchor="middle">+</text>
+            <text x="359" y="161" class="fd-card-meta" text-anchor="middle">New Portfolio</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
 
-<script src="/js/supabase-client.js?v=20260920-153727"></script>
-<script src="/js/i18n/en.js?v=20260920-153727"></script>
-<script src="/js/common.js?v=20260920-153727"></script>
-<script src="/js/color-engine.js?v=20260920-153727"></script>
-<script src="/js/matching.js?v=20260920-153727"></script>
-<script src="/js/auth.js?v=20260920-153727"></script>
-<script src="/js/notifications.js?v=20260920-153727"></script>
-<script src="/js/push.js?v=20260920-153727"></script>
-<script src="/js/lightbox.js?v=20260920-153727"></script>
-<script src="/js/collection.js?v=20260920-153727"></script>
+<div id="toast"></div>
+<script src="/js/supabase-client.js?v=20260920-155724"></script>
+<script src="/js/i18n/en.js?v=20260920-155724"></script>
+<script src="/js/common.js?v=20260920-155724"></script>
+<script src="/js/auth.js?v=20260920-155724"></script>
+<script src="/js/notifications.js?v=20260920-155724"></script>
+<script src="/js/push.js?v=20260920-155724"></script>
+<script src="/js/portfolios.js?v=20260920-155724"></script>
 </body>
 </html>

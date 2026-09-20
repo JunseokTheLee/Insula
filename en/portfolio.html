@@ -17,17 +17,17 @@
   gtag('config', 'G-NLXNX3C6KW');
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Weavo | Collaborative Art Mosaic Community</title>
-<meta name="description" content="Submit your artwork and become part of a collaborative mosaic where every artist and every piece remains visible.">
-<link rel="canonical" href="https://weavo.art/en/">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/">
+<title>Portfolio | Weavo</title>
+<meta name="description" content="An artist's portfolio on Weavo — their own selection of their work.">
+<link rel="canonical" href="https://weavo.art/en/portfolios">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/portfolios">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/portfolios">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Weavo | Collaborative Art Mosaic Community">
-<meta property="og:description" content="Submit your artwork and become part of a collaborative mosaic where every artist and every piece remains visible.">
-<meta property="og:url" content="https://weavo.art/en/">
+<meta property="og:title" content="Portfolio | Weavo">
+<meta property="og:description" content="An artist's portfolio on Weavo — their own selection of their work.">
+<meta property="og:url" content="https://weavo.art/en/portfolios">
 <meta property="og:image" content="https://weavo.art/og-image-en.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -35,23 +35,20 @@
 <meta property="og:image:alt" content="Weavo — Collaborative Art Mosaic Community">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Weavo | Collaborative Art Mosaic Community">
-<meta name="twitter:description" content="Submit your artwork and become part of a collaborative mosaic where every artist and every piece remains visible.">
+<meta name="twitter:title" content="Portfolio | Weavo">
+<meta name="twitter:description" content="An artist's portfolio on Weavo — their own selection of their work.">
 <meta name="twitter:image" content="https://weavo.art/og-image-en.png">
 <meta name="twitter:image:alt" content="Weavo — Collaborative Art Mosaic Community">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Weavo","url":"https://weavo.art/en/","inLanguage":"en"}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/en/","logo":"https://weavo.art/logo.png"}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <link rel="stylesheet" href="/css/base.css?v=20260920-155724">
-<link rel="stylesheet" href="/css/home.css?v=20260920-155724">
+<link rel="stylesheet" href="/css/portfolio.css?v=20260920-155724">
 </head>
-<body>
-
+<body class="pf-dark">
 <div class="app">
   <header class="topnav">
-    <a class="logo" id="logoHome" href="/en/">Weavo</a>
+   <a class="logo" id="logoHome" href="/en/">Weavo</a>
     <nav class="nav-links">
       <a href="/en/campaigns" class="nav-link">Campaigns</a>
       <a href="/en/network" class="nav-link">Network</a>
@@ -72,113 +69,52 @@
         <button id="logoutBtn" class="id-btn" style="display:none">Sign out</button>
       </div>
   </header>
-
-  <main class="main-scroll home-scroll">
-    <section class="snap-panel" id="heroPanel">
-      <div class="hero">
-        <div class="hero-inner">
-          <div class="hero-copy">
-            <div class="hero-eyebrow">Art that connects tomorrow</div>
-            <h1>Small artworks<br>make a better world.</h1>
-            <p class="hero-lead">Art created together with artists with disabilities becomes one big picture and builds a warmer world.</p>
+  <main class="main main-scroll pf-page">
+    <div class="backnav pf-backnav">
+      <a class="back" id="pfBackBtn" href="/en/portfolios">&larr; Portfolios</a>
+      <div class="pf-owner-tools" id="pfOwnerTools" hidden>
+        <button type="button" class="pf-btn" id="pfEditBtn"><span class="ico" aria-hidden="true">✎</span><span class="txt">Edit</span></button>
+        <button type="button" class="pf-btn" id="pfAddBtn"><span class="ico" aria-hidden="true">＋</span><span class="txt">Add artworks</span></button>
+        <button type="button" class="pf-btn" id="pfArrangeBtn"><span class="ico" aria-hidden="true">⇅</span><span class="txt">Arrange</span></button>
+        <button type="button" class="pf-btn danger" id="pfDeleteBtn"><span class="ico" aria-hidden="true">🗑</span><span class="txt">Delete</span></button>
+      </div>
+    </div>
+    <header class="pf-hero" id="pfHero">
+      <div class="pf-hero-bg" id="pfHeroBg" aria-hidden="true"></div>
+      <div class="pf-hero-inner">
+        <div class="pf-hero-text">
+          <div class="pf-eyebrow"><span>Portfolio</span><span aria-hidden="true">·</span><span id="pfCount"></span><span class="pf-badge" id="pfVisBadge" hidden></span></div>
+          <h1 class="pf-title" id="pfTitle">Loading…</h1>
+          <p class="pf-desc" id="pfDesc"></p>
+          <div class="pf-artist" id="pfArtist"></div>
+          <div class="pf-actions">
+            <button type="button" class="pf-btn primary" id="pfShareBtn"><span class="ico" aria-hidden="true">🔗</span><span>Copy link</span></button>
+            <button type="button" class="pf-btn" id="pfSlideshowBtn" disabled><span class="ico" aria-hidden="true">▶</span><span>Slideshow</span></button>
           </div>
-
-          <!-- Phone: one white card (partner line, mosaic, progress). Desktop:
-               display:contents, so grid areas place the mosaic on the right. -->
-          <div class="hero-card">
-            <div class="hero-art">
-              <div class="hero-art-main">
-                <a class="hero-preview" id="heroPreview" href="/en/campaigns" aria-label="Open the campaign">
-                  <canvas id="heroPreviewCanvas"></canvas>
-                  <div class="hero-preview-empty" id="heroPreviewEmpty" style="display:none;">No campaigns yet — be the first to start one.</div>
-                </a>
-                <div class="hero-tagline" aria-hidden="true"><span>Different</span><span>People</span><span>Brighter</span><span>Tomorrows</span></div>
-              </div>
-              <div class="hero-art-foot">
-                <div class="hero-art-side">
-                <div class="hero-art-nav" id="heroArtNav">
-                  <button type="button" class="hero-arrow" id="heroPrev" aria-label="Previous campaign">&lsaquo;</button>
-                  <button type="button" class="hero-arrow dark" id="heroNext" aria-label="Next campaign">&rsaquo;</button>
-                </div>
-                <div class="hero-art-caption"><b><span id="heroTotalCaption">0</span> stories made together</b><span>Add a piece today.</span></div>
-                </div>
-              </div>
-            </div>
-            <div class="hero-progress" id="heroProgress">
-              <span class="hero-heart-wrap" aria-hidden="true"><svg class="hero-heart" viewBox="-2 -2 28 28" width="34" height="34"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
-              <div class="hero-progress-body">
-                <div class="hero-pieces">
-                  <div class="hero-pieces-count"><b id="heroPieces">0</b> <span class="hero-pieces-total">/ <span id="heroPiecesTotal">0</span> pieces</span></div>
-                  <div class="hero-pieces-pct" id="heroPercent">0%</div>
-                </div>
-                <div class="progress-bar hero-bar"><div class="progress-fill" id="heroProgressFill"></div></div>
-                <div class="hero-pieces-sub"><span>Pieces added <b id="heroAdded">0</b></span><span aria-hidden="true">·</span><span>Artworks still needed <b id="heroRemaining">0</b></span></div>
-              </div>
-            </div>
-            <!-- Artworks whose pieces are in the campaign on screen; scrolls
-                 sideways when there are many (landing.js renderHeroStrip). -->
-            <div class="hero-strip" id="heroStrip" style="display:none;">
-              <div class="hero-strip-head"><b id="heroStripCount">0</b> artworks in this mosaic</div>
-              <div class="hero-strip-track" id="heroStripTrack"></div>
-            </div>
-          </div>
-
-          <div class="hero-mine" id="heroMine" style="display:none;">
-            <span class="hero-mine-icon" aria-hidden="true"><svg class="hero-sprout" viewBox="-2 -2 28 28" width="32" height="32"><path d="M7 20h10"/><g transform="translate(10 20)"><g class="hero-sprout-plant"><g transform="translate(-10 -20)"><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></g></g></g></svg></span>
-            <div>
-              <div class="hero-mine-k">My contribution</div>
-              <div class="hero-mine-v" id="heroMineValue">0 pieces</div>
-              <div class="hero-mine-s"><b id="heroMinePercent">0%</b> of this campaign</div>
-            </div>
-          </div>
-
-          <div class="hero-partner-body">
-            <p class="hero-partner-desc">When all <span id="heroTotalInline">0</span> pieces are filled, the picture is complete. The piece you add stays part of it.</p>
-            <a class="hero-partner-link" id="heroCampaignLink" href="/en/campaigns">See the campaign <span aria-hidden="true">&rarr;</span></a>
-            <div class="game-banners">
-              <a class="game-banner" href="/en/game?g=find" data-game-link="find">
-                <span class="game-banner-icon" aria-hidden="true">🔍</span>
-                <span class="game-banner-text"><b>Find the Piece</b><span>Hunt an artwork's pieces inside this mosaic</span></span>
-                <span class="game-banner-go" aria-hidden="true">&rarr;</span>
-              </a>
-              <a class="game-banner game-banner-color" href="/en/coloring" data-coloring-link>
-                <span class="game-banner-icon" aria-hidden="true">🎨</span>
-                <span class="game-banner-text"><b>Color by Number</b><span>Color an artist's work, number by number</span></span>
-                <span class="game-banner-go" aria-hidden="true">&rarr;</span>
-              </a>
-            </div>
-          </div>
-
-          <div class="hero-cta">
-            <button type="button" class="cta-blue" id="heroUploadBtn">Join with your artwork <span aria-hidden="true">&rarr;</span></button>
-          </div>
+        </div>
+        <div class="pf-cover" id="pfCover"></div>
+      </div>
+    </header>
+    <section class="pf-works" id="pfWorks" data-layout="grid">
+      <div class="pf-works-head">
+        <span>Works</span>
+        <div class="pf-layouts" id="pfLayouts" hidden>
+          <button type="button" data-layout="grid">Grid</button>
+          <button type="button" data-layout="masonry">Masonry</button>
+          <button type="button" data-layout="story">Story</button>
         </div>
       </div>
-
-      <div class="stats-bar" id="statsBar">
-        <div class="stats-bar-inner">
-          <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🎨</span><div><div class="stat-value" id="statArtists">0</div><div class="stat-label">Artists</div></div></div>
-          <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🖼️</span><div><div class="stat-value" id="statArtworks">0</div><div class="stat-label">Artworks Submitted</div></div></div>
-          <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🧩</span><div><div class="stat-value" id="statProjects">0</div><div class="stat-label">Active Campaigns</div></div></div>
-          <div class="stat-tile"><span class="stat-icon" aria-hidden="true">✨</span><div><div class="stat-value" id="statFill">0%</div><div class="stat-label">Cells Filled</div></div></div>
-        </div>
-      </div>
-
-    </section>
-
-    <section class="recent-activity" id="recentActivityPanel">
-      <div class="recent-activity-inner">
-        <div class="recent-list-col">
-          <div class="recent-list-header">
-            <h2 class="section-label">Latest Artworks</h2>
-          </div>
-          <div class="recent-list" id="recentArtworksList"></div>
-          <div class="empty-note" id="recentArtworksEmpty" style="display:none;">No artworks yet — be the first to submit one.</div>
-        </div>
+      <div class="pf-items" id="pfItems"></div>
+      <div class="pf-empty" id="pfEmpty" hidden>
+        <div id="pfEmptyText"></div>
+        <button type="button" class="pf-btn primary" id="pfEmptyAdd" hidden>＋ Add artworks</button>
       </div>
     </section>
-
-
+    <section class="pf-more" id="pfMore" hidden>
+      <h2>More by this artist</h2>
+      <div class="pf-more-grid" id="pfMoreGrid"></div>
+    </section>
+    <div class="pf-made-with">A portfolio on <a href="/en/">Weavo</a> — where artists’ work becomes a shared mosaic.</div>
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>
@@ -188,7 +124,74 @@
     <a href="/en/delete-account">Delete Account</a>
   </footer>
 </div>
-
+<!-- Slideshow -->
+<div class="pf-show" id="pfShow" hidden role="dialog" aria-modal="true" aria-label="Slideshow">
+  <div class="pf-show-bar" id="pfShowBar"></div>
+  <div class="pf-show-stage">
+    <img id="pfShowImg" src="" alt="">
+    <button type="button" class="pf-show-nav pf-show-prev" id="pfShowPrev" aria-label="Previous">&#8249;</button>
+    <button type="button" class="pf-show-nav pf-show-next" id="pfShowNext" aria-label="Next">&#8250;</button>
+  </div>
+  <div class="pf-show-cap">
+    <div class="pf-show-text">
+      <div class="pf-show-title" id="pfShowTitle"></div>
+      <div class="pf-show-meta" id="pfShowMeta"></div>
+      <div class="pf-show-desc" id="pfShowDesc"></div>
+    </div>
+    <div class="pf-show-ctl">
+      <span class="pf-show-count" id="pfShowCount"></span>
+      <button type="button" class="pf-show-btn" id="pfShowPlay">Pause</button>
+      <button type="button" class="pf-show-btn" id="pfShowClose">Close</button>
+    </div>
+  </div>
+</div>
+<!-- Edit portfolio modal -->
+<div id="pf-edit-modal" class="modal-overlay">
+  <div id="pf-edit-dialog" class="modal-panel">
+    <h3>Edit portfolio</h3>
+    <div class="field">
+      <label for="pe-title">Title</label>
+      <input type="text" id="pe-title" maxlength="80">
+    </div>
+    <div class="field">
+      <label for="pe-desc">Introduction <span class="field-hint">(optional)</span></label>
+      <textarea id="pe-desc" maxlength="500"></textarea>
+    </div>
+    <div class="field">
+      <label for="pe-visibility">Who can see it</label>
+      <select id="pe-visibility">
+        <option value="public">Public — listed in Portfolios</option>
+        <option value="link">Link only — anyone with the link</option>
+        <option value="private">Private — only me</option>
+      </select>
+      <div class="pf-vis-hint" id="pe-vis-hint"></div>
+    </div>
+    <div class="field">
+      <label for="pe-layout">Layout</label>
+      <select id="pe-layout">
+        <option value="grid">Grid</option>
+        <option value="masonry">Masonry</option>
+        <option value="story">Story — one work at a time</option>
+      </select>
+    </div>
+    <div class="field-error" id="pe-error"></div>
+    <div class="modal-actions">
+      <button id="pe-cancel" class="btn-cancel">Cancel</button>
+      <button id="pe-submit" class="btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+<!-- Add artworks picker -->
+<div id="pf-add-modal" class="modal-overlay">
+  <div id="pf-add-dialog" class="modal-panel">
+    <h3>Add your artworks</h3>
+    <div id="pf-add-list"></div>
+    <div class="empty-note" id="pf-add-empty" style="display:none;padding:16px;">You haven’t uploaded any artwork yet.</div>
+    <div class="modal-actions">
+      <button id="pf-add-done" class="btn-primary">Done</button>
+    </div>
+  </div>
+</div>
 <!-- Lightbox -->
 <div id="lightbox-modal" class="modal-overlay lightbox-overlay">
   <div class="lightbox-stage" id="lightboxStage">
@@ -304,7 +307,7 @@
   <div id="auth-dialog" class="modal-panel">
     <div class="auth-icon">🖼️</div>
     <h3>Join Weavo</h3>
-    <p>Sign in to contribute your artwork to a community mosaic.</p>
+    <p>Sign in to contribute your artwork to a community weavo.</p>
     <button id="google-signin-btn" class="oauth-signin-btn">
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
         <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2z"/>
@@ -340,17 +343,14 @@
 </div>
 
 <div id="toast"></div>
-
 <script src="/js/supabase-client.js?v=20260920-155724"></script>
 <script src="/js/i18n/en.js?v=20260920-155724"></script>
-<script src="/js/common.js?v=20260920-155724"></script>
 <script src="/js/color-engine.js?v=20260920-155724"></script>
-<script src="/js/matching.js?v=20260920-155724"></script>
+<script src="/js/common.js?v=20260920-155724"></script>
 <script src="/js/auth.js?v=20260920-155724"></script>
 <script src="/js/notifications.js?v=20260920-155724"></script>
 <script src="/js/push.js?v=20260920-155724"></script>
-<script src="/js/project-preview.js?v=20260920-155724"></script>
 <script src="/js/lightbox.js?v=20260920-155724"></script>
-<script src="/js/landing.js?v=20260920-155724"></script>
+<script src="/js/portfolio.js?v=20260920-155724"></script>
 </body>
 </html>

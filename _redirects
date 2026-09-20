@@ -28,3 +28,17 @@
 /en/projects/*      /en/campaigns/:splat  301
 /ko/projects/*      /ko/campaigns/:splat  301
 /sitemap-projects.xml  /sitemap-campaigns.xml  301
+
+# 2026-09-20: "exhibitions" (collections) became artist PORTFOLIOS. The list
+# page is now {lang}/portfolios.html and the detail route
+# functions/{lang}/portfolios/[id].js; every old address redirects for good
+# (shared links and search results consolidate onto the new URLs).
+/en/exhibitions          /en/portfolios          301
+/ko/exhibitions          /ko/portfolios          301
+/en/exhibitions.html     /en/portfolios          301
+/ko/exhibitions.html     /ko/portfolios          301
+/en/collection.html      /en/portfolios          301
+/ko/collection.html      /ko/portfolios          301
+/en/collections/*        /en/portfolios/:splat   301
+/ko/collections/*        /ko/portfolios/:splat   301
+/sitemap-collections.xml /sitemap-portfolios.xml 301

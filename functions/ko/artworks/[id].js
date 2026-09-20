@@ -24,7 +24,7 @@ export async function onRequestGet({ params, request, env }) {
       `&select=collection_id,mosaic_collections!inner(is_public)&mosaic_collections.is_public=eq.true&limit=1`
     );
     if (!item) return notFoundResponse(assetResponse, '작품을 찾을 수 없습니다 | Weavo');
-    return Response.redirect(`${SITE}/ko/collections/${encodeURIComponent(item.collection_id)}?artwork=${encodeURIComponent(id)}`, 302);
+    return Response.redirect(`${SITE}/ko/portfolios/${encodeURIComponent(item.collection_id)}?artwork=${encodeURIComponent(id)}`, 302);
   }
 
   const author = sub.author_id ? await pgFetchOne(`profiles?id=eq.${encodeURIComponent(sub.author_id)}&select=username`) : null;

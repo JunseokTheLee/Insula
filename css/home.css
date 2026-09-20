@@ -5,12 +5,14 @@
 .main-scroll.home-scroll{scroll-snap-type:y proximity;scroll-behavior:smooth;}
 .snap-panel{min-height:100%;scroll-snap-align:start;display:flex;flex-direction:column;}
 
-/* ---------- landing: recent activity (latest artworks + exhibitions lists) ----------
+/* ---------- landing: recent activity (latest artworks list) ----------
    Deliberately not a .snap-panel — it's a short, glanceable strip below the
    hero (since 2026-09-10 the hero with the campaign preview comes first),
    not a full-viewport section of its own. */
 .recent-activity{flex-shrink:0;width:100%;max-width:var(--frame-max);margin:0 auto;padding:28px var(--gutter) 40px;}
-.recent-activity-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;}
+/* One column since 2026-09-20 (the "latest exhibitions" list left with
+   the exhibition → portfolio change); kept as a grid for the phone rules. */
+.recent-activity-inner{display:grid;grid-template-columns:1fr;gap:48px;}
 .recent-list-col{min-width:0;}
 .recent-list-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;min-width:0;}
 .recent-list-header .section-label{margin:0;}

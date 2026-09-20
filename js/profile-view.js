@@ -266,19 +266,13 @@ function profileProjectCardEl(project) {
   card.appendChild(info);
   return card;
 }
-// ---------- collections (named boards built from the Liked pool) ----------
-// Items are embedded per collection (rather than fetched separately) so a
-// collection's cover thumb and item count are both derivable client-side
-// without an extra round trip, and so the add-to-collection picker already
-// knows which boards a given piece is already on.
+// ---------- portfolios (the artist's own artworks, in their order) ----------
+// Items are embedded per portfolio so a cover and a count are derivable
+// client-side, and so the add-to-portfolio picker already knows which
+// portfolios a given artwork is in. Fetched by common.js fetchUserPortfolios.
 let profileCollections = [];
 async function fetchUserCollections(userId) {
-  const { data, error } = await sb.from('mosaic_collections')
-    .select('id,title,description,is_public,is_published,end_date,created_at,mosaic_collection_items(submission_id,added_at,mosaic_submissions(thumb_url,image_url))')
-    .eq('owner_id', userId)
-    .order('created_at', { ascending: false });
-  if (error) { console.error('load collections error:', error); toast(tr('couldNotLoadCollections')); return []; }
-  return data || [];
+  return typeof fetchUserPortfolios === 'function' ? fetchUserPortfolios(userId) : [];
 }
 function collectionCardEl(collection, isOwner) {
   const card = document.createElement('a');
@@ -298,17 +292,11 @@ function collectionCardEl(collection, isOwner) {
   info.className = 'pv-card-info';
   const title = document.createElement('div');
   title.className = 'pv-card-title'; title.textContent = collection.title;
-  if (isOwner && !collection.is_public) {
+  const vis = portfolioVisibility(collection);
+  if (isOwner && vis !== 'public') {
     const badge = document.createElement('span');
     badge.className = 'pv-card-archived-badge';
-    badge.textContent = tr('privateBadge');
-    title.appendChild(document.createTextNode(' '));
-    title.appendChild(badge);
-  }
-  if (isOwner && !isExhibitionLive(collection)) {
-    const badge = document.createElement('span');
-    badge.className = 'pv-card-archived-badge';
-    badge.textContent = tr('statusUnpublished');
+    badge.textContent = vis === 'private' ? tr('privateBadge') : tr('pfLinkOnlyBadge');
     title.appendChild(document.createTextNode(' '));
     title.appendChild(badge);
   }
@@ -321,11 +309,14 @@ function collectionCardEl(collection, isOwner) {
 }
 function renderCollectionsSection(collections, isOwner) {
   profileCollections = collections;
+  // A visitor sees the listed ones only: link-only portfolios are for the
+  // people who were sent the link, and an empty one has nothing to show.
+  const shown = isOwner ? collections : collections.filter(c => portfolioVisibility(c) === 'public' && (c.mosaic_collection_items || []).length);
   const grid = document.getElementById('profileCollectionsGrid');
   grid.innerHTML = '';
   document.getElementById('newCollectionBtn').style.display = isOwner ? '' : 'none';
-  document.getElementById('profileCollectionsEmpty').style.display = collections.length ? 'none' : '';
-  for (const c of collections) grid.appendChild(collectionCardEl(c, isOwner));
+  document.getElementById('profileCollectionsEmpty').style.display = shown.length ? 'none' : '';
+  for (const c of shown) grid.appendChild(collectionCardEl(c, isOwner));
 }
 async function refreshCollectionsSection() {
   if (!profileUserId) return;
@@ -336,8 +327,8 @@ async function refreshCollectionsSection() {
 function openNewCollectionModal() {
   document.getElementById('nc-title').value = '';
   document.getElementById('nc-desc').value = '';
-  document.getElementById('nc-public').checked = true;
-  document.getElementById('nc-enddate').value = '';
+  document.getElementById('nc-visibility').value = 'public';
+  document.getElementById('nc-layout').value = 'grid';
   document.getElementById('nc-error').textContent = '';
   document.getElementById('new-collection-modal').classList.add('open');
 }
@@ -351,20 +342,28 @@ document.getElementById('nc-submit').onclick = async () => {
   errorEl.textContent = '';
   const btn = document.getElementById('nc-submit');
   btn.disabled = true;
-  // is_published defaults to false at the database level (see
-  // supabase_mosaic_collections_publish.sql) — every new exhibition starts
-  // as a draft regardless of is_public, and the owner publishes it
-  // themselves from the exhibition's own page when it's ready.
-  const { error } = await sb.from('mosaic_collections').insert({
+  // public | link | private → is_public + is_published (supabase_portfolios.sql
+  // Part B); `layout` is dropped while that file is not applied.
+  const vis = document.getElementById('nc-visibility').value;
+  const row = {
     owner_id: me.id, title,
     description: document.getElementById('nc-desc').value.trim() || null,
-    is_public: document.getElementById('nc-public').checked,
-    end_date: document.getElementById('nc-enddate').value || null,
-  });
+    is_public: vis !== 'private',
+    is_published: vis === 'public',
+    published_at: vis === 'public' ? new Date().toISOString() : null,
+    layout: document.getElementById('nc-layout').value,
+  };
+  let { data: created, error } = await sb.from('mosaic_collections').insert(row).select('id').single();
+  if (error && isSchemaMismatchError(error)) {
+    const { layout, ...rest } = row;
+    ({ data: created, error } = await sb.from('mosaic_collections').insert(rest).select('id').single());
+  }
   btn.disabled = false;
-  if (error) { console.error('create collection error:', error); errorEl.textContent = tr('couldNotCreateCollectionMsg', { msg: error.message }); return; }
+  if (error) { console.error('create portfolio error:', error); errorEl.textContent = tr('couldNotCreateCollectionMsg', { msg: error.message }); return; }
   document.getElementById('new-collection-modal').classList.remove('open');
   toast(tr('collectionCreatedToast'));
+  // Straight to the new page, where the artworks are added.
+  if (created && created.id) { location.href = portfolioUrl(created.id); return; }
   refreshCollectionsSection();
 };
 
@@ -380,11 +379,17 @@ function atcRowEl(collection) {
   checkbox.checked = items.some(i => i.submission_id === atcSubmission.id);
   checkbox.onchange = async () => {
     checkbox.disabled = true;
-    const { error } = checkbox.checked
-      ? await sb.from('mosaic_collection_items').insert({ collection_id: collection.id, submission_id: atcSubmission.id })
-      : await sb.from('mosaic_collection_items').delete().eq('collection_id', collection.id).eq('submission_id', atcSubmission.id);
+    let error;
+    if (checkbox.checked) {
+      // Appended at the end of the owner's order; without `position` while
+      // supabase_portfolios.sql is not applied.
+      ({ error } = await sb.from('mosaic_collection_items').insert({ collection_id: collection.id, submission_id: atcSubmission.id, position: items.length }));
+      if (error && isSchemaMismatchError(error)) ({ error } = await sb.from('mosaic_collection_items').insert({ collection_id: collection.id, submission_id: atcSubmission.id }));
+    } else {
+      ({ error } = await sb.from('mosaic_collection_items').delete().eq('collection_id', collection.id).eq('submission_id', atcSubmission.id));
+    }
     checkbox.disabled = false;
-    if (error) { console.error('update collection item error:', error); toast(tr('couldNotUpdateCollection')); checkbox.checked = !checkbox.checked; return; }
+    if (error) { console.error('update portfolio item error:', error); toast(tr('couldNotUpdateCollection')); checkbox.checked = !checkbox.checked; return; }
     if (checkbox.checked) items.push({ submission_id: atcSubmission.id, added_at: new Date().toISOString(), mosaic_submissions: atcSubmission });
     else { const idx = items.findIndex(i => i.submission_id === atcSubmission.id); if (idx !== -1) items.splice(idx, 1); }
   };
@@ -788,7 +793,7 @@ async function loadProfileView(userId) {
 
   const likedGrid = document.getElementById('profileLikedGrid');
   if (!liked.length) document.getElementById('profileLikedEmpty').style.display = '';
-  else for (const sub of liked) likedGrid.appendChild(profileArtThumbEl(sub, false, isOwner));
+  else for (const sub of liked) likedGrid.appendChild(profileArtThumbEl(sub, false, false)); // a portfolio holds one's own artworks only
 
   renderCollectionsSection(collections, isOwner);
 
@@ -973,7 +978,7 @@ authReady.then(async () => {
   // Captured before loadProfileView() — it canonicalizes the URL via
   // replaceState, which drops the fragment.
   const wantUpload = location.hash === '#upload';
-  const wantNewCollection = location.hash === '#new-collection';
+  const wantNewCollection = location.hash === '#new-portfolio' || location.hash === '#new-collection';
   const requested = routeParam('artists', 'user');
   const handle = requested || me.id;
   if (!handle) { document.getElementById('profileName').textContent = tr('userNotFound'); return; }
@@ -981,6 +986,6 @@ authReady.then(async () => {
   await loadProfileView(userId);
   // Deep link from the homepage's "Upload Artwork" button.
   if (wantUpload && me.id && userId === me.id) document.getElementById('profileUploadBtn').click();
-  // Deep link from the exhibitions page's "create your own" CTA banner.
+  // Deep link from the portfolios directory's "create a portfolio" banner.
   if (wantNewCollection && me.id && userId === me.id) document.getElementById('newCollectionBtn').click();
 });

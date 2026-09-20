@@ -29,7 +29,7 @@ class RemoveElement {
   element(el) { el.remove(); }
 }
 
-// `page` = { title, description, canonical, hreflangEn, hreflangKo, image, imageWidth, imageHeight, locale, jsonld: [...] }
+// `page` = { title, description, canonical, hreflangEn, hreflangKo, image, imageWidth, imageHeight, locale, noindex, jsonld: [...] }
 export function renderEntityPage(assetResponse, page) {
   const jsonldHtml = (page.jsonld || [])
     .map(obj => `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`)
@@ -62,6 +62,9 @@ export function renderEntityPage(assetResponse, page) {
       .on('meta[property="og:image:height"]', page.imageHeight ? new SetAttr('content', String(page.imageHeight)) : new RemoveElement())
       .on('meta[property="og:image:type"]', new RemoveElement());
   }
+  // Reachable but not to be listed (a link-only portfolio): the page says
+  // so itself; the client repeats it (common.js setRobotsNoindex).
+  if (page.noindex) rewriter = rewriter.on('head', new AppendHtml('<meta name="robots" content="noindex,nofollow">'));
   if (jsonldHtml) rewriter = rewriter.on('head', new AppendHtml(jsonldHtml));
 
   return rewriter.transform(assetResponse);

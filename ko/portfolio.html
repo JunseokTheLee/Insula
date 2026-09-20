@@ -17,17 +17,17 @@
   gtag('config', 'G-NLXNX3C6KW');
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Weavo — 전시</title>
-<meta name="description" content="Weavo에서 큐레이션된 미니 전시입니다.">
-<link rel="canonical" href="https://weavo.art/ko/campaigns">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/campaigns">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/campaigns">
+<title>포트폴리오 | Weavo</title>
+<meta name="description" content="Weavo 작가의 포트폴리오 — 작가가 직접 고른 자신의 작품들.">
+<link rel="canonical" href="https://weavo.art/ko/portfolios">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/portfolios">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/portfolios">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Weavo — 전시">
-<meta property="og:description" content="Weavo에서 큐레이션된 미니 전시입니다.">
-<meta property="og:url" content="https://weavo.art/ko/campaigns">
+<meta property="og:title" content="포트폴리오 | Weavo">
+<meta property="og:description" content="Weavo 작가의 포트폴리오 — 작가가 직접 고른 자신의 작품들.">
+<meta property="og:url" content="https://weavo.art/ko/portfolios">
 <meta property="og:image" content="https://weavo.art/og-image-ko.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -35,19 +35,17 @@
 <meta property="og:image:alt" content="Weavo — 함께 만드는 예술 모자이크 커뮤니티">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Weavo — 전시">
-<meta name="twitter:description" content="Weavo에서 큐레이션된 미니 전시입니다.">
+<meta name="twitter:title" content="포트폴리오 | Weavo">
+<meta name="twitter:description" content="Weavo 작가의 포트폴리오 — 작가가 직접 고른 자신의 작품들.">
 <meta name="twitter:image" content="https://weavo.art/og-image-ko.png">
 <meta name="twitter:image:alt" content="Weavo — 함께 만드는 예술 모자이크 커뮤니티">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260920-153727">
-<link rel="stylesheet" href="/css/project.css?v=20260920-153727">
-<link rel="stylesheet" href="/css/profile.css?v=20260920-153727">
+<link rel="stylesheet" href="/css/base.css?v=20260920-155724">
+<link rel="stylesheet" href="/css/portfolio.css?v=20260920-155724">
 </head>
-<body>
-
+<body class="pf-dark">
 <div class="app">
   <header class="topnav">
    <a class="logo" id="logoHome" href="/ko/">Weavo</a>
@@ -56,7 +54,7 @@
       <a href="/ko/network" class="nav-link">네트워크</a>
       <a href="/ko/artworks" class="nav-link">작품 탐색</a>
       <a href="/ko/artists" class="nav-link">작가</a>
-      <a href="/ko/exhibitions" class="nav-link">전시</a>
+      <a href="/ko/portfolios" class="nav-link">포트폴리오</a>
       <a href="/ko/game" class="nav-link" data-game-link>게임</a>
       <a href="/ko/about" class="nav-link">소개</a>
     </nav>
@@ -71,34 +69,52 @@
         <button id="logoutBtn" class="id-btn" style="display:none">로그아웃</button>
       </div>
   </header>
-
-  <main class="main main-scroll">
-    <div class="backnav">
-      <a class="back" id="collectionBackBtn" href="/ko/campaigns">&larr; 뒤로</a>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <button class="btn-cancel" id="publishCollectionBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-          게시하기
-        </button>
-        <button class="btn-cancel" id="addArtworkBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-          + 작품 추가
-        </button>
-        <button class="btn-cancel" id="editCollectionBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-          수정
-        </button>
-        <button class="btn-cancel" id="deleteCollectionBtn" style="display:none;padding:11px 18px;border-radius:var(--r-full);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--accent-warm);">
-          삭제
-        </button>
+  <main class="main main-scroll pf-page">
+    <div class="backnav pf-backnav">
+      <a class="back" id="pfBackBtn" href="/ko/portfolios">&larr; 포트폴리오</a>
+      <div class="pf-owner-tools" id="pfOwnerTools" hidden>
+        <button type="button" class="pf-btn" id="pfEditBtn"><span class="ico" aria-hidden="true">✎</span><span class="txt">수정</span></button>
+        <button type="button" class="pf-btn" id="pfAddBtn"><span class="ico" aria-hidden="true">＋</span><span class="txt">작품 추가</span></button>
+        <button type="button" class="pf-btn" id="pfArrangeBtn"><span class="ico" aria-hidden="true">⇅</span><span class="txt">정렬</span></button>
+        <button type="button" class="pf-btn danger" id="pfDeleteBtn"><span class="ico" aria-hidden="true">🗑</span><span class="txt">삭제</span></button>
       </div>
     </div>
-    <div class="project-head">
-      <h1 id="collectionTitle">불러오는 중…</h1>
-      <div class="profile-meta" id="collectionMeta"></div>
-      <div class="collection-status" id="collectionStatus" style="display:none;"></div>
-      <p id="collectionDesc" style="display:none;"></p>
-      <div id="collectionOwnerByline"></div>
-    </div>
-    <div class="profile-art-grid" id="collectionItemsGrid"></div>
-    <div class="empty-note" id="collectionItemsEmpty" style="display:none;">아직 전시에 추가된 작품이 없습니다.</div>
+    <header class="pf-hero" id="pfHero">
+      <div class="pf-hero-bg" id="pfHeroBg" aria-hidden="true"></div>
+      <div class="pf-hero-inner">
+        <div class="pf-hero-text">
+          <div class="pf-eyebrow"><span>포트폴리오</span><span aria-hidden="true">·</span><span id="pfCount"></span><span class="pf-badge" id="pfVisBadge" hidden></span></div>
+          <h1 class="pf-title" id="pfTitle">불러오는 중…</h1>
+          <p class="pf-desc" id="pfDesc"></p>
+          <div class="pf-artist" id="pfArtist"></div>
+          <div class="pf-actions">
+            <button type="button" class="pf-btn primary" id="pfShareBtn"><span class="ico" aria-hidden="true">🔗</span><span>링크 복사</span></button>
+            <button type="button" class="pf-btn" id="pfSlideshowBtn" disabled><span class="ico" aria-hidden="true">▶</span><span>슬라이드쇼</span></button>
+          </div>
+        </div>
+        <div class="pf-cover" id="pfCover"></div>
+      </div>
+    </header>
+    <section class="pf-works" id="pfWorks" data-layout="grid">
+      <div class="pf-works-head">
+        <span>작품</span>
+        <div class="pf-layouts" id="pfLayouts" hidden>
+          <button type="button" data-layout="grid">격자</button>
+          <button type="button" data-layout="masonry">벽돌</button>
+          <button type="button" data-layout="story">스토리</button>
+        </div>
+      </div>
+      <div class="pf-items" id="pfItems"></div>
+      <div class="pf-empty" id="pfEmpty" hidden>
+        <div id="pfEmptyText"></div>
+        <button type="button" class="pf-btn primary" id="pfEmptyAdd" hidden>＋ 작품 추가</button>
+      </div>
+    </section>
+    <section class="pf-more" id="pfMore" hidden>
+      <h2>이 작가의 다른 포트폴리오</h2>
+      <div class="pf-more-grid" id="pfMoreGrid"></div>
+    </section>
+    <div class="pf-made-with"><a href="/ko/">Weavo</a> 의 포트폴리오 — 작가들의 작품이 하나의 모자이크가 되는 곳.</div>
   </main>
   <footer id="legal-footer">
     <a href="/ko/privacy">개인정보처리방침</a>
@@ -108,49 +124,74 @@
     <a href="/ko/delete-account">계정 삭제</a>
   </footer>
 </div>
-
-<!-- Edit exhibition modal -->
-<div id="edit-collection-modal" class="modal-overlay">
-  <div id="edit-collection-dialog" class="modal-panel">
-    <h3>전시 수정</h3>
-    <div class="field">
-      <label for="ec-title">제목</label>
-      <input type="text" id="ec-title" maxlength="80">
+<!-- Slideshow -->
+<div class="pf-show" id="pfShow" hidden role="dialog" aria-modal="true" aria-label="슬라이드쇼">
+  <div class="pf-show-bar" id="pfShowBar"></div>
+  <div class="pf-show-stage">
+    <img id="pfShowImg" src="" alt="">
+    <button type="button" class="pf-show-nav pf-show-prev" id="pfShowPrev" aria-label="이전">&#8249;</button>
+    <button type="button" class="pf-show-nav pf-show-next" id="pfShowNext" aria-label="다음">&#8250;</button>
+  </div>
+  <div class="pf-show-cap">
+    <div class="pf-show-text">
+      <div class="pf-show-title" id="pfShowTitle"></div>
+      <div class="pf-show-meta" id="pfShowMeta"></div>
+      <div class="pf-show-desc" id="pfShowDesc"></div>
     </div>
-    <div class="field">
-      <label for="ec-desc">설명 <span class="field-hint">(선택)</span></label>
-      <textarea id="ec-desc" maxlength="500"></textarea>
-    </div>
-    <div class="field">
-      <label for="ec-public" style="display:flex;align-items:center;gap:8px;font-weight:400;">
-        <input type="checkbox" id="ec-public" style="width:auto;">
-        모두에게 공개
-      </label>
-    </div>
-    <div class="field">
-      <label for="ec-enddate">종료일 <span class="field-hint">(선택 — 이 날짜가 지나면 전시가 자동으로 게시 취소됩니다)</span></label>
-      <input type="date" id="ec-enddate">
-    </div>
-    <div class="field-error" id="ec-error"></div>
-    <div class="modal-actions">
-      <button id="ec-cancel" class="btn-cancel">취소</button>
-      <button id="ec-submit" class="btn-primary">저장</button>
+    <div class="pf-show-ctl">
+      <span class="pf-show-count" id="pfShowCount"></span>
+      <button type="button" class="pf-show-btn" id="pfShowPlay">일시정지</button>
+      <button type="button" class="pf-show-btn" id="pfShowClose">닫기</button>
     </div>
   </div>
 </div>
-
-<!-- Add artwork picker -->
-<div id="add-artwork-modal" class="modal-overlay">
-  <div id="add-artwork-dialog" class="modal-panel">
-    <h3>작품 추가</h3>
-    <div id="aa-list"></div>
-    <div class="empty-note" id="aa-empty" style="display:none;padding:16px;">저장한 작품이 아직 없습니다 — 먼저 작품을 컬렉트해보세요.</div>
+<!-- Edit portfolio modal -->
+<div id="pf-edit-modal" class="modal-overlay">
+  <div id="pf-edit-dialog" class="modal-panel">
+    <h3>포트폴리오 수정</h3>
+    <div class="field">
+      <label for="pe-title">제목</label>
+      <input type="text" id="pe-title" maxlength="80">
+    </div>
+    <div class="field">
+      <label for="pe-desc">소개 <span class="field-hint">(선택)</span></label>
+      <textarea id="pe-desc" maxlength="500"></textarea>
+    </div>
+    <div class="field">
+      <label for="pe-visibility">공개 범위</label>
+      <select id="pe-visibility">
+        <option value="public">공개 — 포트폴리오 목록에 실림</option>
+        <option value="link">링크 공개 — 링크가 있는 사람만</option>
+        <option value="private">비공개 — 나만</option>
+      </select>
+      <div class="pf-vis-hint" id="pe-vis-hint"></div>
+    </div>
+    <div class="field">
+      <label for="pe-layout">레이아웃</label>
+      <select id="pe-layout">
+        <option value="grid">격자</option>
+        <option value="masonry">벽돌</option>
+        <option value="story">스토리 — 한 점씩 크게</option>
+      </select>
+    </div>
+    <div class="field-error" id="pe-error"></div>
     <div class="modal-actions">
-      <button id="aa-done" class="btn-primary">완료</button>
+      <button id="pe-cancel" class="btn-cancel">취소</button>
+      <button id="pe-submit" class="btn-primary">저장</button>
     </div>
   </div>
 </div>
-
+<!-- Add artworks picker -->
+<div id="pf-add-modal" class="modal-overlay">
+  <div id="pf-add-dialog" class="modal-panel">
+    <h3>내 작품 추가</h3>
+    <div id="pf-add-list"></div>
+    <div class="empty-note" id="pf-add-empty" style="display:none;padding:16px;">아직 올린 작품이 없습니다.</div>
+    <div class="modal-actions">
+      <button id="pf-add-done" class="btn-primary">완료</button>
+    </div>
+  </div>
+</div>
 <!-- Lightbox -->
 <div id="lightbox-modal" class="modal-overlay lightbox-overlay">
   <div class="lightbox-stage" id="lightboxStage">
@@ -302,16 +343,14 @@
 </div>
 
 <div id="toast"></div>
-
-<script src="/js/supabase-client.js?v=20260920-153727"></script>
-<script src="/js/i18n/ko.js?v=20260920-153727"></script>
-<script src="/js/common.js?v=20260920-153727"></script>
-<script src="/js/color-engine.js?v=20260920-153727"></script>
-<script src="/js/matching.js?v=20260920-153727"></script>
-<script src="/js/auth.js?v=20260920-153727"></script>
-<script src="/js/notifications.js?v=20260920-153727"></script>
-<script src="/js/push.js?v=20260920-153727"></script>
-<script src="/js/lightbox.js?v=20260920-153727"></script>
-<script src="/js/collection.js?v=20260920-153727"></script>
+<script src="/js/supabase-client.js?v=20260920-155724"></script>
+<script src="/js/i18n/ko.js?v=20260920-155724"></script>
+<script src="/js/color-engine.js?v=20260920-155724"></script>
+<script src="/js/common.js?v=20260920-155724"></script>
+<script src="/js/auth.js?v=20260920-155724"></script>
+<script src="/js/notifications.js?v=20260920-155724"></script>
+<script src="/js/push.js?v=20260920-155724"></script>
+<script src="/js/lightbox.js?v=20260920-155724"></script>
+<script src="/js/portfolio.js?v=20260920-155724"></script>
 </body>
 </html>

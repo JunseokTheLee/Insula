@@ -42,8 +42,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260920-153727">
-<link rel="stylesheet" href="/css/profile.css?v=20260920-153727">
+<link rel="stylesheet" href="/css/base.css?v=20260920-155724">
+<link rel="stylesheet" href="/css/profile.css?v=20260920-155724">
 </head>
 <body>
 
@@ -55,7 +55,7 @@
       <a href="/en/network" class="nav-link">Network</a>
       <a href="/en/artworks" class="nav-link">Explore</a>
       <a href="/en/artists" class="nav-link">Artists</a>
-      <a href="/en/exhibitions" class="nav-link">Exhibitions</a>
+      <a href="/en/portfolios" class="nav-link">Portfolios</a>
       <a href="/en/game" class="nav-link" data-game-link>Game</a>
       <a href="/en/about" class="nav-link">About</a>
     </nav>
@@ -128,11 +128,11 @@
     </div>
     <div class="profile-section">
       <div class="profile-section-head">
-        <h2 class="section-label">Exhibitions</h2>
+        <h2 class="section-label">Portfolios</h2>
         <button type="button" class="section-new-btn" id="newCollectionBtn" style="display:none;">+ New</button>
       </div>
       <div class="profile-collections-grid" id="profileCollectionsGrid"></div>
-      <div class="empty-note" id="profileCollectionsEmpty" style="display:none;">No exhibitions yet — gather saved pieces into a mini-exhibition.</div>
+      <div class="empty-note" id="profileCollectionsEmpty" style="display:none;">No portfolios yet — a page of your own artworks, in your order.</div>
     </div>
     <div class="profile-section mfs-panel">
       <h2 class="section-label">Network</h2>
@@ -157,28 +157,34 @@
   </footer>
 </div>
 
-<!-- New exhibition modal -->
+<!-- New portfolio modal -->
 <div id="new-collection-modal" class="modal-overlay">
   <div id="new-collection-dialog" class="modal-panel">
-    <h3>New Exhibition</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">A named board built from artwork you've already saved — a mini-exhibition of your own. Starts unpublished; you publish it yourself when it's ready.</p>
+    <h3>New portfolio</h3>
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">A page of your own artworks — the ones you choose, in the order you set. You add the artworks on the next screen.</p>
     <div class="field">
       <label for="nc-title">Title</label>
-      <input type="text" id="nc-title" placeholder="e.g. Autumn Palettes" maxlength="80">
+      <input type="text" id="nc-title" placeholder="e.g. Selected works 2026" maxlength="80">
     </div>
     <div class="field">
-      <label for="nc-desc">Description <span class="field-hint">(optional)</span></label>
-      <textarea id="nc-desc" placeholder="What ties this exhibition together?" maxlength="500"></textarea>
+      <label for="nc-desc">Introduction <span class="field-hint">(optional)</span></label>
+      <textarea id="nc-desc" placeholder="A few lines about this body of work" maxlength="500"></textarea>
     </div>
     <div class="field">
-      <label for="nc-public" style="display:flex;align-items:center;gap:8px;font-weight:400;">
-        <input type="checkbox" id="nc-public" checked style="width:auto;">
-        Anyone can view this exhibition
-      </label>
+      <label for="nc-visibility">Who can see it</label>
+      <select id="nc-visibility">
+        <option value="public">Public — listed in Portfolios</option>
+        <option value="link">Link only — anyone with the link</option>
+        <option value="private">Private — only me</option>
+      </select>
     </div>
     <div class="field">
-      <label for="nc-enddate">End date <span class="field-hint">(optional)</span></label>
-      <input type="date" id="nc-enddate">
+      <label for="nc-layout">Layout</label>
+      <select id="nc-layout">
+        <option value="grid">Grid</option>
+        <option value="masonry">Masonry</option>
+        <option value="story">Story — one work at a time</option>
+      </select>
     </div>
     <div class="field-error" id="nc-error"></div>
     <div class="modal-actions">
@@ -188,19 +194,18 @@
   </div>
 </div>
 
-<!-- Add to exhibition picker -->
+<!-- Add to portfolio picker -->
 <div id="add-to-collection-modal" class="modal-overlay">
   <div id="add-to-collection-dialog" class="modal-panel">
-    <h3>Add to Exhibition</h3>
+    <h3>Add to a portfolio</h3>
     <div id="atc-list"></div>
-    <div class="empty-note" id="atc-empty" style="display:none;padding:16px;">You don't have any exhibitions yet.</div>
-    <button type="button" id="atc-new" class="section-new-btn" style="margin-top:4px;">+ New exhibition</button>
+    <div class="empty-note" id="atc-empty" style="display:none;padding:16px;">You don’t have a portfolio yet.</div>
+    <button type="button" id="atc-new" class="section-new-btn" style="margin-top:4px;">+ New portfolio</button>
     <div class="modal-actions">
       <button id="atc-done" class="btn-primary">Done</button>
     </div>
   </div>
 </div>
-
 <!-- Upload artwork modal -->
 <div id="upload-art-modal" class="modal-overlay">
   <div id="upload-art-dialog" class="modal-panel">
@@ -416,18 +421,18 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260920-153727"></script>
-<script src="/js/i18n/en.js?v=20260920-153727"></script>
-<script src="/js/common.js?v=20260920-153727"></script>
-<script src="/js/color-engine.js?v=20260920-153727"></script>
-<script src="/js/pixel-board.js?v=20260920-153727"></script>
-<script src="/js/project-preview.js?v=20260920-153727"></script>
-<script src="/js/matching.js?v=20260920-153727"></script>
-<script src="/js/auth.js?v=20260920-153727"></script>
-<script src="/js/notifications.js?v=20260920-153727"></script>
-<script src="/js/push.js?v=20260920-153727"></script>
-<script src="/js/lightbox.js?v=20260920-153727"></script>
-<script src="/js/graph-common.js?v=20260920-153727"></script>
-<script src="/js/profile-view.js?v=20260920-153727"></script>
+<script src="/js/supabase-client.js?v=20260920-155724"></script>
+<script src="/js/i18n/en.js?v=20260920-155724"></script>
+<script src="/js/common.js?v=20260920-155724"></script>
+<script src="/js/color-engine.js?v=20260920-155724"></script>
+<script src="/js/pixel-board.js?v=20260920-155724"></script>
+<script src="/js/project-preview.js?v=20260920-155724"></script>
+<script src="/js/matching.js?v=20260920-155724"></script>
+<script src="/js/auth.js?v=20260920-155724"></script>
+<script src="/js/notifications.js?v=20260920-155724"></script>
+<script src="/js/push.js?v=20260920-155724"></script>
+<script src="/js/lightbox.js?v=20260920-155724"></script>
+<script src="/js/graph-common.js?v=20260920-155724"></script>
+<script src="/js/profile-view.js?v=20260920-155724"></script>
 </body>
 </html>

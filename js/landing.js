@@ -1,5 +1,5 @@
 // Landing page: hero (copy, campaign mosaic, pieces progress),
-// stats bar, and the latest-artworks / -exhibitions lists below the hero.
+// stats bar, and the latest-artworks list below the hero.
 // Needs js/project-preview.js (paintProjectPreview) loaded first.
 "use strict";
 
@@ -246,33 +246,6 @@ async function loadRecentArtworks() {
   renderRecentArtworks((data || []).filter(sub => !isUserBlocked(sub.author_id)).slice(0, 5));
 }
 
-// ---------- latest exhibitions (list) ----------
-// fetchPublishedExhibitions/fetchExhibitionOwners/collectionCoverUrl are
-// shared with the /exhibitions browse-all page — see js/common.js. Only
-// published, public, not-(yet-)expired exhibitions are queried, so a draft
-// or an expired one never leaks onto the landing page.
-function exhibitionListRowEl(collection, owner) {
-  const name = (owner && owner.username) || tr('anonymous');
-  return recentListRowEl({
-    href: collectionUrl(collection.id),
-    thumbUrl: collectionCoverUrl(collection),
-    title: collection.title,
-    avatarUrl: owner && owner.avatar_url ? cdnUrl(owner.avatar_url) : null,
-    name,
-    metaText: collectionItemCountText((collection.mosaic_collection_items || []).length),
-  });
-}
-function renderRecentCollections(list, owners) {
-  const el = document.getElementById('recentCollectionsList');
-  el.innerHTML = '';
-  list.forEach(c => el.appendChild(exhibitionListRowEl(c, owners[c.owner_id])));
-  document.getElementById('recentCollectionsEmpty').style.display = list.length ? 'none' : 'block';
-}
-async function loadRecentCollections() {
-  const collections = await fetchPublishedExhibitions(5);
-  renderRecentCollections(collections, await fetchExhibitionOwners(collections));
-}
-
 // Artwork is uploaded from the artist's own profile (the upload modal only
 // exists on profile.html), so this just routes there — signed out, it opens
 // the auth modal instead. The #upload hash tells profile-view.js to pop the
@@ -288,4 +261,4 @@ document.getElementById('heroUploadBtn').onclick = () => {
 window.onSubmissionDeleted = () => loadRecentArtworks();
 window.onSubmissionUpdated = () => loadRecentArtworks();
 
-authReady.then(() => { loadHeroPreview(); renderStats(); loadRecentArtworks(); loadRecentCollections(); });
+authReady.then(() => { loadHeroPreview(); renderStats(); loadRecentArtworks(); });

@@ -42,8 +42,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260920-153727">
-<link rel="stylesheet" href="/css/profile.css?v=20260920-153727">
+<link rel="stylesheet" href="/css/base.css?v=20260920-155724">
+<link rel="stylesheet" href="/css/profile.css?v=20260920-155724">
 </head>
 <body>
 
@@ -55,7 +55,7 @@
       <a href="/ko/network" class="nav-link">네트워크</a>
       <a href="/ko/artworks" class="nav-link">작품 탐색</a>
       <a href="/ko/artists" class="nav-link">작가</a>
-      <a href="/ko/exhibitions" class="nav-link">전시</a>
+      <a href="/ko/portfolios" class="nav-link">포트폴리오</a>
       <a href="/ko/game" class="nav-link" data-game-link>게임</a>
       <a href="/ko/about" class="nav-link">소개</a>
     </nav>
@@ -128,11 +128,11 @@
     </div>
     <div class="profile-section">
       <div class="profile-section-head">
-        <h2 class="section-label">전시</h2>
+        <h2 class="section-label">포트폴리오</h2>
         <button type="button" class="section-new-btn" id="newCollectionBtn" style="display:none;">+ 새 전시</button>
       </div>
       <div class="profile-collections-grid" id="profileCollectionsGrid"></div>
-      <div class="empty-note" id="profileCollectionsEmpty" style="display:none;">아직 전시가 없습니다 — 저장한 작품을 모아 미니 전시를 만들어보세요.</div>
+      <div class="empty-note" id="profileCollectionsEmpty" style="display:none;">아직 포트폴리오가 없습니다 — 내 작품을 내 순서로 담은 한 페이지를 만들어 보세요.</div>
     </div>
     <div class="profile-section mfs-panel">
       <h2 class="section-label">네트워크</h2>
@@ -157,28 +157,34 @@
   </footer>
 </div>
 
-<!-- New exhibition modal -->
+<!-- New portfolio modal -->
 <div id="new-collection-modal" class="modal-overlay">
   <div id="new-collection-dialog" class="modal-panel">
-    <h3>새 전시</h3>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">이미 저장한 작품들로 만드는 나만의 미니 전시예요. 처음에는 미게시 상태로 만들어지며, 준비되면 직접 게시할 수 있습니다.</p>
+    <h3>새 포트폴리오</h3>
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">내 작품만으로 꾸미는 한 페이지 — 내가 고른 작품을 내가 정한 순서로. 작품은 다음 화면에서 담습니다.</p>
     <div class="field">
       <label for="nc-title">제목</label>
-      <input type="text" id="nc-title" placeholder="예: 가을 팔레트" maxlength="80">
+      <input type="text" id="nc-title" placeholder="예: 2026 선별작" maxlength="80">
     </div>
     <div class="field">
-      <label for="nc-desc">설명 <span class="field-hint">(선택)</span></label>
-      <textarea id="nc-desc" placeholder="이 전시를 하나로 묶는 주제가 있나요?" maxlength="500"></textarea>
+      <label for="nc-desc">소개 <span class="field-hint">(선택)</span></label>
+      <textarea id="nc-desc" placeholder="이 작업들에 대한 몇 줄의 소개" maxlength="500"></textarea>
     </div>
     <div class="field">
-      <label for="nc-public" style="display:flex;align-items:center;gap:8px;font-weight:400;">
-        <input type="checkbox" id="nc-public" checked style="width:auto;">
-        모두에게 공개
-      </label>
+      <label for="nc-visibility">공개 범위</label>
+      <select id="nc-visibility">
+        <option value="public">공개 — 포트폴리오 목록에 실림</option>
+        <option value="link">링크 공개 — 링크가 있는 사람만</option>
+        <option value="private">비공개 — 나만</option>
+      </select>
     </div>
     <div class="field">
-      <label for="nc-enddate">종료일 <span class="field-hint">(선택)</span></label>
-      <input type="date" id="nc-enddate">
+      <label for="nc-layout">레이아웃</label>
+      <select id="nc-layout">
+        <option value="grid">격자</option>
+        <option value="masonry">벽돌</option>
+        <option value="story">스토리 — 한 점씩 크게</option>
+      </select>
     </div>
     <div class="field-error" id="nc-error"></div>
     <div class="modal-actions">
@@ -188,19 +194,18 @@
   </div>
 </div>
 
-<!-- Add to exhibition picker -->
+<!-- Add to portfolio picker -->
 <div id="add-to-collection-modal" class="modal-overlay">
   <div id="add-to-collection-dialog" class="modal-panel">
-    <h3>전시에 추가</h3>
+    <h3>포트폴리오에 담기</h3>
     <div id="atc-list"></div>
-    <div class="empty-note" id="atc-empty" style="display:none;padding:16px;">아직 전시가 없습니다.</div>
-    <button type="button" id="atc-new" class="section-new-btn" style="margin-top:4px;">+ 새 전시</button>
+    <div class="empty-note" id="atc-empty" style="display:none;padding:16px;">아직 포트폴리오가 없습니다.</div>
+    <button type="button" id="atc-new" class="section-new-btn" style="margin-top:4px;">+ 새 포트폴리오</button>
     <div class="modal-actions">
       <button id="atc-done" class="btn-primary">완료</button>
     </div>
   </div>
 </div>
-
 <!-- Upload artwork modal -->
 <div id="upload-art-modal" class="modal-overlay">
   <div id="upload-art-dialog" class="modal-panel">
@@ -416,18 +421,18 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260920-153727"></script>
-<script src="/js/i18n/ko.js?v=20260920-153727"></script>
-<script src="/js/common.js?v=20260920-153727"></script>
-<script src="/js/color-engine.js?v=20260920-153727"></script>
-<script src="/js/pixel-board.js?v=20260920-153727"></script>
-<script src="/js/project-preview.js?v=20260920-153727"></script>
-<script src="/js/matching.js?v=20260920-153727"></script>
-<script src="/js/auth.js?v=20260920-153727"></script>
-<script src="/js/notifications.js?v=20260920-153727"></script>
-<script src="/js/push.js?v=20260920-153727"></script>
-<script src="/js/lightbox.js?v=20260920-153727"></script>
-<script src="/js/graph-common.js?v=20260920-153727"></script>
-<script src="/js/profile-view.js?v=20260920-153727"></script>
+<script src="/js/supabase-client.js?v=20260920-155724"></script>
+<script src="/js/i18n/ko.js?v=20260920-155724"></script>
+<script src="/js/common.js?v=20260920-155724"></script>
+<script src="/js/color-engine.js?v=20260920-155724"></script>
+<script src="/js/pixel-board.js?v=20260920-155724"></script>
+<script src="/js/project-preview.js?v=20260920-155724"></script>
+<script src="/js/matching.js?v=20260920-155724"></script>
+<script src="/js/auth.js?v=20260920-155724"></script>
+<script src="/js/notifications.js?v=20260920-155724"></script>
+<script src="/js/push.js?v=20260920-155724"></script>
+<script src="/js/lightbox.js?v=20260920-155724"></script>
+<script src="/js/graph-common.js?v=20260920-155724"></script>
+<script src="/js/profile-view.js?v=20260920-155724"></script>
 </body>
 </html>

@@ -54,72 +54,74 @@ function cdnUrl(url) {
   return `/img/${url.slice(SUPABASE_STORAGE_PREFIX.length)}`;
 }
 
-// A collection's cover thumb is whichever item was added to it most
-// recently — shared by the profile grid and the landing page's collections
-// section. `collection.mosaic_collection_items` must be embedded with each
-// item's `added_at` and its `mosaic_submissions(thumb_url,image_url)`.
+// A portfolio's cover: the artwork its owner chose (cover_submission_id),
+// else the first in their order, else the most recently added — shared by
+// the profile cards, the directory and the "more by this artist" strip.
+// `collection.mosaic_collection_items` must be embedded with each item's
+// `submission_id`, `added_at`, `position` and `mosaic_submissions(thumb_url,image_url)`.
 function collectionCoverUrl(collection) {
   const items = collection.mosaic_collection_items || [];
   if (!items.length) return null;
-  const latest = items.reduce((a, b) => (new Date(a.added_at) > new Date(b.added_at) ? a : b));
-  const sub = latest.mosaic_submissions;
+  let pick = collection.cover_submission_id ? items.find(i => i.submission_id === collection.cover_submission_id) : null;
+  if (!pick) {
+    const ordered = items.filter(i => i.position != null).sort((a, b) => a.position - b.position);
+    pick = ordered[0] || items.reduce((a, b) => (new Date(a.added_at) > new Date(b.added_at) ? a : b));
+  }
+  const sub = pick && pick.mosaic_submissions;
   return sub ? cdnUrl(sub.thumb_url || sub.image_url) : null;
 }
 
-// Card for a public collection ("Exhibition") — same shell as an artwork
-// card (.artwork-card, css/home.css), but the byline is the exhibition's
-// owner rather than an artwork's author, and the date line is repurposed
-// for the piece count. Shared by the landing page's Latest Exhibitions
-// section (js/landing.js) and the /exhibitions browse-all page
-// (js/exhibitions.js). `owner` may be null (profile lookup still pending
-// or missing) and falls back to an "Anonymous" initial avatar.
-function exhibitionCardEl(collection, owner, i) {
+// Card for a portfolio — the directory (js/portfolios.js) and the "more by
+// this artist" strip on a portfolio page. Cover picture, title, owner and
+// the count; `withBadge` adds the visibility for the owner's own list.
+// `owner` may be null (profile lookup still pending or missing).
+function portfolioCardEl(collection, owner, i, withBadge) {
   const name = (owner && owner.username) || tr('anonymous');
   const card = document.createElement('a');
-  card.className = 'artwork-card';
-  card.href = collectionUrl(collection.id);
-  card.style.animationDelay = `${Math.min(i, 10) * 0.05}s`;
-
+  card.className = 'pf-card';
+  card.href = portfolioUrl(collection.id);
+  card.style.animationDelay = `${Math.min(i || 0, 10) * 0.05}s`;
   const coverUrl = collectionCoverUrl(collection);
   if (coverUrl) {
     const img = document.createElement('img');
-    img.className = 'artwork-card-img';
-    img.loading = 'lazy';
-    img.src = coverUrl;
-    img.alt = '';
+    img.loading = 'lazy'; img.decoding = 'async'; img.src = coverUrl;
+    img.alt = tr('collectionCoverAlt', { title: collection.title });
     card.appendChild(img);
   } else {
-    const empty = document.createElement('div');
-    empty.className = 'artwork-card-img collection-card-img-empty';
-    card.appendChild(empty);
+    const empty = document.createElement('div'); empty.className = 'pf-card-empty'; card.appendChild(empty);
   }
-
-  const info = document.createElement('div'); info.className = 'info';
-  const title = document.createElement('div');
-  title.className = 'art-title'; title.textContent = collection.title;
-  const byline = document.createElement('div'); byline.className = 'art-byline';
+  const shade = document.createElement('div'); shade.className = 'pf-card-shade'; card.appendChild(shade);
+  if (withBadge) {
+    const vis = portfolioVisibility(collection);
+    if (vis !== 'public') {
+      const b = document.createElement('span'); b.className = 'pf-badge';
+      b.textContent = vis === 'private' ? tr('privateBadge') : tr('pfLinkOnlyBadge');
+      card.appendChild(b);
+    }
+  }
+  const text = document.createElement('div'); text.className = 'pf-card-text';
+  const title = document.createElement('div'); title.className = 'pf-card-title'; title.textContent = collection.title;
+  const by = document.createElement('div'); by.className = 'pf-card-by';
+  // A <span>, not miniAvatarEl's <a>: the whole card is already a link and
+  // an anchor inside an anchor is not valid HTML.
+  const avatar = document.createElement('span');
+  avatar.className = 'mini-avatar';
   if (owner && owner.avatar_url) {
-    const avatar = document.createElement('img');
-    avatar.className = 'art-byline-avatar'; avatar.loading = 'lazy'; avatar.src = cdnUrl(owner.avatar_url); avatar.alt = '';
-    byline.appendChild(avatar);
+    const av = document.createElement('img'); av.src = cdnUrl(owner.avatar_url); av.alt = ''; avatar.appendChild(av);
   } else {
-    const fallback = document.createElement('div');
-    fallback.className = 'art-byline-avatar art-byline-avatar-fallback';
-    fallback.textContent = name.charAt(0).toUpperCase();
-    byline.appendChild(fallback);
+    avatar.textContent = (name || '?').trim().charAt(0).toUpperCase() || '?';
   }
-  const nameSpan = document.createElement('span'); nameSpan.className = 'art-byline-name'; nameSpan.textContent = name;
-  byline.appendChild(nameSpan);
-  const count = document.createElement('div'); count.className = 'art-date';
+  const who = document.createElement('span'); who.textContent = name;
+  const count = document.createElement('span'); count.className = 'pf-card-count';
   count.textContent = collectionItemCountText((collection.mosaic_collection_items || []).length);
-  info.append(title, byline, count);
-  card.appendChild(info);
+  by.append(avatar, who, count);
+  text.append(title, by);
+  card.appendChild(text);
   return card;
 }
-
 // Batch-fetches the owner profiles for a set of public collections (which
 // only carry owner_id — see collectionCoverUrl's comment for why this isn't
-// embedded) and returns an {ownerId: profile} map ready for exhibitionCardEl.
+// embedded) and returns an {ownerId: profile} map ready for portfolioCardEl.
 async function fetchExhibitionOwners(collections) {
   const ownerIds = [...new Set(collections.map(c => c.owner_id))];
   const owners = {};
@@ -137,32 +139,50 @@ function todayDateStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
-// An exhibition only counts as "live" for discovery surfaces once it's both
-// published and, if it set a self-expiry, that date hasn't passed yet — see
-// supabase_mosaic_collections_publish.sql for why end_date is checked here
-// rather than a stored flag a scheduled job would need to flip.
-function isExhibitionLive(collection) {
-  if (!collection.is_published) return false;
-  if (!collection.end_date) return true;
-  return collection.end_date >= todayDateStr();
+// public | link | private — the two columns read as three steps
+// (supabase_portfolios.sql Part B): listed in the directory, reachable by
+// its link only, or the owner's alone.
+function portfolioVisibility(c) {
+  if (!c.is_public) return 'private';
+  return c.is_published ? 'public' : 'link';
 }
-// Public, published, not-(yet-)expired exhibitions, most recently published
-// first — shared by the landing page's Latest Exhibitions list and the
-// /exhibitions browse-all page. `limit` is optional (browse-all wants
-// everything; the landing page passes 5).
-async function fetchPublishedExhibitions(limit) {
-  let query = sb.from('mosaic_collections')
-    .select('id,owner_id,title,published_at,mosaic_collection_items(added_at,mosaic_submissions(thumb_url,image_url))')
-    .eq('is_public', true)
-    .eq('is_published', true)
-    .or(`end_date.is.null,end_date.gte.${todayDateStr()}`)
-    .order('published_at', { ascending: false });
-  if (limit) query = query.limit(limit);
-  const { data, error } = await query;
-  if (error) { console.error('load exhibitions error:', error); toast(tr('couldNotLoadCollections')); return []; }
+// Columns the cards need; the newer ones (supabase_portfolios.sql) are
+// dropped while that file is not applied.
+function portfolioListSelect(on) {
+  return 'id,owner_id,title,description,is_public,is_published,published_at,created_at'
+    + (on.has('cover') ? ',cover_submission_id,layout' : '')
+    + ',mosaic_collection_items(submission_id,added_at' + (on.has('order') ? ',position' : '') + ',mosaic_submissions(thumb_url,image_url))';
+}
+const PORTFOLIO_OPTIONAL_COLS = { cover: ['cover_submission_id', 'layout'], order: ['position'] };
+// Public portfolios, newest first — the directory (empty ones are filtered
+// out by the caller: nothing to show yet). `limit` is optional.
+async function fetchPublicPortfolios(limit) {
+  const { data, error } = await queryWithOptional(on => {
+    let q = sb.from('mosaic_collections').select(portfolioListSelect(on))
+      .eq('is_public', true).eq('is_published', true)
+      .order('published_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false });
+    if (limit) q = q.limit(limit);
+    return q;
+  }, PORTFOLIO_OPTIONAL_COLS);
+  if (error) { console.error('load portfolios error:', error); toast(tr('couldNotLoadCollections')); return []; }
   return data || [];
 }
-
+// One person's portfolios — all of them for the owner (RLS), the public
+// ones for anyone else. Newest first.
+async function fetchUserPortfolios(userId) {
+  const { data, error } = await queryWithOptional(on => sb.from('mosaic_collections').select(portfolioListSelect(on))
+    .eq('owner_id', userId).order('created_at', { ascending: false }), PORTFOLIO_OPTIONAL_COLS);
+  if (error) { console.error('load user portfolios error:', error); toast(tr('couldNotLoadCollections')); return []; }
+  return data || [];
+}
+// Search engines: a page that is reachable but not meant to be listed (a
+// link-only portfolio) says so itself, as its Function does server-side.
+function setRobotsNoindex(on) {
+  let el = document.querySelector('meta[name="robots"][data-dynamic]');
+  if (!on) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement('meta'); el.name = 'robots'; el.dataset.dynamic = '1'; document.head.appendChild(el); }
+  el.content = 'noindex,nofollow';
+}
 // A single row for the landing page's compact "recent activity" lists
 // (Latest Exhibitions / Latest Artworks) — thumbnail, title, byline, and a
 // trailing meta bit (piece count or date). `onPlainClick`, if given, is
@@ -239,10 +259,13 @@ function projectUrl(id) {
 function artworkUrl(id) {
   return `/${CURRENT_LANG}/artworks/${encodeURIComponent(id)}`;
 }
-// Real path to a collection's own page (functions/[lang]/collections/[id].js).
-function collectionUrl(id) {
-  return `/${CURRENT_LANG}/collections/${encodeURIComponent(id)}`;
+// Real path to a portfolio's own page (functions/[lang]/portfolios/[id].js).
+function portfolioUrl(id) {
+  return `/${CURRENT_LANG}/portfolios/${encodeURIComponent(id)}`;
 }
+// The old name — a page copy from before the rename (CLAUDE.md §12) may
+// still call it; /collections/… also 301s to /portfolios/… (_redirects).
+function collectionUrl(id) { return portfolioUrl(id); }
 
 // Reads an entity id/handle out of the current URL: the path segment right
 // after /{lang}/{prefix}/ when this page was reached through its clean,
@@ -978,23 +1001,6 @@ async function findPublicPortfolioFor(artworkId) {
     .eq('submission_id', artworkId).eq('mosaic_collections.is_public', true).limit(1);
   if (error) { console.error('find portfolio for artwork error:', error); return null; }
   return data && data[0] ? data[0].collection_id : null;
-}
-
-// ---------- collectible artwork pool (liked ∪ own) ----------
-// Everything a user can add to one of their Collections: their liked pool
-// above, plus every piece they've authored themselves — a user's own
-// artwork should always be addable to their own collections, whether or
-// not they've separately liked it. Backs the collection detail page's
-// add-artwork picker (js/collection.js's openAddArtworkModal).
-async function fetchCollectibleWeavoArt(userId) {
-  const [liked, { data: own, error: ownErr }] = await Promise.all([
-    fetchLikedWeavoArt(userId),
-    fetchOwnArtworkRows(userId), // artworks only — pieces are not collectible
-  ]);
-  if (ownErr) console.error('load own weavo art error:', ownErr);
-  const byId = new Map(liked.map(sub => [sub.id, sub]));
-  for (const sub of (own || [])) byId.set(sub.id, sub);
-  return [...byId.values()];
 }
 
 // ---------- confirm dialog ----------

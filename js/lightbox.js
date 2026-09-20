@@ -123,15 +123,13 @@ async function renderLightboxCountryMap(countryId) {
   wrap.style.display = 'block';
 }
 
-// ---------- add-to-exhibition multi-select dropdown ----------
+// ---------- add-to-portfolio multi-select dropdown ----------
 // Built once here — rather than repeated in every page's static HTML —
 // and inserted into .lightbox-actions, whose markup is identical across
-// every page that embeds the lightbox (see the file banner comment). Lets
-// you drop the piece you're looking at straight into any of your own
-// exhibitions without it needing to be liked first, unlike the liked-pool
-// pickers elsewhere (profile.html's add-to-collection modal, collection.html's
-// own add-artwork modal) — mosaic_collection_items has no such constraint,
-// those two just happen to only ever offer pieces from that pool.
+// every page that embeds the lightbox (see the file banner comment). Shown
+// to the artwork's own artist only: a portfolio holds one's own artworks
+// (supabase_portfolios.sql B2 enforces it; applyLightboxOwnerControls
+// hides the button for everyone else).
 const lbExhibitWrap = document.createElement('div');
 lbExhibitWrap.className = 'lb-exhibit-wrap';
 lbExhibitWrap.innerHTML = `
@@ -145,7 +143,7 @@ lbExhibitWrap.innerHTML = `
 })();
 const lbExhibitBtn = document.getElementById('lb-exhibit-btn');
 const lbExhibitMenu = document.getElementById('lb-exhibit-menu');
-if (lbExhibitBtn) lbExhibitBtn.querySelector('.lb-exhibit-label').textContent = tr('addToExhibitionBtn');
+if (lbExhibitBtn) lbExhibitBtn.querySelector('.lb-exhibit-label').textContent = tr('addToPortfolioBtn');
 
 // ---------- report this artwork (built dynamically — same rationale as the
 // exhibit dropdown above) ----------
@@ -356,11 +354,15 @@ function lbExhibitRowEl(collection) {
   checkbox.checked = items.some(i => i.submission_id === lbCurrentSub.id);
   checkbox.onchange = async () => {
     checkbox.disabled = true;
-    const { error } = checkbox.checked
-      ? await sb.from('mosaic_collection_items').insert({ collection_id: collection.id, submission_id: lbCurrentSub.id })
-      : await sb.from('mosaic_collection_items').delete().eq('collection_id', collection.id).eq('submission_id', lbCurrentSub.id);
+    let error;
+    if (checkbox.checked) {
+      ({ error } = await sb.from('mosaic_collection_items').insert({ collection_id: collection.id, submission_id: lbCurrentSub.id, position: items.length }));
+      if (error && isSchemaMismatchError(error)) ({ error } = await sb.from('mosaic_collection_items').insert({ collection_id: collection.id, submission_id: lbCurrentSub.id }));
+    } else {
+      ({ error } = await sb.from('mosaic_collection_items').delete().eq('collection_id', collection.id).eq('submission_id', lbCurrentSub.id));
+    }
     checkbox.disabled = false;
-    if (error) { console.error('update exhibition item error:', error); toast(tr('couldNotUpdateCollection')); checkbox.checked = !checkbox.checked; return; }
+    if (error) { console.error('update portfolio item error:', error); toast(tr('couldNotUpdateCollection')); checkbox.checked = !checkbox.checked; return; }
     if (checkbox.checked) items.push({ submission_id: lbCurrentSub.id });
     else { const idx = items.findIndex(i => i.submission_id === lbCurrentSub.id); if (idx !== -1) items.splice(idx, 1); }
   };
@@ -371,21 +373,21 @@ function lbExhibitRowEl(collection) {
 function lbExhibitNewRowEl() {
   const wrap = document.createElement('div'); wrap.className = 'lb-exhibit-new';
   const input = document.createElement('input');
-  input.type = 'text'; input.placeholder = tr('newExhibitionTitlePlaceholder'); input.maxLength = 80;
+  input.type = 'text'; input.placeholder = tr('newPortfolioTitlePlaceholder'); input.maxLength = 80;
   const createBtn = document.createElement('button');
   createBtn.type = 'button'; createBtn.textContent = tr('createLabel');
   createBtn.onclick = async () => {
     const title = input.value.trim();
     if (!title) return;
     createBtn.disabled = true;
-    // New exhibitions start unpublished/draft by default (see
-    // supabase_mosaic_collections_publish.sql) — the owner publishes it
-    // themselves from its own page once it's ready.
+    // A quick new portfolio is public (listed) — it has this artwork in it
+    // from the start; the owner can narrow that on its page.
     const { data: created, error: createErr } = await sb.from('mosaic_collections')
-      .insert({ owner_id: me.id, title, is_public: true }).select('id,title').single();
-    if (createErr) { console.error('create exhibition error:', createErr); toast(tr('couldNotCreateCollectionRetry')); createBtn.disabled = false; return; }
-    const { error: addErr } = await sb.from('mosaic_collection_items').insert({ collection_id: created.id, submission_id: lbCurrentSub.id });
-    if (addErr) console.error('add to new exhibition error:', addErr);
+      .insert({ owner_id: me.id, title, is_public: true, is_published: true, published_at: new Date().toISOString() }).select('id,title').single();
+    if (createErr) { console.error('create portfolio error:', createErr); toast(tr('couldNotCreateCollectionRetry')); createBtn.disabled = false; return; }
+    let { error: addErr } = await sb.from('mosaic_collection_items').insert({ collection_id: created.id, submission_id: lbCurrentSub.id, position: 0 });
+    if (addErr && isSchemaMismatchError(addErr)) ({ error: addErr } = await sb.from('mosaic_collection_items').insert({ collection_id: created.id, submission_id: lbCurrentSub.id }));
+    if (addErr) console.error('add to new portfolio error:', addErr);
     createBtn.disabled = false;
     input.value = '';
     toast(tr('collectionCreatedToast'));
@@ -401,7 +403,7 @@ async function renderLbExhibitMenu() {
     .select('id,title,mosaic_collection_items(submission_id)')
     .eq('owner_id', me.id)
     .order('created_at', { ascending: false });
-  if (error) { console.error('load my exhibitions error:', error); lbExhibitMenu.innerHTML = ''; toast(tr('couldNotLoadCollections')); return; }
+  if (error) { console.error('load my portfolios error:', error); lbExhibitMenu.innerHTML = ''; toast(tr('couldNotLoadCollections')); return; }
   lbExhibitMenu.innerHTML = '';
   const collections = data || [];
   if (!collections.length) {
@@ -647,6 +649,7 @@ async function renderLightboxPieceUsage(sub) {
 function applyLightboxOwnerControls(sub) {
   const isOwner = !!(me.id && me.id === sub.author_id);
   lbReportBtn.style.display = isOwner ? 'none' : '';
+  lbExhibitWrap.style.display = isOwner ? '' : 'none';   // a portfolio holds one's own artworks
   lbBlockBtn.style.display = isOwner ? 'none' : '';
   refreshLbBlockBtn();
   const deleteBtn = document.getElementById('lb-delete-btn');

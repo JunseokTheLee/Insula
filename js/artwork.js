@@ -82,7 +82,7 @@ async function loadArtworkPage(id) {
   // where it is shown. The artist and admins see the page as usual.
   if (sub.is_public === false && !(me.id && (me.id === sub.author_id || me.isAdmin))) {
     const pid = typeof findPublicPortfolioFor === 'function' ? await findPublicPortfolioFor(sub.id) : null;
-    if (pid) { location.replace(`${collectionUrl(pid)}?artwork=${encodeURIComponent(sub.id)}`); return; }
+    if (pid) { location.replace(`${portfolioUrl(pid)}?artwork=${encodeURIComponent(sub.id)}`); return; }
     document.getElementById('lightbox-cap-title').textContent = tr('artworkNotFound');
     document.getElementById('artworkBreadcrumb').style.display = 'none';
     return;

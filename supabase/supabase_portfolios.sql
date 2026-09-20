@@ -369,3 +369,56 @@ as $fn$
 $fn$;
 revoke execute on function public.game_recent_runs(bigint, integer, integer, bigint) from public;
 grant execute on function public.game_recent_runs(bigint, integer, integer, bigint) to anon, authenticated;
+
+-- ══════════════════════════════════════════════════════════════════════════
+-- Part B — portfolios (the former "exhibitions")
+-- ══════════════════════════════════════════════════════════════════════════
+
+-- ── B1. new columns ─────────────────────────────────────────────────────
+-- cover_submission_id: the artwork the viewer's hero and the share card
+--   show; null = the first artwork in the portfolio's order.
+-- preview_image_url: the 1200×630 share card the browser renders and
+--   uploads whenever the owner changes something (title, cover, artworks) —
+--   what Facebook / X / KakaoTalk unfurl. Null = the cover picture itself.
+-- layout: how the viewer page arranges the artworks.
+alter table public.mosaic_collections
+  add column if not exists cover_submission_id bigint references public.mosaic_submissions(id) on delete set null,
+  add column if not exists preview_image_url text,
+  add column if not exists layout text not null default 'grid';
+alter table public.mosaic_collections drop constraint if exists mosaic_collections_layout_check;
+alter table public.mosaic_collections
+  add constraint mosaic_collections_layout_check check (layout in ('grid', 'masonry', 'story'));
+
+-- The owner's order. Null sorts last (then by added_at) so rows from before
+-- this column keep the order they always had.
+alter table public.mosaic_collection_items
+  add column if not exists position integer;
+create index if not exists mosaic_collection_items_order_idx
+  on public.mosaic_collection_items (collection_id, position, added_at);
+
+-- Retired: the self-expiring "end date" of the exhibition era. The column
+-- stays (dropping data is not this file's job) but nothing reads it any
+-- more, so a value left in it must not keep a portfolio out of the directory.
+update public.mosaic_collections set end_date = null where end_date is not null;
+
+-- ── B2. a portfolio holds its owner's own artworks only ─────────────────
+-- Replaces "Owners can add items to their own collection": the row must be
+-- an artwork (not a piece) by the same person. The lightbox and the pickers
+-- only offer those anyway; this is the rule the API enforces.
+drop policy if exists "Owners can add items to their own collection" on public.mosaic_collection_items;
+drop policy if exists "Owners add their own artworks to their own portfolio" on public.mosaic_collection_items;
+create policy "Owners add their own artworks to their own portfolio"
+  on public.mosaic_collection_items for insert
+  with check (
+    exists (select 1 from public.mosaic_collections c where c.id = collection_id and c.owner_id = auth.uid())
+    and exists (select 1 from public.mosaic_submissions s
+                where s.id = submission_id and s.author_id = auth.uid() and s.parent_id is null)
+  );
+
+-- Reordering = updating `position` on rows of one's own portfolio.
+drop policy if exists "Owners can reorder their own portfolio" on public.mosaic_collection_items;
+create policy "Owners can reorder their own portfolio"
+  on public.mosaic_collection_items for update
+  using (exists (select 1 from public.mosaic_collections c where c.id = collection_id and c.owner_id = auth.uid()))
+  with check (exists (select 1 from public.mosaic_collections c where c.id = collection_id and c.owner_id = auth.uid()));
+grant update (position) on public.mosaic_collection_items to authenticated;

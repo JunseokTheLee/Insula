@@ -17,17 +17,17 @@
   gtag('config', 'G-NLXNX3C6KW');
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>전체 전시 | Weavo</title>
-<meta name="description" content="Weavo 커뮤니티가 공개한 모든 미니 전시를 둘러보세요.">
-<link rel="canonical" href="https://weavo.art/ko/exhibitions">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/exhibitions">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/exhibitions">
+<title>포트폴리오 | Weavo</title>
+<meta name="description" content="Weavo 작가들의 공개 포트폴리오 — 작가가 직접 고르고 순서를 정한 작품들.">
+<link rel="canonical" href="https://weavo.art/ko/portfolios">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/portfolios">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/portfolios">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="전체 전시 | Weavo">
-<meta property="og:description" content="Weavo 커뮤니티가 공개한 모든 미니 전시를 둘러보세요.">
-<meta property="og:url" content="https://weavo.art/ko/exhibitions">
+<meta property="og:title" content="포트폴리오 | Weavo">
+<meta property="og:description" content="Weavo 작가들의 공개 포트폴리오 — 작가가 직접 고르고 순서를 정한 작품들.">
+<meta property="og:url" content="https://weavo.art/ko/portfolios">
 <meta property="og:image" content="https://weavo.art/og-image-ko.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -35,27 +35,25 @@
 <meta property="og:image:alt" content="Weavo — 함께 만드는 예술 모자이크 커뮤니티">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="전체 전시 | Weavo">
-<meta name="twitter:description" content="Weavo 커뮤니티가 공개한 모든 미니 전시를 둘러보세요.">
+<meta name="twitter:title" content="포트폴리오 | Weavo">
+<meta name="twitter:description" content="Weavo 작가들의 공개 포트폴리오 — 작가가 직접 고르고 순서를 정한 작품들.">
 <meta name="twitter:image" content="https://weavo.art/og-image-ko.png">
 <meta name="twitter:image:alt" content="Weavo — 함께 만드는 예술 모자이크 커뮤니티">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/ko/"},{"@type":"ListItem","position":2,"name":"전시","item":"https://weavo.art/ko/exhibitions"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/ko/"},{"@type":"ListItem","position":2,"name":"포트폴리오","item":"https://weavo.art/ko/portfolios"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260920-153727">
-<link rel="stylesheet" href="/css/home.css?v=20260920-153727">
-<link rel="stylesheet" href="/css/exhibitions.css?v=20260920-153727">
+<link rel="stylesheet" href="/css/base.css?v=20260920-155724">
+<link rel="stylesheet" href="/css/portfolio.css?v=20260920-155724">
 </head>
-<body>
-
+<body class="pf-dark">
 <div class="app">
   <header class="topnav">
-    <a class="logo" id="logoHome" href="/ko/">Weavo</a>
+   <a class="logo" id="logoHome" href="/ko/">Weavo</a>
     <nav class="nav-links">
       <a href="/ko/campaigns" class="nav-link">캠페인</a>
       <a href="/ko/network" class="nav-link">네트워크</a>
       <a href="/ko/artworks" class="nav-link">작품 탐색</a>
       <a href="/ko/artists" class="nav-link">작가</a>
-      <a href="/ko/exhibitions" class="nav-link active">전시</a>
+      <a href="/ko/portfolios" class="nav-link">포트폴리오</a>
       <a href="/ko/game" class="nav-link" data-game-link>게임</a>
       <a href="/ko/about" class="nav-link">소개</a>
     </nav>
@@ -70,32 +68,32 @@
         <button id="logoutBtn" class="id-btn" style="display:none">로그아웃</button>
       </div>
   </header>
-
   <main class="main main-scroll">
     <div class="backnav">
       <a class="back" href="/ko/campaigns">&larr; 뒤로</a>
     </div>
-    <div class="exhibitions-page" style="padding-bottom:0;">
+    <div class="pf-dir">
+      <div class="pf-dir-eyebrow">Weavo</div>
       <div class="page-title-row">
-        <h1 class="exhibitions-page-title">전체 전시</h1>
-        <button type="button" class="info-btn" data-info-open aria-haspopup="dialog">전시가 뭔가요?</button>
+        <h1 class="pf-dir-title">포트폴리오</h1>
+        <button type="button" class="info-btn" data-info-open aria-haspopup="dialog">포트폴리오가 뭔가요?</button>
       </div>
-      <div class="exhibitions-page-desc">Weavo 커뮤니티가 공개한 모든 미니 전시를 모았습니다.</div>
-      <div class="exhibition-tabs" id="exhibitionTabs">
-        <button type="button" class="exhibition-tab" id="exTabFeatured" disabled title="준비 중입니다">추천</button>
-        <button type="button" class="exhibition-tab" id="exTabPopular" disabled title="준비 중입니다">인기</button>
-        <button type="button" class="exhibition-tab active" id="exTabRecent">최신순</button>
-        <button type="button" class="exhibition-tab" id="exTabMine">내 전시회</button>
+      <p class="pf-dir-desc">작가가 직접 고르고 순서를 정한 자신의 작품들 — Weavo 커뮤니티의 모든 공개 포트폴리오.</p>
+      <div class="pf-dir-tabs">
+        <button type="button" class="pf-dir-tab active" id="pfTabRecent">최신순</button>
+        <button type="button" class="pf-dir-tab" id="pfTabMine">내 포트폴리오</button>
       </div>
     </div>
-    <div class="artworks-grid" id="exhibitionsGrid"></div>
-    <div class="empty-note" id="exhibitionsEmpty" style="display:none;">아직 공개된 전시가 없습니다 — 프로필에서 전시를 만들어보세요.</div>
-    <div class="exhibitions-cta-banner">
-      <div class="exhibitions-cta-text">
-        <h3>작은 전시가 더 큰 이야기를 만듭니다.</h3>
-        <p>당신의 시선이 누군가에게는 꼭 필요한 것일 수 있어요. 지금 나만의 전시회를 시작해보세요.</p>
+    <div class="pf-dir-grid" id="portfoliosGrid"></div>
+    <div class="empty-note" id="portfoliosEmpty" style="display:none;"></div>
+    <div class="pf-dir-cta">
+      <div class="pf-dir-cta-inner">
+        <div>
+          <h3>내 작품을, 내가 원하는 방식으로.</h3>
+          <p>작품을 고르고, 순서를 정하고, 누가 볼지 선택한 뒤 — 링크 하나로 공유하세요.</p>
+        </div>
+        <button type="button" class="pf-btn primary" id="portfoliosCtaBtn">포트폴리오 만들기 <span aria-hidden="true">&rarr;</span></button>
       </div>
-      <button type="button" class="cta" id="exhibitionsCtaBtn">전시회 만들기 <span aria-hidden="true">&rarr;</span></button>
     </div>
   </main>
   <footer id="legal-footer">
@@ -106,7 +104,6 @@
     <a href="/ko/delete-account">계정 삭제</a>
   </footer>
 </div>
-
 <!-- Edit profile modal -->
 <div id="edit-profile-modal" class="modal-overlay">
   <div id="edit-profile-dialog" class="modal-panel">
@@ -202,16 +199,16 @@
   </div>
 </div>
 
-<!-- "전시가 뭔가요?" 안내 팝업 (랜딩 페이지에서 옮겨온 전시 설명) -->
+<!-- "포트폴리오가 뭔가요?" 안내 팝업 -->
 <div id="info-modal" class="modal-overlay">
   <div id="info-dialog" class="modal-panel">
     <button type="button" class="info-dialog-close" data-info-close aria-label="닫기">&#10005;</button>
-    <span class="feature-tag">전시</span>
-    <h3>마음에 남는 작품으로 나만의 미니 전시를 열어보세요.</h3>
-    <p>작품을 저장하면 나의 보관함에 담깁니다 — 전시를 만들면 그중 몇 점을 의도를 가지고 하나로 묶을 수 있습니다. 제목과 함께 어떤 기준으로 모았는지 짧은 설명을 남기고, 언제든 작품을 추가하거나 뺄 수 있으며, 비공개로 둘지 누구나 볼 수 있게 할지도 직접 정할 수 있습니다.</p>
+    <span class="feature-tag">포트폴리오</span>
+    <h3>내 작품을, 내가 보여주고 싶은 모습으로.</h3>
+    <p>포트폴리오는 내 작품만으로 꾸미는 한 페이지입니다 — 내가 고른 작품을 내가 정한 순서로, 커버와 짧은 소개와 함께. 비공개 작품도 담을 수 있고, 그 작품은 포트폴리오 안에서만 보입니다. 공개로 두면 이 목록에 실리고, 링크 공개로 두면 링크를 받은 사람만 볼 수 있으며, 정리하는 동안은 비공개로 둘 수 있습니다. 링크 하나로 전체가 열리고, SNS 에 붙여 넣으면 미리보기 카드가 함께 나옵니다.</p>
     <div class="feature-diagram">
       <div class="feature-diagram-panel feature-diagram-light">
-        <svg viewBox="0 0 420 210" class="fd-collections" role="img" aria-label="작품 색상 견본이 작게 격자로 담긴 두 개의 전시 보드에 각각 제목과 공개 또는 비공개 표시가 있고, 그 옆에는 새 전시를 만들 수 있는 점선 카드가 놓여 있는 다이어그램.">
+        <svg viewBox="0 0 420 210" class="fd-collections" role="img" aria-label="작품 색상 견본이 작게 격자로 담긴 두 개의 포트폴리오 카드에 각각 제목과 공개·링크 공개 표시가 있고, 그 옆에 새 포트폴리오를 시작하는 점선 카드가 있는 그림.">
           <g class="fd-card">
             <rect x="24" y="16" width="118" height="170" rx="2" class="fd-card-body"/>
             <rect x="32" y="24" width="49" height="49" class="fd-swatch" fill="#FF8C69"/>
@@ -228,12 +225,12 @@
             <rect x="170" y="77" width="49" height="49" class="fd-swatch-empty"/>
             <rect x="223" y="77" width="49" height="49" class="fd-swatch" fill="#F4D35E"/>
             <text x="170" y="146" class="fd-card-title">스튜디오 스케치</text>
-            <text x="170" y="161" class="fd-card-meta">작품 6개 &middot; 비공개</text>
+            <text x="170" y="161" class="fd-card-meta">작품 6개 &middot; 링크 공개</text>
           </g>
           <g class="fd-card">
             <rect x="300" y="16" width="118" height="170" rx="2" class="fd-card-new"/>
             <text x="359" y="98" class="fd-card-plus" text-anchor="middle">+</text>
-            <text x="359" y="161" class="fd-card-meta" text-anchor="middle">새 전시</text>
+            <text x="359" y="161" class="fd-card-meta" text-anchor="middle">새 포트폴리오</text>
           </g>
         </svg>
       </div>
@@ -242,13 +239,12 @@
 </div>
 
 <div id="toast"></div>
-
-<script src="/js/supabase-client.js?v=20260920-153727"></script>
-<script src="/js/i18n/ko.js?v=20260920-153727"></script>
-<script src="/js/common.js?v=20260920-153727"></script>
-<script src="/js/auth.js?v=20260920-153727"></script>
-<script src="/js/notifications.js?v=20260920-153727"></script>
-<script src="/js/push.js?v=20260920-153727"></script>
-<script src="/js/exhibitions.js?v=20260920-153727"></script>
+<script src="/js/supabase-client.js?v=20260920-155724"></script>
+<script src="/js/i18n/ko.js?v=20260920-155724"></script>
+<script src="/js/common.js?v=20260920-155724"></script>
+<script src="/js/auth.js?v=20260920-155724"></script>
+<script src="/js/notifications.js?v=20260920-155724"></script>
+<script src="/js/push.js?v=20260920-155724"></script>
+<script src="/js/portfolios.js?v=20260920-155724"></script>
 </body>
 </html>

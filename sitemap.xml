@@ -5,7 +5,7 @@
   are what grow as campaigns/artworks/artists are added.
   sitemap-static.xml is hand-maintained (fixed marketing/legal pages).
   sitemap-campaigns.xml, sitemap-artworks.xml, sitemap-artists.xml and
-  sitemap-collections.xml are generated on request by Pages Functions (see
+  sitemap-portfolios.xml are generated on request by Pages Functions (see
   functions/sitemap-*.xml.js) straight from Supabase, so newly created
   content is picked up automatically.
 -->
@@ -14,5 +14,5 @@
   <sitemap><loc>https://weavo.art/sitemap-campaigns.xml</loc></sitemap>
   <sitemap><loc>https://weavo.art/sitemap-artworks.xml</loc></sitemap>
   <sitemap><loc>https://weavo.art/sitemap-artists.xml</loc></sitemap>
-  <sitemap><loc>https://weavo.art/sitemap-collections.xml</loc></sitemap>
+  <sitemap><loc>https://weavo.art/sitemap-portfolios.xml</loc></sitemap>
 </sitemapindex>

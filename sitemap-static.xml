@@ -86,15 +86,15 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
   </url>
   <url>
-    <loc>https://weavo.art/en/exhibitions</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/exhibitions"/>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/exhibitions"/>
+    <loc>https://weavo.art/en/portfolios</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/portfolios"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/portfolios"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
   </url>
   <url>
-    <loc>https://weavo.art/ko/exhibitions</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/exhibitions"/>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/exhibitions"/>
+    <loc>https://weavo.art/ko/portfolios</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://weavo.art/en/portfolios"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://weavo.art/ko/portfolios"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://weavo.art/"/>
   </url>
   <url>

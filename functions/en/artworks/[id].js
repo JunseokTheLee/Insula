@@ -24,7 +24,7 @@ export async function onRequestGet({ params, request, env }) {
       `&select=collection_id,mosaic_collections!inner(is_public)&mosaic_collections.is_public=eq.true&limit=1`
     );
     if (!item) return notFoundResponse(assetResponse, 'Artwork not found | Weavo');
-    return Response.redirect(`${SITE}/en/collections/${encodeURIComponent(item.collection_id)}?artwork=${encodeURIComponent(id)}`, 302);
+    return Response.redirect(`${SITE}/en/portfolios/${encodeURIComponent(item.collection_id)}?artwork=${encodeURIComponent(id)}`, 302);
   }
 
   // Prefer the artist's username for the creator link, same as the client's
