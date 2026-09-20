@@ -604,6 +604,12 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   gameMinArtworks: 10,
   // Artwork list order. Off = newest first, the old behaviour.
   gameRandomOrder: true,
+  // Find-the-piece medal rules and the recent-games list
+  // (supabase_game_medal_rules.sql). A medal needs this many recorders on
+  // the artwork; the list shows finished runs, newest first.
+  gameMedalMinPlayers: 3,
+  gameRecentRunsEnabled: true,
+  gameRecentRunsCount: 10,
   // How far back the admin "New members" list reaches.
   adminNewMemberDays: 5,
   // Costs one interval a second and a few hundred bytes of localStorage.

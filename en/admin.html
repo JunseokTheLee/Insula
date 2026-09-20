@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260920-130739">
-<link rel="stylesheet" href="/css/admin.css?v=20260920-130739">
+<link rel="stylesheet" href="/css/base.css?v=20260920-141831">
+<link rel="stylesheet" href="/css/admin.css?v=20260920-141831">
 </head>
 <body>
 
@@ -65,6 +65,7 @@
           <button type="button" class="admin-tab" data-tab="comments" role="tab" aria-selected="false">Comments</button>
           <button type="button" class="admin-tab" data-tab="campaigns" role="tab" aria-selected="false">Campaigns</button>
           <button type="button" class="admin-tab" data-tab="tools" role="tab" aria-selected="false">Maintenance</button>
+          <button type="button" class="admin-tab" data-tab="games" role="tab" aria-selected="false">Game records</button>
           <button type="button" class="admin-tab" data-tab="members" role="tab" aria-selected="false">Members</button>
           <button type="button" class="admin-tab" data-tab="broadcast" role="tab" aria-selected="false">Announce</button>
           <button type="button" class="admin-tab" data-tab="settings" role="tab" aria-selected="false">Site options</button>
@@ -234,6 +235,36 @@
         </section>
         </div>
 
+        <div class="admin-panel" data-panel="games" role="tabpanel" hidden>
+        <section class="admin-section" id="adminGamesSection">
+          <div class="admin-section-head">
+            <h2>Game records</h2>
+            <div class="admin-actions">
+              <button type="button" class="admin-btn danger" id="adminGameVoidBtn" disabled>Void selected</button>
+              <button type="button" class="admin-btn" id="adminGameUnvoidBtn" disabled>Restore selected</button>
+            </div>
+          </div>
+          <p class="admin-help">Every best time in the find-the-piece game, newest first — the rows medals come from. <strong>Voiding</strong> keeps the row but takes it out of the rankings and medals; a voided record can be restored, and a new personal best by the same player replaces it. <strong>Up to 20 per action.</strong> Both are written to the "Log" tab. To take a whole account out of the rankings use Members → Ranking exclusion instead.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminGameUnavailable" style="display:none;">Not available yet — run <code>supabase_game_medal_rules.sql</code> in the Supabase SQL editor first.</p>
+          <div class="admin-toolbar">
+            <label class="admin-field admin-field-grow"><span class="sr-only">Search</span>
+              <input type="search" id="adminGameSearch" placeholder="Username or artwork title" autocomplete="off">
+            </label>
+            <button type="button" class="admin-btn" id="adminGameSearchBtn">Search</button>
+            <label class="admin-filter"><input type="checkbox" id="adminGameSelectAll"> Select all shown</label>
+            <span class="admin-sub" id="adminGameCount"></span>
+          </div>
+          <div class="admin-list" id="adminGameRows"></div>
+          <p class="empty-note admin-empty" id="adminGameEmpty" style="display:none;">No records.</p>
+          <div class="admin-more"><button type="button" class="admin-btn" id="adminGameMoreBtn" style="display:none;">Load more</button></div>
+        </section>
+        <section class="admin-section" id="adminGameTopSection">
+          <h2>Medal standings</h2>
+          <p class="admin-help">Under the current rules — minimum recorders, exclusions, voids. The same numbers the hall of fame shows.</p>
+          <div class="admin-list" id="adminGameTop"></div>
+          <p class="empty-note admin-empty" id="adminGameTopEmpty" style="display:none;">Nobody holds a medal yet.</p>
+        </section>
+        </div>
         <div class="admin-panel" data-panel="members" role="tabpanel" hidden>
         <section class="admin-section" id="adminNewMembersSection">
           <h2>New members</h2>
@@ -263,6 +294,21 @@
           <h3 class="admin-subhead">Blocked accounts</h3>
           <div class="admin-list" id="adminBlockedList"></div>
           <p class="empty-note admin-empty" id="adminBlockedEmpty" style="display:none;">No blocked accounts.</p>
+        </section>
+        <section class="admin-section" id="adminRankSection">
+          <h2>Ranking exclusion</h2>
+          <p class="admin-help">Take an account out of the find-the-piece rankings — for the site's own test accounts. Its runs are still recorded and still show on its own profile, but not in the hall of fame, the per-artwork podium, the medal counts or the recent-games list. Nothing is deleted; switch it back any time. Logged in the "Log" tab.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminRankUnavailable" style="display:none;">Not available yet — run <code>supabase_game_medal_rules.sql</code> in the Supabase SQL editor first.</p>
+          <div class="admin-toolbar">
+            <label class="admin-field admin-field-grow"><span class="sr-only">Search username</span>
+              <input type="search" id="adminRankSearch" placeholder="Search username" autocomplete="off">
+            </label>
+            <button type="button" class="admin-btn" id="adminRankSearchBtn">Search</button>
+          </div>
+          <div class="admin-list" id="adminRankResults"></div>
+          <h3 class="admin-subhead">Excluded accounts</h3>
+          <div class="admin-list" id="adminRankList"></div>
+          <p class="empty-note admin-empty" id="adminRankEmpty" style="display:none;">No excluded accounts.</p>
         </section>
         </div>
 
@@ -332,6 +378,17 @@
               <div class="admin-setting admin-setting-range">
                 <label for="adminGameHintPenalty">Hint <strong>penalty</strong>: seconds added to the recorded time per sector hint. 0 makes hints free. <em>(default: 30s, up to 300s)</em></label>
                 <div class="admin-range"><input id="adminGameHintPenalty" type="range" min="0" max="300" step="5" data-setting="gameHintPenaltySec" disabled><output for="adminGameHintPenalty" data-setting-output="gameHintPenaltySec">30</output></div>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminGameMedalMin">Medal <strong>minimum recorders</strong>: the top three on an artwork count as medals only once this many people have a time on it. Below that the times are listed without medals. <em>(default: 3)</em></label>
+                <div class="admin-range"><input id="adminGameMedalMin" type="range" min="1" max="10" step="1" data-setting="gameMedalMinPlayers" disabled><output for="adminGameMedalMin" data-setting-output="gameMedalMinPlayers">3</output></div>
+              </div>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="gameRecentRunsEnabled" disabled> <strong>Recent games list</strong> — finished runs (who, which artwork, time) under the hall of fame and on the result screen. Excluded accounts never appear in it.</label>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminGameRecentCount">Recent games <strong>shown at first</strong>; "Load more" goes up to 50. <em>(default: 10)</em></label>
+                <div class="admin-range"><input id="adminGameRecentCount" type="range" min="5" max="50" step="5" data-setting="gameRecentRunsCount" disabled><output for="adminGameRecentCount" data-setting-output="gameRecentRunsCount">10</output></div>
               </div>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameRandomOrder" disabled> <strong>Random artwork order</strong> — off means newest first. The order is reshuffled on every visit.</label>
@@ -597,15 +654,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260920-130739"></script>
-<script src="/js/i18n/en.js?v=20260920-130739"></script>
-<script src="/js/common.js?v=20260920-130739"></script>
-<script src="/js/auth.js?v=20260920-130739"></script>
-<script src="/js/notifications.js?v=20260920-130739"></script>
-<script src="/js/push.js?v=20260920-130739"></script>
-<script src="/js/color-engine.js?v=20260920-130739"></script>
-<script src="/js/pixel-board.js?v=20260920-130739"></script>
-<script src="/js/matching.js?v=20260920-130739"></script>
-<script src="/js/admin.js?v=20260920-130739"></script>
+<script src="/js/supabase-client.js?v=20260920-141831"></script>
+<script src="/js/i18n/en.js?v=20260920-141831"></script>
+<script src="/js/common.js?v=20260920-141831"></script>
+<script src="/js/auth.js?v=20260920-141831"></script>
+<script src="/js/notifications.js?v=20260920-141831"></script>
+<script src="/js/push.js?v=20260920-141831"></script>
+<script src="/js/color-engine.js?v=20260920-141831"></script>
+<script src="/js/pixel-board.js?v=20260920-141831"></script>
+<script src="/js/matching.js?v=20260920-141831"></script>
+<script src="/js/admin.js?v=20260920-141831"></script>
 </body>
 </html>

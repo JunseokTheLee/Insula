@@ -72,8 +72,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/game.css?v=20260920-130739">
-<link rel="stylesheet" href="/css/base.css?v=20260920-130739">
+<link rel="stylesheet" href="/css/game.css?v=20260920-141831">
+<link rel="stylesheet" href="/css/base.css?v=20260920-141831">
 </head>
 
 <body>
@@ -140,6 +140,11 @@
           <h2>명예의 전당</h2>
           <ol class="game-hall-list" id="gameHallList"></ol>
           <div class="game-hall-me" id="gameHallMe" hidden></div>
+        </section>
+        <section class="game-recent" id="gameRecent" hidden>
+          <h2>최근 게임</h2>
+          <ol class="game-recent-list" id="gameRecentList"></ol>
+          <div class="game-more game-recent-more"><button type="button" class="admin-btn" id="gameRecentMore" hidden>더 보기</button></div>
         </section>
         <div class="game-toolbar">
           <label class="sr-only" for="gameSearch">작품 또는 작가 검색</label>
@@ -210,6 +215,10 @@
           <p class="game-campaign" id="gameResultArtwork"></p>
           <div class="game-result-time"><span id="gameResultTime">0.00초</span></div>
           <p class="game-result-note" id="gameResultNote"></p>
+          <section class="game-recent game-recent-result" id="gameResultRecent" hidden>
+            <h2>이 작품의 최근 기록</h2>
+            <ol class="game-recent-list" id="gameResultRecentList"></ol>
+          </section>
           <div class="game-result-actions">
             <button type="button" class="admin-btn" id="gameResultRetry" hidden>기록 다시 저장</button>
             <button type="button" class="btn-primary" id="gameResultBack">작품 선택으로 돌아가기</button>
@@ -496,15 +505,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260920-130739"></script>
-<script src="/js/i18n/ko.js?v=20260920-130739"></script>
-<script src="/js/color-engine.js?v=20260920-130739"></script>
-<script src="/js/common.js?v=20260920-130739"></script>
-<script src="/js/auth.js?v=20260920-130739"></script>
-<script src="/js/notifications.js?v=20260920-130739"></script>
-<script src="/js/push.js?v=20260920-130739"></script>
-<script src="/js/lightbox.js?v=20260920-130739"></script>
-<script src="/js/game.js?v=20260920-130739"></script>
+<script src="/js/supabase-client.js?v=20260920-141831"></script>
+<script src="/js/i18n/ko.js?v=20260920-141831"></script>
+<script src="/js/color-engine.js?v=20260920-141831"></script>
+<script src="/js/common.js?v=20260920-141831"></script>
+<script src="/js/auth.js?v=20260920-141831"></script>
+<script src="/js/notifications.js?v=20260920-141831"></script>
+<script src="/js/push.js?v=20260920-141831"></script>
+<script src="/js/lightbox.js?v=20260920-141831"></script>
+<script src="/js/game.js?v=20260920-141831"></script>
 
 </body>
 </html>

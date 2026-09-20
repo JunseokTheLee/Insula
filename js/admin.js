@@ -415,6 +415,236 @@ async function runAdminPixel(all) {
 document.getElementById('adminPixelRunBtn').onclick = () => runAdminPixel(false);
 document.getElementById('adminPixelRegenBtn').onclick = () => runAdminPixel(true);
 
+// ---------- ranking exclusion (supabase_game_medal_rules.sql) ----------
+// Same shape as the upload block above: search a username, flip the flag
+// through admin_set_ranking_excluded (which logs it), list who is excluded.
+const ADMIN_RANK_COLS = 'id,username,name,avatar_url,ranking_excluded';
+let adminRankAvailable = true;
+async function fetchAdminRankProfiles(apply) {
+  let { data, error } = await apply(sb.from('profiles').select(ADMIN_RANK_COLS));
+  if (error && isSchemaMismatchError(error)) {
+    adminRankAvailable = false;
+    adminShow('adminRankUnavailable', true);
+    return { data: null, error };
+  }
+  return { data, error };
+}
+async function loadAdminRankExcluded() {
+  const list = document.getElementById('adminRankList');
+  if (!list || !adminRankAvailable) return;
+  const { data, error } = await fetchAdminRankProfiles(q => q.eq('ranking_excluded', true).order('username').limit(100));
+  if (error) { if (!isSchemaMismatchError(error)) console.error('load excluded profiles error:', error); return; }
+  const rows = data || [];
+  list.innerHTML = '';
+  adminShow('adminRankEmpty', rows.length === 0);
+  for (const p of rows) list.appendChild(adminRankRowEl(p));
+}
+async function searchAdminRank() {
+  const term = document.getElementById('adminRankSearch').value.trim();
+  const list = document.getElementById('adminRankResults');
+  list.innerHTML = '';
+  if (!term || !adminRankAvailable) return;
+  const { data, error } = await fetchAdminRankProfiles(q => q.ilike('username', `%${term}%`).order('username').limit(20));
+  if (error) { if (!isSchemaMismatchError(error)) { console.error('search profiles error:', error); toast(tr('adminLoadError')); } return; }
+  const rows = data || [];
+  if (!rows.length) { toast(tr('adminBlockNoResults')); return; }
+  for (const p of rows) list.appendChild(adminRankRowEl(p));
+}
+function adminRankRowEl(p) {
+  const row = document.createElement('div');
+  row.className = 'admin-row admin-admin';
+  const name = p.username || p.name || tr('anonymous');
+  const target = document.createElement('div'); target.className = 'admin-target';
+  target.appendChild(miniAvatarEl(name, p.avatar_url, p.id));
+  const label = document.createElement('a');
+  label.className = 'admin-target-label';
+  label.href = profileUrl(p.username || p.id);
+  label.target = '_blank'; label.rel = 'noopener';
+  label.textContent = name;
+  target.appendChild(label);
+  const meta = document.createElement('div'); meta.className = 'admin-meta';
+  if (p.ranking_excluded) {
+    const badge = document.createElement('span');
+    badge.className = 'admin-badge admin-status-open'; badge.textContent = tr('adminRankBadge');
+    meta.appendChild(badge);
+  }
+  const actions = document.createElement('div'); actions.className = 'admin-actions';
+  actions.appendChild(adminActionBtn(
+    p.ranking_excluded ? tr('adminRankIncludeLabel') : tr('adminRankLabel'),
+    () => setAdminRankExcluded(p, !p.ranking_excluded),
+    p.ranking_excluded ? '' : 'danger'
+  ));
+  row.append(target, meta, actions);
+  return row;
+}
+async function setAdminRankExcluded(p, on) {
+  const name = p.username || p.name || tr('anonymous');
+  if (on) {
+    const proceed = await confirmDialog(tr('adminRankMessage', { name }), { title: tr('adminRankTitle'), okLabel: tr('adminRankLabel') });
+    if (!proceed) return;
+  }
+  const { error } = await sb.rpc('admin_set_ranking_excluded', { p_user: p.id, p_on: on });
+  if (error) {
+    console.error('admin_set_ranking_excluded error:', error);
+    if (isSchemaMismatchError(error)) { adminShow('adminRankUnavailable', true); toast(tr('adminRankUnavailableToast')); return; }
+    toast(tr('adminRankFailed')); return;
+  }
+  toast(on ? tr('adminRankDone', { name }) : tr('adminRankUndone', { name }));
+  await Promise.all([loadAdminRankExcluded(), searchAdminRank()]);
+  if (adminTabsLoaded.has('log')) loadAdminLog();
+  if (adminTabsLoaded.has('games')) { resetAdminGames(); loadAdminGameTop(); }
+}
+document.getElementById('adminRankSearchBtn').onclick = () => searchAdminRank().catch(err => console.error('admin rank search error:', err));
+document.getElementById('adminRankSearch').onkeydown = e => { if (e.key === 'Enter') searchAdminRank().catch(err => console.error('admin rank search error:', err)); };
+
+// ---------- game records (supabase_game_medal_rules.sql) ----------
+// Best times newest first through admin_game_records; tick up to 20 and
+// void (or restore) them one RPC call each — the RPC logs every change.
+const ADMIN_GAME_PAGE = 50;
+let adminGameOffset = 0, adminGameDone = false, adminGameSearchTerm = '';
+const adminGameSelected = new Map();  // key -> row
+const adminGameKey = r => `${r.project_id}:${r.artwork_id}:${r.user_id}`;
+function adminFmtMs(ms) {
+  const total = Math.max(0, Number(ms) || 0) / 1000;
+  if (total < 60) return tr('gameDurSec', { s: total.toFixed(2) });
+  const m = Math.floor(total / 60);
+  return tr('gameDurMin', { m, s: (total - m * 60).toFixed(2) });
+}
+async function resetAdminGames() {
+  adminGameOffset = 0; adminGameDone = false;
+  adminGameSelected.clear();
+  adminGameSearchTerm = document.getElementById('adminGameSearch').value.trim();
+  document.getElementById('adminGameRows').innerHTML = '';
+  document.getElementById('adminGameSelectAll').checked = false;
+  syncAdminGameBar();
+  await loadMoreAdminGames();
+}
+async function loadMoreAdminGames() {
+  const btn = document.getElementById('adminGameMoreBtn');
+  btn.disabled = true;
+  const { data, error } = await sb.rpc('admin_game_records', { p_limit: ADMIN_GAME_PAGE, p_offset: adminGameOffset, p_search: adminGameSearchTerm || null });
+  btn.disabled = false;
+  if (error) {
+    if (isSchemaMismatchError(error)) { adminShow('adminGameUnavailable', true); return; }
+    console.error('admin_game_records error:', error); toast(tr('adminLoadError')); return;
+  }
+  const rows = Array.isArray(data) ? data : [];
+  const list = document.getElementById('adminGameRows');
+  for (const r of rows) list.appendChild(adminGameRowEl(r));
+  adminGameOffset += rows.length;
+  adminGameDone = rows.length < ADMIN_GAME_PAGE;
+  adminShow('adminGameEmpty', adminGameOffset === 0);
+  btn.style.display = adminGameDone ? 'none' : '';
+  syncAdminGameBar();
+}
+function adminGameRowEl(r) {
+  const key = adminGameKey(r);
+  const row = document.createElement('div');
+  row.className = 'admin-row admin-comment';
+  const check = document.createElement('input');
+  check.type = 'checkbox'; check.className = 'admin-com-check';
+  check.checked = adminGameSelected.has(key);
+  check.setAttribute('aria-label', (r.username || '') + ' ' + (r.art_title || ''));
+  check.onchange = () => {
+    if (check.checked) adminGameSelected.set(key, r); else adminGameSelected.delete(key);
+    row.classList.toggle('selected', check.checked);
+    syncAdminGameBar();
+  };
+  row.classList.toggle('selected', check.checked);
+  const meta = document.createElement('div'); meta.className = 'admin-meta';
+  const line = document.createElement('div'); line.className = 'admin-com-body';
+  const who = document.createElement('a');
+  who.className = 'admin-target-label'; who.href = profileUrl(r.username || r.user_id);
+  who.target = '_blank'; who.rel = 'noopener'; who.textContent = r.username || tr('anonymous');
+  line.append(who, ` · ${adminFmtMs(r.elapsed_ms)} · `);
+  const art = document.createElement('a');
+  art.className = 'admin-target-label'; art.href = artworkUrl(r.artwork_id);
+  art.target = '_blank'; art.rel = 'noopener'; art.textContent = r.art_title || tr('adminNoTitle');
+  line.appendChild(art);
+  const sub = document.createElement('div'); sub.className = 'admin-sub';
+  sub.textContent = adminDate(r.completed_at);
+  if (r.voided_at) {
+    const b = document.createElement('span'); b.className = 'admin-badge admin-status-open'; b.textContent = tr('adminGameVoidedBadge');
+    sub.append(' ', b);
+    if (r.void_note) sub.append(' ' + r.void_note);
+  }
+  if (r.ranking_excluded) {
+    const b = document.createElement('span'); b.className = 'admin-badge'; b.textContent = tr('adminRankBadge');
+    sub.append(' ', b);
+  }
+  meta.append(line, sub);
+  row.append(check, meta);
+  return row;
+}
+function syncAdminGameBar() {
+  const n = adminGameSelected.size;
+  const voidBtn = document.getElementById('adminGameVoidBtn');
+  const unBtn = document.getElementById('adminGameUnvoidBtn');
+  voidBtn.disabled = n === 0; unBtn.disabled = n === 0;
+  voidBtn.textContent = n ? tr('adminGameVoidSelectedN', { n }) : tr('adminGameVoidSelected');
+  unBtn.textContent = n ? tr('adminGameUnvoidSelectedN', { n }) : tr('adminGameUnvoidSelected');
+  document.getElementById('adminGameCount').textContent = tr('adminShownSelected', { shown: adminGameOffset, selected: n });
+}
+async function voidSelectedGames(on) {
+  const rows = [...adminGameSelected.values()];
+  if (!rows.length) return;
+  if (rows.length > ADMIN_BULK_MAX) { toast(tr('adminBulkTooMany', { max: ADMIN_BULK_MAX })); return; }
+  let proceed;
+  if (on) {
+    const word = tr('adminGameVoidWord');
+    proceed = await confirmDialog(tr('adminGameVoidMessage', { n: rows.length, word }), { title: tr('adminGameVoidTitle'), okLabel: tr('adminGameVoidSelected'), confirmText: word });
+  } else {
+    proceed = await confirmDialog(tr('adminGameUnvoidMessage', { n: rows.length }), { title: tr('adminGameUnvoidTitle'), okLabel: tr('adminGameUnvoidSelected') });
+  }
+  if (!proceed) return;
+  const btns = [document.getElementById('adminGameVoidBtn'), document.getElementById('adminGameUnvoidBtn')];
+  btns.forEach(b => { b.disabled = true; });
+  let done = 0, failed = 0;
+  for (const r of rows) {
+    const { error } = await sb.rpc('admin_void_game_record', { p_project_id: r.project_id, p_artwork_id: r.artwork_id, p_user: r.user_id, p_on: on, p_note: null });
+    if (error) { console.error('admin_void_game_record error:', error); failed++; } else done++;
+  }
+  toast(failed ? tr('adminGameVoidFailed', { done, failed }) : (on ? tr('adminGameVoided', { n: done }) : tr('adminGameRestored', { n: done })));
+  await Promise.all([resetAdminGames(), loadAdminGameTop()]);
+  if (adminTabsLoaded.has('log')) loadAdminLog();
+}
+async function loadAdminGameTop() {
+  const list = document.getElementById('adminGameTop');
+  if (!list) return;
+  const { data, error } = await sb.rpc('game_top_players', { p_limit: 20 });
+  if (error) { if (!isSchemaMismatchError(error)) console.error('game_top_players error:', error); return; }
+  const rows = Array.isArray(data) ? data : [];
+  list.innerHTML = '';
+  adminShow('adminGameTopEmpty', rows.length === 0);
+  rows.forEach((p, i) => {
+    const row = document.createElement('div'); row.className = 'admin-row admin-admin';
+    const name = p.username || tr('anonymous');
+    const target = document.createElement('div'); target.className = 'admin-target';
+    target.appendChild(miniAvatarEl(name, p.avatar_url, p.user_id));
+    const label = document.createElement('a'); label.className = 'admin-target-label';
+    label.href = profileUrl(p.username || p.user_id); label.target = '_blank'; label.rel = 'noopener';
+    label.textContent = `${i + 1}. ${name}`;
+    target.appendChild(label);
+    const meta = document.createElement('div'); meta.className = 'admin-meta';
+    meta.textContent = tr('adminMedalsLine', { g: p.gold, s: p.silver, b: p.bronze, r: p.records });
+    row.append(target, meta);
+    list.appendChild(row);
+  });
+}
+document.getElementById('adminGameVoidBtn').onclick = () => voidSelectedGames(true);
+document.getElementById('adminGameUnvoidBtn').onclick = () => voidSelectedGames(false);
+document.getElementById('adminGameMoreBtn').onclick = loadMoreAdminGames;
+document.getElementById('adminGameSearchBtn').onclick = () => resetAdminGames().catch(err => console.error('admin game search error:', err));
+document.getElementById('adminGameSearch').onkeydown = e => { if (e.key === 'Enter') resetAdminGames().catch(err => console.error('admin game search error:', err)); };
+document.getElementById('adminGameSelectAll').onchange = function () {
+  const on = this.checked; let truncated = false;
+  for (const check of document.querySelectorAll('#adminGameRows .admin-com-check')) {
+    if (on && !check.checked && adminGameSelected.size >= ADMIN_BULK_MAX) { truncated = true; continue; }
+    if (check.checked !== on) { check.checked = on; check.dispatchEvent(new Event('change')); }
+  }
+  if (truncated) toast(tr('adminSelectAllCapped', { max: ADMIN_BULK_MAX }));
+};
+
 // ---------- artwork pieces (supabase_mosaic_pieces.sql) ----------
 // Artworks are cut into pieceGrid × pieceGrid pieces in the browser when
 // uploaded (common.js makeArtworkPieces). Artworks from before that — or
@@ -1513,7 +1743,8 @@ const ADMIN_TAB_LOADERS = {
   comments:  () => resetAdminComments(),
   campaigns: () => loadAdminCampaigns(),
   tools:     () => Promise.all([loadAdminPool(), loadAdminPieces(), loadAdminThumbs(), loadAdminPixel()]),
-  members:   () => Promise.all([loadAdminNewMembers(), loadAdminAdmins(), loadAdminBlocked()]),
+  members:   () => Promise.all([loadAdminNewMembers(), loadAdminAdmins(), loadAdminBlocked(), loadAdminRankExcluded()]),
+  games:     () => Promise.all([resetAdminGames(), loadAdminGameTop()]),
   broadcast: () => loadAdminBroadcast(),
   settings:  () => loadAdminSettings(),
   log:       () => loadAdminLog(),

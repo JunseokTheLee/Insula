@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260920-130739">
-<link rel="stylesheet" href="/css/admin.css?v=20260920-130739">
+<link rel="stylesheet" href="/css/base.css?v=20260920-141831">
+<link rel="stylesheet" href="/css/admin.css?v=20260920-141831">
 </head>
 
 <body>
@@ -70,6 +70,7 @@
           <button type="button" class="admin-tab" data-tab="comments" role="tab" aria-selected="false">댓글</button>
           <button type="button" class="admin-tab" data-tab="campaigns" role="tab" aria-selected="false">캠페인</button>
           <button type="button" class="admin-tab" data-tab="tools" role="tab" aria-selected="false">작품 처리</button>
+          <button type="button" class="admin-tab" data-tab="games" role="tab" aria-selected="false">게임 기록</button>
           <button type="button" class="admin-tab" data-tab="members" role="tab" aria-selected="false">회원</button>
           <button type="button" class="admin-tab" data-tab="broadcast" role="tab" aria-selected="false">공지</button>
           <button type="button" class="admin-tab" data-tab="settings" role="tab" aria-selected="false">사이트 옵션</button>
@@ -239,6 +240,36 @@
         </section>
         </div>
 
+        <div class="admin-panel" data-panel="games" role="tabpanel" hidden>
+        <section class="admin-section" id="adminGamesSection">
+          <div class="admin-section-head">
+            <h2>게임 기록</h2>
+            <div class="admin-actions">
+              <button type="button" class="admin-btn danger" id="adminGameVoidBtn" disabled>무효 처리</button>
+              <button type="button" class="admin-btn" id="adminGameUnvoidBtn" disabled>되살리기</button>
+            </div>
+          </div>
+          <p class="admin-help">조각 찾기의 개인 최고 기록 전부를 최신순으로 보여줍니다 — 메달은 이 행들에서 계산됩니다. <strong>무효 처리</strong>는 행을 지우지 않고 순위·메달 계산에서만 빼며, 되살릴 수 있고 같은 사람이 새 최고 기록을 내면 대체됩니다. <strong>한 번에 최대 20건.</strong> 둘 다 "기록" 탭에 남습니다. 계정 전체를 순위에서 빼려면 회원 → 순위 제외를 쓰세요.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminGameUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_game_medal_rules.sql</code> 을 먼저 실행하세요.</p>
+          <div class="admin-toolbar">
+            <label class="admin-field admin-field-grow"><span class="sr-only">검색</span>
+              <input type="search" id="adminGameSearch" placeholder="사용자 이름 또는 작품 제목" autocomplete="off">
+            </label>
+            <button type="button" class="admin-btn" id="adminGameSearchBtn">검색</button>
+            <label class="admin-filter"><input type="checkbox" id="adminGameSelectAll"> 보이는 것 전체 선택</label>
+            <span class="admin-sub" id="adminGameCount"></span>
+          </div>
+          <div class="admin-list" id="adminGameRows"></div>
+          <p class="empty-note admin-empty" id="adminGameEmpty" style="display:none;">기록이 없습니다.</p>
+          <div class="admin-more"><button type="button" class="admin-btn" id="adminGameMoreBtn" style="display:none;">더 보기</button></div>
+        </section>
+        <section class="admin-section" id="adminGameTopSection">
+          <h2>메달 현황</h2>
+          <p class="admin-help">지금 규칙(최소 기록자 수·순위 제외·무효 처리)을 적용한 결과입니다. 명예의 전당과 같은 숫자입니다.</p>
+          <div class="admin-list" id="adminGameTop"></div>
+          <p class="empty-note admin-empty" id="adminGameTopEmpty" style="display:none;">아직 메달을 가진 사람이 없습니다.</p>
+        </section>
+        </div>
         <div class="admin-panel" data-panel="members" role="tabpanel" hidden>
         <section class="admin-section" id="adminNewMembersSection">
           <h2>신규 회원</h2>
@@ -268,6 +299,21 @@
           <h3 class="admin-subhead">차단된 계정</h3>
           <div class="admin-list" id="adminBlockedList"></div>
           <p class="empty-note admin-empty" id="adminBlockedEmpty" style="display:none;">차단된 계정이 없습니다.</p>
+        </section>
+        <section class="admin-section" id="adminRankSection">
+          <h2>순위 제외</h2>
+          <p class="admin-help">계정을 조각 찾기 순위에서 뺍니다 — 운영자·테스트 계정용. 기록은 그대로 남고 본인 프로필의 개인 기록으로는 보이지만, 명예의 전당·작품별 순위·메달 수·최근 게임 목록에는 나오지 않습니다. 지우는 것이 없고 언제든 되돌립니다. "기록" 탭에 남습니다.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminRankUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_game_medal_rules.sql</code> 을 먼저 실행하세요.</p>
+          <div class="admin-toolbar">
+            <label class="admin-field admin-field-grow"><span class="sr-only">사용자 이름 검색</span>
+              <input type="search" id="adminRankSearch" placeholder="사용자 이름 검색" autocomplete="off">
+            </label>
+            <button type="button" class="admin-btn" id="adminRankSearchBtn">검색</button>
+          </div>
+          <div class="admin-list" id="adminRankResults"></div>
+          <h3 class="admin-subhead">순위 제외 계정</h3>
+          <div class="admin-list" id="adminRankList"></div>
+          <p class="empty-note admin-empty" id="adminRankEmpty" style="display:none;">순위에서 제외한 계정이 없습니다.</p>
         </section>
         </div>
 
@@ -337,6 +383,17 @@
               <div class="admin-setting admin-setting-range">
                 <label for="adminGameHintPenalty">힌트 <strong>패널티</strong>: 구역 힌트 한 번마다 기록에 더해지는 초. 0이면 공짜입니다. <em>(기본: 30초, 최대 300초)</em></label>
                 <div class="admin-range"><input id="adminGameHintPenalty" type="range" min="0" max="300" step="5" data-setting="gameHintPenaltySec" disabled><output for="adminGameHintPenalty" data-setting-output="gameHintPenaltySec">30</output></div>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminGameMedalMin">메달 <strong>최소 기록자 수</strong>: 한 작품에 이만큼의 사람이 기록을 남겨야 그 작품의 1~3위가 메달이 됩니다. 그 전에는 기록만 순번으로 보입니다. <em>(기본: 3명)</em></label>
+                <div class="admin-range"><input id="adminGameMedalMin" type="range" min="1" max="10" step="1" data-setting="gameMedalMinPlayers" disabled><output for="adminGameMedalMin" data-setting-output="gameMedalMinPlayers">3</output></div>
+              </div>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="gameRecentRunsEnabled" disabled> <strong>최근 게임 목록</strong> — 완주한 기록(누가·어느 작품·시간)을 명예의 전당 아래와 결과 화면에 보여줍니다. 순위 제외 계정은 나오지 않습니다.</label>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminGameRecentCount">최근 게임 <strong>처음 표시 개수</strong>; "더 보기"로 50건까지 봅니다. <em>(기본: 10)</em></label>
+                <div class="admin-range"><input id="adminGameRecentCount" type="range" min="5" max="50" step="5" data-setting="gameRecentRunsCount" disabled><output for="adminGameRecentCount" data-setting-output="gameRecentRunsCount">10</output></div>
               </div>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameRandomOrder" disabled> <strong>작품 목록 무작위 순서</strong> — 끄면 최신 등록순으로 보입니다. 접속할 때마다 순서가 새로 섞입니다.</label>
@@ -703,16 +760,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260920-130739"></script>
-<script src="/js/i18n/ko.js?v=20260920-130739"></script>
-<script src="/js/common.js?v=20260920-130739"></script>
-<script src="/js/auth.js?v=20260920-130739"></script>
-<script src="/js/notifications.js?v=20260920-130739"></script>
-<script src="/js/push.js?v=20260920-130739"></script>
-<script src="/js/color-engine.js?v=20260920-130739"></script>
-<script src="/js/pixel-board.js?v=20260920-130739"></script>
-<script src="/js/matching.js?v=20260920-130739"></script>
-<script src="/js/admin.js?v=20260920-130739"></script>
+<script src="/js/supabase-client.js?v=20260920-141831"></script>
+<script src="/js/i18n/ko.js?v=20260920-141831"></script>
+<script src="/js/common.js?v=20260920-141831"></script>
+<script src="/js/auth.js?v=20260920-141831"></script>
+<script src="/js/notifications.js?v=20260920-141831"></script>
+<script src="/js/push.js?v=20260920-141831"></script>
+<script src="/js/color-engine.js?v=20260920-141831"></script>
+<script src="/js/pixel-board.js?v=20260920-141831"></script>
+<script src="/js/matching.js?v=20260920-141831"></script>
+<script src="/js/admin.js?v=20260920-141831"></script>
 
 </body>
 </html>
