@@ -15,6 +15,17 @@ export async function onRequestGet({ params, request, env }) {
   if (!sub) return notFoundResponse(assetResponse, '작품을 찾을 수 없습니다 | Weavo');
   // A piece has no page of its own — its artwork does.
   if (sub.parent_id) return Response.redirect(`${SITE}/ko/artworks/${encodeURIComponent(sub.parent_id)}`, 302);
+  // A private artwork has no page either: the anon key only gets its row
+  // because a public portfolio holds it (supabase_portfolios.sql A4), so the
+  // visitor is sent to that portfolio, which opens the artwork there.
+  if (sub.is_public === false) {
+    const item = await pgFetchOne(
+      `mosaic_collection_items?submission_id=eq.${encodeURIComponent(id)}` +
+      `&select=collection_id,mosaic_collections!inner(is_public)&mosaic_collections.is_public=eq.true&limit=1`
+    );
+    if (!item) return notFoundResponse(assetResponse, '작품을 찾을 수 없습니다 | Weavo');
+    return Response.redirect(`${SITE}/ko/collections/${encodeURIComponent(item.collection_id)}?artwork=${encodeURIComponent(id)}`, 302);
+  }
 
   const author = sub.author_id ? await pgFetchOne(`profiles?id=eq.${encodeURIComponent(sub.author_id)}&select=username`) : null;
   const authorHandle = (author && author.username) || sub.author_id;

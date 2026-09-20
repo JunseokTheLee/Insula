@@ -124,10 +124,11 @@
   // filters fall back while their SQL is not applied.
   async function loadPage() {
     const from = pageFrom, to = pageFrom + LIST_PAGE - 1;
-    const build = (withOptOut, withPieces) => {
+    const build = (withOptOut, withPieces, withPublic) => {
       let q = sb.from('mosaic_submissions').select(ARTWORK_ROW_COLS + (withOptOut ? ',coloring_opt_out' : ''));
       if (withPieces) q = q.is('parent_id', null);
       if (withOptOut) q = q.or('coloring_opt_out.is.null,coloring_opt_out.eq.false');
+      if (withPublic) q = q.eq('is_public', true);   // private artworks are not coloured (supabase_portfolios.sql)
       if (searchTerm) {
         const s = searchTerm.replace(/[%,()]/g, ' ').trim();
         if (s) q = q.or(`art_title.ilike.%${s}%,author_name.ilike.%${s}%`);
@@ -139,11 +140,13 @@
       }
       return q.order('created_at', { ascending: false }).range(from, to);
     };
-    let q = build(true, true);
+    let q = build(true, true, true);
     if (!q) return [];
     let { data, error } = await q;
-    if (error && isSchemaMismatchError(error)) ({ data, error } = await build(false, true));
-    if (error && isSchemaMismatchError(error)) ({ data, error } = await build(false, false));
+    // Newest SQL file first to go, oldest last (each is a hand-run file).
+    if (error && isSchemaMismatchError(error)) ({ data, error } = await build(true, true, false));
+    if (error && isSchemaMismatchError(error)) ({ data, error } = await build(false, true, false));
+    if (error && isSchemaMismatchError(error)) ({ data, error } = await build(false, false, false));
     if (error) { console.error('coloring: load artworks error:', error); return []; }
     const list = (data || []).filter(a => !isUserBlocked(a.author_id) && (a.thumb_url || a.image_url));
     pageFrom += (data || []).length;
@@ -958,7 +961,11 @@
     if (!wanted) return;
     let a = rows.find(x => String(x.id) === String(wanted));
     if (!a) {
-      const { data } = await sb.from('mosaic_submissions').select(ARTWORK_ROW_COLS).eq('id', wanted).maybeSingle();
+      let { data, error } = await sb.from('mosaic_submissions').select(ARTWORK_ROW_COLS + ',is_public').eq('id', wanted).maybeSingle();
+      if (error && isSchemaMismatchError(error)) ({ data } = await sb.from('mosaic_submissions').select(ARTWORK_ROW_COLS).eq('id', wanted).maybeSingle());
+      // A private artwork readable here through a public portfolio is still
+      // not a colouring board — same rule as the list.
+      if (data && data.is_public === false) data = null;
       if (data && !isUserBlocked(data.author_id)) { a = data; await loadBoardsFor([a]); }
     }
     if (!a) { toast(tr('cgNotHere')); return; }

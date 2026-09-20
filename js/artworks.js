@@ -23,6 +23,7 @@ let artworksLoading = false;
 let artworksRun = 0;      // bumped on every new search/sort so a stale page is ignored
 let artworksHasLikeCount = true; // false once the column turns out to be missing
 let artworksHasPieces = true; // false once parent_id (supabase_mosaic_pieces.sql) turns out to be missing
+let artworksHasPublic = true; // false once is_public (supabase_portfolios.sql) turns out to be missing
 
 function artworkCardEl(sub, i) {
   const name = sub.author_name || tr('anonymous');
@@ -99,6 +100,7 @@ function artworksPageQuery() {
     + (artworksHasLikeCount ? ',like_count' : '');
   let q = sb.from('mosaic_submissions').select(cols);
   if (artworksHasPieces) q = q.is('parent_id', null); // pieces are not artworks
+  if (artworksHasPublic) q = q.eq('is_public', true); // private artworks are not browsed (supabase_portfolios.sql)
   if (artworksQuery) {
     const v = artworksSearchValue();
     q = q.or(`art_title.ilike.${v},author_name.ilike.${v}`);
@@ -116,9 +118,10 @@ async function loadMoreArtworks() {
   // supabase_mosaic_like_count.sql / supabase_mosaic_pieces.sql not applied
   // yet: the error names the missing column — drop that one (not both) and
   // ask again, at most once per column.
-  for (let tries = 0; tries < 2 && error && isSchemaMismatchError(error) && (artworksHasLikeCount || artworksHasPieces); tries++) {
+  for (let tries = 0; tries < 3 && error && isSchemaMismatchError(error) && (artworksHasLikeCount || artworksHasPieces || artworksHasPublic); tries++) {
     const msg = String(error.message || '');
-    if (artworksHasPieces && (msg.includes('parent_id') || !artworksHasLikeCount)) artworksHasPieces = false;
+    if (artworksHasPublic && (msg.includes('is_public') || (!artworksHasLikeCount && !artworksHasPieces))) artworksHasPublic = false;
+    else if (artworksHasPieces && (msg.includes('parent_id') || !artworksHasLikeCount)) artworksHasPieces = false;
     else artworksHasLikeCount = false;
     if (run !== artworksRun) return;
     ({ data, error } = await artworksPageQuery());

@@ -15,7 +15,9 @@ async function fetchArtwork(id) {
   const base = ARTWORK_ROW_COLS;
   // Piece columns (supabase_mosaic_pieces.sql) asked for first, dropped
   // while that file isn't applied.
-  let { data, error } = await sb.from('mosaic_submissions').select(base + ',parent_id,piece_n,home_project_id').eq('id', id).maybeSingle();
+  let { data, error } = await sb.from('mosaic_submissions').select(base + ',parent_id,piece_n,home_project_id,is_public').eq('id', id).maybeSingle();
+  // Then without the visibility flag (supabase_portfolios.sql), then plain.
+  if (error && isSchemaMismatchError(error)) ({ data, error } = await sb.from('mosaic_submissions').select(base + ',parent_id,piece_n,home_project_id').eq('id', id).maybeSingle());
   if (error && isSchemaMismatchError(error)) ({ data, error } = await sb.from('mosaic_submissions').select(base).eq('id', id).maybeSingle());
   if (error) { console.error('load artwork error:', error); return null; }
   // A cut artwork's campaign is its home campaign (its pieces are placed
@@ -75,6 +77,16 @@ async function loadArtworkPage(id) {
   }
   // A piece has no page of its own — its artwork does.
   if (sub.parent_id) { location.replace(artworkUrl(sub.parent_id)); return; }
+  // Nor has a private artwork: a visitor only gets its row because a public
+  // portfolio holds it (supabase_portfolios.sql A4), so that portfolio is
+  // where it is shown. The artist and admins see the page as usual.
+  if (sub.is_public === false && !(me.id && (me.id === sub.author_id || me.isAdmin))) {
+    const pid = typeof findPublicPortfolioFor === 'function' ? await findPublicPortfolioFor(sub.id) : null;
+    if (pid) { location.replace(`${collectionUrl(pid)}?artwork=${encodeURIComponent(sub.id)}`); return; }
+    document.getElementById('lightbox-cap-title').textContent = tr('artworkNotFound');
+    document.getElementById('artworkBreadcrumb').style.display = 'none';
+    return;
+  }
   const backBtn = document.getElementById('artworkBackBtn');
   const campaignId = sub.project_id || sub.home_project_id;
   // Where "back" goes for someone who arrived from outside the site; a

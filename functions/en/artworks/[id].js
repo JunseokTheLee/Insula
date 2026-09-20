@@ -15,6 +15,17 @@ export async function onRequestGet({ params, request, env }) {
   if (!sub) return notFoundResponse(assetResponse, 'Artwork not found | Weavo');
   // A piece has no page of its own — its artwork does.
   if (sub.parent_id) return Response.redirect(`${SITE}/en/artworks/${encodeURIComponent(sub.parent_id)}`, 302);
+  // A private artwork has no page either: the anon key only gets its row
+  // because a public portfolio holds it (supabase_portfolios.sql A4), so the
+  // visitor is sent to that portfolio, which opens the artwork there.
+  if (sub.is_public === false) {
+    const item = await pgFetchOne(
+      `mosaic_collection_items?submission_id=eq.${encodeURIComponent(id)}` +
+      `&select=collection_id,mosaic_collections!inner(is_public)&mosaic_collections.is_public=eq.true&limit=1`
+    );
+    if (!item) return notFoundResponse(assetResponse, 'Artwork not found | Weavo');
+    return Response.redirect(`${SITE}/en/collections/${encodeURIComponent(item.collection_id)}?artwork=${encodeURIComponent(id)}`, 302);
+  }
 
   // Prefer the artist's username for the creator link, same as the client's
   // own canonicalization in profile-view.js — falls back to the raw id if

@@ -1045,3 +1045,6 @@ html[lang="ko"] * {
    left alone — blurring it would make a correct picture look worse. */
 .lightbox-overlay img.lb-img-loading,
 #artworkStage img.lb-img-loading{background:rgba(247,247,245,.06);min-width:120px;min-height:120px;}
+
+/* Lightbox edit dialog: the note under the "private" checkbox. */
+.lb-edit-private-hint{font-size:12px;color:var(--muted);line-height:1.45;margin:4px 0 0 24px;}

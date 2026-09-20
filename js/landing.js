@@ -229,14 +229,19 @@ async function loadRecentArtworks() {
   // below doesn't leave the list looking sparse.
   // Pieces (supabase_mosaic_pieces.sql) are not artworks; asked again
   // without the filter while that file isn't applied (unknown column).
-  const q = artworksOnly => {
+  // Public artworks only (supabase_portfolios.sql): RLS already hides other
+  // people's private ones, the filter keeps the artist's own out as well.
+  const q = (artworksOnly, publicOnly) => {
     let s = sb.from('mosaic_submissions')
       .select('id,pixel_id,project_id,image_url,thumb_url,art_title,art_material,art_completed_date,art_description,art_link,author_id,author_name,author_avatar_url,created_at');
     if (artworksOnly) s = s.is('parent_id', null);
+    if (publicOnly) s = s.eq('is_public', true);
     return s.order('created_at', { ascending: false }).limit(30);
   };
-  let { data, error } = await q(true);
-  if (error && isSchemaMismatchError(error)) ({ data, error } = await q(false));
+  let { data, error } = typeof queryWithOptional === 'function'
+    ? await queryWithOptional(on => q(on.has('pieces'), on.has('visibility')), { pieces: ['parent_id'], visibility: ['is_public'] })
+    : await q(true, false);
+  if (error && isSchemaMismatchError(error)) ({ data, error } = await q(false, false));
   if (error) { console.error('load recent artworks error:', error); toast(tr('couldNotLoadArtworks')); return; }
   renderRecentArtworks((data || []).filter(sub => !isUserBlocked(sub.author_id)).slice(0, 5));
 }

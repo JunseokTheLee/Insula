@@ -10,7 +10,10 @@ export async function onRequestGet() {
   // Pieces (supabase_mosaic_pieces.sql) have no page of their own. While
   // that file isn't applied the filter is an unknown column (400 → []),
   // so an empty answer is asked again without it.
-  let subs = await pgFetchMany('mosaic_submissions?select=id,created_at&parent_id=is.null&order=created_at.desc&limit=1000');
+  // Public artworks only (supabase_portfolios.sql); the same fallback again
+  // while that file is not applied.
+  let subs = await pgFetchMany('mosaic_submissions?select=id,created_at&parent_id=is.null&is_public=eq.true&order=created_at.desc&limit=1000');
+  if (!subs.length) subs = await pgFetchMany('mosaic_submissions?select=id,created_at&parent_id=is.null&order=created_at.desc&limit=1000');
   if (!subs.length) subs = await pgFetchMany('mosaic_submissions?select=id,created_at&order=created_at.desc&limit=1000');
 
   const urls = subs.flatMap(s => {

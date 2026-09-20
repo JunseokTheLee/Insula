@@ -423,7 +423,14 @@ function profileArtThumbEl(sub, pending, showBoardBtn) {
   img.src = cdnUrl(sub.thumb_url || sub.image_url);
   img.alt = sub.art_title ? tr('artworkThumbAlt', { title: sub.art_title, name: sub.author_name || tr('anonymous') }) : '';
   el.appendChild(img);
-  if (pending) {
+  if (sub.is_public === false) {
+    // Only the artist (and admins) ever receive private rows — RLS,
+    // supabase_portfolios.sql A4 — so this badge is a reminder, not a gate.
+    const badge = document.createElement('span');
+    badge.className = 'private-badge';
+    badge.textContent = tr('privateBadge');
+    el.appendChild(badge);
+  } else if (pending) {
     const badge = document.createElement('span');
     badge.className = 'pool-badge';
     badge.textContent = tr('waitingForMatchBadge');
@@ -876,8 +883,17 @@ document.getElementById('ua-submit').onclick = async () => {
     description: document.getElementById('ua-desc').value.trim(),
     link
   };
+  const visChoice = document.querySelector('input[name="ua-visibility"]:checked');
+  const isPublic = !(visChoice && visChoice.value === 'private');
   const btn = document.getElementById('ua-submit');
   btn.disabled = true;
+  if (!isPublic) {
+    // supabase_portfolios.sql not applied yet: say so BEFORE the file goes
+    // up — quietly uploading it as public would be the one thing the artist
+    // asked not to happen.
+    const { error: probe } = await sb.from('mosaic_submissions').select('id,is_public').limit(1);
+    if (probe && isSchemaMismatchError(probe)) { errorEl.textContent = tr('privateUploadUnavailable'); btn.disabled = false; return; }
+  }
   toast(tr('uploadingToast'));
   try {
     const previewImg = await loadImageEl(artPicker.getPreviewEl().src);
@@ -892,6 +908,7 @@ document.getElementById('ua-submit').onclick = async () => {
       art_title: meta.title || null, art_material: meta.material || null, art_completed_date: meta.completedDate,
       art_description: meta.description || null, art_link: meta.link || null
     };
+    if (!isPublic) row.is_public = false;   // the default is public; only say otherwise
     let { data: inserted, error: insErr } = await sb.from('mosaic_submissions')
       .insert(uploaded.microThumb ? { ...row, micro_thumb: uploaded.microThumb } : row).select('id').single();
     if (insErr && uploaded.microThumb && isSchemaMismatchError(insErr)) {
@@ -905,12 +922,20 @@ document.getElementById('ua-submit').onclick = async () => {
     }
 
     closeUploadArtModal();
-    toast(tr('findingBestSpot'));
+    if (isPublic) toast(tr('findingBestSpot'));
     // Cut into pieces first (supabase_mosaic_pieces.sql) — the pieces are
     // what the pass below places. Only while that file is missing is the
-    // artwork itself matched, whole, as before.
+    // artwork itself matched, whole, as before. A private artwork is cut
+    // too (its pieces inherit the flag and wait, unplaced, until it is
+    // made public — supabase_portfolios.sql A2/A3).
     const pieces = typeof makeArtworkPieces === 'function' ? await makeArtworkPieces(inserted.id, previewImg) : { missing: true };
     if (pieces.error) toast(tr('piecesFailed'));
+    if (!isPublic) {
+      // No board (a board is a small copy of the picture) and no matching
+      // pass — nothing of a private artwork goes anywhere public.
+      toast(tr('artworkPrivateSavedToast'));
+      return;
+    }
     // The colour-by-number board, from the same preview image. Never blocks
     // the upload: the admin page can make it later (supabase_pixel_game.sql).
     if (typeof makePixelBoardFor === 'function') {

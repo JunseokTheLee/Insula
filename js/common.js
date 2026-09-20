@@ -543,6 +543,25 @@ async function uploadPreviewImage(cells, width, height) {
 function isSchemaMismatchError(error) {
   return !!error && (error.code === '42703' || error.code === 'PGRST204' || error.code === 'PGRST202' || error.code === '42883');
 }
+// Runs a PostgREST query that names columns from SQL files which may not be
+// applied yet (CLAUDE.md §6: they are run by hand). `build(on)` returns the
+// query for the Set of optional features still enabled; `optionals` maps
+// each feature to the column names its part of the query mentions. On an
+// unknown-column error the feature whose column the message names is
+// dropped (else the last one) and the query runs again, until it succeeds
+// or nothing optional is left. `build` may return null for "nothing to ask".
+async function queryWithOptional(build, optionals) {
+  const on = new Set(Object.keys(optionals));
+  for (;;) {
+    const q = build(on);
+    if (!q) return { data: null, error: null };
+    const res = await q;
+    if (!res.error || !isSchemaMismatchError(res.error) || !on.size) return res;
+    const msg = String(res.error.message || '');
+    const hit = [...on].find(name => optionals[name].some(col => msg.includes(col))) || [...on].pop();
+    on.delete(hit);
+  }
+}
 
 // ---------- site options (site_settings) ----------
 // One jsonb row that admins edit on /admin ("Site options") and any page can
@@ -939,15 +958,26 @@ function bindArtworkLightbox(el, id) {
     openArtworkById(id);
   });
 }
+// Private artworks (supabase_portfolios.sql) come along with their flag so
+// the artist's own grid can mark them; RLS already keeps them from anyone
+// else, so no visibility filter is needed here.
 async function fetchOwnArtworkRows(userId) {
-  const q = withPieces => {
-    let s = sb.from('mosaic_submissions').select(ARTWORK_ROW_COLS + (withPieces ? ',piece_n,home_project_id' : '')).eq('author_id', userId);
-    if (withPieces) s = s.is('parent_id', null);
+  return queryWithOptional(on => {
+    let s = sb.from('mosaic_submissions')
+      .select(ARTWORK_ROW_COLS + (on.has('pieces') ? ',piece_n,home_project_id' : '') + (on.has('visibility') ? ',is_public' : ''))
+      .eq('author_id', userId);
+    if (on.has('pieces')) s = s.is('parent_id', null);
     return s.order('created_at', { ascending: false });
-  };
-  let res = await q(true);
-  if (res.error && isSchemaMismatchError(res.error)) res = await q(false);
-  return res;
+  }, { pieces: ['parent_id', 'piece_n', 'home_project_id'], visibility: ['is_public'] });
+}
+// The public (or link-only) portfolio a private artwork can be seen in, if
+// any — where its own page sends a visitor (supabase_portfolios.sql A4).
+async function findPublicPortfolioFor(artworkId) {
+  const { data, error } = await sb.from('mosaic_collection_items')
+    .select('collection_id,mosaic_collections!inner(id,is_public)')
+    .eq('submission_id', artworkId).eq('mosaic_collections.is_public', true).limit(1);
+  if (error) { console.error('find portfolio for artwork error:', error); return null; }
+  return data && data[0] ? data[0].collection_id : null;
 }
 
 // ---------- collectible artwork pool (liked ∪ own) ----------

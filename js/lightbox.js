@@ -234,6 +234,10 @@ lbEditModal.innerHTML = `
     <div class="field" id="lb-edit-optout-row" style="display:none;">
       <label class="lb-edit-check"><input type="checkbox" id="lb-edit-optout"> ${tr('editOptOutColoring')}</label>
     </div>
+    <div class="field" id="lb-edit-private-row" style="display:none;">
+      <label class="lb-edit-check"><input type="checkbox" id="lb-edit-private"> ${tr('editPrivateArtwork')}</label>
+      <div class="lb-edit-private-hint">${tr('editPrivateArtworkHint')}</div>
+    </div>
     <div class="field-error" id="lb-edit-error"></div>
     <div class="modal-actions">
       <button type="button" id="lb-edit-cancel" class="btn-cancel">${tr('cancelLabel')}</button>
@@ -268,6 +272,16 @@ function openLbEditModal() {
     sub.coloring_opt_out = !!data.coloring_opt_out;
     lbEditModal.querySelector('#lb-edit-optout').checked = sub.coloring_opt_out;
     optRow.style.display = '';
+  });
+  // Same for the visibility flag (supabase_portfolios.sql) — its own read,
+  // so one missing column does not hide the other row.
+  const privRow = lbEditModal.querySelector('#lb-edit-private-row');
+  privRow.style.display = 'none';
+  sb.from('mosaic_submissions').select('is_public').eq('id', sub.id).maybeSingle().then(({ data, error }) => {
+    if (error || !data || lbCurrentSub !== sub) return;
+    sub.is_public = data.is_public !== false;
+    lbEditModal.querySelector('#lb-edit-private').checked = !sub.is_public;
+    privRow.style.display = '';
   });
   lbEditModal.classList.add('open');
 }
@@ -306,9 +320,28 @@ lbEditModal.querySelector('#lb-edit-save').onclick = async () => {
       else { sub.coloring_opt_out = optOut; renderLightboxColoring(sub); }
     }
   }
+  // Visibility too is its own update (supabase_portfolios.sql): the trigger
+  // behind it pulls a newly private artwork out of the campaign, and a newly
+  // public one is offered to the matching pass right away.
+  const privRow = lbEditModal.querySelector('#lb-edit-private-row');
+  let visibilityToast = null;
+  if (privRow.style.display !== 'none') {
+    const wantPublic = !lbEditModal.querySelector('#lb-edit-private').checked;
+    if (wantPublic !== (sub.is_public !== false)) {
+      const { error: visErr } = await sb.from('mosaic_submissions').update({ is_public: wantPublic }).eq('id', sub.id);
+      if (visErr) { console.error('artwork visibility update error:', visErr); toast(tr('couldNotUpdateVisibility')); }
+      else {
+        sub.is_public = wantPublic;
+        visibilityToast = tr(wantPublic ? 'artworkNowPublicToast' : 'artworkNowPrivateToast');
+        if (wantPublic && typeof runPoolMatching === 'function') runPoolMatching().catch(err => console.error('pool matching after publish error:', err));
+        renderLightboxColoring(sub);
+        renderLightboxPieceUsage(sub).then(u => renderLightboxPlay(sub, u));
+      }
+    }
+  }
   applyArtDetailsToCaption(sub);
   closeLbEditModal();
-  toast(tr('artworkUpdatedToast'));
+  toast(visibilityToast || tr('artworkUpdatedToast'));
   // Lets the host page refresh anything showing the old title/details
   // (thumbnail alt/tooltips, meta tags) — same hook shape as onSubmissionDeleted.
   if (typeof window.onSubmissionUpdated === 'function') window.onSubmissionUpdated(sub);
@@ -415,6 +448,7 @@ function applyArtDetailsToCaption(sub) {
     : tr('artworkImgAltFallback', { name: sub.author_name || tr('anonymous') });
   document.getElementById('lightbox-cap-title').textContent = sub.art_title || '';
   document.getElementById('lightbox-cap-meta').textContent = [
+    sub.is_public === false ? tr('privateBadge') : null,
     sub.art_material || null,
     sub.art_completed_date ? fmtCompletedYear(sub.art_completed_date) : null,
   ].filter(Boolean).join(' · ');
@@ -491,7 +525,7 @@ async function renderLightboxPlay(sub, usage) {
   }
   btn.style.display = 'none';
   const id = sub.parent_id != null ? sub.parent_id : sub.id;
-  if (!id) return;
+  if (!id || sub.is_public === false) return;
   let u = usage;
   // usage is only handed in for a whole artwork; a piece opened from the
   // campaign grid needs its parent looked up.
@@ -524,7 +558,7 @@ async function renderLightboxColoring(sub) {
   }
   btn.style.display = 'none';
   const id = sub.parent_id != null ? sub.parent_id : sub.id;
-  if (!id || sub.coloring_opt_out) return;
+  if (!id || sub.coloring_opt_out || sub.is_public === false) return;
   let on = true;
   try { on = (await getSiteSettings()).pixelGameEnabled !== false; } catch (e) {}
   if (!on || lbCurrentSub !== sub) return;

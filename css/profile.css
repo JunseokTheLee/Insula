@@ -242,3 +242,16 @@
 .pmw-rank-1{color:#b8860b;}
 .pmw-rank-2{color:#8a8f98;}
 .pmw-rank-3{color:#a1663b;}
+
+/* ---------- upload: visibility choice + private badge (supabase_portfolios.sql) ---------- */
+.ua-visibility{display:flex;flex-direction:column;gap:8px;}
+.ua-vis-opt{display:flex;gap:10px;align-items:flex-start;font-family:'Pretendard',sans-serif;font-size:13px;line-height:1.45;font-weight:400;cursor:pointer;}
+.ua-vis-opt input{width:auto;margin:3px 0 0;flex-shrink:0;accent-color:var(--primary);}
+.ua-vis-opt strong{font-weight:600;}
+.ua-vis-opt small{display:block;color:var(--muted);font-size:12px;}
+.private-badge{
+  position:absolute;left:0;right:0;bottom:0;padding:4px 6px;text-align:center;
+  background:rgba(40,40,40,.8);color:#fff;
+  font-family:'Pretendard',sans-serif;font-size:10px;font-weight:600;
+  pointer-events:none;
+}
