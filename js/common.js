@@ -679,6 +679,9 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // Colouring input: true = swipe paints (a press on a cell of the chosen
   // number starts a stroke); false = tap paints, one finger moves.
   pixelDragDefault: true,
+  // Colouring sound level in percent of the built-in loudness (the fill pop,
+  // the colour-done chime, the finish fanfare, the wrong-number buzz).
+  pixelSoundVolume: 100,
   // Plan limits the admin Usage tiles show a percentage of. Supabase Pro:
   // 8 GB of database disk per project, 100 GB of Storage. Options rather
   // than constants so changing plan does not need a deploy.

@@ -99,7 +99,21 @@
   }
 
   // ---------- sound (synthesised, same approach as game.js) ----------
-  let audioCtx = null;
+  let audioCtx = null, audioOut = null, lastFillAt = 0;
+  // One limiter in front of the speakers: the blips are loud now (2026-09-21,
+  // "the fill sound is too quiet") and a fast stroke overlaps several of
+  // them — without it they would clip into a crackle.
+  function audioTarget() {
+    if (audioOut) return audioOut;
+    try {
+      const comp = audioCtx.createDynamicsCompressor();
+      comp.threshold.value = -8; comp.knee.value = 6; comp.ratio.value = 12;
+      comp.attack.value = 0.002; comp.release.value = 0.08;
+      comp.connect(audioCtx.destination);
+      audioOut = comp;
+    } catch (e) { audioOut = audioCtx.destination; }
+    return audioOut;
+  }
   function unlockAudio() {
     try {
       try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) {}
@@ -119,17 +133,25 @@
       if (!audioCtx) unlockAudio();
       if (!audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
+      // A stroke fills several cells a frame: one pop per 35 ms is a quick
+      // patter, not a stack of oscillators.
+      if (kind === 'fill') { const now = performance.now(); if (now - lastFillAt < 35) return; lastFillAt = now; }
       const t = audioCtx.currentTime;
       const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-      let peak = 0.14, stop = 0.08;
+      // Peaks are about three times the first version (0.14 / 0.2 / 0.26 /
+      // 0.15), which phones barely played; the fill pop also rings a little
+      // longer. Site option pixelSoundVolume (percent) scales all of them.
+      let peak = 0.45, stop = 0.11;
       if (kind === 'fill') { osc.type = 'triangle'; osc.frequency.setValueAtTime(720, t); }
-      else if (kind === 'color') { osc.type = 'triangle'; osc.frequency.setValueAtTime(520, t); osc.frequency.setValueAtTime(780, t + 0.07); peak = 0.2; stop = 0.2; }
-      else if (kind === 'done') { osc.type = 'triangle'; osc.frequency.setValueAtTime(523, t); osc.frequency.setValueAtTime(784, t + 0.09); osc.frequency.setValueAtTime(1046, t + 0.18); peak = 0.26; stop = 0.4; }
-      else { osc.type = 'square'; osc.frequency.setValueAtTime(400, t); osc.frequency.exponentialRampToValueAtTime(220, t + 0.14); peak = 0.15; stop = 0.16; }
+      else if (kind === 'color') { osc.type = 'triangle'; osc.frequency.setValueAtTime(520, t); osc.frequency.setValueAtTime(780, t + 0.07); peak = 0.5; stop = 0.22; }
+      else if (kind === 'done') { osc.type = 'triangle'; osc.frequency.setValueAtTime(523, t); osc.frequency.setValueAtTime(784, t + 0.09); osc.frequency.setValueAtTime(1046, t + 0.18); peak = 0.55; stop = 0.42; }
+      else { osc.type = 'square'; osc.frequency.setValueAtTime(400, t); osc.frequency.exponentialRampToValueAtTime(220, t + 0.14); peak = 0.3; stop = 0.16; }
+      const vol = Number(settings && settings.pixelSoundVolume);
+      peak = Math.max(0.001, Math.min(0.95, peak * (Number.isFinite(vol) && vol > 0 ? vol : 100) / 100));
       gain.gain.setValueAtTime(0.0001, t);
       gain.gain.exponentialRampToValueAtTime(peak, t + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, t + stop);
-      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.connect(gain); gain.connect(audioTarget());
       osc.start(t); osc.stop(t + stop + 0.02);
     } catch (e) { /* never break play for a sound */ }
   }

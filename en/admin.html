@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260921-004623">
-<link rel="stylesheet" href="/css/admin.css?v=20260921-004623">
+<link rel="stylesheet" href="/css/base.css?v=20260921-152148">
+<link rel="stylesheet" href="/css/admin.css?v=20260921-152148">
 </head>
 <body>
 
@@ -412,6 +412,10 @@
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="pixelDragDefault" disabled> <strong>Swipe to paint by default</strong> — a press on a cell of the chosen number paints and keeps painting as the finger moves; two fingers (or a press on any other cell) move the board. Off = tap paints, one finger moves. Players can switch either way with the ✋ button; this only sets the start.</label>
               </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminPixelSound">Sound <strong>volume (%)</strong> — the pop when a cell is painted, the color-done and finish chimes, and the wrong-number buzz. 100 is the built-in level, 200 doubles it (a limiter keeps overlapping sounds from crackling). <em>(default: 100)</em></label>
+                <div class="admin-range"><input id="adminPixelSound" type="range" min="20" max="200" step="10" data-setting="pixelSoundVolume" disabled><output for="adminPixelSound" data-setting-output="pixelSoundVolume">100</output></div>
+              </div>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="pixelShowCompletions" disabled> <strong>Show completion counts</strong> on the list cards.</label>
               </div>
@@ -673,15 +677,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260921-004623"></script>
-<script src="/js/i18n/en.js?v=20260921-004623"></script>
-<script src="/js/common.js?v=20260921-004623"></script>
-<script src="/js/auth.js?v=20260921-004623"></script>
-<script src="/js/notifications.js?v=20260921-004623"></script>
-<script src="/js/push.js?v=20260921-004623"></script>
-<script src="/js/color-engine.js?v=20260921-004623"></script>
-<script src="/js/pixel-board.js?v=20260921-004623"></script>
-<script src="/js/matching.js?v=20260921-004623"></script>
-<script src="/js/admin.js?v=20260921-004623"></script>
+<script src="/js/supabase-client.js?v=20260921-152148"></script>
+<script src="/js/i18n/en.js?v=20260921-152148"></script>
+<script src="/js/common.js?v=20260921-152148"></script>
+<script src="/js/auth.js?v=20260921-152148"></script>
+<script src="/js/notifications.js?v=20260921-152148"></script>
+<script src="/js/push.js?v=20260921-152148"></script>
+<script src="/js/color-engine.js?v=20260921-152148"></script>
+<script src="/js/pixel-board.js?v=20260921-152148"></script>
+<script src="/js/matching.js?v=20260921-152148"></script>
+<script src="/js/admin.js?v=20260921-152148"></script>
 </body>
 </html>
