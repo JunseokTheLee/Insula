@@ -99,20 +99,47 @@
   }
 
   // ---------- sound (synthesised, same approach as game.js) ----------
-  let audioCtx = null, audioOut = null, lastFillAt = 0;
-  // One limiter in front of the speakers: the blips are loud now (2026-09-21,
-  // "the fill sound is too quiet") and a fast stroke overlaps several of
-  // them — without it they would clip into a crackle.
+  let audioCtx = null, audioOut = null, audioSoft = false, brightWave = null, lastFillAt = 0;
+  // Master stage: a soft clipper (2026-09-21). Up to 0.7 of full scale it is
+  // a straight wire; above, the tops round off towards 0.98 instead of
+  // clipping hard — so overlapping pops of a fast stroke never crackle, and
+  // the volume option can push a sound PAST full scale, where it cannot get
+  // taller, only denser (which the ear hears as louder). The first version
+  // used a compressor here; its low threshold flattened everything to the
+  // same level, so the upper half of the volume slider did nothing.
   function audioTarget() {
     if (audioOut) return audioOut;
     try {
-      const comp = audioCtx.createDynamicsCompressor();
-      comp.threshold.value = -8; comp.knee.value = 6; comp.ratio.value = 12;
-      comp.attack.value = 0.002; comp.release.value = 0.08;
-      comp.connect(audioCtx.destination);
-      audioOut = comp;
-    } catch (e) { audioOut = audioCtx.destination; }
+      const RANGE = 4;                       // the curve covers inputs of ±4
+      const pre = audioCtx.createGain();
+      pre.gain.value = 1 / RANGE;
+      const shaper = audioCtx.createWaveShaper();
+      const n = 4096, curve = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        const x = ((i / (n - 1)) * 2 - 1) * RANGE, ax = Math.abs(x);
+        // 0.98, not 1.0: the 2x oversampling filter overshoots by a hair.
+        curve[i] = Math.sign(x) * (ax <= 0.7 ? ax : 0.7 + 0.28 * Math.tanh((ax - 0.7) / 0.28));
+      }
+      shaper.curve = curve;
+      shaper.oversample = '2x';
+      pre.connect(shaper); shaper.connect(audioCtx.destination);
+      audioOut = pre; audioSoft = true;
+    } catch (e) { audioOut = audioCtx.destination; audioSoft = false; }
     return audioOut;
+  }
+  // The tone of the pops and chimes: a fundamental with five overtones. A
+  // triangle (the first version) has almost no energy at 1.4–4 kHz, where
+  // phone speakers and ears are most sensitive — at the same peak this
+  // sounds much louder. Odd overtones as sines and even ones as cosines keep
+  // the peaks from lining up: the most energy under a peak of 1 among the
+  // phase sets tried (RMS 0.67 of peak; a triangle has 0.58).
+  function brightTone() {
+    if (brightWave) return brightWave;
+    const amp = [0, 1, 0.55, 0.4, 0.28, 0.18, 0.1];
+    const real = new Float32Array(amp.length), imag = new Float32Array(amp.length);
+    for (let k = 1; k < amp.length; k++) { if (k % 2) imag[k] = amp[k]; else real[k] = amp[k]; }
+    brightWave = audioCtx.createPeriodicWave(real, imag);
+    return brightWave;
   }
   function unlockAudio() {
     try {
@@ -138,20 +165,27 @@
       if (kind === 'fill') { const now = performance.now(); if (now - lastFillAt < 35) return; lastFillAt = now; }
       const t = audioCtx.currentTime;
       const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-      // Peaks are about three times the first version (0.14 / 0.2 / 0.26 /
-      // 0.15), which phones barely played; the fill pop also rings a little
-      // longer. Site option pixelSoundVolume (percent) scales all of them.
-      let peak = 0.45, stop = 0.11;
-      if (kind === 'fill') { osc.type = 'triangle'; osc.frequency.setValueAtTime(720, t); }
-      else if (kind === 'color') { osc.type = 'triangle'; osc.frequency.setValueAtTime(520, t); osc.frequency.setValueAtTime(780, t + 0.07); peak = 0.5; stop = 0.22; }
-      else if (kind === 'done') { osc.type = 'triangle'; osc.frequency.setValueAtTime(523, t); osc.frequency.setValueAtTime(784, t + 0.09); osc.frequency.setValueAtTime(1046, t + 0.18); peak = 0.55; stop = 0.42; }
-      else { osc.type = 'square'; osc.frequency.setValueAtTime(400, t); osc.frequency.exponentialRampToValueAtTime(220, t + 0.14); peak = 0.3; stop = 0.16; }
+      // Loudness, asked for twice (2026-09-21). Full scale is the ceiling,
+      // so beyond it only the SHAPE of a sound can get louder: a brighter
+      // tone (brightTone), pops that ring longer, and a volume option that
+      // may drive the peaks past 1.0 into the soft clipper (audioTarget) —
+      // denser and louder, a little rougher from about 150% up. The first
+      // version peaked at 0.14 / 0.2 / 0.26 / 0.15 with a plain triangle.
+      let peak = 0.65, stop = 0.15;
+      if (kind === 'fill') osc.frequency.setValueAtTime(720, t);
+      else if (kind === 'color') { osc.frequency.setValueAtTime(520, t); osc.frequency.setValueAtTime(780, t + 0.07); peak = 0.68; stop = 0.26; }
+      else if (kind === 'done') { osc.frequency.setValueAtTime(523, t); osc.frequency.setValueAtTime(784, t + 0.09); osc.frequency.setValueAtTime(1046, t + 0.18); peak = 0.7; stop = 0.5; }
+      else { osc.type = 'square'; osc.frequency.setValueAtTime(400, t); osc.frequency.exponentialRampToValueAtTime(220, t + 0.14); peak = 0.4; stop = 0.16; }
+      if (kind !== 'wrong') { try { osc.setPeriodicWave(brightTone()); } catch (e) { osc.type = 'triangle'; } }
+      const out = audioTarget();
       const vol = Number(settings && settings.pixelSoundVolume);
-      peak = Math.max(0.001, Math.min(0.95, peak * (Number.isFinite(vol) && vol > 0 ? vol : 100) / 100));
+      peak = peak * (Number.isFinite(vol) && vol > 0 ? vol : 100) / 100;
+      // Without the soft clipper (it could not be built) stay under full scale.
+      peak = Math.max(0.001, Math.min(audioSoft ? 3.5 : 0.95, peak));
       gain.gain.setValueAtTime(0.0001, t);
       gain.gain.exponentialRampToValueAtTime(peak, t + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, t + stop);
-      osc.connect(gain); gain.connect(audioTarget());
+      osc.connect(gain); gain.connect(out);
       osc.start(t); osc.stop(t + stop + 0.02);
     } catch (e) { /* never break play for a sound */ }
   }
