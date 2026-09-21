@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260921-153629">
-<link rel="stylesheet" href="/css/admin.css?v=20260921-153629">
+<link rel="stylesheet" href="/css/base.css?v=20260921-154618">
+<link rel="stylesheet" href="/css/admin.css?v=20260921-154618">
 </head>
 
 <body>
@@ -418,6 +418,14 @@
                 <label><input type="checkbox" data-setting="pixelDragDefault" disabled> <strong>쓸어서 칠하기를 기본으로</strong> — 고른 번호의 칸을 누른 채 움직이면 이어서 칠해지고, 두 손가락(또는 다른 칸에서 시작한 드래그)은 화면을 옮깁니다. 끄면 탭으로만 칠하고 한 손가락으로 옮깁니다. 플레이어는 ✋ 버튼으로 언제든 바꿀 수 있고, 이 옵션은 처음 상태만 정합니다.</label>
               </div>
               <div class="admin-setting admin-setting-range">
+                <label for="adminPixelWrongMode"><strong>쓸어서 칠하다가 다른 번호의 칸에 닿으면</strong> — 아직 칠하지 않은 다른 번호 칸의 가운데를 지날 때의 동작입니다(모서리를 스친 것은 봐줍니다). "끝냄" 은 그 자리에서 쓸기를 멈추고 짧은 소리와 붉은 깜빡임으로 알립니다 — 번호를 찾지 않고 판 전체를 문질러 칠하는 것을 막습니다. <em>(기본: 그 쓸기를 끝냄)</em></label>
+                <select id="adminPixelWrongMode" class="admin-select" data-setting="pixelDragWrongMode" disabled>
+                  <option value="stop">그 쓸기를 끝냄 — 손을 떼고 다시 시작</option>
+                  <option value="mark">틀린 표시와 경고음을 남기고 계속 칠함</option>
+                  <option value="pass">조용히 지나감 (예전 동작)</option>
+                </select>
+              </div>
+              <div class="admin-setting admin-setting-range">
                 <label for="adminPixelSound">효과음 <strong>음량(%)</strong> — 칸을 칠할 때의 소리, 색 완성·작품 완성 소리, 틀린 번호 소리에 함께 적용됩니다. 100 이 기본 크기입니다. 약 150 부터는 신호가 최대 진폭에 닿으므로, 그 위로는 소리를 눌러 뭉쳐서 더 크게 들리게 합니다 — 올릴수록 커지지만 조금씩 거칠어집니다. 그 위의 상한은 기기의 미디어 음량입니다. <em>(기본: 100)</em></label>
                 <div class="admin-range"><input id="adminPixelSound" type="range" min="20" max="300" step="10" data-setting="pixelSoundVolume" disabled><output for="adminPixelSound" data-setting-output="pixelSoundVolume">100</output></div>
               </div>
@@ -783,16 +791,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260921-153629"></script>
-<script src="/js/i18n/ko.js?v=20260921-153629"></script>
-<script src="/js/common.js?v=20260921-153629"></script>
-<script src="/js/auth.js?v=20260921-153629"></script>
-<script src="/js/notifications.js?v=20260921-153629"></script>
-<script src="/js/push.js?v=20260921-153629"></script>
-<script src="/js/color-engine.js?v=20260921-153629"></script>
-<script src="/js/pixel-board.js?v=20260921-153629"></script>
-<script src="/js/matching.js?v=20260921-153629"></script>
-<script src="/js/admin.js?v=20260921-153629"></script>
+<script src="/js/supabase-client.js?v=20260921-154618"></script>
+<script src="/js/i18n/ko.js?v=20260921-154618"></script>
+<script src="/js/common.js?v=20260921-154618"></script>
+<script src="/js/auth.js?v=20260921-154618"></script>
+<script src="/js/notifications.js?v=20260921-154618"></script>
+<script src="/js/push.js?v=20260921-154618"></script>
+<script src="/js/color-engine.js?v=20260921-154618"></script>
+<script src="/js/pixel-board.js?v=20260921-154618"></script>
+<script src="/js/matching.js?v=20260921-154618"></script>
+<script src="/js/admin.js?v=20260921-154618"></script>
 
 </body>
 </html>

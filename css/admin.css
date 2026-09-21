@@ -127,6 +127,12 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
   background:var(--bg);
 }
 .admin-text:disabled{opacity:.55;}
+/* One-of-several options (<select data-setting>). */
+.admin-select{
+  max-width:560px;box-sizing:border-box;font-family:'Pretendard',sans-serif;font-size:13px;color:var(--text);
+  padding:8px 10px;border:1px solid var(--border-strong);border-radius:var(--r-xs);background:var(--bg);
+}
+.admin-select:disabled{opacity:.55;}
 .admin-range output{font-family:'Pretendard',sans-serif;font-weight:700;color:var(--primary);min-width:2.5em;}
 .admin-contrast-preview{display:block;width:180px;max-width:100%;height:auto;border:1px solid var(--border);border-radius:var(--r-xs);background:#fff;image-rendering:pixelated;}
 .admin-code{background:var(--gray-100);padding:10px 12px;border-radius:var(--r-xs);font-size:12.5px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;}

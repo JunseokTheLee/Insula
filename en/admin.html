@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260921-153629">
-<link rel="stylesheet" href="/css/admin.css?v=20260921-153629">
+<link rel="stylesheet" href="/css/base.css?v=20260921-154618">
+<link rel="stylesheet" href="/css/admin.css?v=20260921-154618">
 </head>
 <body>
 
@@ -413,6 +413,14 @@
                 <label><input type="checkbox" data-setting="pixelDragDefault" disabled> <strong>Swipe to paint by default</strong> — a press on a cell of the chosen number paints and keeps painting as the finger moves; two fingers (or a press on any other cell) move the board. Off = tap paints, one finger moves. Players can switch either way with the ✋ button; this only sets the start.</label>
               </div>
               <div class="admin-setting admin-setting-range">
+                <label for="adminPixelWrongMode"><strong>When a swipe reaches a cell of another number</strong> — what happens as a stroke crosses the middle of an unpainted cell of a different number (grazing a corner is forgiven). "End" stops the stroke there with a short sound and a red flash — it keeps players from scribbling over the whole board without looking for the numbers. <em>(default: end the stroke)</em></label>
+                <select id="adminPixelWrongMode" class="admin-select" data-setting="pixelDragWrongMode" disabled>
+                  <option value="stop">End the stroke — lift and start again</option>
+                  <option value="mark">Leave the wrong mark and buzz, keep painting</option>
+                  <option value="pass">Pass over silently (the old behaviour)</option>
+                </select>
+              </div>
+              <div class="admin-setting admin-setting-range">
                 <label for="adminPixelSound">Sound <strong>volume (%)</strong> — the pop when a cell is painted, the color-done and finish chimes, and the wrong-number buzz. 100 is the built-in level. From about 150 the signal reaches full scale, so above that the sound is pressed denser to seem louder — it keeps getting louder, and a little rougher. Beyond that, the device's media volume is the limit. <em>(default: 100)</em></label>
                 <div class="admin-range"><input id="adminPixelSound" type="range" min="20" max="300" step="10" data-setting="pixelSoundVolume" disabled><output for="adminPixelSound" data-setting-output="pixelSoundVolume">100</output></div>
               </div>
@@ -677,15 +685,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260921-153629"></script>
-<script src="/js/i18n/en.js?v=20260921-153629"></script>
-<script src="/js/common.js?v=20260921-153629"></script>
-<script src="/js/auth.js?v=20260921-153629"></script>
-<script src="/js/notifications.js?v=20260921-153629"></script>
-<script src="/js/push.js?v=20260921-153629"></script>
-<script src="/js/color-engine.js?v=20260921-153629"></script>
-<script src="/js/pixel-board.js?v=20260921-153629"></script>
-<script src="/js/matching.js?v=20260921-153629"></script>
-<script src="/js/admin.js?v=20260921-153629"></script>
+<script src="/js/supabase-client.js?v=20260921-154618"></script>
+<script src="/js/i18n/en.js?v=20260921-154618"></script>
+<script src="/js/common.js?v=20260921-154618"></script>
+<script src="/js/auth.js?v=20260921-154618"></script>
+<script src="/js/notifications.js?v=20260921-154618"></script>
+<script src="/js/push.js?v=20260921-154618"></script>
+<script src="/js/color-engine.js?v=20260921-154618"></script>
+<script src="/js/pixel-board.js?v=20260921-154618"></script>
+<script src="/js/matching.js?v=20260921-154618"></script>
+<script src="/js/admin.js?v=20260921-154618"></script>
 </body>
 </html>

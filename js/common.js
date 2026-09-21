@@ -679,6 +679,10 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // Colouring input: true = swipe paints (a press on a cell of the chosen
   // number starts a stroke); false = tap paints, one finger moves.
   pixelDragDefault: true,
+  // A drag stroke reaching an unpainted cell of another number: 'stop' ends
+  // the stroke there, 'mark' leaves the wrong mark and goes on, 'pass'
+  // skips it silently.
+  pixelDragWrongMode: 'stop',
   // Colouring sound level in percent of the built-in loudness (the fill pop,
   // the colour-done chime, the finish fanfare, the wrong-number buzz).
   pixelSoundVolume: 100,

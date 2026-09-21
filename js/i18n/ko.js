@@ -278,6 +278,7 @@ const T = {
   cgPanModeOn: '이동 모드 켜짐 — 탭으로만 칠하기 (눌러서 끄기)',
   cgPanModeOff: '이동 모드 — 켜면 드래그가 칠하지 않고 이동만 합니다',
   cgTipDrag: '같은 번호 칸을 누른 채 쓸면 이어서 칠해져요. 두 손가락(또는 다른 칸)을 끌면 이동합니다.',
+  cgStrokeStopped: '다른 번호의 칸에 닿아 쓸기가 멈췄어요 — 손을 떼고 고른 번호의 칸에서 다시 시작하세요',
   // 색칠: 난이도 (2026-09-20)
   cgLevelEasy: '쉬움', cgLevelNormal: '보통', cgLevelHard: '어려움',
   cgLevelTitle: '{level} — 긴 변 {n}칸',

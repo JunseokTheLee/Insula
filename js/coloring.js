@@ -99,7 +99,7 @@
   }
 
   // ---------- sound (synthesised, same approach as game.js) ----------
-  let audioCtx = null, audioOut = null, audioSoft = false, brightWave = null, lastFillAt = 0;
+  let audioCtx = null, audioOut = null, audioSoft = false, brightWave = null, lastFillAt = 0, lastWrongAt = 0;
   // Master stage: a soft clipper (2026-09-21). Up to 0.7 of full scale it is
   // a straight wire; above, the tops round off towards 0.98 instead of
   // clipping hard — so overlapping pops of a fast stroke never crackle, and
@@ -163,6 +163,7 @@
       // A stroke fills several cells a frame: one pop per 35 ms is a quick
       // patter, not a stack of oscillators.
       if (kind === 'fill') { const now = performance.now(); if (now - lastFillAt < 35) return; lastFillAt = now; }
+      if (kind === 'wrong') { const now = performance.now(); if (now - lastWrongAt < 120) return; lastWrongAt = now; }
       const t = audioCtx.currentTime;
       const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
       // Loudness, asked for twice (2026-09-21). Full scale is the ceiling,
@@ -175,8 +176,9 @@
       if (kind === 'fill') osc.frequency.setValueAtTime(720, t);
       else if (kind === 'color') { osc.frequency.setValueAtTime(520, t); osc.frequency.setValueAtTime(780, t + 0.07); peak = 0.68; stop = 0.26; }
       else if (kind === 'done') { osc.frequency.setValueAtTime(523, t); osc.frequency.setValueAtTime(784, t + 0.09); osc.frequency.setValueAtTime(1046, t + 0.18); peak = 0.7; stop = 0.5; }
+      else if (kind === 'tick') { osc.type = 'square'; osc.frequency.setValueAtTime(240, t); osc.frequency.exponentialRampToValueAtTime(150, t + 0.05); peak = 0.35; stop = 0.07; }   // a stroke ran into another number
       else { osc.type = 'square'; osc.frequency.setValueAtTime(400, t); osc.frequency.exponentialRampToValueAtTime(220, t + 0.14); peak = 0.4; stop = 0.16; }
-      if (kind !== 'wrong') { try { osc.setPeriodicWave(brightTone()); } catch (e) { osc.type = 'triangle'; } }
+      if (kind !== 'wrong' && kind !== 'tick') { try { osc.setPeriodicWave(brightTone()); } catch (e) { osc.type = 'triangle'; } }
       const out = audioTarget();
       const vol = Number(settings && settings.pixelSoundVolume);
       peak = peak * (Number.isFinite(vol) && vol > 0 ? vol : 100) / 100;
@@ -731,6 +733,27 @@
       hlCtx.strokeRect(x + 1, y + 1, cellPx - 2, cellPx - 2);
     }
   }
+  // A brief red flash on one cell (a stroke ran into it), on the highlight
+  // layer; afterwards the cell gets back whatever highlight it should have.
+  function flashCell(i) {
+    if (!board || !hlCtx) return;
+    const x = (i % board.w) * cellPx, y = Math.floor(i / board.w) * cellPx;
+    hlCtx.clearRect(x, y, cellPx, cellPx);
+    hlCtx.fillStyle = 'rgba(192,82,47,.6)';
+    hlCtx.fillRect(x, y, cellPx, cellPx);
+    const b = board;
+    setTimeout(() => {
+      if (board !== b) return;
+      hlCtx.clearRect(x, y, cellPx, cellPx);
+      if (board.cells[i] === selected && !pixelBitGet(bits, i)) {
+        hlCtx.fillStyle = 'rgba(26,60,43,.22)';
+        hlCtx.strokeStyle = 'rgba(26,60,43,.75)';
+        hlCtx.lineWidth = Math.max(1, Math.round(cellPx * 0.08));
+        hlCtx.fillRect(x, y, cellPx, cellPx);
+        hlCtx.strokeRect(x + 1, y + 1, cellPx - 2, cellPx - 2);
+      }
+    }, 380);
+  }
   function applyTransform() {
     const t = `translate(${panX}px, ${panY}px) scale(${scale})`;
     for (const el of [baseCv, hlCv, numCv, $('cgLayer'), $('cgPeek')]) if (el) el.style.transform = t;
@@ -1208,7 +1231,7 @@
   function wireStage() {
     stage = $('cgStage');
     if (!stage) return;
-    let down = false, moved = false, painting = false, lastX = 0, lastY = 0, pinch = 0, lastCell = -1;
+    let down = false, moved = false, painting = false, blocked = false, lastX = 0, lastY = 0, pinch = 0, lastCell = -1;
     let lastBx = 0, lastBy = 0;   // where the stroke last painted, in cells (fractional)
     let spaceDown = false;         // Space + drag moves the board (desktop has no second finger)
     addEventListener('keydown', e => { if (e.code === 'Space') spaceDown = true; });
@@ -1218,14 +1241,39 @@
       const r = stage.getBoundingClientRect();
       return { x: (clientX - r.left - panX) / scale / cellPx, y: (clientY - r.top - panY) / scale / cellPx };
     }
+    // What a stroke does at an unpainted cell of ANOTHER number (site option
+    // pixelDragWrongMode, 2026-09-21): 'stop' ends the stroke there with a
+    // tick and a red flash — before, scribbling over the whole board painted
+    // a colour without ever looking for its cells; 'mark' leaves the mark and
+    // buzz a wrong tap gets and goes on; 'pass' skips it silently (the first
+    // behaviour). Only the middle 60% of a cell counts, so grazing a corner on
+    // the way past is forgiven. Painted cells and empty ones never stop it.
+    function wrongMode() { const m = settings.pixelDragWrongMode; return m === 'pass' || m === 'mark' ? m : 'stop'; }
+    function stopStroke(i) {
+      painting = false; blocked = true;
+      flashCell(i);
+      beep('tick');
+      if (!prefs.tipStop) { prefs.tipStop = true; savePrefs(); toast(tr('cgStrokeStopped')); }
+    }
     // Every cell the segment crosses — a fast swipe leaves no gaps.
     function paintAlong(x0, y0, x1, y1) {
-      const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 2));
+      const mode = wrongMode();
+      const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 3));
       for (let k = 1; k <= steps; k++) {
         const t = k / steps;
-        const cx = Math.floor(x0 + (x1 - x0) * t), cy = Math.floor(y0 + (y1 - y0) * t);
+        const fx = x0 + (x1 - x0) * t, fy = y0 + (y1 - y0) * t;
+        const cx = Math.floor(fx), cy = Math.floor(fy);
         if (cx < 0 || cy < 0 || cx >= board.w || cy >= board.h) continue;
         const i = cy * board.w + cx;
+        const c = board.cells[i];
+        if (mode !== 'pass' && c !== PIXEL_EMPTY && c !== selected && !pixelBitGet(bits, i)) {
+          const ix = fx - cx, iy = fy - cy;
+          if (ix >= 0.2 && ix <= 0.8 && iy >= 0.2 && iy <= 0.8) {
+            if (mode === 'stop') { stopStroke(i); return; }
+            if (i !== lastCell) { lastCell = i; paintCell(cx, cy); }   // 'mark': what a wrong tap does
+          }
+          continue;
+        }
         if (i === lastCell) continue;
         lastCell = i;
         paintCell(cx, cy, true);
@@ -1241,7 +1289,7 @@
       // The zoom toolbar sits on the stage: capturing the pointer here would
       // swallow its buttons' clicks (the click needs the up on the button).
       if (e.target.closest('button, .zoom-toolbar')) return;
-      down = true; moved = false; painting = false; lastX = e.clientX; lastY = e.clientY; lastCell = -1;
+      down = true; moved = false; painting = false; blocked = false; lastX = e.clientX; lastY = e.clientY; lastCell = -1;
       try { stage.setPointerCapture(e.pointerId); } catch (err) {}
       if (!board) return;
       // Smart drag: a press on a cell of the chosen number starts a stroke;
@@ -1262,6 +1310,9 @@
       if (!down || !board) return;
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+      // A stopped stroke stays stopped until the finger lifts: it neither
+      // paints on nor turns into a pan.
+      if (blocked) return;
       if (painting) {
         const p = boardPoint(e.clientX, e.clientY);
         // A second finger arrived: that is a zoom, not a stroke — follow the
@@ -1279,14 +1330,14 @@
       try { stage.releasePointerCapture(e.pointerId); } catch (err) {}
       // A tap that did not start a stroke (another number, a painted cell,
       // pan mode): the plain tap, with the wrong-number mark when it is one.
-      if (!moved && !painting && board && e.button !== 1 && e.button !== 2) {
+      if (!moved && !painting && !blocked && board && e.button !== 1 && e.button !== 2) {
         const c = cellAt(e.clientX, e.clientY);
         if (c) { cursor = null; $('cgCursor').hidden = true; paintCell(c.x, c.y); }
       }
-      painting = false;
+      painting = false; blocked = false;
     };
     stage.addEventListener('pointerup', up);
-    stage.addEventListener('pointercancel', () => { down = false; painting = false; });
+    stage.addEventListener('pointercancel', () => { down = false; painting = false; blocked = false; });
     stage.addEventListener('contextmenu', e => e.preventDefault());   // right-drag moves
     stage.addEventListener('wheel', e => {
       e.preventDefault();

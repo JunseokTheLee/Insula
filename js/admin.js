@@ -1026,7 +1026,7 @@ function adminVisitsChartSvg(rows) {
 // admin_set_site_settings RPC and writes the result into this tab's cached
 // copy, so the admin sees the effect on the next page they open.
 async function loadAdminSettings() {
-  const inputs = document.querySelectorAll('#adminSettings input[data-setting]');
+  const inputs = document.querySelectorAll('#adminSettings input[data-setting], #adminSettings select[data-setting]');
   if (!inputs.length) return;
   // Read the row directly (not getSiteSettings): this page must show what
   // is stored, not a cached copy.
@@ -1042,6 +1042,7 @@ async function loadAdminSettings() {
     adminSettingApply(input, adminSettingIsNumber(input) ? adminSettingNumber(settings[key], key)
       : adminSettingIsColor(input) ? adminSettingColor(settings[key], key)
       : adminSettingIsText(input) ? String(settings[key] ?? '')
+      : adminSettingIsChoice(input) ? adminSettingChoice(input, settings[key])
       : !!settings[key]);
     input.disabled = false;
     // Dragging a slider only updates its readout and preview; the save
@@ -1060,6 +1061,13 @@ function adminSettingIsColor(input) { return input.type === 'color'; }
 // Free-text options (the VAPID public key, the push Edge Function URL):
 // stored as-is, trimmed, and saved when the field loses focus.
 function adminSettingIsText(input) { return input.type === 'text' || input.type === 'url'; }
+// One-of-several options (<select data-setting>, e.g. pixelDragWrongMode):
+// the stored string when it is one of the <option> values, else the default.
+function adminSettingIsChoice(input) { return input.tagName === 'SELECT'; }
+function adminSettingChoice(input, v) {
+  const values = [...input.options].map(o => o.value);
+  return values.includes(String(v)) ? String(v) : String(SITE_SETTING_DEFAULTS[input.dataset.setting] ?? values[0]);
+}
 function adminSettingColor(v, key) {
   const raw = String(v || '').trim();
   return /^#[0-9a-f]{6}$/i.test(raw) ? raw.toUpperCase() : String(SITE_SETTING_DEFAULTS[key]).toUpperCase();
@@ -1070,13 +1078,14 @@ function adminSettingNumber(v, key) {
 }
 function adminSettingValue(input) {
   if (adminSettingIsText(input)) return input.value.trim();
+  if (adminSettingIsChoice(input)) return adminSettingChoice(input, input.value);
   if (adminSettingIsColor(input)) return adminSettingColor(input.value, input.dataset.setting);
   if (!adminSettingIsNumber(input)) return input.checked;
   const min = Number(input.min || 0), max = Number(input.max || 100);
   return Math.min(max, Math.max(min, adminSettingNumber(input.value, input.dataset.setting)));
 }
 function adminSettingApply(input, value) {
-  if (adminSettingIsNumber(input) || adminSettingIsText(input)) input.value = String(value ?? '');
+  if (adminSettingIsNumber(input) || adminSettingIsText(input) || adminSettingIsChoice(input)) input.value = String(value ?? '');
   else if (adminSettingIsColor(input)) input.value = adminSettingColor(value, input.dataset.setting).toLowerCase(); // <input type=color> wants lowercase
   else input.checked = !!value;
   input.dataset.saved = JSON.stringify(value);

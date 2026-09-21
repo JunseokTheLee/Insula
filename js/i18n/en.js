@@ -278,6 +278,7 @@ const T = {
   cgPanModeOn: 'Move mode on — paint by tap only (press to turn off)',
   cgPanModeOff: 'Move mode — when on, dragging only moves the board',
   cgTipDrag: 'Press a cell of the chosen number and swipe to keep painting. Drag with two fingers (or from another cell) to move.',
+  cgStrokeStopped: 'The stroke stopped at a cell of another number — lift and start again on your number',
   // Colouring: difficulty levels (2026-09-20)
   cgLevelEasy: 'Easy', cgLevelNormal: 'Normal', cgLevelHard: 'Hard',
   cgLevelTitle: '{level} — {n} cells on the long side',
