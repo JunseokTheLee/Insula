@@ -92,7 +92,6 @@
   column-gap:40px;row-gap:0;align-items:start;}
 .hero-card{display:contents;}
 .hero-copy{grid-area:copy;}
-.hero-eyebrow{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:600;color:#5F6B9E;margin:0 0 14px;}
 .hero h1{font-family:'Pretendard',sans-serif;font-weight:800;font-size:clamp(34px,4vw,56px);letter-spacing:-.03em;line-height:1.18;margin:0 0 18px;color:var(--hero-ink);word-break:keep-all;}
 .hero-lead{font-family:'Pretendard',sans-serif;color:var(--gray-700);font-size:16px;line-height:1.75;margin:0 0 26px;max-width:480px;word-break:keep-all;}
 .hero-cta{grid-area:cta;margin:0 0 34px;}
