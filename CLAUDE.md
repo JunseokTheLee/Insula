@@ -289,7 +289,7 @@ git config core.hooksPath tools/git-hooks
 - 옵션 하나를 추가하는 절차 (세 곳):
   1. `SITE_SETTING_DEFAULTS` 에 키와 기본값 (camelCase, 예: `showCampaignPreview: false`).
   2. `en/admin.html`·`ko/admin.html` 의 `#adminSettings` 에 `<input type="checkbox" data-setting="키" disabled>` 체크박스 한 줄씩 (문구는 HTML 에 언어별로 직접 — 4절). `admin.js` 가 `data-setting` 을 자동으로 묶어 읽고 저장한다. 숫자 옵션은 `type="range"`(또는 `number`)에 `min`·`max` 를 두면 같은 방식으로 묶이고, 문자열 옵션은 `type="text"`·`type="url"`(클래스 `admin-text`)로 묶여 포커스를 잃을 때 저장되고, 색 옵션은 `type="color"`(값 `#RRGGBB`)로 묶이며, 옆의 `<output data-setting-output="키">` 에 값이 표시된다 (2026.9.10, `previewContrast`·`previewTint`).
-  3. 기능 코드에서 `getSiteSettings().then(s => …)` 로 읽는다. 절대 거부(reject)하지 않고 테이블이 없거나 오프라인이면 기본값을 준다. 페이지당 1회 조회, `sessionStorage` 60초 캐시, 관리자 자신의 저장은 캐시를 즉시 갱신한다.
+  3. 기능 코드에서 `getSiteSettings().then(s => …)` 로 읽는다. **오래 열려 있는 페이지(게임)는 `refreshSiteSettings()` 로 다시 읽는다** (2026.9.21): `getSiteSettings()` 는 페이지 수명 동안 promise 하나로 답하므로, 열려 있던 색칠 게임 탭은 관리자가 옵션을 바꿔도 새로고침 전까지 예전 값으로 동작했다(쓸기 방식을 "끝냄" 으로 되돌렸는데 게임 탭은 계속 "표시 남기고 계속" 이던 실제 사례 — 운영 코드는 정상이었다). 색칠 게임은 판을 열 때와 탭이 다시 앞으로 올 때 `refreshSiteSettings()`(60초 캐시가 지났을 때만 테이블을 다시 읽음)를 부른다. 옵션이 "안 먹는다" 는 보고를 받으면 먼저 DB 값(anon 으로 `site_settings` 조회)과 그 페이지를 언제 열었는지를 확인한다. 절대 거부(reject)하지 않고 테이블이 없거나 오프라인이면 기본값을 준다. 페이지당 1회 조회, `sessionStorage` 60초 캐시, 관리자 자신의 저장은 캐시를 즉시 갱신한다.
 - 서버에서도 강제해야 하는 옵션(예: 업로드 잠금)은 RLS 정책·RPC 안에서 같은 `site_settings` 행을 읽어 검사한다. 화면 가림만으로 끝내지 않는다.
 - 현재 옵션: `showCampaignPreview` — 캠페인 페이지 오른쪽 "미리보기" 썸네일 표시, 기본 꺼짐.
 - 현재 옵션: `countVisits` — 방문자 수 집계(브라우저당 하루 1회, 회원/게스트 구분), 기본 켜짐. `record_visit()` 이 서버에서도 검사한다.

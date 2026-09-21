@@ -744,6 +744,17 @@ function getSiteSettings() {
   }
   return siteSettingsPromise;
 }
+// getSiteSettings() answers from one promise for the life of the page, so a
+// page that stays open — a game left on its list, a board under way — kept
+// the options it booted with, and an admin's change seemed not to work
+// until a reload (2026-09-21: the stroke mode was switched back to "stop"
+// while a game tab still ran "mark"). This drops that promise once the
+// 60-second tab cache has expired, so the next read goes to the table; while
+// the cache is fresh it costs nothing. Resolves like getSiteSettings().
+function refreshSiteSettings() {
+  if (!readSiteSettingsCache()) siteSettingsPromise = null;
+  return getSiteSettings();
+}
 
 // ---------- game entry points ----------
 // The nav link and the home/campaign banners are static markup on every

@@ -555,7 +555,15 @@
     } else if (saved.scrollY) window.scrollTo(0, saved.scrollY);
   }
   // ---------- opening a board ----------
+  // Options an admin changed while this page was open (the stroke mode, the
+  // volume) are picked up when a board opens and when the tab comes back to
+  // the front — not only on the next reload. At most one small read a minute.
+  function refreshSettings() {
+    if (typeof refreshSiteSettings !== 'function') return;
+    refreshSiteSettings().then(next => { if (next) settings = next; }).catch(() => {});
+  }
   async function openBoard(a, level) {
+    refreshSettings();
     level = LEVELS.includes(level) ? level : suggestedLevel(a.id);
     if (!me.id && settings.pixelAnonymousPlay === false) { toast(tr('cgNeedSignIn')); openAuthModal(); return; }
     unlockAudio();
@@ -923,7 +931,7 @@
   // iOS reloads pages freely (memory pressure, pull-to-refresh); save when
   // the page is about to go, not only on a timer.
   addEventListener('pagehide', () => { if (board) flushSave(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden && board) flushSave(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { if (board) flushSave(); } else refreshSettings(); });
 
   // ---------- finishing ----------
   async function finish() {
