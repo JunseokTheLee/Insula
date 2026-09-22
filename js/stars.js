@@ -15,8 +15,10 @@
 // page: feGaussianBlur re-runs every time the thing it wraps changes, and
 // every star animated, so a phone was doing hundreds of filter passes a
 // frame. A radial gradient looks the same and costs nothing once painted.
-// The background star field is one <path>, not 190 <circle>s, and only the
-// first ANIM_BUDGET sparkles breathe.
+// The background star field is five <path>s, not 190 <circle>s, and only
+// the first ANIM_BUDGET sparkles breathe. Those three drift as one group
+// (a Milky Way, user 2026-09-22) — a transform, which costs nothing per
+// frame; the constellation above them never moves.
 //
 // Needs sb, me, tr, common.js (getSiteSettings/toast/openArtworkById/
 // profileUrl/cdnUrl), lightbox.js (the artwork a star opens) and
@@ -96,15 +98,52 @@
     defs.appendChild(lg);
     return { halo, line: `url(#${id}l)` };
   }
-  // One path, many sub-circles: the far-away stars cost a single node.
+  // The far field: a slow river of light behind the constellation.
+  //
+  // Few nodes, many sub-circles. The stars are split into five bands that
+  // fade on different clocks, so what the eye sees is stars changing
+  // brightness rather than one layer pulsing, and all five sit in a group
+  // that slides exactly one field-width and starts over. Every star is
+  // therefore drawn twice, one width apart, which is what makes the loop
+  // seamless; the svg viewport clips the copy that is off screen.
+  //
+  // Cost: six painted nodes and seven animations, every one of them a
+  // transform or an opacity — the two the compositor can run by itself.
+  // No filter, ever: see the note at the top of the file.
+  const WAY_SPEED = 7;        // user units per second: noticed only if you wait
+  const WAY_BANDS = 5;        // five clocks, so no two stars blink together
   function scatter(svg, w, h, seed, n) {
     const r = rnd(seed);
-    let d = '';
+    const bands = new Array(WAY_BANDS).fill('');
     for (let i = 0; i < n; i++) {
-      const x = (r() * w).toFixed(1), y = (r() * h).toFixed(1), q = +(r() * 1.4 + .35).toFixed(2);
-      d += `M${x} ${y} m${-q} 0 a${q} ${q} 0 1 0 ${q * 2} 0 a${q} ${q} 0 1 0 ${-q * 2} 0 `;
+      const x = r() * w, y = (r() * h).toFixed(1), q = +(r() * 1.4 + .35).toFixed(2);
+      const dot = cx => `M${cx.toFixed(1)} ${y} m${-q} 0 a${q} ${q} 0 1 0 ${q * 2} 0 a${q} ${q} 0 1 0 ${-q * 2} 0 `;
+      bands[i % WAY_BANDS] += dot(x) + dot(x + w);
     }
-    svg.appendChild(el('path', { d, fill: '#fff', opacity: .34, 'aria-hidden': 'true' }));
+    // A faint band of haze for the stars to run along, drawn under them.
+    const gid = 'way' + (++uidN);
+    const dd = el('defs', {});
+    const rg = el('radialGradient', { id: gid });
+    rg.appendChild(el('stop', { offset: '0', 'stop-color': '#dce7ff', 'stop-opacity': '.14' }));
+    rg.appendChild(el('stop', { offset: '.55', 'stop-color': '#c9d8ff', 'stop-opacity': '.06' }));
+    rg.appendChild(el('stop', { offset: '1', 'stop-color': '#c9d8ff', 'stop-opacity': '0' }));
+    dd.appendChild(rg);
+    svg.appendChild(dd);
+    svg.appendChild(el('ellipse', {
+      cx: (w * .5).toFixed(1), cy: (h * .46).toFixed(1), rx: (w * .78).toFixed(1), ry: (h * .23).toFixed(1),
+      transform: `rotate(-13 ${(w * .5).toFixed(1)} ${(h * .46).toFixed(1)})`,
+      fill: `url(#${gid})`, class: 'st-haze', 'aria-hidden': 'true',
+    }));
+    const g = el('g', { class: 'st-way', 'aria-hidden': 'true' });
+    g.style.setProperty('--way', (-w) + 'px');
+    g.style.animationDuration = Math.round(w / WAY_SPEED) + 's';
+    bands.forEach((d, i) => {
+      const p = el('path', { d, fill: '#fff', opacity: .34, class: 'st-way-band' });
+      p.style.animationDuration = (6.5 + i * 1.4).toFixed(1) + 's';
+      p.style.animationDelay = (-i * 1.7).toFixed(1) + 's';
+      g.appendChild(p);
+    });
+    svg.appendChild(g);
   }
   function meteor(svg, x, y, delay) {
     const g = el('g', { class: 'st-meteor', 'aria-hidden': 'true' });
@@ -531,6 +570,8 @@
     if (!fullOpen) scrollLock = document.documentElement.style.overflow;
     fullOpen = true;
     document.documentElement.style.overflow = 'hidden';
+    // The page behind is covered; stop paying for its animations.
+    document.documentElement.classList.add('st-full-open');
     $('stFullClose').focus();
   }
   function closeFull() {
@@ -540,6 +581,7 @@
     $('stFullBody').innerHTML = '';
     fullOpen = false;
     document.documentElement.style.overflow = scrollLock;
+    document.documentElement.classList.remove('st-full-open');
   }
   // Every constellation on one field, laid out to suit the screen's shape.
   function allSkySvg() {
@@ -552,7 +594,7 @@
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'st-full-sky', role: 'img' });
     svg.setAttribute('aria-label', tr('starsFullTitle', { n: groups.filter(g => g.full).length }));
     const defs = skyDefs(svg, '#9EC7FF');
-    scatter(svg, W, H, 5, Math.min(420, n * 60));
+    scatter(svg, W, H, 5, Math.min(260, n * 40));
     resetAnim();
 
     groups.forEach((g, k) => {

@@ -54,6 +54,10 @@ body.stars-dark{
   animation:st-drift 46s ease-in-out infinite alternate;
 }
 .stars-dark .app::after{
+  /* Overrides the -20vmax above: this layer is promoted (it animates),
+     and a surface that size costs real memory on a big monitor. 64px is
+     all the bleed a 30px drift can need. */
+  inset:-64px;
   background-image:
     radial-gradient(1.6px 1.6px at 12% 18%, rgba(255,255,255,.85), transparent 60%),
     radial-gradient(1.2px 1.2px at 74% 9%, rgba(255,255,255,.6), transparent 60%),
@@ -64,14 +68,48 @@ body.stars-dark{
     radial-gradient(1.3px 1.3px at 95% 78%, rgba(206,224,255,.6), transparent 60%),
     radial-gradient(1px 1px at 6% 46%, rgba(255,255,255,.45), transparent 60%);
   background-size:520px 520px;
-  /* Static: animating background-position repaints the whole viewport on
-     every frame, and the nebula drift above is enough movement. */
+  /* It moves again (2026-09-22, user: the background stars should change
+     brightness and flow like the Milky Way) — but with transform and
+     opacity, which the compositor runs on its own, never with
+     background-position, which repainted the whole viewport every frame.
+     The drift stays well inside the 64px bleed, so no edge can show. */
+  will-change:transform,opacity;
+  animation:st-field-a 120s ease-in-out infinite alternate,
+            st-field-dim 15s ease-in-out infinite;
+}
+/* A second, sparser field on the opposite clock. While one dims the other
+   brightens, so what the eye reads is STARS changing brightness, not a
+   sheet fading. It hangs off .stars-page because .app has only the two
+   pseudo-elements above, and z-index:-1 keeps it behind the page content
+   inside .main (which is its own stacking context). */
+.stars-dark .stars-page::before{
+  content:'';position:fixed;inset:-64px;z-index:-1;pointer-events:none;
+  background-image:
+    radial-gradient(1.4px 1.4px at 31% 27%, rgba(255,255,255,.75), transparent 60%),
+    radial-gradient(1px 1px at 63% 71%, rgba(206,224,255,.6), transparent 60%),
+    radial-gradient(1.7px 1.7px at 84% 34%, rgba(255,239,214,.62), transparent 60%),
+    radial-gradient(1.1px 1.1px at 17% 82%, rgba(255,255,255,.5), transparent 60%),
+    radial-gradient(1.3px 1.3px at 49% 12%, rgba(255,255,255,.55), transparent 60%);
+  background-size:430px 430px;
+  will-change:transform,opacity;
+  animation:st-field-b 150s ease-in-out infinite alternate,
+            st-field-dim 15s ease-in-out -7.5s infinite;
 }
 .stars-dark .main,.stars-dark .topnav,.stars-dark #legal-footer{position:relative;z-index:1;}
 @keyframes st-drift{
   from{transform:translate3d(-2%,-1%,0) scale(1);}
   to{transform:translate3d(2%,2%,0) scale(1.08);}
 }
+/* Two minutes from one end to the other: a current, not a movement. */
+@keyframes st-field-a{
+  from{transform:translate3d(-30px,-16px,0);}
+  to{transform:translate3d(30px,18px,0);}
+}
+@keyframes st-field-b{
+  from{transform:translate3d(24px,12px,0);}
+  to{transform:translate3d(-24px,-14px,0);}
+}
+@keyframes st-field-dim{ 0%,100%{opacity:1;} 50%{opacity:.58;} }
 
 /* ---------- frame (CLAUDE.md §7: no page-specific max-width) ---------- */
 .stars-page{max-width:var(--frame-max);margin:0 auto;padding:26px var(--gutter) 60px;}
@@ -209,6 +247,19 @@ body.stars-dark{
 /* Only the sparkle animates, and only for the first few stars on a page
    (ANIM_BUDGET in js/stars.js). Halos and cores are painted once. */
 .st-spark{transform-box:fill-box;transform-origin:center;animation:st-twinkle 3.6s ease-in-out infinite;}
+
+/* The far field behind a constellation (scatter(), js/stars.js).
+   .st-way slides the whole group by exactly one field width and starts
+   over — --way and the duration come from JS, because the width differs
+   per sky and the speed must not. The five bands inside it dim on
+   different clocks, which is what makes the background twinkle. The
+   constellation is NOT in this group: it stays exactly where it is. */
+@keyframes st-way-flow{ from{transform:translate3d(0,0,0);} to{transform:translate3d(var(--way,-960px),0,0);} }
+@keyframes st-way-dim{ 0%,100%{opacity:.5;} 50%{opacity:.16;} }
+@keyframes st-haze-dim{ 0%,100%{opacity:.9;} 50%{opacity:.45;} }
+.st-way{animation:st-way-flow 140s linear infinite;will-change:transform;}
+.st-way-band{animation:st-way-dim 8s ease-in-out infinite;}
+.st-haze{animation:st-haze-dim 26s ease-in-out infinite;}
 /* Lines draw themselves the first time a sky is painted. */
 @keyframes st-draw{ from{stroke-dashoffset:var(--len);} to{stroke-dashoffset:0;} }
 .st-line-lit{animation:st-draw 1.5s cubic-bezier(.22,.8,.3,1) both;}
@@ -364,7 +415,8 @@ body.stars-dark{
 @media (prefers-reduced-motion: reduce){
   .stars-dark .app::before,.stars-dark .app::after,
   .stars-page h1,.st-brand-mark,
-  .st-spark,.st-line-lit,.st-meteor,
+  .stars-dark .stars-page::before,
+  .st-spark,.st-line-lit,.st-meteor,.st-way,.st-way-band,.st-haze,
   .st-whale-body,.st-flow,.st-aurora,.st-bubble,.st-whale-eye,
   .st-full,.st-emblem.won{animation:none !important;}
   .st-meteor{display:none;}
@@ -380,6 +432,18 @@ body.stars-dark{
   animation:st-full-in .22s ease-out;
 }
 .st-full[hidden]{display:none;}
+/* The page underneath is hidden by this layer but would keep animating,
+   and the overlay's own sky is the biggest one we draw. Pause everything
+   behind, keep what is inside running (an id beats the html class). */
+html.st-full-open .st-way,html.st-full-open .st-way-band,html.st-full-open .st-haze,
+html.st-full-open .st-spark,html.st-full-open .st-meteor,html.st-full-open .st-line-lit,
+html.st-full-open .st-whale-body,html.st-full-open .st-flow,html.st-full-open .st-aurora,
+html.st-full-open .st-bubble,html.st-full-open .st-whale-eye,
+html.st-full-open .stars-dark .app::before,html.st-full-open .stars-dark .app::after,
+html.st-full-open .stars-dark .stars-page::before{animation-play-state:paused;}
+#stFull .st-way,#stFull .st-way-band,#stFull .st-haze,#stFull .st-spark,#stFull .st-meteor,
+#stFull .st-whale-body,#stFull .st-flow,#stFull .st-aurora,#stFull .st-bubble,
+#stFull .st-whale-eye{animation-play-state:running;}
 @keyframes st-full-in{from{opacity:0;}to{opacity:1;}}
 .st-full-bar{
   flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px;
