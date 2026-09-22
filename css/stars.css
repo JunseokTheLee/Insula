@@ -2,138 +2,360 @@
    The second dark wing of the site. `body.stars-dark` re-points the shared
    colour tokens exactly as `body.pf-dark` does for the portfolio viewer, so
    the header, modals, lightbox and toast follow along without their own
-   overrides; the few hard-coded white boxes are re-coloured below. */
+   overrides; the few hard-coded white boxes are re-coloured below.
+
+   The sky is meant to look like a sky (2026-09-21, "make it big and sparkle"):
+   a full-width panel per night, stars with a blurred halo and a four-point
+   sparkle that breathes, lines that draw themselves in, a nebula wash and a
+   drifting star field. Everything is SVG + CSS — no library, no build step,
+   and every animation stops under prefers-reduced-motion (bottom of file). */
 body.stars-dark{
-  --bg:#0b1020;--surface:#141b30;--text:#f2f4fb;--muted:rgba(242,244,251,.62);
+  --bg:#070b17;--surface:#111832;--text:#f2f4fb;--muted:rgba(242,244,251,.66);
   --border:rgba(255,255,255,.09);--border-strong:rgba(255,255,255,.2);
-  --gray-0:#0b1020;--gray-50:#141b30;--gray-100:#1a2238;--gray-200:rgba(255,255,255,.12);
+  --gray-0:#070b17;--gray-50:#111832;--gray-100:#18203a;--gray-200:rgba(255,255,255,.12);
   --gray-900:#f2f4fb;--primary-soft:rgba(158,199,255,.14);
-  --st-accent:#9EC7FF;
-  background:#0b1020;color:var(--text);
+  --st-accent:#9EC7FF;--st-gold:#FFD98E;
+  background:#070b17;color:var(--text);
 }
-.stars-dark .app{background:#0b1020;}
-.stars-dark .topnav{background:rgba(11,16,32,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
-.stars-dark .nav-link:hover,.stars-dark .nav-link.active{color:#9EC7FF;}
+.stars-dark .app{background:transparent;}
+.stars-dark .topnav{background:rgba(7,11,23,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+.stars-dark .nav-link:hover,.stars-dark .nav-link.active{color:var(--st-accent);}
 .stars-dark .lang-toggle{background:rgba(255,255,255,.1);}
-.stars-dark .lang-btn.active{background:#f2f4fb;color:#0b1020;}
+.stars-dark .lang-btn.active{background:#f2f4fb;color:#070b17;}
 .stars-dark #logoutBtn{background:transparent;color:var(--text);border-color:var(--border-strong);}
-.stars-dark .field input[type="text"],.stars-dark .field textarea,.stars-dark .field select{background:#182034;color:var(--text);border-color:var(--border-strong);}
-.stars-dark .field select option{background:#182034;color:var(--text);}
-.stars-dark #toast{background:#f2f4fb;color:#0b1020;}
+.stars-dark .field input[type="text"],.stars-dark .field textarea,.stars-dark .field select{background:#151d36;color:var(--text);border-color:var(--border-strong);}
+.stars-dark .field select option{background:#151d36;color:var(--text);}
+.stars-dark #toast{background:#f2f4fb;color:#070b17;}
 .stars-dark .btn-cancel:hover{background:rgba(255,255,255,.08);}
 .stars-dark #legal-footer,.stars-dark #legal-footer a{color:var(--muted);}
 /* The lightbox paints light text with var(--bg) (dark on every other page);
    inside it the token keeps the site's light value. */
 .stars-dark .lightbox-overlay{--bg:#F7F7F5;--gray-0:#F7F7F5;}
-/* A faint field of stars behind the whole page. */
-.stars-dark .main-scroll{
-  background-image:
-    radial-gradient(1px 1px at 20% 12%, rgba(255,255,255,.35), transparent),
-    radial-gradient(1px 1px at 67% 24%, rgba(255,255,255,.28), transparent),
-    radial-gradient(1px 1px at 38% 58%, rgba(255,255,255,.22), transparent),
-    radial-gradient(1px 1px at 84% 71%, rgba(255,255,255,.3), transparent),
-    radial-gradient(1px 1px at 12% 84%, rgba(255,255,255,.24), transparent);
-  background-attachment:fixed;
+
+/* ---------- the page's own sky ----------
+   Two fixed layers behind everything: coloured nebulae that drift, and a
+   tiled field of pin-prick stars that drifts the other way. Fixed rather
+   than scrolling so the page feels like a window onto one sky. */
+.stars-dark .app::before,
+.stars-dark .app::after{
+  content:'';position:fixed;inset:-20vmax;z-index:0;pointer-events:none;
 }
+.stars-dark .app::before{
+  background:
+    radial-gradient(38vmax 30vmax at 12% 8%, rgba(88,110,255,.20), transparent 62%),
+    radial-gradient(42vmax 34vmax at 88% 22%, rgba(180,110,255,.16), transparent 64%),
+    radial-gradient(46vmax 32vmax at 62% 88%, rgba(40,170,190,.16), transparent 66%),
+    radial-gradient(30vmax 24vmax at 22% 72%, rgba(255,170,110,.10), transparent 60%);
+  filter:blur(18px);
+  animation:st-drift 46s ease-in-out infinite alternate;
+}
+.stars-dark .app::after{
+  background-image:
+    radial-gradient(1.6px 1.6px at 12% 18%, rgba(255,255,255,.85), transparent 60%),
+    radial-gradient(1.2px 1.2px at 74% 9%, rgba(255,255,255,.6), transparent 60%),
+    radial-gradient(1.8px 1.8px at 41% 62%, rgba(206,224,255,.75), transparent 60%),
+    radial-gradient(1.1px 1.1px at 88% 51%, rgba(255,255,255,.55), transparent 60%),
+    radial-gradient(1.5px 1.5px at 26% 88%, rgba(255,239,214,.7), transparent 60%),
+    radial-gradient(1px 1px at 58% 35%, rgba(255,255,255,.5), transparent 60%),
+    radial-gradient(1.3px 1.3px at 95% 78%, rgba(206,224,255,.6), transparent 60%),
+    radial-gradient(1px 1px at 6% 46%, rgba(255,255,255,.45), transparent 60%);
+  background-size:520px 520px;
+  animation:st-field 150s linear infinite;
+}
+.stars-dark .main,.stars-dark .topnav,.stars-dark #legal-footer{position:relative;z-index:1;}
+@keyframes st-drift{
+  from{transform:translate3d(-2%,-1%,0) scale(1);}
+  to{transform:translate3d(2%,2%,0) scale(1.08);}
+}
+@keyframes st-field{ from{background-position:0 0;} to{background-position:520px 1040px;} }
 
 /* ---------- frame (CLAUDE.md §7: no page-specific max-width) ---------- */
 .stars-page{max-width:var(--frame-max);margin:0 auto;padding:26px var(--gutter) 60px;}
 
 /* ---------- head ---------- */
-.st-head{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end;justify-content:space-between;margin:0 0 30px;}
+.st-head{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end;justify-content:space-between;margin:0 0 34px;}
 .st-head-copy{flex:1 1 420px;min-width:0;}
 /* The one place the sky's own brand line appears (user decision 2026-09-21:
    the site header and logo stay exactly as they are). */
 .st-brand{
   display:inline-flex;align-items:center;gap:7px;
-  font-family:'Pretendard',sans-serif;font-size:12.5px;font-weight:600;letter-spacing:.04em;
-  color:rgba(242,244,251,.6);margin:0 0 10px;
+  font-family:'Pretendard',sans-serif;font-size:12.5px;font-weight:600;letter-spacing:.06em;
+  color:rgba(242,244,251,.62);margin:0 0 12px;
 }
-.st-brand-mark{color:#FFD98E;font-size:14px;line-height:1;}
-.stars-page h1{font-family:'Pretendard',sans-serif;font-weight:800;font-size:clamp(28px,3.4vw,42px);letter-spacing:-.02em;margin:0 0 8px;color:var(--text);}
-.st-tagline{font-family:'Pretendard',sans-serif;font-size:17px;font-weight:600;color:#FFD98E;margin:0 0 10px;word-break:keep-all;}
+.st-brand-mark{color:var(--st-gold);font-size:15px;line-height:1;filter:drop-shadow(0 0 6px rgba(255,217,142,.8));animation:st-twinkle 3.2s ease-in-out infinite;}
+.stars-page h1{
+  font-family:'Pretendard',sans-serif;font-weight:800;font-size:clamp(30px,4vw,50px);
+  letter-spacing:-.025em;margin:0 0 10px;line-height:1.12;
+  background:linear-gradient(100deg,#ffffff 8%,#CFE0FF 42%,#FFD98E 78%,#ffffff 96%);
+  background-size:220% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:st-shimmer 9s ease-in-out infinite;
+}
+@keyframes st-shimmer{ 0%,100%{background-position:0% 50%;} 50%{background-position:100% 50%;} }
+.st-tagline{font-family:'Pretendard',sans-serif;font-size:17px;font-weight:600;color:var(--st-gold);margin:0 0 10px;word-break:keep-all;text-shadow:0 0 22px rgba(255,217,142,.35);}
 .st-lead{font-family:'Pretendard',sans-serif;font-size:14.5px;line-height:1.75;color:var(--muted);margin:0;max-width:62ch;word-break:keep-all;}
 .st-head-links{display:flex;flex-wrap:wrap;gap:10px;}
 .st-go{
   display:inline-flex;align-items:center;gap:8px;text-decoration:none;
   font-family:'Pretendard',sans-serif;font-size:13.5px;font-weight:600;
   padding:11px 18px;border-radius:var(--r-full);
-  border:1px solid var(--border-strong);color:var(--text);background:rgba(255,255,255,.04);
-  transition:background .14s linear;
+  border:1px solid var(--border-strong);color:var(--text);
+  background:rgba(255,255,255,.05);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  transition:background .16s linear,border-color .16s linear,box-shadow .16s linear;
 }
-.st-go:hover{background:rgba(255,255,255,.1);}
+.st-go:hover{background:rgba(255,255,255,.12);border-color:rgba(255,217,142,.5);box-shadow:0 0 24px rgba(255,217,142,.16);}
 
 /* ---------- sections ---------- */
-.st-section{margin:0 0 42px;}
+.st-section{margin:0 0 52px;}
 .st-section[hidden]{display:none;}
-.st-section-head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;}
-.st-h2{font-family:'Pretendard',sans-serif;font-size:19px;font-weight:700;color:var(--text);margin:0 0 6px;}
-.st-sub{font-family:'Pretendard',sans-serif;font-size:13.5px;line-height:1.7;color:var(--muted);margin:0 0 16px;max-width:62ch;word-break:keep-all;}
-.st-summary{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:600;color:#FFD98E;margin:2px 0 18px;}
+.st-section-head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;margin:0 0 4px;}
+.st-h2{font-family:'Pretendard',sans-serif;font-size:22px;font-weight:800;color:var(--text);margin:0 0 6px;letter-spacing:-.01em;}
+.st-sub{font-family:'Pretendard',sans-serif;font-size:13.5px;line-height:1.7;color:var(--muted);margin:0 0 18px;max-width:62ch;word-break:keep-all;}
+.st-summary{
+  display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-family:'Pretendard',sans-serif;font-size:14px;font-weight:700;color:var(--st-gold);
+  margin:4px 0 20px;padding:9px 18px;border-radius:var(--r-full);
+  background:linear-gradient(120deg,rgba(255,217,142,.14),rgba(158,199,255,.12));
+  border:1px solid rgba(255,217,142,.28);
+  box-shadow:0 0 30px rgba(255,217,142,.10) inset;
+}
+.st-summary:empty{display:none;}
 .st-notice,.st-empty{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--muted);line-height:1.7;margin:0 0 18px;}
 .st-empty p{margin:0 0 4px;}
 .st-empty-hint{font-size:13px;color:rgba(242,244,251,.45);}
-.st-foot{font-family:'Pretendard',sans-serif;font-size:13px;color:rgba(242,244,251,.45);text-align:center;margin:40px 0 0;word-break:keep-all;}
+.st-foot{font-family:'Pretendard',sans-serif;font-size:13.5px;color:rgba(242,244,251,.5);text-align:center;margin:48px 0 0;word-break:keep-all;letter-spacing:.01em;}
 
 /* ---------- owner controls ---------- */
 .st-owner{display:flex;flex-wrap:wrap;align-items:center;gap:14px;}
 .st-owner[hidden]{display:none;}
 .st-hide{display:inline-flex;align-items:center;gap:8px;font-family:'Pretendard',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;}
-.st-hide input{accent-color:#9EC7FF;cursor:pointer;}
-.stars-dark .admin-btn{background:rgba(255,255,255,.05);color:var(--text);border-color:var(--border-strong);}
-.stars-dark .admin-btn:hover{background:rgba(255,255,255,.12);}
+.st-hide input{accent-color:var(--st-accent);cursor:pointer;}
+.stars-dark .admin-btn{background:rgba(255,255,255,.06);color:var(--text);border-color:var(--border-strong);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+.stars-dark .admin-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,217,142,.5);}
 
-/* ---------- a night ---------- */
-/* auto-FILL, not auto-fit: with a single night auto-fit would stretch it
-   across the whole 1400px frame and blow the sky up to ~780px tall. */
-.st-nights{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;}
-.st-night{
-  border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 16px 10px;
-  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01));
+/* ---------- the stage: the constellation you are working on ----------
+   One wide panel in the middle of the page rather than a grid of small
+   cards (2026-09-21, user direction): a constellation has to be BIG to
+   read as a constellation. The caption sits on a scrim over the bottom of
+   the sky, where the shape never reaches. */
+.st-stage{
+  position:relative;overflow:hidden;margin:0 0 18px;
+  border:1px solid rgba(255,255,255,.11);border-radius:var(--r-lg);
+  background:
+    radial-gradient(85% 70% at 16% 6%, rgba(120,150,255,.20), transparent 62%),
+    radial-gradient(75% 70% at 88% 96%, rgba(190,130,255,.18), transparent 60%),
+    linear-gradient(170deg,#0e1530 0%,#0a1022 55%,#080c1c 100%);
+  box-shadow:0 34px 90px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.03) inset;
 }
-.st-night-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 6px;}
-.st-night-head h3{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:700;color:var(--st-accent);margin:0;}
-.st-night-count{font-family:'Pretendard',sans-serif;font-size:12px;color:var(--muted);flex-shrink:0;}
-.st-sky{display:block;width:100%;height:auto;overflow:visible;}
-.st-sky-special{max-width:220px;margin:0 auto;}
+.st-stage[hidden]{display:none;}
+/* The panel decides the shape; the sky inside slices to fill it (js sets
+   preserveAspectRatio). Wide on a monitor, square on a phone, so the
+   constellation stays big instead of shrinking with the width. */
+.st-stage-sky{position:relative;line-height:0;aspect-ratio:16/10;}
+.st-sky{position:absolute;inset:0;width:100%;height:100%;display:block;}
+@media (max-width:760px){ .st-stage-sky{aspect-ratio:1/1;} }
+@media (max-width:420px){ .st-stage-sky{aspect-ratio:5/6;} }
+.st-stage-info{
+  position:absolute;left:0;right:0;bottom:0;z-index:3;pointer-events:none;
+  padding:80px 30px 26px;
+  background:linear-gradient(180deg,rgba(8,12,26,0) 0%,rgba(8,12,26,.74) 48%,rgba(8,12,26,.94) 100%);
+}
+.st-stage-night{
+  display:inline-block;font-family:'Pretendard',sans-serif;font-size:11.5px;font-weight:800;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--st-accent);
+  text-shadow:0 0 18px currentColor;margin:0 0 6px;
+}
+.st-stage-name{
+  font-family:'Pretendard',sans-serif;font-size:clamp(24px,3vw,38px);font-weight:800;
+  letter-spacing:-.02em;margin:0 0 6px;color:#fff;
+  text-shadow:0 0 34px rgba(158,199,255,.4), 0 2px 18px rgba(0,0,0,.6);
+}
+.st-stage-line{font-family:'Pretendard',sans-serif;font-size:14.5px;line-height:1.6;color:rgba(242,244,251,.78);margin:0 0 12px;word-break:keep-all;}
+.st-pips{display:flex;gap:8px;}
+.st-pip{
+  width:11px;height:11px;border-radius:50%;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+}
+.st-pip.on{background:var(--pip,#fff);border-color:transparent;box-shadow:0 0 14px var(--pip,#fff);}
+
 /* Stars are buttons: they must show they can be pressed and where focus is. */
-.st-star{cursor:pointer;transition:opacity .12s linear;}
-.st-star:hover{opacity:.75;}
-.st-star:focus-visible{outline:2px solid #FFD98E;outline-offset:2px;}
+.st-hit{cursor:pointer;}
+.st-hit:focus{outline:none;}
+.st-hit:focus-visible circle.st-core{stroke:#fff;stroke-width:2.5;}
+.st-hit:hover .st-burst,.st-hit:focus-visible .st-burst{opacity:.95;transform:scale(1.35);}
+.st-burst{transform-box:fill-box;transform-origin:center;transition:transform .18s ease-out,opacity .18s linear;}
 
-.st-caps{list-style:decimal;margin:10px 0 0;padding:0 0 0 22px;}
-.st-cap{font-family:'Pretendard',sans-serif;font-size:12.5px;line-height:1.55;color:rgba(242,244,251,.4);margin:0 0 5px;}
-.st-cap.done{color:var(--muted);}
-.st-cap b{display:block;font-weight:700;color:rgba(242,244,251,.55);}
-.st-cap.done b{color:var(--text);}
+/* The breathing: halo, sparkle and core each on their own rhythm, and each
+   star gets its own delay in JS so the sky never pulses in unison. */
+@keyframes st-twinkle{ 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.34;transform:scale(.72);} }
+@keyframes st-breathe{ 0%,100%{opacity:.24;} 50%{opacity:.54;} }
+@keyframes st-core{ 0%,100%{opacity:1;} 50%{opacity:.8;} }
+.st-spark{transform-box:fill-box;transform-origin:center;animation:st-twinkle 3.6s ease-in-out infinite;}
+.st-halo{animation:st-breathe 5.2s ease-in-out infinite;}
+.st-core{animation:st-core 3.6s ease-in-out infinite;}
+/* Lines draw themselves the first time a sky is painted. */
+@keyframes st-draw{ from{stroke-dashoffset:var(--len);} to{stroke-dashoffset:0;} }
+.st-line-lit{animation:st-draw 1.5s cubic-bezier(.22,.8,.3,1) both;}
+/* An empty slot: a dot that waits. */
+@keyframes st-wait{ 0%,100%{opacity:.34;} 50%{opacity:.14;} }
+.st-empty-dot{animation:st-wait 4.4s ease-in-out infinite;}
+/* A meteor crosses now and then; a few per sky on different clocks. */
+@keyframes st-shoot{
+  0%{opacity:0;transform:translate(0,0);}
+  3%{opacity:1;}
+  16%{opacity:0;transform:translate(340px,190px);}
+  100%{opacity:0;transform:translate(340px,190px);}
+}
+.st-meteor{transform-box:view-box;animation:st-shoot 13s linear infinite;}
 
-/* ---------- "Different Us" ---------- */
-.st-special{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:24px;align-items:center;}
-.st-badges{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 20px;}
-.st-badge{display:flex;gap:10px;align-items:flex-start;font-family:'Pretendard',sans-serif;font-size:12.5px;line-height:1.6;color:rgba(242,244,251,.42);}
-.st-badge.won{color:var(--muted);}
-.st-badge-mark{color:rgba(255,255,255,.25);font-size:15px;line-height:1.3;flex-shrink:0;}
-.st-badge.won .st-badge-mark{color:#FFD98E;}
-.st-badge b{display:block;font-weight:700;color:rgba(242,244,251,.55);}
-.st-badge.won b{color:var(--text);}
+/* ---------- the card that follows a star ---------- */
+.st-tip{
+  position:absolute;z-index:4;pointer-events:none;opacity:0;
+  transform:translate(-50%,-115%) scale(.94);transform-origin:bottom center;
+  transition:opacity .14s linear,transform .14s ease-out;
+  display:flex;gap:10px;align-items:center;width:max-content;max-width:280px;
+  padding:9px 12px;border-radius:var(--r-md);
+  background:rgba(10,15,30,.94);border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 18px 44px rgba(0,0,0,.6);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.st-tip.on{opacity:1;transform:translate(-50%,-125%) scale(1);}
+.st-tip img{width:44px;height:44px;border-radius:8px;object-fit:cover;background:#18203a;flex-shrink:0;}
+.st-tip-txt{min-width:0;}
+.st-tip-title{font-family:'Pretendard',sans-serif;font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.st-tip-by{font-family:'Pretendard',sans-serif;font-size:11.5px;color:rgba(242,244,251,.62);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.st-tip-game{font-family:'Pretendard',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--st-gold);margin-top:2px;}
 
+/* ---------- the strip: pick any constellation ---------- */
+.st-strip-wrap{position:relative;}
+.st-strip-wrap[hidden]{display:none;}
+.st-strip{
+  display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;
+  padding:4px 2px 14px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;
+}
+.st-strip::-webkit-scrollbar{height:8px;}
+.st-strip::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:var(--r-full);}
+.st-chip{
+  position:relative;flex:0 0 auto;width:112px;scroll-snap-align:start;
+  appearance:none;cursor:pointer;padding:8px 8px 10px;
+  border:1px solid rgba(255,255,255,.10);border-radius:var(--r-md);
+  background:linear-gradient(170deg,rgba(255,255,255,.05),rgba(255,255,255,.01));
+  transition:border-color .16s linear,box-shadow .16s linear,transform .16s ease-out,background .16s linear;
+}
+.st-chip svg{display:block;width:100%;height:auto;opacity:.72;}
+.st-chip:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.24);background:rgba(255,255,255,.07);}
+.st-chip.done svg{opacity:1;}
+.st-chip.on{
+  border-color:var(--st-accent);
+  box-shadow:0 0 0 1px var(--st-accent) inset, 0 12px 34px rgba(0,0,0,.45), 0 0 34px color-mix(in srgb, var(--st-accent) 30%, transparent);
+  background:linear-gradient(170deg,rgba(255,255,255,.10),rgba(255,255,255,.02));
+}
+.st-chip-no{
+  position:absolute;top:6px;left:6px;width:19px;height:19px;border-radius:50%;
+  display:grid;place-items:center;font-family:'Pretendard',sans-serif;font-size:10px;font-weight:800;
+  color:rgba(242,244,251,.5);border:1px solid rgba(255,255,255,.14);background:rgba(8,12,26,.6);
+}
+.st-chip.done .st-chip-no{color:#0b1020;background:var(--st-accent);border-color:transparent;}
+.st-chip-name{
+  display:block;font-family:'Pretendard',sans-serif;font-size:11.5px;font-weight:700;
+  color:rgba(242,244,251,.5);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.st-chip.done .st-chip-name{color:var(--text);}
+.st-chip.on .st-chip-name{color:var(--st-accent);}
+
+/* ---------- "Different Us": six drawn emblems ---------- */
+.st-badges{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:14px;}
+.st-badge{
+  display:flex;gap:14px;align-items:center;padding:14px 16px;
+  border:1px solid rgba(255,255,255,.08);border-radius:var(--r-lg);
+  background:linear-gradient(165deg,rgba(255,255,255,.04),rgba(255,255,255,.008));
+  font-family:'Pretendard',sans-serif;font-size:12.5px;line-height:1.6;color:rgba(242,244,251,.4);
+  transition:border-color .16s linear,box-shadow .16s linear,background .16s linear;
+}
+.st-badge.won{
+  color:var(--muted);border-color:rgba(255,217,142,.32);
+  background:linear-gradient(165deg,rgba(255,217,142,.10),rgba(255,255,255,.012));
+  box-shadow:0 0 38px rgba(255,217,142,.10) inset, 0 16px 40px rgba(0,0,0,.34);
+}
+.st-emblem{width:64px;height:64px;flex-shrink:0;opacity:.6;}
+.st-emblem.won{opacity:1;animation:st-emblem-in .7s cubic-bezier(.2,.9,.3,1.1) both;}
+@keyframes st-emblem-in{ from{opacity:0;transform:scale(.7) rotate(-14deg);} to{opacity:1;transform:none;} }
+.st-badge-txt{min-width:0;}
+.st-badge-txt b{display:block;font-weight:800;font-size:13.5px;color:rgba(242,244,251,.55);margin-bottom:2px;}
+.st-badge.won .st-badge-txt b{color:var(--text);}
 /* ---------- the whale ---------- */
 .st-whale{
-  border:1px solid var(--border);border-radius:var(--r-lg);padding:10px;
-  background:radial-gradient(120% 90% at 50% 10%,rgba(158,199,255,.10),rgba(255,255,255,.01) 70%);
+  position:relative;overflow:hidden;border-radius:var(--r-lg);
+  border:1px solid rgba(255,255,255,.10);padding:0;
+  background:
+    radial-gradient(70% 60% at 50% 4%, rgba(158,199,255,.16), transparent 64%),
+    radial-gradient(60% 60% at 88% 96%, rgba(120,90,255,.16), transparent 62%),
+    linear-gradient(175deg,#0b1226 0%,#080d1c 60%,#070a16 100%);
+  box-shadow:0 30px 80px rgba(0,0,0,.48);
 }
 .st-whale-svg{display:block;width:100%;height:auto;}
-.st-whale-meta{font-family:'Pretendard',sans-serif;font-size:13.5px;font-weight:600;color:#FFD98E;margin:14px 0 8px;}
+/* On a phone the whale would shrink to ~180px tall and stop being the
+   showpiece. Keep it big and let the panel pan sideways instead; the
+   overscroll rule keeps that pan from turning into a pull-to-refresh
+   (CLAUDE.md §7).*/
+@media (max-width:760px){
+  .st-whale{overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;}
+  .st-whale-svg{min-width:680px;}
+  .st-whale::-webkit-scrollbar{height:7px;}
+  .st-whale::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:var(--r-full);}
+}
+.st-whale-meta{
+  display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-family:'Pretendard',sans-serif;font-size:14px;font-weight:700;color:var(--st-accent);
+  margin:16px 0 10px;padding:8px 16px;border-radius:var(--r-full);
+  background:rgba(158,199,255,.10);border:1px solid rgba(158,199,255,.26);
+}
 .st-whale-rows{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 16px;}
 .st-whale-rows li{display:inline-flex;align-items:baseline;gap:6px;font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);}
 .st-whale-rows a{color:var(--text);text-decoration:none;font-weight:600;}
 .st-whale-rows a:hover{text-decoration:underline;}
 .st-whale-nth{color:rgba(242,244,251,.4);}
+.st-whale-meta.done{color:var(--st-gold);background:rgba(255,217,142,.12);border-color:rgba(255,217,142,.4);}
+/* The body wash: barely there at one star, luminous when the sky is full. */
+@keyframes st-body{ 0%,100%{opacity:.86;} 50%{opacity:1;} }
+.st-whale-body{animation:st-body 7s ease-in-out infinite;}
+.st-whale-body.full{animation-duration:4.5s;}
+/* A light running along the finished outline — the whale is alive. */
+@keyframes st-flow{ from{stroke-dashoffset:566;} to{stroke-dashoffset:0;} }
+.st-flow{animation:st-flow 4.5s linear infinite;}
+/* Ribbons of aurora behind it, drifting on their own clocks. */
+@keyframes st-aurora{ 0%,100%{transform:translate3d(0,0,0);opacity:.9;} 50%{transform:translate3d(-26px,14px,0);opacity:.55;} }
+.st-aurora{transform-box:view-box;animation:st-aurora 24s ease-in-out infinite;}
+.st-aurora-2{animation-duration:33s;animation-direction:reverse;}
+/* Bubbles rise past the whale and fade out near the top. */
+@keyframes st-bubble{ 0%{transform:translateY(0);opacity:0;} 8%{opacity:.75;} 90%{opacity:.16;} 100%{transform:translateY(-540px);opacity:0;} }
+.st-bubble{transform-box:view-box;animation:st-bubble 16s linear infinite;}
+/* The eye opens once the head is drawn. */
+@keyframes st-eye{ from{opacity:0;transform:scale(.4);} to{opacity:1;transform:none;} }
+.st-whale-eye{transform-box:fill-box;transform-origin:center;animation:st-eye 1.2s .9s cubic-bezier(.2,.9,.3,1.2) both;}
 
+@media (max-width:1000px){
+  .st-stage-info{padding:64px 20px 20px;}
+}
 @media (max-width:640px){
   .stars-page{padding-top:18px;}
-  .st-nights{grid-template-columns:1fr;}
-  .st-special{grid-template-columns:1fr;gap:16px;}
-  .st-sky-special{max-width:180px;}
   .st-head{align-items:flex-start;}
+  .st-stage-info{padding:52px 16px 16px;}
+  .st-stage-line{font-size:13.5px;margin-bottom:10px;}
+  .st-chip{width:96px;}
+  .st-badge{padding:12px 13px;gap:12px;}
+  .st-emblem{width:54px;height:54px;}
+  .st-tip{max-width:210px;}
+  .st-tip img{width:36px;height:36px;}
+}
+
+/* Motion is decoration here — the sky must read the same without it. */
+@media (prefers-reduced-motion: reduce){
+  .stars-dark .app::before,.stars-dark .app::after,
+  .stars-page h1,.st-brand-mark,
+  .st-spark,.st-halo,.st-core,.st-line-lit,.st-empty-dot,.st-meteor,
+  .st-whale-body,.st-flow,.st-aurora,.st-bubble,.st-whale-eye,
+  .st-emblem.won{animation:none !important;}
+  .st-meteor{display:none;}
+  .st-tip,.st-burst{transition:none;}
 }
