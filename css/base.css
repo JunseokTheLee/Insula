@@ -88,9 +88,8 @@ html,body{overscroll-behavior:none;}
 #aa-list,
 .mfs-panel,
 .game-target{overscroll-behavior-y:contain;}
-/* Sideways scrollers on the sky page (css/stars.css): the constellation
-   strip and, on a phone, the whale panel. */
-.st-strip,.st-whale{overscroll-behavior-x:contain;}
+/* The constellation strip on the sky page (css/stars.css). */
+.st-strip{overscroll-behavior-x:contain;}
 
 /* A dialog used to leave the page behind it scrolling: a drag that missed
    the panel moved the page under it, and reaching the top triggered the

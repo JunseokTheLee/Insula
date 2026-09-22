@@ -46,7 +46,11 @@ body.stars-dark{
     radial-gradient(42vmax 34vmax at 88% 22%, rgba(180,110,255,.16), transparent 64%),
     radial-gradient(46vmax 32vmax at 62% 88%, rgba(40,170,190,.16), transparent 66%),
     radial-gradient(30vmax 24vmax at 22% 72%, rgba(255,170,110,.10), transparent 60%);
-  filter:blur(18px);
+  /* No filter:blur() here. Blurring a 140vmax layer and animating it made
+     the compositor re-blur the whole screen every frame — the main reason
+     the page stuttered (2026-09-22). The gradients are already soft, and
+     will-change gives the drift its own layer so it costs a transform. */
+  will-change:transform;
   animation:st-drift 46s ease-in-out infinite alternate;
 }
 .stars-dark .app::after{
@@ -60,14 +64,14 @@ body.stars-dark{
     radial-gradient(1.3px 1.3px at 95% 78%, rgba(206,224,255,.6), transparent 60%),
     radial-gradient(1px 1px at 6% 46%, rgba(255,255,255,.45), transparent 60%);
   background-size:520px 520px;
-  animation:st-field 150s linear infinite;
+  /* Static: animating background-position repaints the whole viewport on
+     every frame, and the nebula drift above is enough movement. */
 }
 .stars-dark .main,.stars-dark .topnav,.stars-dark #legal-footer{position:relative;z-index:1;}
 @keyframes st-drift{
   from{transform:translate3d(-2%,-1%,0) scale(1);}
   to{transform:translate3d(2%,2%,0) scale(1.08);}
 }
-@keyframes st-field{ from{background-position:0 0;} to{background-position:520px 1040px;} }
 
 /* ---------- frame (CLAUDE.md §7: no page-specific max-width) ---------- */
 .stars-page{max-width:var(--frame-max);margin:0 auto;padding:26px var(--gutter) 60px;}
@@ -104,6 +108,20 @@ body.stars-dark{
   transition:background .16s linear,border-color .16s linear,box-shadow .16s linear;
 }
 .st-go:hover{background:rgba(255,255,255,.12);border-color:rgba(255,217,142,.5);box-shadow:0 0 24px rgba(255,217,142,.16);}
+
+/* ---------- "show me all of it" buttons ---------- */
+.st-allwrap{margin:0 0 18px;}
+.st-allwrap[hidden]{display:none;}
+.st-big-btn{
+  appearance:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+  font-family:'Pretendard',sans-serif;font-size:13.5px;font-weight:700;
+  padding:11px 20px;border-radius:var(--r-full);
+  color:var(--text);border:1px solid rgba(255,217,142,.4);
+  background:linear-gradient(120deg,rgba(255,217,142,.16),rgba(158,199,255,.14));
+  transition:background .16s linear,box-shadow .16s linear,transform .14s ease-out;
+}
+.st-big-btn:hover{background:linear-gradient(120deg,rgba(255,217,142,.26),rgba(158,199,255,.22));box-shadow:0 0 28px rgba(255,217,142,.2);transform:translateY(-1px);}
+.st-big-btn:active{transform:none;}
 
 /* ---------- sections ---------- */
 .st-section{margin:0 0 52px;}
@@ -181,24 +199,20 @@ body.stars-dark{
 /* Stars are buttons: they must show they can be pressed and where focus is. */
 .st-hit{cursor:pointer;}
 .st-hit:focus{outline:none;}
-.st-hit:focus-visible circle.st-core{stroke:#fff;stroke-width:2.5;}
+.st-hit:focus-visible .st-burst{stroke:#FFD98E;stroke-width:2;}
 .st-hit:hover .st-burst,.st-hit:focus-visible .st-burst{opacity:.95;transform:scale(1.35);}
 .st-burst{transform-box:fill-box;transform-origin:center;transition:transform .18s ease-out,opacity .18s linear;}
 
 /* The breathing: halo, sparkle and core each on their own rhythm, and each
    star gets its own delay in JS so the sky never pulses in unison. */
 @keyframes st-twinkle{ 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.34;transform:scale(.72);} }
-@keyframes st-breathe{ 0%,100%{opacity:.24;} 50%{opacity:.54;} }
-@keyframes st-core{ 0%,100%{opacity:1;} 50%{opacity:.8;} }
+/* Only the sparkle animates, and only for the first few stars on a page
+   (ANIM_BUDGET in js/stars.js). Halos and cores are painted once. */
 .st-spark{transform-box:fill-box;transform-origin:center;animation:st-twinkle 3.6s ease-in-out infinite;}
-.st-halo{animation:st-breathe 5.2s ease-in-out infinite;}
-.st-core{animation:st-core 3.6s ease-in-out infinite;}
 /* Lines draw themselves the first time a sky is painted. */
 @keyframes st-draw{ from{stroke-dashoffset:var(--len);} to{stroke-dashoffset:0;} }
 .st-line-lit{animation:st-draw 1.5s cubic-bezier(.22,.8,.3,1) both;}
-/* An empty slot: a dot that waits. */
-@keyframes st-wait{ 0%,100%{opacity:.34;} 50%{opacity:.14;} }
-.st-empty-dot{animation:st-wait 4.4s ease-in-out infinite;}
+
 /* A meteor crosses now and then; a few per sky on different clocks. */
 @keyframes st-shoot{
   0%{opacity:0;transform:translate(0,0);}
@@ -294,16 +308,9 @@ body.stars-dark{
   box-shadow:0 30px 80px rgba(0,0,0,.48);
 }
 .st-whale-svg{display:block;width:100%;height:auto;}
-/* On a phone the whale would shrink to ~180px tall and stop being the
-   showpiece. Keep it big and let the panel pan sideways instead; the
-   overscroll rule keeps that pan from turning into a pull-to-refresh
-   (CLAUDE.md §7).*/
-@media (max-width:760px){
-  .st-whale{overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;}
-  .st-whale-svg{min-width:680px;}
-  .st-whale::-webkit-scrollbar{height:7px;}
-  .st-whale::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:var(--r-full);}
-}
+/* The whale always fits whole: panning it sideways showed only its head
+   and read as broken (2026-09-22). Small on a phone is fine — the
+   "View large" button is there for when it is not. */
 .st-whale-meta{
   display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;
   font-family:'Pretendard',sans-serif;font-size:14px;font-weight:700;color:var(--st-accent);
@@ -337,10 +344,14 @@ body.stars-dark{
 @media (max-width:1000px){
   .st-stage-info{padding:64px 20px 20px;}
 }
+@media (max-width:760px){
+  /* The caption used to float over the sky and cover the constellation
+     (2026-09-22). Below 760px it sits under it instead. */
+  .st-stage-info{position:static;padding:14px 16px 16px;background:rgba(8,12,26,.6);border-top:1px solid rgba(255,255,255,.07);}
+}
 @media (max-width:640px){
   .stars-page{padding-top:18px;}
   .st-head{align-items:flex-start;}
-  .st-stage-info{padding:52px 16px 16px;}
   .st-stage-line{font-size:13.5px;margin-bottom:10px;}
   .st-chip{width:96px;}
   .st-badge{padding:12px 13px;gap:12px;}
@@ -353,9 +364,40 @@ body.stars-dark{
 @media (prefers-reduced-motion: reduce){
   .stars-dark .app::before,.stars-dark .app::after,
   .stars-page h1,.st-brand-mark,
-  .st-spark,.st-halo,.st-core,.st-line-lit,.st-empty-dot,.st-meteor,
+  .st-spark,.st-line-lit,.st-meteor,
   .st-whale-body,.st-flow,.st-aurora,.st-bubble,.st-whale-eye,
-  .st-emblem.won{animation:none !important;}
+  .st-full,.st-emblem.won{animation:none !important;}
   .st-meteor{display:none;}
   .st-tip,.st-burst{transition:none;}
 }
+
+/* ---------- full screen ----------
+   Everything at once. Built when it opens and emptied when it closes, so
+   it costs nothing while shut. */
+.st-full{
+  position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;
+  background:radial-gradient(90% 70% at 50% 0%, #101a3a 0%, #070b17 62%, #05070f 100%);
+  animation:st-full-in .22s ease-out;
+}
+.st-full[hidden]{display:none;}
+@keyframes st-full-in{from{opacity:0;}to{opacity:1;}}
+.st-full-bar{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:calc(12px + env(safe-area-inset-top,0px)) 18px 12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.st-full-title{font-family:'Pretendard',sans-serif;font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.01em;}
+.st-full-close{
+  appearance:none;cursor:pointer;width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text);
+  font-size:16px;line-height:1;display:grid;place-items:center;
+}
+.st-full-close:hover{background:rgba(255,255,255,.14);}
+.st-full-body{flex:1;min-height:0;display:grid;place-items:center;padding:12px 14px;}
+.st-full-sky,.st-full-whale svg{display:block;width:100%;height:auto;max-height:100%;}
+.st-full-whale{width:100%;}
+.st-full-hint{
+  flex:0 0 auto;margin:0;padding:0 18px calc(14px + env(safe-area-inset-bottom,0px));
+  font-family:'Pretendard',sans-serif;font-size:12.5px;color:rgba(242,244,251,.5);text-align:center;
+}
+.st-full-hint[hidden]{display:none;}

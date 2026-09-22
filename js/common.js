@@ -679,12 +679,10 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // Colouring input: true = swipe paints (a press on a cell of the chosen
   // number starts a stroke); false = tap paints, one finger moves.
   pixelDragDefault: true,
-  // Constellations (supabase_stars.sql). whaleStarsPerPlayer caps how many
-  // of the shared whale's stars one person may light — the server reads the
-  // same key inside whale_stars(), so hiding the number here is not enough.
+  // Constellations (supabase_stars.sql). The whale is one person's own sky
+  // (2026-09-22), so there is no per-player cap any more.
   starsEnabled: true,
   starsShowWhale: true,
-  whaleStarsPerPlayer: 3,
   // A drag stroke reaching an unpainted cell of another number: 'stop' ends
   // the stroke there, 'mark' leaves the wrong mark and goes on, 'pass'
   // skips it silently.
