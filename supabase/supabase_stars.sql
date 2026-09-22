@@ -95,9 +95,9 @@ begin
           case when p_source = 'color' then p_level::smallint end)
   on conflict (user_id, artwork_id, source) do update
     -- Keep the first earned_at (the sky's order must not move), raise the level.
-    set level = greatest(coalesce(public.user_stars.level, 0), coalesce(excluded.level, 0)),
-        art_title = coalesce(excluded.art_title, public.user_stars.art_title),
-        author_name = coalesce(excluded.author_name, public.user_stars.author_name);
+    set level = greatest(coalesce(user_stars.level, 0), coalesce(excluded.level, 0)),
+        art_title = coalesce(excluded.art_title, user_stars.art_title),
+        author_name = coalesce(excluded.author_name, user_stars.author_name);
 end;
 $$;
 revoke execute on function public.award_star(uuid, bigint, text, integer) from public, anon, authenticated;
@@ -129,8 +129,18 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_was timestamptz;
 begin
-  if new.completed_at is not null and (tg_op = 'INSERT' or old.completed_at is null) then
+  if new.completed_at is null then
+    return new;
+  end if;
+  -- OLD is unassigned on INSERT and reading it there raises, so look at it
+  -- only on UPDATE rather than trusting SQL's OR to short-circuit.
+  if tg_op = 'UPDATE' then
+    v_was := old.completed_at;
+  end if;
+  if v_was is null then
     perform public.award_star(new.user_id, new.artwork_id, 'color', new.level);
   end if;
   return new;
@@ -152,13 +162,18 @@ left join public.mosaic_submissions s on s.id = r.artwork_id
 where s.id is null or s.parent_id is null
 on conflict (user_id, artwork_id, source) do nothing;
 
+-- Fold the levels together FIRST, then look the artwork up once: there is
+-- no min(uuid) in Postgres, so author_id must never sit inside an aggregate.
 insert into public.user_stars (user_id, artwork_id, source, art_title, author_id, author_name, level, earned_at)
-select p.user_id, p.artwork_id, 'color', min(s.art_title), min(s.author_id), min(s.author_name),
-       max(p.level)::smallint, min(p.completed_at)
-from public.pixel_progress p
-left join public.mosaic_submissions s on s.id = p.artwork_id
-where p.completed_at is not null and (s.id is null or s.parent_id is null)
-group by p.user_id, p.artwork_id
+select d.user_id, d.artwork_id, 'color', s.art_title, s.author_id, s.author_name, d.level, d.completed_at
+from (
+  select user_id, artwork_id, max(level)::smallint as level, min(completed_at) as completed_at
+  from public.pixel_progress
+  where completed_at is not null
+  group by user_id, artwork_id
+) d
+left join public.mosaic_submissions s on s.id = d.artwork_id
+where s.id is null or s.parent_id is null
 on conflict (user_id, artwork_id, source) do nothing;
 
 -- ── 5. reading a sky ─────────────────────────────────────────────────────
