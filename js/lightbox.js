@@ -334,6 +334,7 @@ lbEditModal.querySelector('#lb-edit-save').onclick = async () => {
         if (wantPublic && typeof runPoolMatching === 'function') runPoolMatching().catch(err => console.error('pool matching after publish error:', err));
         renderLightboxColoring(sub);
         renderLightboxPieceUsage(sub).then(u => renderLightboxPlay(sub, u));
+        renderLightboxStarCount(sub);
       }
     }
   }
@@ -619,6 +620,29 @@ async function renderLightboxMedals(sub) {
   }
   el.style.display = '';
 }
+// The artist's side of the games (2026-09-21): how many people carry this
+// artwork as a star in their sky. Names nobody, counts hidden skies too —
+// it is about the artwork. Silent when the SQL file is not applied yet.
+async function renderLightboxStarCount(sub) {
+  let el = document.getElementById('artworkStarCount');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'artworkStarCount'; el.className = 'artwork-stars';
+    const anchor = document.getElementById('artworkPieceUsage') || document.getElementById('lightbox-cap-meta');
+    if (!anchor) return;
+    anchor.insertAdjacentElement('afterend', el);
+  }
+  el.style.display = 'none'; el.textContent = '';
+  if (sub.parent_id) return;
+  try {
+    const { data, error } = await sb.rpc('artwork_star_counts', { p_ids: [sub.id] });
+    if (error || !data || !data.length) return;
+    if (lbCurrentSub !== sub) return;
+    const n = data[0].players || 0;
+    if (!n) return;
+    el.textContent = tr(n === 1 ? 'starsArtworkShiningOne' : 'starsArtworkShining', { n });
+    el.style.display = '';
+  } catch (e) { /* the sky is a bonus; never break the lightbox for it */ }
+}
 async function renderLightboxPieceUsage(sub) {
   let el = document.getElementById('artworkPieceUsage');
   if (!el) {
@@ -712,6 +736,7 @@ function populateLightboxContent(sub) {
   setLightboxImage(sub);
   applyArtDetailsToCaption(sub);
   renderLightboxPieceUsage(sub).then(u => renderLightboxPlay(sub, u));
+  renderLightboxStarCount(sub);
   renderLightboxMedals(sub);
   renderLightboxColoring(sub);
   renderLightboxArtistCard(sub);

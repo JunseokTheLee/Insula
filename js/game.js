@@ -1024,6 +1024,7 @@
     $('gameResultTime').textContent = fmtSec(localMs);   // includes its own unit
     $('gameResultArtwork').textContent = target.art_title || tr('untitledArtwork');
     $('gameResultNote').textContent = '';
+    $('starAward').hidden = true;
     $('gameResultRetry').hidden = true;
     $('gameConfetti').innerHTML = '';
 
@@ -1067,6 +1068,7 @@
       if (ranked) bits.push(tr('gameRankOf', { rank: data.rank, players: data.players }));
       note.textContent = bits.join(' · ');
       $('gameResultRetry').hidden = true;
+      showStarAward(!!data.first_record);
       // The list behind us is now stale for this artwork.
       await refreshStats();
       renderRecentRuns(true);
@@ -1085,6 +1087,17 @@
 
   // Canvas confetti — no library, and it does nothing when the visitor asked
   // for reduced motion.
+  // The star this finish lit, and how close the next constellation is
+  // (js/constellations.js). One small read, and only when signed in.
+  async function showStarAward(isNew) {
+    const box = $('starAward');
+    if (!box || typeof starAwardLines !== 'function') return;
+    const total = await fetchStarCount();
+    const lines = starAwardLines(total, isNew);
+    if (!lines.length) { box.hidden = true; return; }
+    $('starAwardText').textContent = lines.join(' · ');
+    box.hidden = false;
+  }
   function confetti() {
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const host = $('gameConfetti');

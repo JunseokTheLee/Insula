@@ -1,0 +1,139 @@
+/* ============ CONSTELLATIONS (/{lang}/stars) ============
+   The second dark wing of the site. `body.stars-dark` re-points the shared
+   colour tokens exactly as `body.pf-dark` does for the portfolio viewer, so
+   the header, modals, lightbox and toast follow along without their own
+   overrides; the few hard-coded white boxes are re-coloured below. */
+body.stars-dark{
+  --bg:#0b1020;--surface:#141b30;--text:#f2f4fb;--muted:rgba(242,244,251,.62);
+  --border:rgba(255,255,255,.09);--border-strong:rgba(255,255,255,.2);
+  --gray-0:#0b1020;--gray-50:#141b30;--gray-100:#1a2238;--gray-200:rgba(255,255,255,.12);
+  --gray-900:#f2f4fb;--primary-soft:rgba(158,199,255,.14);
+  --st-accent:#9EC7FF;
+  background:#0b1020;color:var(--text);
+}
+.stars-dark .app{background:#0b1020;}
+.stars-dark .topnav{background:rgba(11,16,32,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.stars-dark .nav-link:hover,.stars-dark .nav-link.active{color:#9EC7FF;}
+.stars-dark .lang-toggle{background:rgba(255,255,255,.1);}
+.stars-dark .lang-btn.active{background:#f2f4fb;color:#0b1020;}
+.stars-dark #logoutBtn{background:transparent;color:var(--text);border-color:var(--border-strong);}
+.stars-dark .field input[type="text"],.stars-dark .field textarea,.stars-dark .field select{background:#182034;color:var(--text);border-color:var(--border-strong);}
+.stars-dark .field select option{background:#182034;color:var(--text);}
+.stars-dark #toast{background:#f2f4fb;color:#0b1020;}
+.stars-dark .btn-cancel:hover{background:rgba(255,255,255,.08);}
+.stars-dark #legal-footer,.stars-dark #legal-footer a{color:var(--muted);}
+/* The lightbox paints light text with var(--bg) (dark on every other page);
+   inside it the token keeps the site's light value. */
+.stars-dark .lightbox-overlay{--bg:#F7F7F5;--gray-0:#F7F7F5;}
+/* A faint field of stars behind the whole page. */
+.stars-dark .main-scroll{
+  background-image:
+    radial-gradient(1px 1px at 20% 12%, rgba(255,255,255,.35), transparent),
+    radial-gradient(1px 1px at 67% 24%, rgba(255,255,255,.28), transparent),
+    radial-gradient(1px 1px at 38% 58%, rgba(255,255,255,.22), transparent),
+    radial-gradient(1px 1px at 84% 71%, rgba(255,255,255,.3), transparent),
+    radial-gradient(1px 1px at 12% 84%, rgba(255,255,255,.24), transparent);
+  background-attachment:fixed;
+}
+
+/* ---------- frame (CLAUDE.md §7: no page-specific max-width) ---------- */
+.stars-page{max-width:var(--frame-max);margin:0 auto;padding:26px var(--gutter) 60px;}
+
+/* ---------- head ---------- */
+.st-head{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end;justify-content:space-between;margin:0 0 30px;}
+.st-head-copy{flex:1 1 420px;min-width:0;}
+/* The one place the sky's own brand line appears (user decision 2026-09-21:
+   the site header and logo stay exactly as they are). */
+.st-brand{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:'Pretendard',sans-serif;font-size:12.5px;font-weight:600;letter-spacing:.04em;
+  color:rgba(242,244,251,.6);margin:0 0 10px;
+}
+.st-brand-mark{color:#FFD98E;font-size:14px;line-height:1;}
+.stars-page h1{font-family:'Pretendard',sans-serif;font-weight:800;font-size:clamp(28px,3.4vw,42px);letter-spacing:-.02em;margin:0 0 8px;color:var(--text);}
+.st-tagline{font-family:'Pretendard',sans-serif;font-size:17px;font-weight:600;color:#FFD98E;margin:0 0 10px;word-break:keep-all;}
+.st-lead{font-family:'Pretendard',sans-serif;font-size:14.5px;line-height:1.75;color:var(--muted);margin:0;max-width:62ch;word-break:keep-all;}
+.st-head-links{display:flex;flex-wrap:wrap;gap:10px;}
+.st-go{
+  display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+  font-family:'Pretendard',sans-serif;font-size:13.5px;font-weight:600;
+  padding:11px 18px;border-radius:var(--r-full);
+  border:1px solid var(--border-strong);color:var(--text);background:rgba(255,255,255,.04);
+  transition:background .14s linear;
+}
+.st-go:hover{background:rgba(255,255,255,.1);}
+
+/* ---------- sections ---------- */
+.st-section{margin:0 0 42px;}
+.st-section[hidden]{display:none;}
+.st-section-head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;}
+.st-h2{font-family:'Pretendard',sans-serif;font-size:19px;font-weight:700;color:var(--text);margin:0 0 6px;}
+.st-sub{font-family:'Pretendard',sans-serif;font-size:13.5px;line-height:1.7;color:var(--muted);margin:0 0 16px;max-width:62ch;word-break:keep-all;}
+.st-summary{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:600;color:#FFD98E;margin:2px 0 18px;}
+.st-notice,.st-empty{font-family:'Pretendard',sans-serif;font-size:14px;color:var(--muted);line-height:1.7;margin:0 0 18px;}
+.st-empty p{margin:0 0 4px;}
+.st-empty-hint{font-size:13px;color:rgba(242,244,251,.45);}
+.st-foot{font-family:'Pretendard',sans-serif;font-size:13px;color:rgba(242,244,251,.45);text-align:center;margin:40px 0 0;word-break:keep-all;}
+
+/* ---------- owner controls ---------- */
+.st-owner{display:flex;flex-wrap:wrap;align-items:center;gap:14px;}
+.st-owner[hidden]{display:none;}
+.st-hide{display:inline-flex;align-items:center;gap:8px;font-family:'Pretendard',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;}
+.st-hide input{accent-color:#9EC7FF;cursor:pointer;}
+.stars-dark .admin-btn{background:rgba(255,255,255,.05);color:var(--text);border-color:var(--border-strong);}
+.stars-dark .admin-btn:hover{background:rgba(255,255,255,.12);}
+
+/* ---------- a night ---------- */
+/* auto-FILL, not auto-fit: with a single night auto-fit would stretch it
+   across the whole 1400px frame and blow the sky up to ~780px tall. */
+.st-nights{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;}
+.st-night{
+  border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 16px 10px;
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01));
+}
+.st-night-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 6px;}
+.st-night-head h3{font-family:'Pretendard',sans-serif;font-size:14px;font-weight:700;color:var(--st-accent);margin:0;}
+.st-night-count{font-family:'Pretendard',sans-serif;font-size:12px;color:var(--muted);flex-shrink:0;}
+.st-sky{display:block;width:100%;height:auto;overflow:visible;}
+.st-sky-special{max-width:220px;margin:0 auto;}
+/* Stars are buttons: they must show they can be pressed and where focus is. */
+.st-star{cursor:pointer;transition:opacity .12s linear;}
+.st-star:hover{opacity:.75;}
+.st-star:focus-visible{outline:2px solid #FFD98E;outline-offset:2px;}
+
+.st-caps{list-style:decimal;margin:10px 0 0;padding:0 0 0 22px;}
+.st-cap{font-family:'Pretendard',sans-serif;font-size:12.5px;line-height:1.55;color:rgba(242,244,251,.4);margin:0 0 5px;}
+.st-cap.done{color:var(--muted);}
+.st-cap b{display:block;font-weight:700;color:rgba(242,244,251,.55);}
+.st-cap.done b{color:var(--text);}
+
+/* ---------- "Different Us" ---------- */
+.st-special{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:24px;align-items:center;}
+.st-badges{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 20px;}
+.st-badge{display:flex;gap:10px;align-items:flex-start;font-family:'Pretendard',sans-serif;font-size:12.5px;line-height:1.6;color:rgba(242,244,251,.42);}
+.st-badge.won{color:var(--muted);}
+.st-badge-mark{color:rgba(255,255,255,.25);font-size:15px;line-height:1.3;flex-shrink:0;}
+.st-badge.won .st-badge-mark{color:#FFD98E;}
+.st-badge b{display:block;font-weight:700;color:rgba(242,244,251,.55);}
+.st-badge.won b{color:var(--text);}
+
+/* ---------- the whale ---------- */
+.st-whale{
+  border:1px solid var(--border);border-radius:var(--r-lg);padding:10px;
+  background:radial-gradient(120% 90% at 50% 10%,rgba(158,199,255,.10),rgba(255,255,255,.01) 70%);
+}
+.st-whale-svg{display:block;width:100%;height:auto;}
+.st-whale-meta{font-family:'Pretendard',sans-serif;font-size:13.5px;font-weight:600;color:#FFD98E;margin:14px 0 8px;}
+.st-whale-rows{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 16px;}
+.st-whale-rows li{display:inline-flex;align-items:baseline;gap:6px;font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);}
+.st-whale-rows a{color:var(--text);text-decoration:none;font-weight:600;}
+.st-whale-rows a:hover{text-decoration:underline;}
+.st-whale-nth{color:rgba(242,244,251,.4);}
+
+@media (max-width:640px){
+  .stars-page{padding-top:18px;}
+  .st-nights{grid-template-columns:1fr;}
+  .st-special{grid-template-columns:1fr;gap:16px;}
+  .st-sky-special{max-width:180px;}
+  .st-head{align-items:flex-start;}
+}

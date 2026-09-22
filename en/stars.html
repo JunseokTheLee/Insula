@@ -17,16 +17,17 @@
   gtag('config', 'G-NLXNX3C6KW');
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Artwork | Weavo</title>
-<meta name="description" content="An artwork submitted to a Weavo community mosaic.">
-<link rel="canonical" href="https://weavo.art/en/campaigns">
-<link rel="alternate" hreflang="en" href="https://weavo.art/en/campaigns">
-<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/campaigns">
+<title>Constellations | Weavo</title>
+<meta name="description" content="Finishing an artwork in a game lights a star. Collect them into constellations, and complete one whale together.">
+<link rel="canonical" href="https://weavo.art/en/stars">
+<link rel="alternate" hreflang="en" href="https://weavo.art/en/stars">
+<link rel="alternate" hreflang="ko" href="https://weavo.art/ko/stars">
 <link rel="alternate" hreflang="x-default" href="https://weavo.art/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
-<meta property="og:title" content="Artwork | Weavo">
-<meta property="og:description" content="An artwork submitted to a Weavo community mosaic.">
+<meta property="og:title" content="Constellations | Weavo">
+<meta property="og:description" content="Finishing an artwork in a game lights a star. Collect them into constellations, and complete one whale together.">
+<meta property="og:url" content="https://weavo.art/en/stars">
 <meta property="og:image" content="https://weavo.art/og-image-en.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -34,17 +35,17 @@
 <meta property="og:image:alt" content="Weavo — Collaborative Art Mosaic Community">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Artwork | Weavo">
-<meta name="twitter:description" content="An artwork submitted to a Weavo community mosaic.">
+<meta name="twitter:title" content="Constellations | Weavo">
+<meta name="twitter:description" content="Finishing an artwork in a game lights a star. Collect them into constellations, and complete one whale together.">
 <meta name="twitter:image" content="https://weavo.art/og-image-en.png">
 <meta name="twitter:image:alt" content="Weavo — Collaborative Art Mosaic Community">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/en/","logo":"https://weavo.art/logo.png"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Constellations","item":"https://weavo.art/en/stars"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<link rel="stylesheet" href="/css/stars.css?v=20260922-095137">
 <link rel="stylesheet" href="/css/base.css?v=20260922-095137">
-<link rel="stylesheet" href="/css/project.css?v=20260922-095137">
 </head>
-<body>
+<body class="stars-dark">
 
 <div class="app">
   <header class="topnav">
@@ -55,7 +56,7 @@
       <a href="/en/artworks" class="nav-link">Explore</a>
       <a href="/en/artists" class="nav-link">Artists</a>
       <a href="/en/portfolios" class="nav-link">Portfolios</a>
-      <a href="/en/game" class="nav-link" data-game-link>Game</a>
+      <a href="/en/game" class="nav-link active" data-game-link>Game</a>
       <a href="/en/about" class="nav-link">About</a>
     </nav>
     <div id="identity">
@@ -71,65 +72,51 @@
   </header>
 
   <main class="main main-scroll">
-    <div class="backnav">
-      <a class="back" id="artworkBackBtn" href="/en/campaigns">&larr; Back</a>
+    <div class="stars-page" id="starsPage">
+
+      <header class="st-head">
+        <div class="st-head-copy">
+          <div class="st-brand"><span class="st-brand-mark" aria-hidden="true">&#10022;</span>Pieces of People, A Brighter Sky</div>
+          <h1>Constellations</h1>
+          <p class="st-tagline">One small cell becomes a star.</p>
+          <p class="st-lead">Finishing an artwork in either game lights one star. Six stars make a constellation, and every constellation anyone completes lights a star of the whale we build together.</p>
+        </div>
+        <div class="st-head-links">
+          <a class="st-go" href="/en/game?g=find" data-game-link="find"><span aria-hidden="true">&#128269;</span> Find the Piece</a>
+          <a class="st-go" href="/en/coloring" data-coloring-link><span aria-hidden="true">&#127912;</span> Color by Number</a>
+        </div>
+      </header>
+
+      <p class="st-notice" id="stOff" hidden></p>
+
+      <section class="st-section" id="stMineWrap">
+        <div class="st-section-head">
+          <h2 class="st-h2" id="stMineTitle">My constellations</h2>
+          <div class="st-owner" id="stOwner" hidden>
+            <label class="st-hide"><input type="checkbox" id="stHide"> <span>Hide my constellations from others</span></label>
+            <button type="button" class="admin-btn" id="stShare">Share constellation</button>
+          </div>
+        </div>
+        <div class="st-summary" id="stSummary"></div>
+        <div class="st-nights" id="stNights"></div>
+        <div class="st-empty" id="stEmpty" hidden></div>
+      </section>
+
+      <section class="st-section" id="stSpecialWrap" hidden>
+        <h2 class="st-h2">Different Us</h2>
+        <p class="st-sub">A constellation that lights for how you collected, not how much.</p>
+        <div class="st-special" id="stSpecial"></div>
+      </section>
+
+      <section class="st-section" id="stWhaleWrap" hidden>
+        <h2 class="st-h2">The whale we build together</h2>
+        <p class="st-sub" id="stWhaleLead"></p>
+        <div class="st-whale" id="stWhale"></div>
+        <div class="st-whale-list" id="stWhaleList"></div>
+      </section>
+
+      <p class="st-foot">Every artwork joins one larger story.</p>
     </div>
-    <nav class="artwork-breadcrumb" aria-label="Breadcrumb" id="artworkBreadcrumb">
-      <a href="/en/campaigns">Campaigns</a> <span aria-hidden="true">/</span> <a id="artworkProjectLink" href="/en/campaigns"></a>
-    </nav>
-    <article class="artwork-stage" id="artworkStage">
-      <div class="zoom-toolbar">
-        <button type="button" class="zoom-btn" id="lightbox-zoom-out" aria-label="Zoom out">&minus;</button>
-        <span class="zoom-level" id="lightbox-zoom-level">100%</span>
-        <button type="button" class="zoom-btn" id="lightbox-zoom-in" aria-label="Zoom in">+</button>
-      </div>
-      <div class="lightbox-stage" id="lightboxStage">
-        <img id="lightbox-img" src="" alt="" width="1200" height="900">
-      </div>
-      <aside id="lightbox-caption">
-        <h1 id="lightbox-cap-title"></h1>
-        <div id="lightbox-cap-meta"></div>
-        <div id="artworkPieceUsage" class="piece-usage" style="display:none;"></div>
-        <div id="lightbox-artist-card">
-          <div id="lightbox-artist-avatar-wrap"></div>
-          <div class="lb-artist-info">
-            <a id="lightbox-artist-name" class="lb-artist-name"></a>
-          </div>
-        <button type="button" id="lightbox-artist-follow-btn" class="lb-artist-follow-btn" style="display:none;">Follow</button>
-        </div>
-        <div id="lightbox-artist-about">
-          <div class="lb-artist-about-label">About the artist</div>
-          <div id="lightbox-artist-bio" class="lb-artist-bio"></div>
-        </div>
-        <div id="lightbox-cap-desc"></div>
-        <a id="lightbox-cap-link" target="_blank" rel="ugc nofollow noopener noreferrer"></a>
-        <div class="lightbox-actions">
-          <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="Like this artwork">
-            <span class="icon"></span><span id="lb-like-count">0</span>
-          </button>
-          <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="View comments" aria-expanded="true">
-            <span class="icon"></span><span id="lb-comments-count">0</span>
-          </button>
-          <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="Delete this artwork" style="display:none;">
-            <span class="icon"></span><span>Delete</span>
-          </button>
-          <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="Remove from campaign" style="display:none;">
-            <span class="icon"></span><span>Remove from campaign</span>
-          </button>
-        </div>
-        <div id="lightbox-comments" class="lightbox-comments open">
-          <div id="lightbox-comments-list"></div>
-          <div id="lightbox-comment-form">
-            <textarea id="lightbox-comment-input" placeholder="Add a comment…" maxlength="1000"></textarea>
-            <button type="button" id="lightbox-comment-post">Post</button>
-          </div>
-        </div>
-        <div id="lightbox-country-map">
-          <div class="lb-country-map-label" id="lb-country-map-label"></div>
-          <svg id="lb-country-map-svg" viewBox="0 0 280 150" preserveAspectRatio="xMidYMid meet"></svg>
-        </div>
-      </aside>
-    </article>
   </main>
   <footer id="legal-footer">
     <a href="/en/privacy">Privacy Policy</a>
@@ -235,17 +222,70 @@
   </div>
 </div>
 
+<div id="lightbox-modal" class="modal-overlay lightbox-overlay">
+  <div class="lightbox-stage" id="lightboxStage">
+    <div class="zoom-toolbar">
+      <button type="button" class="zoom-btn" id="lightbox-zoom-out" aria-label="Zoom out">&minus;</button>
+      <span class="zoom-level" id="lightbox-zoom-level">100%</span>
+      <button type="button" class="zoom-btn" id="lightbox-zoom-in" aria-label="Zoom in">+</button>
+      <button type="button" class="zoom-btn" id="lightbox-close" aria-label="Close">&#10005;</button>
+    </div>
+    <img id="lightbox-img" src="" alt="">
+  </div>
+  <div id="lightbox-caption">
+    <div id="lightbox-cap-title"></div>
+    <div id="lightbox-cap-meta"></div>
+    <div id="lightbox-artist-card">
+      <div id="lightbox-artist-avatar-wrap"></div>
+      <div class="lb-artist-info">
+        <a id="lightbox-artist-name" class="lb-artist-name"></a>
+      </div>
+    <button type="button" id="lightbox-artist-follow-btn" class="lb-artist-follow-btn" style="display:none;">Follow</button>
+    </div>
+    <div id="lightbox-artist-about">
+      <div class="lb-artist-about-label">About the artist</div>
+      <div id="lightbox-artist-bio" class="lb-artist-bio"></div>
+    </div>
+    <div id="lightbox-cap-desc"></div>
+    <a id="lightbox-cap-link" target="_blank" rel="ugc nofollow noopener noreferrer"></a>
+    <div class="lightbox-actions">
+      <button type="button" id="lb-like-btn" class="lb-action-btn" aria-label="Like this artwork">
+        <span class="icon"></span><span id="lb-like-count">0</span>
+      </button>
+      <button type="button" id="lb-comments-btn" class="lb-action-btn active" aria-label="View comments" aria-expanded="true">
+        <span class="icon"></span><span id="lb-comments-count">0</span>
+      </button>
+      <button type="button" id="lb-delete-btn" class="lb-action-btn" aria-label="Delete this artwork" style="display:none;">
+        <span class="icon"></span><span>Delete</span>
+      </button>
+      <button type="button" id="lb-remove-btn" class="lb-action-btn" aria-label="Remove from campaign" style="display:none;">
+        <span class="icon"></span><span>Remove from campaign</span>
+      </button>
+    </div>
+    <div id="lightbox-comments" class="lightbox-comments open">
+      <div id="lightbox-comments-list"></div>
+      <div id="lightbox-comment-form">
+        <textarea id="lightbox-comment-input" placeholder="Add a comment…" maxlength="1000"></textarea>
+        <button type="button" id="lightbox-comment-post">Post</button>
+      </div>
+    </div>
+    <div id="lightbox-country-map">
+      <div class="lb-country-map-label" id="lb-country-map-label"></div>
+      <svg id="lb-country-map-svg" viewBox="0 0 280 150" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="/js/supabase-client.js?v=20260922-095137"></script>
 <script src="/js/i18n/en.js?v=20260922-095137"></script>
 <script src="/js/common.js?v=20260922-095137"></script>
-<script src="/js/color-engine.js?v=20260922-095137"></script>
-<script src="/js/matching.js?v=20260922-095137"></script>
 <script src="/js/auth.js?v=20260922-095137"></script>
 <script src="/js/notifications.js?v=20260922-095137"></script>
 <script src="/js/push.js?v=20260922-095137"></script>
 <script src="/js/lightbox.js?v=20260922-095137"></script>
-<script src="/js/artwork.js?v=20260922-095137"></script>
+<script src="/js/constellations.js?v=20260922-095137"></script>
+<script src="/js/stars.js?v=20260922-095137"></script>
 </body>
 </html>

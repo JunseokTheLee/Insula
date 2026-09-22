@@ -110,6 +110,66 @@ async function renderProfileMedalWorks(userId) {
 // Artworks this person finished in the colour-by-number game, newest first
 // (supabase_pixel_game.sql pixel_user_completions). Hidden while that SQL
 // is not applied or nothing is finished yet.
+// The newest completed constellations (supabase_stars.sql +
+// js/constellations.js), drawn small. Hidden when this person has none, or
+// hides their sky, or the SQL file is not applied yet.
+async function renderProfileStars(userId) {
+  const box = document.getElementById('profileStars');
+  const track = document.getElementById('profileStarsTrack');
+  if (!box || !track || !userId || typeof groupIntoConstellations !== 'function') return;
+  box.style.display = 'none';
+  let rows = null;
+  try {
+    const s = await getSiteSettings().catch(() => ({}));
+    if (s.starsEnabled === false) return;
+    const { data, error } = await sb.rpc('user_star_list', { p_user_id: userId, p_limit: 400 });
+    if (error) {
+      if (error.code !== 'PGRST202' && error.code !== '42883') console.error('load stars error:', error);
+      return;
+    }
+    rows = data || [];
+  } catch (e) { console.error('load stars error:', e); return; }
+  if (!rows.length) return;
+
+  const groups = groupIntoConstellations(rows).filter(g => g.full);
+  if (!groups.length) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  track.innerHTML = '';
+  for (const g of groups.slice(-3).reverse()) {
+    const shape = constellationShape(g.index);
+    const night = constellationNight(g.index);
+    const a = document.createElement('a');
+    a.className = 'pstar-item';
+    a.href = `/${CURRENT_LANG}/stars` + (me.id === userId ? '' : `?user=${encodeURIComponent(userId)}`);
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 100 100');
+    svg.setAttribute('aria-hidden', 'true');
+    for (const [p, q] of shape.links) {
+      const ln = document.createElementNS(NS, 'line');
+      ln.setAttribute('x1', shape.stars[p][0]); ln.setAttribute('y1', shape.stars[p][1]);
+      ln.setAttribute('x2', shape.stars[q][0]); ln.setAttribute('y2', shape.stars[q][1]);
+      ln.setAttribute('stroke', night.accent); ln.setAttribute('stroke-width', '1.2');
+      svg.appendChild(ln);
+    }
+    shape.stars.forEach(([x, y], i) => {
+      const st = g.stars[i];
+      const c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', '3.2');
+      c.setAttribute('fill', st && st.source === 'find' ? '#FFD98E' : '#9EC7FF');
+      svg.appendChild(c);
+    });
+    const nm = document.createElement('span');
+    nm.className = 'pstar-name';
+    nm.textContent = constellationName(g.index);
+    a.append(svg, nm);
+    track.appendChild(a);
+  }
+  const meta = document.getElementById('profileStarsMeta');
+  if (meta) meta.textContent = [tr('starsCount', { n: rows.length }), tr('starsConstellationCount', { n: groups.length })].join(' · ');
+  const all = document.getElementById('profileStarsAll');
+  if (all) all.href = `/${CURRENT_LANG}/stars` + (me.id === userId ? '' : `?user=${encodeURIComponent(userId)}`);
+  box.style.display = '';
+}
 async function renderProfileColoredWorks(userId) {
   const box = document.getElementById('profileColoredWorks');
   const track = document.getElementById('profileColoredWorksTrack');
@@ -841,6 +901,7 @@ async function loadProfileView(userId) {
   renderProfileMedals(userId);
   renderProfileMedalWorks(userId);
   renderProfileColoredWorks(userId);
+  renderProfileStars(userId);
 
   renderProfileGraphFor(userId, true);
 

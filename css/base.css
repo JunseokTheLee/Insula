@@ -1026,6 +1026,23 @@ html[lang="ko"] * {
   .game-banner:hover .game-banner-go{transform:none;}
 }
 .game-cta{text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+
+/* The star a finished game awards — one strip on both result screens
+   (2026-09-21). Hidden until the record is saved, so it never promises a
+   star to a signed-out player. */
+.star-award{
+  display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;
+  margin:10px auto 0;padding:10px 18px;border-radius:var(--r-full);
+  background:linear-gradient(135deg,rgba(255,217,142,.18),rgba(158,199,255,.18));
+  border:1px solid rgba(255,217,142,.45);
+  font-family:'Pretendard',sans-serif;font-size:13.5px;font-weight:600;color:var(--text);
+}
+.star-award[hidden]{display:none;}
+/* "Shining in N skies" under an artwork — the artist's half of the games. */
+.artwork-stars{font-family:'Pretendard',sans-serif;font-size:12.5px;font-weight:600;color:#B07B1E;margin-top:6px;}
+.star-award-mark{color:#E8B84B;font-size:16px;line-height:1;}
+.star-award-link{color:var(--primary);text-decoration:none;font-weight:700;}
+.star-award-link:hover{text-decoration:underline;}
 @media (max-width:640px){
   /* Phone: the column is already narrow, so let it fill. */
   .game-banner{width:auto;display:flex;}

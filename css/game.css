@@ -356,7 +356,10 @@
    /{lang}/game opens on a choice between the two games (2026-09-20). One
    card is a button (the find-the-piece half lives on this page), the other
    a link to /coloring. Same card either way. */
-.game-choose{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0 28px;max-width:760px;}
+.game-choose{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0 28px;max-width:1140px;}
+/* The sky card is not a game — a night tint sets it apart from the two. */
+.game-choice-stars .game-choice-icon{color:#E8B84B;}
+.game-choice-stars:hover{border-color:#E8B84B;}
 .game-choice{
   appearance:none;cursor:pointer;text-align:left;text-decoration:none;
   display:flex;flex-direction:column;gap:6px;padding:20px 20px 18px;

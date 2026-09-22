@@ -42,8 +42,8 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/en/","logo":"https://weavo.art/logo.png"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Find the Piece","item":"https://weavo.art/en/game"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/game.css?v=20260921-224132">
-<link rel="stylesheet" href="/css/base.css?v=20260921-224132">
+<link rel="stylesheet" href="/css/game.css?v=20260922-095137">
+<link rel="stylesheet" href="/css/base.css?v=20260922-095137">
 </head>
 <body>
 
@@ -90,6 +90,12 @@
             <span class="game-choice-title">Color by Number</span>
             <span class="game-choice-desc">Fill the numbered cells and watch an artist's work appear, at your own pace.</span>
             <span class="game-choice-status">No timer, no ranking</span>
+          </a>
+          <a class="game-choice game-choice-stars" href="/en/stars" data-stars-link>
+            <span class="game-choice-icon" aria-hidden="true">&#10022;</span>
+            <span class="game-choice-title">My constellations</span>
+            <span class="game-choice-desc">Turn the stars you win in the games into constellations, and see the whale we all build.</span>
+            <span class="game-choice-status">Collecting, not competing</span>
           </a>
         </div>
       </div>
@@ -181,6 +187,11 @@
           <p class="game-campaign" id="gameResultArtwork"></p>
           <div class="game-result-time"><span id="gameResultTime">0.00s</span></div>
           <p class="game-result-note" id="gameResultNote"></p>
+          <div class="star-award" id="starAward" hidden>
+            <span class="star-award-mark" aria-hidden="true">&#10022;</span>
+            <span class="star-award-text" id="starAwardText"></span>
+            <a class="star-award-link" href="/en/stars">See my constellations</a>
+          </div>
           <section class="game-recent game-recent-result" id="gameResultRecent" hidden>
             <h2>Recent times on this artwork</h2>
             <ol class="game-recent-list" id="gameResultRecentList"></ol>
@@ -370,14 +381,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260921-224132"></script>
-<script src="/js/i18n/en.js?v=20260921-224132"></script>
-<script src="/js/color-engine.js?v=20260921-224132"></script>
-<script src="/js/common.js?v=20260921-224132"></script>
-<script src="/js/auth.js?v=20260921-224132"></script>
-<script src="/js/notifications.js?v=20260921-224132"></script>
-<script src="/js/push.js?v=20260921-224132"></script>
-<script src="/js/lightbox.js?v=20260921-224132"></script>
-<script src="/js/game.js?v=20260921-224132"></script>
+<script src="/js/supabase-client.js?v=20260922-095137"></script>
+<script src="/js/i18n/en.js?v=20260922-095137"></script>
+<script src="/js/color-engine.js?v=20260922-095137"></script>
+<script src="/js/common.js?v=20260922-095137"></script>
+<script src="/js/auth.js?v=20260922-095137"></script>
+<script src="/js/notifications.js?v=20260922-095137"></script>
+<script src="/js/push.js?v=20260922-095137"></script>
+<script src="/js/lightbox.js?v=20260922-095137"></script>
+<script src="/js/constellations.js?v=20260922-095137"></script>
+<script src="/js/game.js?v=20260922-095137"></script>
 </body>
 </html>

@@ -959,11 +959,25 @@
     else if (result && result.completions) bits2.push(tr('cgFinishedCount', { n: result.completions }));
     if (!me.id) bits2.push(tr('cgLocalOnly'));
     $('cgResultNote').textContent = bits2.join(' · ');
+    // The star this finish lit (js/constellations.js). first_completion is
+    // the server saying "first time this player finished this artwork",
+    // which is exactly when the trigger awards a star.
+    showStarAward(!!(result && result.first_completion));
     confetti();
     renderNext();
     refreshCard(art.id);
     renderMine();
     window.scrollTo(0, 0);
+  }
+  async function showStarAward(isNew) {
+    const box = $('starAward');
+    if (!box || typeof starAwardLines !== 'function') return;
+    box.hidden = true;
+    const total = await fetchStarCount();
+    const lines = starAwardLines(total, isNew);
+    if (!lines.length) return;
+    $('starAwardText').textContent = lines.join(' · ');
+    box.hidden = false;
   }
   function fmtDur(ms) {
     const total = Math.max(0, ms) / 1000;

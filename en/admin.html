@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260921-224132">
-<link rel="stylesheet" href="/css/admin.css?v=20260921-224132">
+<link rel="stylesheet" href="/css/base.css?v=20260922-095137">
+<link rel="stylesheet" href="/css/admin.css?v=20260922-095137">
 </head>
 <body>
 
@@ -399,6 +399,20 @@
             </div>
 
             <div class="admin-option-card">
+              <h3>Constellations</h3>
+              <p class="admin-help">Finishing an artwork in either game lights one star, and six stars make a constellation; every completed constellation lights a star of the shared whale. Stars are written by database triggers, so turning this off hides the page without taking anybody&rsquo;s stars away.</p>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="starsEnabled" disabled> <strong>Constellations on</strong> &mdash; off shows a notice at <code>/en/stars</code> and hides the entry points in the game menu and result screens.</label>
+              </div>
+              <div class="admin-setting">
+                <label><input type="checkbox" data-setting="starsShowWhale" disabled> <strong>Show the shared whale</strong> &mdash; off leaves only personal constellations.</label>
+              </div>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminWhaleCap">The most stars of the whale <strong>one person</strong> may light. The whale has 48, so 3 means at least 16 people are needed. The more artworks the site has, the lower this should be for &ldquo;together&rdquo; to keep its meaning. <em>(default: 3)</em></label>
+                <div class="admin-range"><input id="adminWhaleCap" type="range" min="1" max="12" step="1" data-setting="whaleStarsPerPlayer" disabled><output for="adminWhaleCap" data-setting-output="whaleStarsPerPlayer">3</output></div>
+              </div>
+            </div>
+            <div class="admin-option-card">
               <h3>Color by Number game</h3>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="pixelGameEnabled" disabled> <strong>Game enabled</strong> — when off, <code>/en/coloring</code> shows a notice only, the home and game-menu entries hide, and the server refuses to save progress.</label>
@@ -685,15 +699,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260921-224132"></script>
-<script src="/js/i18n/en.js?v=20260921-224132"></script>
-<script src="/js/common.js?v=20260921-224132"></script>
-<script src="/js/auth.js?v=20260921-224132"></script>
-<script src="/js/notifications.js?v=20260921-224132"></script>
-<script src="/js/push.js?v=20260921-224132"></script>
-<script src="/js/color-engine.js?v=20260921-224132"></script>
-<script src="/js/pixel-board.js?v=20260921-224132"></script>
-<script src="/js/matching.js?v=20260921-224132"></script>
-<script src="/js/admin.js?v=20260921-224132"></script>
+<script src="/js/supabase-client.js?v=20260922-095137"></script>
+<script src="/js/i18n/en.js?v=20260922-095137"></script>
+<script src="/js/common.js?v=20260922-095137"></script>
+<script src="/js/auth.js?v=20260922-095137"></script>
+<script src="/js/notifications.js?v=20260922-095137"></script>
+<script src="/js/push.js?v=20260922-095137"></script>
+<script src="/js/color-engine.js?v=20260922-095137"></script>
+<script src="/js/pixel-board.js?v=20260922-095137"></script>
+<script src="/js/matching.js?v=20260922-095137"></script>
+<script src="/js/admin.js?v=20260922-095137"></script>
 </body>
 </html>

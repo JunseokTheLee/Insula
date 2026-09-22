@@ -679,6 +679,12 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   // Colouring input: true = swipe paints (a press on a cell of the chosen
   // number starts a stroke); false = tap paints, one finger moves.
   pixelDragDefault: true,
+  // Constellations (supabase_stars.sql). whaleStarsPerPlayer caps how many
+  // of the shared whale's stars one person may light — the server reads the
+  // same key inside whale_stars(), so hiding the number here is not enough.
+  starsEnabled: true,
+  starsShowWhale: true,
+  whaleStarsPerPlayer: 3,
   // A drag stroke reaching an unpainted cell of another number: 'stop' ends
   // the stroke there, 'mark' leaves the wrong mark and goes on, 'pass'
   // skips it silently.
@@ -765,12 +771,13 @@ function refreshSiteSettings() {
 // CTA), data-coloring-link a colour-by-number one; the bare data-game-link
 // on the nav "Game" item stays as long as either game is on.
 (function hideGameLinksWhenOff() {
-  const links = document.querySelectorAll('[data-game-link],[data-coloring-link]');
+  const links = document.querySelectorAll('[data-game-link],[data-coloring-link],[data-stars-link]');
   if (!links.length) return;
   getSiteSettings().then(s => {
     const findOff = s.gameEnabled === false, colorOff = s.pixelGameEnabled === false;
     for (const el of links) {
-      const hide = el.hasAttribute('data-coloring-link') ? colorOff
+      const hide = el.hasAttribute('data-stars-link') ? s.starsEnabled === false
+        : el.hasAttribute('data-coloring-link') ? colorOff
         : el.getAttribute('data-game-link') === 'find' ? findOff
         : (findOff && colorOff);
       if (hide) el.style.display = 'none';

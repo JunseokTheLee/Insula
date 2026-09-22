@@ -72,8 +72,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/game.css?v=20260921-224132">
-<link rel="stylesheet" href="/css/base.css?v=20260921-224132">
+<link rel="stylesheet" href="/css/game.css?v=20260922-095137">
+<link rel="stylesheet" href="/css/base.css?v=20260922-095137">
 </head>
 
 <body>
@@ -124,6 +124,12 @@
             <span class="game-choice-title">숫자 색칠</span>
             <span class="game-choice-desc">번호대로 칸을 채우면 작가의 그림이 나타납니다. 시간 제한도 순위도 없습니다.</span>
             <span class="game-choice-status">여유롭게, 순위 없이</span>
+          </a>
+          <a class="game-choice game-choice-stars" href="/ko/stars" data-stars-link>
+            <span class="game-choice-icon" aria-hidden="true">&#10022;</span>
+            <span class="game-choice-title">내 별자리</span>
+            <span class="game-choice-desc">게임에서 모은 별로 별자리를 만들고, 모두가 함께 만드는 고래를 봅니다.</span>
+            <span class="game-choice-status">기록이 아니라 수집</span>
           </a>
         </div>
       </div>
@@ -215,6 +221,11 @@
           <p class="game-campaign" id="gameResultArtwork"></p>
           <div class="game-result-time"><span id="gameResultTime">0.00초</span></div>
           <p class="game-result-note" id="gameResultNote"></p>
+          <div class="star-award" id="starAward" hidden>
+            <span class="star-award-mark" aria-hidden="true">&#10022;</span>
+            <span class="star-award-text" id="starAwardText"></span>
+            <a class="star-award-link" href="/ko/stars">내 별자리 보기</a>
+          </div>
           <section class="game-recent game-recent-result" id="gameResultRecent" hidden>
             <h2>이 작품의 최근 기록</h2>
             <ol class="game-recent-list" id="gameResultRecentList"></ol>
@@ -505,15 +516,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260921-224132"></script>
-<script src="/js/i18n/ko.js?v=20260921-224132"></script>
-<script src="/js/color-engine.js?v=20260921-224132"></script>
-<script src="/js/common.js?v=20260921-224132"></script>
-<script src="/js/auth.js?v=20260921-224132"></script>
-<script src="/js/notifications.js?v=20260921-224132"></script>
-<script src="/js/push.js?v=20260921-224132"></script>
-<script src="/js/lightbox.js?v=20260921-224132"></script>
-<script src="/js/game.js?v=20260921-224132"></script>
+<script src="/js/supabase-client.js?v=20260922-095137"></script>
+<script src="/js/i18n/ko.js?v=20260922-095137"></script>
+<script src="/js/color-engine.js?v=20260922-095137"></script>
+<script src="/js/common.js?v=20260922-095137"></script>
+<script src="/js/auth.js?v=20260922-095137"></script>
+<script src="/js/notifications.js?v=20260922-095137"></script>
+<script src="/js/push.js?v=20260922-095137"></script>
+<script src="/js/lightbox.js?v=20260922-095137"></script>
+<script src="/js/constellations.js?v=20260922-095137"></script>
+<script src="/js/game.js?v=20260922-095137"></script>
 
 </body>
 </html>
