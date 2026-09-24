@@ -3,7 +3,6 @@
 // Shape of it (2026-09-21→22, user direction):
 //   * the constellation you are WORKING ON fills a big stage in the middle
 //   * every constellation you have is a chip under it; picking one stages it
-//   * six hand-drawn "Different Us" badges
 //   * THE WHALE IS YOURS. It was a shared sky at first; the user asked for
 //     one you finish alone, so its 48 points are simply your own stars in the
 //     order you earned them — the constellations are chapters, the whale is
@@ -331,108 +330,6 @@
       b.addEventListener('click', () => { picked = i; renderStage(); renderStrip(); });
       strip.appendChild(b);
     });
-    wrap.hidden = false;
-  }
-
-  // ---------- "Different Us": six drawn badges ----------
-  function badgeEmblem(key, won) {
-    const id = 'bg' + (++uidN);
-    const svg = el('svg', { viewBox: '0 0 72 72', class: 'st-emblem' + (won ? ' won' : ''), 'aria-hidden': 'true' });
-    const defs = el('defs', {});
-    const rg = el('radialGradient', { id: id + 'r', cx: '.5', cy: '.34', r: '.78' });
-    rg.appendChild(el('stop', { offset: '0', 'stop-color': won ? 'rgba(255,217,142,.34)' : 'rgba(255,255,255,.07)' }));
-    rg.appendChild(el('stop', { offset: '1', 'stop-color': 'rgba(255,255,255,0)' }));
-    defs.appendChild(rg);
-    svg.appendChild(defs);
-
-    const ink = won ? '#FFD98E' : 'rgba(255,255,255,.34)';
-    const ink2 = won ? '#9EC7FF' : 'rgba(255,255,255,.22)';
-    svg.appendChild(el('circle', { cx: 36, cy: 36, r: 33, fill: `url(#${id}r)` }));
-    svg.appendChild(el('circle', { cx: 36, cy: 36, r: 32, fill: 'none', stroke: won ? 'rgba(255,217,142,.5)' : 'rgba(255,255,255,.13)', 'stroke-width': 1.3 }));
-    const art = el('g', {});
-    const dot = (x, y, r, c) => art.appendChild(el('circle', { cx: x, cy: y, r, fill: c || ink }));
-    const ring = (x, y, r, c, w) => art.appendChild(el('circle', { cx: x, cy: y, r, fill: 'none', stroke: c || ink, 'stroke-width': w || 1.6 }));
-    const spark = (x, y, r, c) => art.appendChild(el('path', { d: sparkPath(r), fill: c || ink, transform: `translate(${x} ${y})` }));
-
-    if (key === 'artists5' || key === 'artists10') {
-      const n = key === 'artists5' ? 5 : 10, R = key === 'artists5' ? 17 : 19;
-      ring(36, 36, R, won ? 'rgba(255,217,142,.35)' : 'rgba(255,255,255,.14)', 1.1);
-      for (let i = 0; i < n; i++) {
-        const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
-        const x = 36 + Math.cos(a) * R, y = 36 + Math.sin(a) * R, c = i % 2 ? ink2 : ink;
-        dot(x, y - 1.6, n === 5 ? 3.1 : 2.4, c);
-        const w = n === 5 ? 3.4 : 2.6;
-        art.appendChild(el('path', { d: `M${x - w} ${y + w * 1.35} q${w} ${-w * 1.06} ${w * 2} 0`, fill: 'none', stroke: c, 'stroke-width': n === 5 ? 1.9 : 1.5, 'stroke-linecap': 'round' }));
-      }
-      spark(36, 36, n === 5 ? 7 : 6);
-    } else if (key === 'bothGames') {
-      art.appendChild(el('circle', { cx: 27, cy: 30, r: 9, fill: won ? 'rgba(255,217,142,.14)' : 'rgba(255,255,255,.05)' }));
-      ring(27, 30, 9, ink, 2.4);
-      art.appendChild(el('path', { d: 'M33.6 36.6 L41 44', fill: 'none', stroke: ink, 'stroke-width': 2.8, 'stroke-linecap': 'round' }));
-      dot(49, 26, 4.2, ink2); dot(55, 35, 3.4, ink); dot(47, 39, 3, ink2);
-      ring(50, 33, 11, won ? 'rgba(158,199,255,.4)' : 'rgba(255,255,255,.13)', 1.1);
-    } else if (key === 'hardLevel') {
-      art.appendChild(el('path', { d: 'M13 50 L26 30 L33 39 L44 21 L59 50 Z', fill: won ? 'rgba(255,217,142,.22)' : 'rgba(255,255,255,.07)' }));
-      art.appendChild(el('path', { d: 'M13 50 L26 30 L33 39 L44 21 L59 50', fill: 'none', stroke: ink, 'stroke-width': 2.2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
-      art.appendChild(el('path', { d: 'M40 27 L44 21 L48.5 29 L44 31 Z', fill: ink2 }));
-      spark(44, 17, 7.5);
-    } else if (key === 'sameDay3') {
-      art.appendChild(el('path', { d: 'M12 48 A 24 24 0 0 1 60 48', fill: 'none', stroke: ink, 'stroke-width': 1.8 }));
-      art.appendChild(el('path', { d: 'M12 48 L60 48', fill: 'none', stroke: won ? 'rgba(255,217,142,.4)' : 'rgba(255,255,255,.16)', 'stroke-width': 1.2 }));
-      spark(24, 34, 6, ink2); spark(36, 24, 8.5); spark(48, 33, 6.5, ink2);
-    } else {
-      for (let i = 0; i < 8; i++) {
-        const a = -Math.PI / 2 + (i * 2 * Math.PI) / 8;
-        dot(36 + Math.cos(a) * 21, 36 + Math.sin(a) * 21, i % 2 ? 2.4 : 1.6, i % 2 ? ink : ink2);
-      }
-      ring(36, 36, 21, won ? 'rgba(255,217,142,.28)' : 'rgba(255,255,255,.1)', 1);
-      spark(36, 36, 13);
-      dot(36, 36, 3.2, '#fff');
-    }
-    svg.appendChild(art);
-    return svg;
-  }
-  function starBadges(list) {
-    const artists = new Set(list.map(s => s.author_id).filter(Boolean));
-    const both = new Set(), byArtwork = new Map();
-    for (const s of list) {
-      const seen = byArtwork.get(s.artwork_id) || new Set();
-      seen.add(s.source);
-      byArtwork.set(s.artwork_id, seen);
-      if (seen.size > 1) both.add(s.artwork_id);
-    }
-    const perDay = new Map();
-    for (const s of list) {
-      const d = String(s.earned_at || '').slice(0, 10);
-      perDay.set(d, (perDay.get(d) || 0) + 1);
-    }
-    const bestDay = perDay.size ? Math.max(...perDay.values()) : 0;
-    const hard = list.some(s => s.source === 'color' && s.level >= 3);
-    return {
-      artists5: artists.size, bothGames: both.size, hardLevel: hard ? 1 : 0,
-      sameDay3: bestDay, artists10: artists.size, stars20: list.length,
-    };
-  }
-  function renderSpecial(list) {
-    const wrap = $('stSpecialWrap'), host = $('stBadges');
-    if (!wrap || !host) return;
-    const have = starBadges(list);
-    host.innerHTML = '';
-    for (const b of CONSTELLATION_SPECIAL.badges) {
-      const won = (have[b.key] || 0) >= b.need;
-      const li = document.createElement('li');
-      li.className = 'st-badge' + (won ? ' won' : '');
-      li.appendChild(badgeEmblem(b.key, won));
-      const txt = document.createElement('div');
-      txt.className = 'st-badge-txt';
-      const nm = document.createElement('b'); nm.textContent = tr('conBadge_' + b.key);
-      const hint = document.createElement('span');
-      // Clamp so a finished badge reads (5/5), not (6/5).
-      hint.textContent = tr('conBadgeHint_' + b.key, { have: Math.min(have[b.key] || 0, b.need) });
-      txt.append(nm, hint);
-      li.appendChild(txt);
-      host.appendChild(li);
-    }
     wrap.hidden = false;
   }
 
@@ -789,14 +686,12 @@
         empty.appendChild(hint);
       }
       empty.hidden = false;
-      renderSpecial([]);
       return;
     }
     empty.hidden = true;
     $('stAllWrap').hidden = false;
     renderStage();
     renderStrip();
-    renderSpecial(myStars);
     renderWhale(myStars);
   }
 
@@ -817,7 +712,6 @@
       empty.appendChild(p);
       empty.hidden = false;
       owner.hidden = true;
-      renderSpecial([]);
       return;
     }
     if (wanted && wanted !== me.id) {
@@ -828,7 +722,6 @@
         $('stSummary').textContent = '';
         $('stEmpty').textContent = tr('starsHiddenNotice');
         $('stEmpty').hidden = false;
-        $('stSpecialWrap').hidden = true;
         owner.hidden = true;
         return;
       }

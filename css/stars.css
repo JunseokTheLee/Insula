@@ -328,26 +328,6 @@ body.stars-dark{
 .st-chip.done .st-chip-name{color:var(--text);}
 .st-chip.on .st-chip-name{color:var(--st-accent);}
 
-/* ---------- "Different Us": six drawn emblems ---------- */
-.st-badges{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:14px;}
-.st-badge{
-  display:flex;gap:14px;align-items:center;padding:14px 16px;
-  border:1px solid rgba(255,255,255,.08);border-radius:var(--r-lg);
-  background:linear-gradient(165deg,rgba(255,255,255,.04),rgba(255,255,255,.008));
-  font-family:'Pretendard',sans-serif;font-size:12.5px;line-height:1.6;color:rgba(242,244,251,.4);
-  transition:border-color .16s linear,box-shadow .16s linear,background .16s linear;
-}
-.st-badge.won{
-  color:var(--muted);border-color:rgba(255,217,142,.32);
-  background:linear-gradient(165deg,rgba(255,217,142,.10),rgba(255,255,255,.012));
-  box-shadow:0 0 38px rgba(255,217,142,.10) inset, 0 16px 40px rgba(0,0,0,.34);
-}
-.st-emblem{width:64px;height:64px;flex-shrink:0;opacity:.6;}
-.st-emblem.won{opacity:1;animation:st-emblem-in .7s cubic-bezier(.2,.9,.3,1.1) both;}
-@keyframes st-emblem-in{ from{opacity:0;transform:scale(.7) rotate(-14deg);} to{opacity:1;transform:none;} }
-.st-badge-txt{min-width:0;}
-.st-badge-txt b{display:block;font-weight:800;font-size:13.5px;color:rgba(242,244,251,.55);margin-bottom:2px;}
-.st-badge.won .st-badge-txt b{color:var(--text);}
 /* ---------- the whale ---------- */
 .st-whale{
   position:relative;overflow:hidden;border-radius:var(--r-lg);
@@ -405,8 +385,6 @@ body.stars-dark{
   .st-head{align-items:flex-start;}
   .st-stage-line{font-size:13.5px;margin-bottom:10px;}
   .st-chip{width:96px;}
-  .st-badge{padding:12px 13px;gap:12px;}
-  .st-emblem{width:54px;height:54px;}
   .st-tip{max-width:210px;}
   .st-tip img{width:36px;height:36px;}
 }
@@ -418,7 +396,7 @@ body.stars-dark{
   .stars-dark .stars-page::before,
   .st-spark,.st-line-lit,.st-meteor,.st-way,.st-way-band,.st-haze,
   .st-whale-body,.st-flow,.st-aurora,.st-bubble,.st-whale-eye,
-  .st-full,.st-emblem.won{animation:none !important;}
+  .st-full{animation:none !important;}
   .st-meteor{display:none;}
   .st-tip,.st-burst{transition:none;}
 }

@@ -400,7 +400,6 @@ const T = {
   conName_bridge: 'Bridge', conLine_bridge: 'Your star crosses over to someone else.',
   conName_flower: 'Flower', conLine_flower: 'Opening outward from the middle.',
   conName_compass: 'Compass', conLine_compass: 'Wherever you go, the sky goes with you.',
-  conName_different: 'Different Us', conLine_different: 'Different artworks make one sky.',
   // Night names ({n} = which night)
   conNight_firstLight: 'Night {n} · First Light',
   conNight_wind: 'Night {n} · Wind',
@@ -408,13 +407,6 @@ const T = {
   conNight_woods: 'Night {n} · Woods',
   conNight_snow: 'Night {n} · Snow',
   conNight_dawn: 'Night {n} · Dawn',
-  // The special constellation and its six conditions
-  conBadge_artists5: '5 different artists', conBadgeHint_artists5: 'Collect stars from 5 different artists ({have}/5)',
-  conBadge_bothGames: 'One artwork, both games', conBadgeHint_bothGames: 'Finish the same artwork in Find the Piece and Color by Number',
-  conBadge_hardLevel: 'Hard level', conBadgeHint_hardLevel: 'Finish a Color by Number board on Hard',
-  conBadge_sameDay3: '3 stars in a day', conBadgeHint_sameDay3: 'Light 3 stars within one day (best {have})',
-  conBadge_artists10: '10 different artists', conBadgeHint_artists10: 'Collect stars from 10 different artists ({have}/10)',
-  conBadge_stars20: '20 stars', conBadgeHint_stars20: 'Collect 20 stars ({have}/20)',
   // The sky page
   starsTitle: 'Constellations',
   starsTagline: 'One small cell becomes a star.',
@@ -437,8 +429,6 @@ const T = {
   starsGameColor: 'Color by Number',
   starsGoneArtwork: 'An artwork no longer shown',
   starsEmptySlot: 'An empty place, for now',
-  starsSpecialTitle: 'Different Us',
-  starsSpecialLead: 'A constellation that lights for HOW you collected, not how much.',
   starsWhaleTitle: 'My whale',
   starsWhaleLeft: '{n} to go',
   starsWhaleNth: 'whale #{n}',

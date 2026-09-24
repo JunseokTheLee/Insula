@@ -60,31 +60,12 @@ const CONSTELLATION_NIGHTS = [
   { key: 'dawn',       accent: '#FFC98E' },
 ];
 
-// The one constellation that is not filled in order: its six stars light when
-// the player's collection says something about HOW they played, not how much.
-// Every test reads only the star list the sky already has (see starBadges in
-// js/stars.js), so there is nothing extra to store.
-const CONSTELLATION_SPECIAL = {
-  key: 'different',
-  stars: [[50, 10], [85, 30], [85, 70], [50, 90], [15, 70], [15, 30]],
-  links: [[0, 3], [1, 4], [2, 5]],
-  // Order matters: slot k belongs to badges[k].
-  badges: [
-    { key: 'artists5',  need: 5 },
-    { key: 'bothGames', need: 1 },
-    { key: 'hardLevel', need: 1 },
-    { key: 'sameDay3',  need: 3 },
-    { key: 'artists10', need: 10 },
-    { key: 'stars20',   need: 20 },
-  ],
-};
-
-// ── the shared whale ─────────────────────────────────────────────────────
+// ── your whale ───────────────────────────────────────────────────────────
 // 48 stars on a 1000×520 field, in one closed outline: snout → back → tail →
-// belly → fin → back to the snout. They light IN THIS ORDER (one per
-// constellation anybody completes, at most a few per person — see
-// whaleStarsPerPlayer), so the whale draws itself rather than appearing in
-// scattered dots, and an unlit slot is a faint dot until somebody earns it.
+// belly → fin → back to the snout. They light IN THIS ORDER with the stars
+// ONE PERSON earns (user decision 2026-09-22 — it used to be communal), so
+// the whale draws itself from the head rather than appearing in scattered
+// dots, and an unlit slot is a faint dot until that person earns it.
 const WHALE_SKY = { w: 1000, h: 520 };
 const WHALE_STARS = [
   [58, 268], [78, 236], [110, 212], [152, 194], [205, 178], [262, 166],

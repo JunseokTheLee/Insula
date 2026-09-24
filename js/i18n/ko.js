@@ -400,7 +400,6 @@ const T = {
   conName_bridge: '다리', conLine_bridge: '당신의 별이 다른 사람에게 건너갑니다.',
   conName_flower: '꽃', conLine_flower: '한가운데에서 사방으로 피어납니다.',
   conName_compass: '나침반', conLine_compass: '어디로 가든 하늘은 함께 갑니다.',
-  conName_different: '서로 다른 우리', conLine_different: '서로 다른 작품이 하나의 하늘을 만듭니다.',
   // 밤 이름 ({n} = 몇 번째 밤)
   conNight_firstLight: '{n}번째 밤 · 첫 별의 밤',
   conNight_wind: '{n}번째 밤 · 바람의 밤',
@@ -408,13 +407,6 @@ const T = {
   conNight_woods: '{n}번째 밤 · 숲의 밤',
   conNight_snow: '{n}번째 밤 · 눈의 밤',
   conNight_dawn: '{n}번째 밤 · 새벽의 밤',
-  // 특별 별자리의 여섯 가지 조건
-  conBadge_artists5: '서로 다른 작가 5명', conBadgeHint_artists5: '작가 5명의 작품으로 별을 모으세요 ({have}/5)',
-  conBadge_bothGames: '한 작품, 두 게임', conBadgeHint_bothGames: '같은 작품을 조각 찾기와 숫자 색칠로 모두 완성하세요',
-  conBadge_hardLevel: '어려움 완성', conBadgeHint_hardLevel: '숫자 색칠의 어려움 단계를 완성하세요',
-  conBadge_sameDay3: '하루에 별 3개', conBadgeHint_sameDay3: '하루 안에 별 3개를 밝히세요 (최고 {have}개)',
-  conBadge_artists10: '서로 다른 작가 10명', conBadgeHint_artists10: '작가 10명의 작품으로 별을 모으세요 ({have}/10)',
-  conBadge_stars20: '별 20개', conBadgeHint_stars20: '별을 20개 모으세요 ({have}/20)',
   // 별자리 페이지
   starsTitle: '별자리',
   starsTagline: '작은 한 칸이, 하나의 별이 됩니다.',
@@ -437,8 +429,6 @@ const T = {
   starsGameColor: '숫자 색칠',
   starsGoneArtwork: '지금은 볼 수 없는 작품',
   starsEmptySlot: '아직 비어 있는 자리',
-  starsSpecialTitle: '서로 다른 우리',
-  starsSpecialLead: '얼마나 많이가 아니라, 어떻게 모았는지로 켜지는 별자리입니다.',
   starsWhaleTitle: '나의 고래',
   starsWhaleLeft: '완성까지 {n}개',
   starsWhaleNth: '{n}번째 고래',
