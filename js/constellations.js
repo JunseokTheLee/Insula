@@ -13,9 +13,8 @@
 // migration. Six constellations make a NIGHT, which carries its own name and
 // tint so the later ones still feel like new ground even when a shape returns.
 
-// MUST match the 6 in whale_stars() (supabase_stars.sql): the shapes below
-// have exactly this many slots each, and the whale counts completed
-// constellations with the same number.
+// Every shape below has exactly this many slots, and a result screen
+// counts down to the next constellation with it.
 const STAR_CONSTELLATION_SIZE = 6;
 const CONSTELLATIONS_PER_NIGHT = 6;
 
@@ -59,26 +58,6 @@ const CONSTELLATION_NIGHTS = [
   { key: 'snow',       accent: '#E4E8F5' },
   { key: 'dawn',       accent: '#FFC98E' },
 ];
-
-// ── your whale ───────────────────────────────────────────────────────────
-// 48 stars on a 1000×520 field, in one closed outline: snout → back → tail →
-// belly → fin → back to the snout. They light IN THIS ORDER with the stars
-// ONE PERSON earns (user decision 2026-09-22 — it used to be communal), so
-// the whale draws itself from the head rather than appearing in scattered
-// dots, and an unlit slot is a faint dot until that person earns it.
-const WHALE_SKY = { w: 1000, h: 520 };
-const WHALE_STARS = [
-  [58, 268], [78, 236], [110, 212], [152, 194], [205, 178], [262, 166],
-  [322, 158], [384, 154], [446, 154], [508, 158], [568, 166], [626, 178],
-  [682, 192], [734, 208], [782, 224], [824, 238], [866, 206], [908, 168],
-  [946, 128], [972, 96], [964, 148], [944, 196], [916, 236], [884, 262],
-  [918, 296], [950, 336], [972, 382], [940, 356], [902, 328], [866, 302],
-  [820, 300], [764, 318], [704, 334], [642, 346], [580, 354], [518, 358],
-  [470, 384], [438, 424], [408, 462], [424, 414], [446, 372], [456, 356],
-  [396, 350], [336, 340], [276, 326], [218, 308], [162, 290], [108, 282],
-];
-// Consecutive, and the last one closes back to the snout.
-const WHALE_LINKS = WHALE_STARS.map((_, i) => [i, (i + 1) % WHALE_STARS.length]);
 
 // ── helpers ──────────────────────────────────────────────────────────────
 // Constellation index → its shape, its night, and the night's name. Index 0

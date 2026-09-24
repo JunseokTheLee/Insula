@@ -328,50 +328,6 @@ body.stars-dark{
 .st-chip.done .st-chip-name{color:var(--text);}
 .st-chip.on .st-chip-name{color:var(--st-accent);}
 
-/* ---------- the whale ---------- */
-.st-whale{
-  position:relative;overflow:hidden;border-radius:var(--r-lg);
-  border:1px solid rgba(255,255,255,.10);padding:0;
-  background:
-    radial-gradient(70% 60% at 50% 4%, rgba(158,199,255,.16), transparent 64%),
-    radial-gradient(60% 60% at 88% 96%, rgba(120,90,255,.16), transparent 62%),
-    linear-gradient(175deg,#0b1226 0%,#080d1c 60%,#070a16 100%);
-  box-shadow:0 30px 80px rgba(0,0,0,.48);
-}
-.st-whale-svg{display:block;width:100%;height:auto;}
-/* The whale always fits whole: panning it sideways showed only its head
-   and read as broken (2026-09-22). Small on a phone is fine — the
-   "View large" button is there for when it is not. */
-.st-whale-meta{
-  display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;
-  font-family:'Pretendard',sans-serif;font-size:14px;font-weight:700;color:var(--st-accent);
-  margin:16px 0 10px;padding:8px 16px;border-radius:var(--r-full);
-  background:rgba(158,199,255,.10);border:1px solid rgba(158,199,255,.26);
-}
-.st-whale-rows{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 16px;}
-.st-whale-rows li{display:inline-flex;align-items:baseline;gap:6px;font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);}
-.st-whale-rows a{color:var(--text);text-decoration:none;font-weight:600;}
-.st-whale-rows a:hover{text-decoration:underline;}
-.st-whale-nth{color:rgba(242,244,251,.4);}
-.st-whale-meta.done{color:var(--st-gold);background:rgba(255,217,142,.12);border-color:rgba(255,217,142,.4);}
-/* The body wash: barely there at one star, luminous when the sky is full. */
-@keyframes st-body{ 0%,100%{opacity:.86;} 50%{opacity:1;} }
-.st-whale-body{animation:st-body 7s ease-in-out infinite;}
-.st-whale-body.full{animation-duration:4.5s;}
-/* A light running along the finished outline — the whale is alive. */
-@keyframes st-flow{ from{stroke-dashoffset:566;} to{stroke-dashoffset:0;} }
-.st-flow{animation:st-flow 4.5s linear infinite;}
-/* Ribbons of aurora behind it, drifting on their own clocks. */
-@keyframes st-aurora{ 0%,100%{transform:translate3d(0,0,0);opacity:.9;} 50%{transform:translate3d(-26px,14px,0);opacity:.55;} }
-.st-aurora{transform-box:view-box;animation:st-aurora 24s ease-in-out infinite;}
-.st-aurora-2{animation-duration:33s;animation-direction:reverse;}
-/* Bubbles rise past the whale and fade out near the top. */
-@keyframes st-bubble{ 0%{transform:translateY(0);opacity:0;} 8%{opacity:.75;} 90%{opacity:.16;} 100%{transform:translateY(-540px);opacity:0;} }
-.st-bubble{transform-box:view-box;animation:st-bubble 16s linear infinite;}
-/* The eye opens once the head is drawn. */
-@keyframes st-eye{ from{opacity:0;transform:scale(.4);} to{opacity:1;transform:none;} }
-.st-whale-eye{transform-box:fill-box;transform-origin:center;animation:st-eye 1.2s .9s cubic-bezier(.2,.9,.3,1.2) both;}
-
 @media (max-width:1000px){
   .st-stage-info{padding:64px 20px 20px;}
 }
@@ -395,7 +351,6 @@ body.stars-dark{
   .stars-page h1,.st-brand-mark,
   .stars-dark .stars-page::before,
   .st-spark,.st-line-lit,.st-meteor,.st-way,.st-way-band,.st-haze,
-  .st-whale-body,.st-flow,.st-aurora,.st-bubble,.st-whale-eye,
   .st-full{animation:none !important;}
   .st-meteor{display:none;}
   .st-tip,.st-burst{transition:none;}
@@ -415,13 +370,10 @@ body.stars-dark{
    behind, keep what is inside running (an id beats the html class). */
 html.st-full-open .st-way,html.st-full-open .st-way-band,html.st-full-open .st-haze,
 html.st-full-open .st-spark,html.st-full-open .st-meteor,html.st-full-open .st-line-lit,
-html.st-full-open .st-whale-body,html.st-full-open .st-flow,html.st-full-open .st-aurora,
-html.st-full-open .st-bubble,html.st-full-open .st-whale-eye,
 html.st-full-open .stars-dark .app::before,html.st-full-open .stars-dark .app::after,
 html.st-full-open .stars-dark .stars-page::before{animation-play-state:paused;}
-#stFull .st-way,#stFull .st-way-band,#stFull .st-haze,#stFull .st-spark,#stFull .st-meteor,
-#stFull .st-whale-body,#stFull .st-flow,#stFull .st-aurora,#stFull .st-bubble,
-#stFull .st-whale-eye{animation-play-state:running;}
+#stFull .st-way,#stFull .st-way-band,#stFull .st-haze,#stFull .st-spark,
+#stFull .st-meteor{animation-play-state:running;}
 @keyframes st-full-in{from{opacity:0;}to{opacity:1;}}
 .st-full-bar{
   flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px;
@@ -436,10 +388,5 @@ html.st-full-open .stars-dark .stars-page::before{animation-play-state:paused;}
 }
 .st-full-close:hover{background:rgba(255,255,255,.14);}
 .st-full-body{flex:1;min-height:0;display:grid;place-items:center;padding:12px 14px;}
-.st-full-sky,.st-full-whale svg{display:block;width:100%;height:auto;max-height:100%;}
-.st-full-whale{width:100%;}
-.st-full-hint{
-  flex:0 0 auto;margin:0;padding:0 18px calc(14px + env(safe-area-inset-bottom,0px));
-  font-family:'Pretendard',sans-serif;font-size:12.5px;color:rgba(242,244,251,.5);text-align:center;
-}
-.st-full-hint[hidden]{display:none;}
+.st-full-sky{display:block;width:100%;height:auto;max-height:100%;}
+

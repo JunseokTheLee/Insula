@@ -3,12 +3,7 @@
 // Shape of it (2026-09-21→22, user direction):
 //   * the constellation you are WORKING ON fills a big stage in the middle
 //   * every constellation you have is a chip under it; picking one stages it
-//   * THE WHALE IS YOURS. It was a shared sky at first; the user asked for
-//     one you finish alone, so its 48 points are simply your own stars in the
-//     order you earned them — the constellations are chapters, the whale is
-//     the whole picture. Nothing extra is stored and whale_stars() is no
-//     longer called.
-//   * a full-screen view, for all the constellations at once or the whale
+//   * a full-screen view, for every constellation at once
 //
 // PERFORMANCE (2026-09-22, "버벅거린다"). There are NO SVG filters on this
 // page: feGaussianBlur re-runs every time the thing it wraps changes, and
@@ -333,137 +328,18 @@
     wrap.hidden = false;
   }
 
-  // ---------- the whale: YOUR whole sky ----------
-  // Its 48 points are your own stars in the order you earned them. Six of
-  // them make a constellation, all forty-eight make the whale; past that a
-  // new whale begins. No extra data — the same list drives both.
-  function whaleD(from, to) {
-    let d = '';
-    for (let i = from; i <= to; i++) {
-      const [x, y] = WHALE_STARS[i % WHALE_STARS.length];
-      d += (i === from ? 'M' : 'L') + x + ' ' + y + ' ';
-    }
-    return d.trim();
-  }
-  function paintWhale(host, list, big) {
-    const total = WHALE_STARS.length;
-    const skies = list.length ? Math.ceil(list.length / total) : 1;
-    const lit = list.slice((skies - 1) * total);
-    const done = lit.length >= total;
-    host.innerHTML = '';
-    resetAnim();
-
-    const svg = el('svg', { viewBox: `0 0 ${WHALE_SKY.w} ${WHALE_SKY.h}`, class: 'st-whale-svg', role: 'img' });
-    svg.setAttribute('aria-label', tr('starsWhaleTitle'));
-    const defs = skyDefs(svg, '#9EC7FF');
-    const gid = 'wh' + (++uidN);
-    const dd = el('defs', {});
-    const body = el('radialGradient', { id: gid + 'b', cx: '.42', cy: '.4', r: '.72' });
-    body.appendChild(el('stop', { offset: '0', 'stop-color': '#9EC7FF', 'stop-opacity': '.55' }));
-    body.appendChild(el('stop', { offset: '.55', 'stop-color': '#7B86FF', 'stop-opacity': '.3' }));
-    body.appendChild(el('stop', { offset: '1', 'stop-color': '#4B3FA8', 'stop-opacity': '.08' }));
-    // Aurora ribbons: soft gradient stops, no blur filter (that was the cost).
-    const aur = el('linearGradient', { id: gid + 'a', x1: '0', y1: '0', x2: '1', y2: '.4' });
-    aur.appendChild(el('stop', { offset: '0', 'stop-color': '#5BE7C4', 'stop-opacity': '0' }));
-    aur.appendChild(el('stop', { offset: '.42', 'stop-color': '#5BE7C4', 'stop-opacity': '.20' }));
-    aur.appendChild(el('stop', { offset: '.7', 'stop-color': '#A78BFA', 'stop-opacity': '.18' }));
-    aur.appendChild(el('stop', { offset: '1', 'stop-color': '#A78BFA', 'stop-opacity': '0' }));
-    dd.append(body, aur);
-    svg.appendChild(dd);
-    svg.append(
-      el('path', { d: 'M-60 150 C 240 60, 560 250, 1060 120 L1060 250 C 560 370, 240 180, -60 280 Z', fill: `url(#${gid}a)`, class: 'st-aurora' }),
-      el('path', { d: 'M-60 330 C 300 240, 640 430, 1060 300 L1060 420 C 640 540, 300 370, -60 450 Z', fill: `url(#${gid}a)`, class: 'st-aurora st-aurora-2', opacity: .7 }),
-    );
-    scatter(svg, WHALE_SKY.w, WHALE_SKY.h, 3, 150);
-    meteor(svg, WHALE_SKY.w * 0.92, 70, 3);
-
-    const frac = lit.length / total;
-    svg.appendChild(el('path', {
-      d: whaleD(0, total) + ' Z', fill: `url(#${gid}b)`,
-      opacity: (0.06 + frac * 0.5).toFixed(3), class: 'st-whale-body' + (done ? ' full' : ''),
-    }));
-    svg.appendChild(el('path', { d: whaleD(0, total) + ' Z', fill: 'none', stroke: 'rgba(255,255,255,.09)', 'stroke-width': 1.3, 'stroke-dasharray': '5 10', 'stroke-linecap': 'round' }));
-    if (lit.length > 1) {
-      const dLit = whaleD(0, lit.length - 1) + (done ? ' Z' : '');
-      svg.appendChild(el('path', { d: dLit, fill: 'none', stroke: defs.line, 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: .95 }));
-      svg.appendChild(el('path', { d: dLit, fill: 'none', stroke: '#ffffff', 'stroke-width': 3.4, 'stroke-linecap': 'round', 'stroke-dasharray': '46 520', opacity: .85, class: 'st-flow' }));
-    }
-    const br = rnd(21);
-    for (let i = 0; i < 8; i++) {
-      const b = el('circle', {
-        cx: (br() * WHALE_SKY.w).toFixed(0), cy: (WHALE_SKY.h - 10).toFixed(0),
-        r: (br() * 3.4 + 1.2).toFixed(1), fill: 'none', stroke: 'rgba(190,220,255,.5)', 'stroke-width': .9, class: 'st-bubble',
-      });
-      b.style.animationDelay = (br() * 16).toFixed(1) + 's';
-      b.style.animationDuration = (12 + br() * 12).toFixed(1) + 's';
-      svg.appendChild(b);
-    }
-
-    const hits = [];
-    WHALE_STARS.forEach(([x, y], i) => {
-      const star = lit[i];
-      if (!star) {
-        svg.appendChild(el('circle', { cx: x, cy: y, r: 3, fill: 'rgba(255,255,255,.26)' }));
-        return;
-      }
-      const made = drawStar(svg, x, y, big ? 7 : 6, star, defs, i);
-      if (made) hits.push(made);
-    });
-    // The eye opens once the head is drawn — the whale starts looking back.
-    if (lit.length >= 4) {
-      const eye = el('g', { class: 'st-whale-eye' });
-      eye.append(
-        el('circle', { cx: 132, cy: 236, r: 14, fill: defs.halo('#9EC7FF') }),
-        el('circle', { cx: 132, cy: 236, r: 5.2, fill: '#ffffff' }),
-        el('circle', { cx: 133.6, cy: 234.6, r: 1.8, fill: '#0b1226' }),
-      );
-      svg.appendChild(eye);
-    }
-    host.appendChild(svg);
-    wireTips(host, svg, hits);
-    return { lit: lit.length, total, done, skies };
-  }
-  function renderWhale(list) {
-    const wrap = $('stWhaleWrap'), host = $('stWhale'), meta = $('stWhaleMeta');
-    if (!wrap || !host) return;
-    if (settings.starsShowWhale === false || !list.length) { wrap.hidden = true; return; }
-    const r = paintWhale(host, list, false);
-    $('stWhaleLead').textContent = tr('starsWhaleLead', { total: r.total });
-    const bits = [tr('starsWhaleProgress', { n: r.lit, total: r.total })];
-    if (r.done) bits.push(tr('starsWhaleDone'));
-    else bits.push(tr('starsWhaleLeft', { n: r.total - r.lit }));
-    if (r.skies > 1) bits.push(tr('starsWhaleNth', { n: r.skies }));
-    meta.textContent = bits.join(' · ');
-    wrap.hidden = false;
-  }
-
   // ---------- full screen ----------
   // Drawn fresh when it opens and thrown away on close, so it costs nothing
   // while shut.
   let fullOpen = false, scrollLock = '';
-  function openFull(kind) {
-    const box = $('stFull'), body = $('stFullBody'), title = $('stFullTitle'), hint = $('stFullHint');
+  function openFull() {
+    const box = $('stFull'), body = $('stFullBody'), title = $('stFullTitle');
     if (!box) return;
     body.innerHTML = '';
-    hint.hidden = true;
-    if (kind === 'whale') {
-      title.textContent = tr('starsWhaleTitle');
-      const host = document.createElement('div');
-      host.className = 'st-full-whale';
-      body.appendChild(host);
-      paintWhale(host, myStars, true);
-      // A 1.9:1 picture on a portrait phone can only get so big.
-      if (window.innerWidth < 700 && window.innerHeight > window.innerWidth) {
-        hint.textContent = tr('starsRotateHint');
-        hint.hidden = false;
-      }
-    } else {
-      title.textContent = tr('starsFullTitle', { n: groups.filter(g => g.full).length });
-      body.appendChild(allSkySvg());
-    }
+    title.textContent = tr('starsFullTitle', { n: groups.filter(g => g.full).length });
+    body.appendChild(allSkySvg());
     box.hidden = false;
-    // Only remember the page scroll on the FIRST open — switching from one
-    // view to the other must not record our own lock as the value to restore.
+    // Never record our own lock as the value to restore.
     if (!fullOpen) scrollLock = document.documentElement.style.overflow;
     fullOpen = true;
     document.documentElement.style.overflow = 'hidden';
@@ -658,7 +534,6 @@
   function hideSky() {
     $('stStage').hidden = true;
     $('stStripWrap').hidden = true;
-    $('stWhaleWrap').hidden = true;
     $('stAllWrap').hidden = true;
   }
   function renderMine(res) {
@@ -692,7 +567,6 @@
     $('stAllWrap').hidden = false;
     renderStage();
     renderStrip();
-    renderWhale(myStars);
   }
 
   async function load() {
@@ -745,8 +619,7 @@
     }
     $('stHide').addEventListener('change', e => setHidden(e.target.checked));
     $('stShare').addEventListener('click', shareConstellation);
-    $('stAll').addEventListener('click', () => openFull('all'));
-    $('stWhaleBig').addEventListener('click', () => openFull('whale'));
+    $('stAll').addEventListener('click', openFull);
     $('stFullClose').addEventListener('click', closeFull);
     $('stFull').addEventListener('click', e => { if (e.target === $('stFull')) closeFull(); });
     addEventListener('keydown', e => { if (e.key === 'Escape' && fullOpen) closeFull(); });
