@@ -61,7 +61,7 @@
 /og-image-ko.png
   Cache-Control: public, max-age=86400
 
-# The sky page's photograph and painted animals (/sky/night.webp,
+# The sky page's photograph and painted animals (/sky/night-loop.webp,
 # /sky/con-*.webp). A week, not a year: they are referenced by path from
 # js/sky-figures.js, so a replaced picture gets a new ?v= there (or a new
 # file name) and is fetched fresh; an untouched one stays cached.

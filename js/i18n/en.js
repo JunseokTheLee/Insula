@@ -425,6 +425,7 @@ const T = {
   starsGameFind: 'Find the Piece',
   starsGameColor: 'Color by Number',
   starsGoneArtwork: 'An artwork no longer shown',
+  starsTipOpen: 'View artwork ›',
   starsEmptySlot: 'An empty place, for now',
   starsConLocked: 'A constellation of {n} stars, still ahead.',
   starsConDone: 'Complete',

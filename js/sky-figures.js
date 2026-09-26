@@ -2,7 +2,7 @@
 // the painted animal, and where it sits on the panorama.
 // No DOM. Loaded by {en,ko}/stars.html and tools/sky-editor.html only.
 //
-// SKY_W × SKY_H is the photograph's own size (sky/night.webp) and every
+// SKY_W × SKY_H is the photograph's own size (sky/night-loop.webp) and every
 // position here is in its pixels, so an animal stays on the same patch of
 // sky however large the panorama is shown. `at` is [x, y, size]: the
 // constellation's 0–100 box (the same box its stars use) is placed at
@@ -23,9 +23,14 @@
 // Milky Way as the real ones do; nothing reaches below y 640, where the
 // horizon, the island and the trees start.
 //
+// The photograph loops (2026-09-26): its two ends were cross-faded into each
+// other (tools/sky-art.js --loop), so x = SKY_W runs straight on into x = 0
+// and the page scrolls round without end. Keep the gap across that seam
+// (from the rightmost animals to the leftmost) about as wide as the others.
+//
 // /sky/ is cached for a week (_headers): a replaced painting takes a new
 // ?v= in its `src`; the photograph, which has none, takes a new file name.
-const SKY_IMAGE = '/sky/night.webp';
+const SKY_IMAGE = '/sky/night-loop.webp';
 const SKY_W = 1916, SKY_H = 821;
 
 const SKY_FIGURES = {

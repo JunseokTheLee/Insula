@@ -425,6 +425,7 @@ const T = {
   starsGameFind: '조각 찾기',
   starsGameColor: '숫자 색칠',
   starsGoneArtwork: '지금은 볼 수 없는 작품',
+  starsTipOpen: '작품 보기 ›',
   starsEmptySlot: '아직 비어 있는 자리',
   starsConLocked: '별 {n}개로 완성되는 별자리입니다.',
   starsConDone: '완성',

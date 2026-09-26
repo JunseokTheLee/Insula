@@ -1,7 +1,7 @@
 // The sky page (/{lang}/stars).
 //
 // One panorama (user decision 2026-09-26): a photograph of the night sky
-// (sky/night.webp) fitted to the height of the screen and dragged sideways,
+// (sky/night-loop.webp) fitted to the height of the screen and dragged sideways,
 // with the thirteen constellations of js/constellations.js laid on it as
 // painted, translucent animals (js/sky-figures.js). Every finished artwork
 // lights the next star. Constellations already finished are bright and take
@@ -38,10 +38,14 @@
   let current = 0;            // the constellation being filled (index over all skies)
   let skyNo = 0;              // which sky of thirteen is on screen
   let picked = 0;             // 0..12: the one the caption is about
-  let hits = [];              // the lit stars, for the hover card
+  let hits = [];              // the lit stars, for the card
+  let reveal = new Set();     // 0..12: finished since this person last looked — they light up once
 
   let uidN = 0;               // unique ids for per-SVG gradients
-  const ANIM_BUDGET = 46;     // how many sparkles may breathe at once
+  // How many sparkles may breathe in each copy of the sky (the loop draws
+  // the sky two or three times side by side; each copy breathes the same
+  // stars, so no seam shows). About one copy is on screen at a time.
+  const ANIM_BUDGET = 24;
   let animLeft = ANIM_BUDGET;
 
   const FIND = '#FFD98E';     // find the piece — warm
@@ -140,13 +144,7 @@
     const title = star.art_title || tr('untitledArtwork');
     const game = tr(star.source === 'find' ? 'starsGameFind' : 'starsGameColor');
     g.setAttribute('aria-label', `${title} · ${star.author_name || tr('anonymous')} · ${game}`);
-    const open = () => {
-      if (!star.alive) { toast(tr('starsGoneArtwork')); return; }
-      if (typeof openArtworkById === 'function') openArtworkById(star.artwork_id);
-      else location.href = artworkUrl(star.artwork_id);
-    };
-    g.addEventListener('click', open);
-    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    // Pressing a star pins its card (wireTips); the card opens the artwork.
     parent.appendChild(g);
     return { g, star, x, y };
   }
@@ -180,8 +178,9 @@
     const [X, Y, S] = f.at;
     const s = S / 100;
     const state = stateOf(gi);
+    const fresh = state === 'done' && reveal.has(k);   // lights up now, once
     const got = (groups[gi] && groups[gi].stars) || [];
-    const g = el('g', { class: `st-con ${state}` + (k === picked ? ' sel' : ''), 'data-k': k });
+    const g = el('g', { class: `st-con ${state}` + (fresh ? ' reveal' : '') + (k === picked ? ' sel' : ''), 'data-k': k });
     g.style.setProperty('--acc', c.accent);
 
     // Pressing the constellation (not one of its stars) chooses it.
@@ -190,6 +189,10 @@
     pick.addEventListener('click', () => choose(k, true));
     pick.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(k, true); } });
     g.appendChild(pick);
+
+    // A constellation completed since its owner last looked: a bloom of its
+    // colour swells behind it as the painting lights up (css .reveal).
+    if (fresh) g.appendChild(el('circle', { cx: X + S / 2, cy: Y + S / 2, r: S * .62, fill: defs.halo(c.accent), class: 'st-bloom', 'aria-hidden': 'true' }));
 
     // The painted animal: a transparent WebP under /sky/, laid in the same
     // 0–100 box as the stars. A picture that fails to load simply leaves the
@@ -207,14 +210,15 @@
       const [x1, y1] = at(a), [x2, y2] = at(b);
       const lit = !!(got[a] && got[b]);
       const line = el('line', { x1, y1, x2, y2, class: 'st-link' + (lit ? ' lit' : '') });
-      // Lines draw themselves in, but only in the constellation being filled —
-      // a whole sky of lines animating on every visit is noise.
-      if (lit && state === 'going') {
+      // Lines draw themselves in, but only in the constellation being filled
+      // and in one that has just been completed — a whole sky of lines
+      // animating on every visit is noise.
+      if (lit && (state === 'going' || fresh)) {
         const len = Math.hypot(x2 - x1, y2 - y1);
         line.classList.add('st-line-lit');
         line.style.setProperty('--len', len);
         line.style.strokeDasharray = len;
-        line.style.animationDelay = (n * 0.12) + 's';
+        line.style.animationDelay = ((fresh ? .5 : 0) + n * 0.12) + 's';
       }
       lines.appendChild(line);
     });
@@ -241,65 +245,136 @@
     const svg = $('stSkyLayer');
     if (!svg) return;
     svg.replaceChildren();
-    resetAnim();
+    svg.setAttribute('viewBox', `0 0 ${SKY_W * copies} ${SKY_H}`);
     hits = [];
     const defs = skyDefs(svg);
-    twinkles(svg);
     // The constellation being filled goes first so its sparkles get the
     // animation budget; then the finished ones, newest first.
     const order = [...Array(SKY_SIZE).keys()].sort((a, b) => {
       const rank = k => { const gi = skyNo * SKY_SIZE + k; return gi === current ? -1e6 : gi < current ? -gi : gi; };
       return rank(a) - rank(b);
     });
-    for (const k of order) drawConstellation(svg, k, defs);
-    wireTips($('stSkyWrap'), svg, hits);
+    // The same sky once per copy on the track, each shifted by one width.
+    for (let i = 0; i < copies; i++) {
+      const copy = el('g', { transform: `translate(${i * SKY_W} 0)` });
+      twinkles(copy);
+      resetAnim();
+      for (const k of order) drawConstellation(copy, k, defs);
+      svg.appendChild(copy);
+    }
+    wireTips($('stSkyWrap'), hits);
   }
 
-  // ---------- size, scroll, choose ----------
+  // ---------- size, pan, choose ----------
   // The picture always fills the height. On a wide screen that leaves almost
   // nothing to drag, so it may grow up to 10% taller than the view and lose
-  // the empty top of the sky (no drawing starts above y 110).
+  // the empty top of the sky (no animal starts above y 80).
+  //
+  // The sky has no end (user decision 2026-09-26, "360도 돌아보는 느낌"). The
+  // photograph's two ends were cross-faded into each other (tools/sky-art.js
+  // --loop), and the track (#stSkyCanvas) carries the sky `copies` times
+  // side by side. panX is where the view's left edge sits inside the first
+  // copy, always 0 ≤ panX < P (P = one sky's width on screen); the track is
+  // moved with a transform, never scrolled, so there is no end to reach.
   let scale = 1;              // CSS pixels per photograph pixel
+  let P = 0;                  // one sky's width on screen, CSS pixels
+  let panX = 0;
+  let copies = 2;             // enough that the view never runs off the track
+  let lastVw = 0;
+  function setPan(x) {
+    if (!P) return;
+    panX = ((x % P) + P) % P;
+    $('stSkyCanvas').style.transform = `translate3d(${-panX}px,0,0)`;
+  }
+  // One photograph per copy; the first (in the markup, fetched early) is
+  // cloned for the rest — the same file, so it comes from the cache.
+  function placePhotos() {
+    const cv = $('stSkyCanvas'), first = $('stSkyBg'), layer = $('stSkyLayer');
+    cv.querySelectorAll('.st-sky-bg.st-copy').forEach(n => n.remove());
+    for (let i = 0; i < copies; i++) {
+      let im = first;
+      if (i) {
+        im = first.cloneNode(false);
+        im.removeAttribute('id');
+        im.removeAttribute('fetchpriority');
+        im.classList.add('st-copy');
+        cv.insertBefore(im, layer);
+      }
+      im.style.left = (i * 100 / copies) + '%';
+      im.style.width = (100 / copies) + '%';
+    }
+  }
   function layoutSky() {
     const view = $('stSkyView'), cv = $('stSkyCanvas');
     if (!view || !cv) return;
     const vw = view.clientWidth, vh = view.clientHeight;
     if (!vw || !vh) return;
-    const keep = view.scrollWidth > vw ? (view.scrollLeft + vw / 2) / view.scrollWidth : null;
+    const mid = P ? (panX + lastVw / 2) / P : null;   // keep what is in the middle
     let h = vh;
     if (vw > 760) {
       const want = vw * 1.3 / AR;
       if (want > h) h = Math.min(want, vh * 1.10);
     }
-    const w = Math.round(h * AR);
-    cv.style.width = w + 'px';
-    cv.style.height = Math.round(h) + 'px';
-    cv.style.top = Math.round(vh - h) + 'px';
+    P = h * AR;
     scale = h / SKY_H;
-    if (keep != null) view.scrollLeft = keep * w - vw / 2;
-    edges();
+    const need = Math.max(2, Math.ceil(vw / P) + 1);
+    if (need !== copies || !cv.querySelector('.st-sky-bg[style]')) {
+      copies = need;
+      placePhotos();
+      if ($('stSkyLayer').childNodes.length) renderSky();
+    }
+    cv.style.width = (P * copies) + 'px';
+    cv.style.height = h + 'px';
+    cv.style.top = (vh - h) + 'px';
+    lastVw = vw;
+    hideTip();
+    setPan(mid == null ? panX : mid * P - vw / 2);
+  }
+  // ---- moving on its own: easing to a place, coasting after a fling ----
+  let raf = 0;
+  function stopAnim() { if (raf) cancelAnimationFrame(raf); raf = 0; }
+  function glideTo(x) {
+    stopAnim();
+    const from = panX, d = x - from, t0 = performance.now(), T = 520;
+    const step = now => {
+      const t = Math.min(1, (now - t0) / T);
+      setPan(from + d * (1 - Math.pow(1 - t, 3)));
+      if (t < 1) raf = requestAnimationFrame(step);
+      else { raf = 0; rememberScroll(); }
+    };
+    raf = requestAnimationFrame(step);
+  }
+  // v: how fast the finger was going when it let go (px per ms); the sky
+  // carries on that way and slows down.
+  function coast(v) {
+    stopAnim();
+    if (reduceMotion() || Math.abs(v) < 0.05) { rememberScroll(); return; }
+    let last = performance.now();
+    const step = now => {
+      const dt = Math.min(40, now - last);
+      last = now;
+      setPan(panX - v * dt);
+      v *= Math.pow(0.94, dt / 16);
+      if (Math.abs(v) > 0.02) raf = requestAnimationFrame(step);
+      else { raf = 0; rememberScroll(); }
+    };
+    raf = requestAnimationFrame(step);
   }
   function centerOn(k, smooth) {
     const f = SKY_FIGURES[constellationShape(skyNo * SKY_SIZE + k).key];
     const view = $('stSkyView');
-    if (!f || !view) return;
-    const left = Math.max(0, (f.at[0] + f.at[2] / 2) * scale - view.clientWidth / 2);
-    if (smooth && !reduceMotion() && view.scrollTo) view.scrollTo({ left, behavior: 'smooth' });
-    else view.scrollLeft = left;
-  }
-  // Fades on the edges say "there is more this way".
-  function edges() {
-    const view = $('stSkyView'), wrap = $('stSkyWrap');
-    if (!view || !wrap) return;
-    wrap.classList.toggle('can-l', view.scrollLeft > 4);
-    wrap.classList.toggle('can-r', view.scrollLeft + view.clientWidth < view.scrollWidth - 4);
+    if (!f || !view || !P) return;
+    const target = (f.at[0] + f.at[2] / 2) * scale - view.clientWidth / 2;
+    let d = ((target - panX) % P + P) % P;
+    if (d > P / 2) d -= P;                       // the short way round
+    if (smooth && !reduceMotion()) glideTo(panX + d);
+    else { stopAnim(); setPan(panX + d); }
   }
   function choose(k, scroll) {
-    picked = Math.max(0, Math.min(SKY_SIZE - 1, k));
+    picked = ((k % SKY_SIZE) + SKY_SIZE) % SKY_SIZE;   // the caption goes round too
     const svg = $('stSkyLayer');
     svg.querySelectorAll('.st-con.sel').forEach(n => n.classList.remove('sel'));
-    const g = svg.querySelector(`.st-con[data-k="${picked}"]`);
-    if (g) g.classList.add('sel');
+    svg.querySelectorAll(`.st-con[data-k="${picked}"]`).forEach(n => n.classList.add('sel'));
     renderCaption();
     if (scroll) centerOn(picked, true);
     rememberScroll();
@@ -324,33 +399,47 @@
       pips.appendChild(p);
     });
     $('stCapCount').textContent = state === 'done' ? tr('starsConDone') : `${got.length} / ${c.stars.length}`;
-    $('stCapPrev').disabled = picked === 0;
-    $('stCapNext').disabled = picked === SKY_SIZE - 1;
   }
 
-  // Dragging with a mouse. Touch already scrolls natively, and the wheel is
-  // left alone on purpose: taking it over would trap a mouse user who only
-  // wants to scroll the page past the sky (CLAUDE.md §7, the dead-wheel
-  // regression).
+  // Dragging: mouse, pen and touch alike (touch-action:pan-y in the CSS
+  // keeps vertical swipes for the page), with a little momentum. A
+  // horizontal wheel or trackpad swipe moves the sky too; a VERTICAL wheel
+  // is left alone on purpose — taking it over would trap a mouse user who
+  // only wants to scroll the page past the sky (CLAUDE.md §7, the dead-wheel
+  // regression). Arrow keys on the focused sky move it a quarter of a view.
   function wirePan(view) {
-    let down = null, dragged = false;
+    let down = null, dragged = false, trail = [];
     view.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      stopAnim();
       dragged = false;
-      if (e.pointerType !== 'mouse' || e.button !== 0) return;
-      down = { x: e.clientX, left: view.scrollLeft, id: e.pointerId };
+      down = { x: e.clientX, pan: panX, id: e.pointerId };
+      trail = [{ t: e.timeStamp, x: e.clientX }];
     });
     view.addEventListener('pointermove', e => {
       if (!down || e.pointerId !== down.id) return;
       const dx = e.clientX - down.x;
-      if (!dragged && Math.abs(dx) > 5) {
+      if (!dragged) {
+        if (Math.abs(dx) <= 5) return;
         dragged = true;
         view.classList.add('dragging');
         try { view.setPointerCapture(e.pointerId); } catch (err) { /* already released */ }
+        hideTip();
         hideHint();
       }
-      if (dragged) view.scrollLeft = down.left - dx;
+      setPan(down.pan - dx);
+      trail.push({ t: e.timeStamp, x: e.clientX });
+      if (trail.length > 8) trail.shift();
     });
-    const end = () => { down = null; view.classList.remove('dragging'); };
+    const end = e => {
+      if (!down || e.pointerId !== down.id) return;
+      down = null;
+      view.classList.remove('dragging');
+      if (!dragged) return;
+      // the speed over the last tenth of a second before letting go
+      const last = trail[trail.length - 1], first = trail.find(p => last.t - p.t <= 100) || last;
+      coast(e.type === 'pointerup' && last.t > first.t ? (last.x - first.x) / (last.t - first.t) : 0);
+    };
     view.addEventListener('pointerup', end);
     view.addEventListener('pointercancel', end);
     // A drag must not finish as a click on the star it started on.
@@ -360,6 +449,25 @@
       e.stopPropagation();
       e.preventDefault();
     }, true);
+    view.addEventListener('wheel', e => {
+      let d = 0;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) d = e.deltaX;
+      else if (e.shiftKey) d = e.deltaY;
+      if (!d) return;                              // vertical: the page scrolls as usual
+      e.preventDefault();
+      stopAnim();
+      hideTip();
+      hideHint();
+      setPan(panX + d * (e.deltaMode === 1 ? 16 : 1));
+      rememberScroll();
+    }, { passive: false });
+    view.addEventListener('keydown', e => {
+      if (e.target !== view || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+      e.preventDefault();
+      hideTip();
+      hideHint();
+      glideTo(panX + (e.key === 'ArrowRight' ? 1 : -1) * view.clientWidth * .25);
+    });
   }
 
   // Where the sky was, so a reload or a trip back from an artwork lands on
@@ -369,11 +477,10 @@
   function rememberScroll() {
     clearTimeout(scrollTimer);
     scrollTimer = setTimeout(() => {
-      const view = $('stSkyView');
-      if (!view || !view.scrollWidth) return;
+      if (!P) return;
       try {
         sessionStorage.setItem(SCROLL_KEY, JSON.stringify({
-          who: viewId || '', sky: skyNo, picked, x: view.scrollLeft / view.scrollWidth,
+          who: viewId || '', sky: skyNo, picked, x: panX / P,
         }));
       } catch (e) { /* private mode */ }
     }, 250);
@@ -384,10 +491,9 @@
     if (nav !== 'reload' && nav !== 'back_forward') return false;
     try {
       const m = JSON.parse(sessionStorage.getItem(SCROLL_KEY) || 'null');
-      if (!m || m.who !== (viewId || '') || m.sky !== skyNo) return false;
+      if (!m || m.who !== (viewId || '') || m.sky !== skyNo || !(m.x >= 0)) return false;
       choose(m.picked, false);
-      const view = $('stSkyView');
-      view.scrollLeft = m.x * view.scrollWidth;
+      setPan(m.x * P);
       return true;
     } catch (e) { return false; }
   }
@@ -433,50 +539,98 @@
     centerOn(picked, false);
   }
 
-  // A card that follows whichever star the pointer is over.
-  function wireTips(host, svg, list) {
+  // ---------- the card over a star ----------
+  // Pressing a star pins its card; pressing the card opens the artwork (the
+  // lightbox, like every artwork grid on the site — the href keeps the real
+  // page for a new tab); pressing anywhere else puts it away (user decision
+  // 2026-09-26). A mouse resting on a star only previews the card, and
+  // moving the sky puts any card away.
+  let tip = null;
+  function wireTips(host, list) {
     const old = host.querySelector('.st-tip');
     if (old) old.remove();
+    tip = null;
     if (!list.length) return;
-    const tip = document.createElement('div');
-    tip.className = 'st-tip';
+    const card = document.createElement('a');
+    card.className = 'st-tip';
+    card.href = '#';
+    card.tabIndex = -1;
     const img = document.createElement('img'); img.alt = '';
     const txt = document.createElement('div'); txt.className = 'st-tip-txt';
     const t1 = document.createElement('div'); t1.className = 'st-tip-title';
     const t2 = document.createElement('div'); t2.className = 'st-tip-by';
     const t3 = document.createElement('div'); t3.className = 'st-tip-game';
-    txt.append(t1, t2, t3);
-    tip.append(img, txt);
-    host.appendChild(tip);
+    const t4 = document.createElement('div'); t4.className = 'st-tip-go';
+    t4.textContent = tr('starsTipOpen');
+    txt.append(t1, t2, t3, t4);
+    card.append(img, txt);
+    host.appendChild(card);
 
-    const show = hit => {
+    let cur = null, pinned = false;
+    const show = (hit, pin) => {
       const s = hit.star;
+      cur = hit;
+      pinned = !!pin;
       t1.textContent = s.art_title || tr('untitledArtwork');
       t2.textContent = s.author_name || tr('anonymous');
       t3.textContent = tr(s.source === 'find' ? 'starsGameFind' : 'starsGameColor')
         + (s.level ? ' · ' + tr(s.level === 1 ? 'cgLevelEasy' : s.level === 3 ? 'cgLevelHard' : 'cgLevelNormal') : '');
       if (s.thumb) { img.src = cdnUrl(s.thumb); img.style.display = ''; } else img.style.display = 'none';
-      // getScreenCTM, not a ratio: the sky is scaled and scrolled.
+      card.href = artworkUrl(s.artwork_id);
+      card.setAttribute('aria-label', `${t1.textContent} · ${t2.textContent} — ${tr('starsTipOpen')}`);
+      card.tabIndex = pinned ? 0 : -1;
+      card.classList.toggle('pinned', pinned);
+      card.classList.add('on');
+      // Where the star is on screen: its own group's CTM, not a ratio — the
+      // sky is scaled, moved and drawn more than once.
       const panel = host.getBoundingClientRect();
-      const m = svg.getScreenCTM();
+      const m = hit.g.getScreenCTM();
       let px = 0, py = 0;
-      if (m) { const p = svg.createSVGPoint(); p.x = hit.x; p.y = hit.y; const o = p.matrixTransform(m); px = o.x; py = o.y; }
-      tip.style.left = (px - panel.left) + 'px';
-      tip.style.top = (py - panel.top) + 'px';
-      tip.classList.add('on');
+      if (m) {
+        const p = hit.g.ownerSVGElement.createSVGPoint();
+        p.x = hit.x; p.y = hit.y;
+        const o = p.matrixTransform(m);
+        px = o.x - panel.left; py = o.y - panel.top;
+      }
+      // Kept inside the panel: below the star when there is no room above,
+      // and pushed in from the sides on a narrow phone.
+      const w = card.offsetWidth, hgt = card.offsetHeight;
+      card.classList.toggle('below', py - hgt * 1.3 < 8);
+      card.style.left = Math.max(w / 2 + 8, Math.min(panel.width - w / 2 - 8, px)) + 'px';
+      card.style.top = py + 'px';
     };
-    const hide = () => tip.classList.remove('on');
+    const hide = () => {
+      cur = null;
+      pinned = false;
+      card.classList.remove('on', 'pinned');
+      card.tabIndex = -1;
+    };
+    card.addEventListener('click', e => {
+      if (!cur || !pinned) { e.preventDefault(); return; }
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // a new tab: the real page
+      e.preventDefault();
+      const s = cur.star;
+      hide();
+      if (!s.alive) { toast(tr('starsGoneArtwork')); return; }
+      if (typeof openArtworkById === 'function') openArtworkById(s.artwork_id);
+      else location.href = artworkUrl(s.artwork_id);
+    });
     for (const hit of list) {
-      hit.g.addEventListener('pointerenter', () => show(hit));
-      hit.g.addEventListener('focus', () => show(hit));
-      hit.g.addEventListener('pointerleave', hide);
-      hit.g.addEventListener('blur', hide);
+      hit.g.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse' && !pinned) show(hit, false); });
+      hit.g.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !pinned) hide(); });
+      hit.g.addEventListener('focus', () => { if (!pinned) show(hit, false); });
+      hit.g.addEventListener('blur', () => { if (!pinned) hide(); });
+      hit.g.addEventListener('click', () => show(hit, true));
+      hit.g.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        show(hit, true);
+        card.focus();
+      });
     }
+    tip = { hide, isOpen: () => !!cur };
   }
-  function hideTip() {
-    const t = document.querySelector('#stSkyWrap .st-tip.on');
-    if (t) t.classList.remove('on');
-  }
+  function hideTip() { if (tip) tip.hide(); }
 
   // ---------- summary and the skies after the first ----------
   function renderSummary(list) {
@@ -675,19 +829,45 @@
     $('stSkyWrap').hidden = true;
     $('stSkies').hidden = true;
   }
+  // Constellations completed since their owner last looked at this page
+  // light up all at once (user decision 2026-09-26: "완성되는 순간 한번에
+  // 밝아지도록"). How many were complete at the last look is kept per
+  // account on this device; with nothing kept yet (the first visit), every
+  // complete one counts as new. Returns their indices over all skies.
+  const SEEN_KEY = 'weavo.stars.seenDone.';
+  function freshlyDone() {
+    if (!isMine()) return [];
+    const done = groups.filter(g => g.full).length;
+    let seen = 0;
+    try {
+      const v = localStorage.getItem(SEEN_KEY + viewId);
+      if (v != null && /^\d+$/.test(v)) seen = Math.min(+v, done);
+      localStorage.setItem(SEEN_KEY + viewId, String(done));
+    } catch (e) { /* private mode: every visit is a first one */ }
+    const out = [];
+    for (let gi = seen; gi < done; gi++) out.push(gi);
+    return out;
+  }
   // The sky is shown even with no stars at all — a visitor or a new member
-  // sees the thirteen outlines waiting, which is the point of the page.
+  // sees the thirteen constellations waiting, which is the point of the page.
   function showSky() {
     groups = groupIntoConstellations(myStars);
     const going = groups.findIndex(g => !g.full);
     current = going === -1 ? groups.length : going;
-    skyNo = Math.floor(current / SKY_SIZE);
-    picked = current % SKY_SIZE;
+    // Something just completed: open on it (in the sky it belongs to, even
+    // when it was the last of a sky) and let it light up.
+    const fresh = freshlyDone();
+    const focus = fresh.length ? fresh[fresh.length - 1] : current;
+    skyNo = Math.floor(focus / SKY_SIZE);
+    picked = focus % SKY_SIZE;
+    reveal = new Set(fresh.filter(gi => Math.floor(gi / SKY_SIZE) === skyNo).map(gi => gi % SKY_SIZE));
     $('stSkyWrap').hidden = false;
     renderSkies();
-    renderSky();
     layoutSky();
-    if (!restoreScroll()) {
+    renderSky();
+    const revealing = reveal.size > 0;
+    reveal = new Set();                 // once: a later redraw must not replay it
+    if (revealing || !restoreScroll()) {
       choose(picked, false);
       centerOn(picked, false);
     }
@@ -766,26 +946,27 @@
       return;
     }
     const view = $('stSkyView');
+    // Only a person moving the sky dismisses the hint (wirePan does it);
+    // the page's own centring on load must not count.
     wirePan(view);
-    // Only a person moving the sky dismisses the hint — the page's own
-    // centring on load scrolls too, and must not count.
-    let touched = false;
-    for (const ev of ['pointerdown', 'wheel', 'keydown', 'touchstart']) {
-      view.addEventListener(ev, () => { touched = true; }, { passive: true });
-    }
-    view.addEventListener('scroll', () => {
-      edges();
-      hideTip();
-      if (touched) hideHint();
-      rememberScroll();
-    }, { passive: true });
     if (window.ResizeObserver) new ResizeObserver(() => layoutSky()).observe(view);
     else addEventListener('resize', layoutSky);
+    // Anywhere but a star or its card puts the card away.
+    document.addEventListener('click', e => {
+      if (!tip || !tip.isOpen()) return;
+      const t = e.target;
+      if (t && t.closest && (t.closest('.st-hit') || t.closest('.st-tip'))) return;
+      hideTip();
+    });
     $('stCapPrev').addEventListener('click', () => choose(picked - 1, true));
     $('stCapNext').addEventListener('click', () => choose(picked + 1, true));
     $('stSkyBig').addEventListener('click', () => setFull(true));
     $('stSkyClose').addEventListener('click', () => setFull(false));
-    addEventListener('keydown', e => { if (e.key === 'Escape' && full) setFull(false); });
+    addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      if (tip && tip.isOpen()) hideTip();
+      else if (full) setFull(false);
+    });
     $('stHide').addEventListener('change', e => setHidden(e.target.checked));
     $('stShare').addEventListener('click', shareConstellation);
     await load();

@@ -5,6 +5,14 @@
 //   node tools/sky-art.js sky/src/leo.png                → sky/con-leo.webp
 //   node tools/sky-art.js sky/src                        → every picture in it
 //   node tools/sky-art.js sky/src/leo.png sky/con-leo.webp --size 560 --black 16
+//   node tools/sky-art.js sky/ConstellationNightSkyBackground.png sky/night-loop.webp --loop 160 --quality 82
+//
+// --loop is for the background photograph instead (2026-09-26, the sky page
+// scrolls round without end): its last --loop pixels are cross-faded into
+// its first ones, so its right edge runs on into its left edge with no seam,
+// and the result is stretched back to the original width — a few per cent,
+// invisible in a starry sky — so every position in js/sky-figures.js stays
+// where it was. Nothing is keyed or trimmed in this mode.
 //
 // What it does, in a headless Chrome (no npm packages needed):
 //   1. a transparent picture keeps its own alpha; one on an opaque black
@@ -26,11 +34,11 @@ const { pathToFileURL } = require('url');
 
 function usage(msg) {
   if (msg) console.error('sky-art: ' + msg);
-  console.error('usage: node tools/sky-art.js <input image | folder> [output.webp] [--size 560] [--black 16] [--pad 3] [--quality 80] [--dust 6] [--astep 4]');
+  console.error('usage: node tools/sky-art.js <input image | folder> [output.webp] [--size 560] [--black 16] [--pad 3] [--quality 80] [--dust 6] [--astep 4] [--loop px]');
   process.exit(2);
 }
 const args = process.argv.slice(2);
-const opt = { size: 560, black: 16, pad: 3, quality: 80, dust: 6, astep: 4 };
+const opt = { size: 560, black: 16, pad: 3, quality: 80, dust: 6, astep: 4, loop: 0 };
 const files = [];
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
@@ -46,6 +54,7 @@ if (!fs.existsSync(input)) usage('no such file: ' + input);
 // A folder converts every picture in it: sky/src/leo.png → sky/con-leo.webp.
 const target = name => path.join(__dirname, '..', 'sky', `con-${name.replace(/\.[^.]+$/, '')}.webp`);
 const jobs = [];
+if (opt.loop && (fs.statSync(input).isDirectory() || !files[1])) usage('--loop takes one photograph and an output file, e.g. sky/night-loop.webp');
 if (fs.statSync(input).isDirectory()) {
   if (files[1]) usage('give a folder on its own: each picture becomes sky/con-<name>.webp');
   for (const f of fs.readdirSync(input).filter(f => /\.(png|jpe?g|webp)$/i.test(f)).sort()) jobs.push([path.join(input, f), target(f)]);
@@ -75,6 +84,30 @@ img.onload = () => {
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0);
     const im = cx.getImageData(0, 0, W, H), p = im.data;
+    if (O.loop > 0) {
+      // The seamless loop: column x < B blends the photo's own column x into
+      // the column B before its right edge (smoothstep), so the last column
+      // kept (W - B - 1) meets the first one (≈ W - B) without a seam.
+      const B = Math.round(O.loop), Pw = W - B;
+      if (B < 8 || Pw < W / 2) { out.textContent = JSON.stringify({ error: '--loop must be between 8 and half the width' }); return; }
+      const lp = new ImageData(Pw, H), d = lp.data;
+      for (let y = 0; y < H; y++) for (let x = 0; x < Pw; x++) {
+        const o = (y * Pw + x) * 4, a = (y * W + x) * 4;
+        if (x >= B) { d[o] = p[a]; d[o + 1] = p[a + 1]; d[o + 2] = p[a + 2]; d[o + 3] = 255; continue; }
+        const u = x / B, t = u * u * (3 - 2 * u), b = (y * W + W - B + x) * 4;
+        for (let c = 0; c < 3; c++) d[o + c] = p[a + c] * t + p[b + c] * (1 - t);
+        d[o + 3] = 255;
+      }
+      const lc = document.createElement('canvas'); lc.width = Pw; lc.height = H;
+      lc.getContext('2d').putImageData(lp, 0, 0);
+      const o = document.createElement('canvas'); o.width = W; o.height = H;
+      const ox = o.getContext('2d'); ox.imageSmoothingQuality = 'high';
+      ox.drawImage(lc, 0, 0, W, H);                      // back to the original width
+      const url = o.toDataURL('image/webp', O.quality / 100);
+      if (!url.startsWith('data:image/webp')) { out.textContent = JSON.stringify({ error: 'this Chrome cannot write WebP' }); return; }
+      out.textContent = JSON.stringify({ source: [W, H], crop: [0, 0, Pw, H], size: [W, H], url, loop: B });
+      return;
+    }
     // A picture that is already transparent (most AI tools can export one)
     // keeps its own alpha — re-deriving it from brightness would turn its
     // faint glow opaque. Only a picture on an opaque ground is keyed on
@@ -132,6 +165,6 @@ try {
     // js/sky-figures.js (tools/sky-editor.html works it out the same way).
     const [w, h] = res.size, bw = w >= h ? 100 : 100 * w / h, bh = w >= h ? 100 * h / w : 100;
     console.log(`${path.relative(process.cwd(), output)}  ${w}x${h}  ${kb} KB  (from ${res.source[0]}x${res.source[1]}, crop ${res.crop.join(',')})`
-      + `  box: [${[(100 - bw) / 2, (100 - bh) / 2, bw, bh].map(r1).join(', ')}]`);
+      + (res.loop ? `  seamless loop, ${res.loop}px cross-fade` : `  box: [${[(100 - bw) / 2, (100 - bh) / 2, bw, bh].map(r1).join(', ')}]`));
   }
 } finally { fs.unlinkSync(tmp); }

@@ -202,18 +202,29 @@ body.stars-dark{
 @keyframes st-draw{ from{stroke-dashoffset:var(--len);} to{stroke-dashoffset:0;} }
 .st-line-lit{animation:st-draw 1.5s cubic-bezier(.22,.8,.3,1) both;}
 
-/* ---------- the card that follows a star ---------- */
+/* ---------- the card a star opens ----------
+   Pressing a star pins this card over it; pressing the card opens the
+   artwork; pressing anywhere else puts it away (2026-09-26). A mouse
+   resting on a star only previews it. Below the star when there is no
+   room above (.below). */
 .st-tip{
   position:absolute;z-index:4;pointer-events:none;opacity:0;
   transform:translate(-50%,-115%) scale(.94);transform-origin:bottom center;
   transition:opacity .14s linear,transform .14s ease-out;
   display:flex;gap:10px;align-items:center;width:max-content;max-width:280px;
-  padding:9px 12px;border-radius:var(--r-md);
+  padding:9px 12px;border-radius:var(--r-md);text-decoration:none;color:inherit;
   background:rgba(10,15,30,.94);border:1px solid rgba(255,255,255,.18);
   box-shadow:0 18px 44px rgba(0,0,0,.6);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
 .st-tip.on{opacity:1;transform:translate(-50%,-125%) scale(1);}
+.st-tip.below{transform-origin:top center;transform:translate(-50%,15%) scale(.94);}
+.st-tip.on.below{transform:translate(-50%,25%) scale(1);}
+.st-tip.pinned{pointer-events:auto;cursor:pointer;border-color:rgba(255,217,142,.55);}
+.st-tip.pinned:hover{background:rgba(18,25,48,.96);}
+.st-tip:focus-visible{outline:2px solid var(--st-gold);outline-offset:2px;}
+.st-tip-go{display:none;font-family:'Pretendard',sans-serif;font-size:11px;font-weight:700;color:var(--st-gold);margin-top:3px;}
+.st-tip.pinned .st-tip-go{display:block;}
 .st-tip img{width:44px;height:44px;border-radius:8px;object-fit:cover;background:#18203a;flex-shrink:0;}
 .st-tip-txt{min-width:0;}
 .st-tip-title{font-family:'Pretendard',sans-serif;font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -237,28 +248,31 @@ body.stars-dark{
 }
 .st-sky-pill.on{color:#0b1020;background:var(--st-gold);border-color:transparent;}
 .st-sky-wrap{position:relative;background:#050814;}
+/* The sky has no end (2026-09-26, "360도 돌아보는 느낌"): the view does not
+   scroll at all. js/stars.js moves the track below with a transform —
+   drags, a fling's momentum, horizontal wheel and trackpad swipes — and
+   wraps it round. touch-action:pan-y leaves vertical swipes to the page, so
+   the sky never traps someone scrolling past it. */
 .st-sky-view{
   position:relative;height:78vh;height:78svh;min-height:380px;max-height:980px;
-  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
-  scrollbar-width:none;cursor:grab;outline:none;
+  overflow:hidden;touch-action:pan-y;cursor:grab;outline:none;
 }
-.st-sky-view::-webkit-scrollbar{display:none;}
 .st-sky-view.dragging{cursor:grabbing;}
 .st-sky-view:focus-visible{box-shadow:inset 0 0 0 2px rgba(255,217,142,.7);}
-/* Sized and placed by layoutSky() (js/stars.js). Absolute so that `top`
-   can go negative: on a wide screen the picture is allowed to be a little
-   taller than the view, and it is the empty top of the sky that is cut. */
-.st-sky-canvas{position:absolute;left:0;top:0;user-select:none;-webkit-user-select:none;}
-.st-sky-bg,.st-sky-layer{position:absolute;inset:0;width:100%;height:100%;display:block;}
-.st-sky-bg{-webkit-user-drag:none;pointer-events:none;}
-/* The fades at the edges say there is more sky that way. */
+/* The track: the sky two or more times side by side (the photograph was
+   cross-faded end into start, tools/sky-art.js --loop), sized and moved by
+   layoutSky()/setPan(). Absolute so that `top` can go negative: on a wide
+   screen the picture is allowed to be a little taller than the view, and
+   it is the empty top of the sky that is cut. */
+.st-sky-canvas{position:absolute;left:0;top:0;will-change:transform;user-select:none;-webkit-user-select:none;}
+.st-sky-bg{position:absolute;top:0;left:0;height:100%;width:50%;display:block;-webkit-user-drag:none;pointer-events:none;}
+.st-sky-layer{position:absolute;inset:0;width:100%;height:100%;display:block;}
+/* Soft fades at both sides: the sky goes on either way. */
 .st-sky-wrap::before,.st-sky-wrap::after{
-  content:'';position:absolute;top:0;bottom:0;width:64px;z-index:2;pointer-events:none;
-  opacity:0;transition:opacity .2s linear;
+  content:'';position:absolute;top:0;bottom:0;width:48px;z-index:2;pointer-events:none;
 }
-.st-sky-wrap::before{left:0;background:linear-gradient(90deg,rgba(5,8,20,.8),transparent);}
-.st-sky-wrap::after{right:0;background:linear-gradient(270deg,rgba(5,8,20,.8),transparent);}
-.st-sky-wrap.can-l::before,.st-sky-wrap.can-r::after{opacity:1;}
+.st-sky-wrap::before{left:0;background:linear-gradient(90deg,rgba(5,8,20,.55),transparent);}
+.st-sky-wrap::after{right:0;background:linear-gradient(270deg,rgba(5,8,20,.55),transparent);}
 
 .st-sky-tools{position:absolute;top:14px;right:14px;z-index:3;display:flex;gap:8px;}
 .st-sky-btn{
@@ -300,17 +314,26 @@ body.stars-dark{
 .st-cap-count{font-size:12px;font-weight:700;color:rgba(242,244,251,.7);}
 
 /* ---------- the animals ----------
-   Each is a painting (sky-figures.js `img`). Three states, told by opacity
-   alone — no filters (see the header): waiting (a faint ghost), being
-   filled (brighter, dashed lines to come), finished (bright; its lines take
-   the constellation's own colour, --acc). */
+   Each is a painting (sky-figures.js `img`), told apart by opacity alone —
+   no filters (see the header). Until a constellation is complete its
+   animal is barely there, and being filled looks exactly like not yet
+   started (user decision 2026-09-26: a fifth of the old faint state or
+   less) — only its stars show the progress. Complete, it is bright, its
+   lines in its own colour (--acc); and the first time its owner sees it
+   complete it lights up all at once (.reveal, js/stars.js), a bloom of its
+   colour swelling behind it. */
 .st-con-hit{fill:transparent;cursor:pointer;outline:none;}
 .st-con-hit:focus-visible{stroke:#FFD98E;stroke-opacity:.7;stroke-width:1.5px;stroke-dasharray:6 6;vector-effect:non-scaling-stroke;}
-.st-fig-art{opacity:.3;transition:opacity .45s ease;}
-.st-con.going .st-fig-art{opacity:.72;}
+.st-fig-art{opacity:.06;transition:opacity .45s ease;}
 .st-con.done .st-fig-art{opacity:.94;}
-.st-con.sel .st-fig-art,.st-con-hit:focus-visible + .st-fig .st-fig-art{opacity:1;}
-.st-con.locked.sel .st-fig-art{opacity:.5;}
+.st-con.done.sel .st-fig-art,.st-con.done .st-con-hit:focus-visible + .st-fig .st-fig-art{opacity:1;}
+/* backwards, not both: once the reveal ends the painting settles on
+   whatever its state asks for (.94, or 1 when chosen). */
+@keyframes st-reveal{ 0%{opacity:.06;} 100%{opacity:1;} }
+.st-con.done.reveal .st-fig-art{animation:st-reveal 1.1s cubic-bezier(.3,.7,.2,1) .6s backwards;}
+@keyframes st-bloom{ 0%{opacity:0;transform:scale(.55);} 45%{opacity:.85;transform:scale(1);} 100%{opacity:0;transform:scale(1.25);} }
+.st-bloom{opacity:0;pointer-events:none;transform-box:fill-box;transform-origin:center;}
+.st-con.reveal .st-bloom{animation:st-bloom 2.4s ease-out .5s both;}
 .st-link{stroke:#fff;stroke-opacity:.1;stroke-width:1.2px;stroke-linecap:round;}
 .st-con.going .st-link{stroke-opacity:.28;stroke-dasharray:4 6;}
 .st-link.lit{stroke:var(--acc);stroke-opacity:.8;stroke-width:1.25px;stroke-dasharray:none;}
@@ -365,6 +388,6 @@ html.st-full-open .stars-dark .stars-page::before{animation-play-state:paused;}
   .stars-dark .app::before,.stars-dark .app::after,
   .stars-page h1,.st-brand-mark,
   .stars-dark .stars-page::before,
-  .st-spark,.st-line-lit,.st-next,.st-tw{animation:none !important;}
-  .st-tip,.st-burst,.st-sky-wrap::before,.st-sky-wrap::after,.st-fig-art{transition:none;}
+  .st-spark,.st-line-lit,.st-next,.st-tw,.st-con.reveal .st-fig-art,.st-con.reveal .st-bloom{animation:none !important;}
+  .st-tip,.st-burst,.st-fig-art{transition:none;}
 }
