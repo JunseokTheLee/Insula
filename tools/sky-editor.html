@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<title>별자리 배치 도구</title>
+<!--
+  The sky page's layout tool (2026-09-26). Open this file straight from disk
+  in Chrome (file://); it is not served (functions/tools/[[path]].js 404s).
+
+  For one constellation at a time:
+    · drop a painted animal (a transparent AI image, one on black, or a WebP
+      already made by tools/sky-art.js): it is treated exactly as sky-art.js
+      treats it, and "WebP 저장" hands back the file for /sky/;
+    · drag the picture to move it on the panorama, the slider sizes it;
+    · "별 찍기" on, then click the stars in the order of js/constellations.js
+      (slot 1 first); a star already placed can be dragged;
+    · copy the two lines under the sky into js/sky-figures.js and
+      js/constellations.js.
+  Work in progress is kept in localStorage per constellation.
+  Needs ../js/i18n/ko.js, ../js/constellations.js, ../js/sky-figures.js.
+-->
+<style>
+  :root{--bg:#0b1020;--panel:#141b33;--ink:#e8ecf8;--dim:#9aa5c4;--acc:#ffd98e;--line:#2a3558;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;}
+  header{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);}
+  header h1{font-size:15px;margin:0 8px 0 0;}
+  label{display:inline-flex;gap:6px;align-items:center;color:var(--dim);}
+  select,button,input[type=number]{font:inherit;color:var(--ink);background:#1d2645;border:1px solid var(--line);border-radius:8px;padding:5px 10px;}
+  button{cursor:pointer;}
+  button.on{background:var(--acc);color:#1a1300;border-color:var(--acc);}
+  input[type=range]{width:160px;}
+  #drop{border:1px dashed var(--dim);border-radius:8px;padding:5px 10px;color:var(--dim);}
+  #drop.over{border-color:var(--acc);color:var(--acc);}
+  #wrap{overflow-x:auto;overflow-y:hidden;margin:0;}
+  #sky{position:relative;height:640px;}
+  #sky img.bg{position:absolute;inset:0;height:100%;width:auto;display:block;user-select:none;-webkit-user-drag:none;}
+  #sky svg{position:absolute;left:0;top:0;height:100%;}
+  #out{display:grid;gap:10px;padding:14px 16px 40px;}
+  #out textarea{width:100%;min-height:64px;background:#0e1428;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;font:12px/1.5 ui-monospace,Consolas,monospace;}
+  .hint{color:var(--dim);font-size:13px;}
+  .link{stroke:#fff;stroke-opacity:.55;stroke-width:1.4;}
+  .star{fill:var(--acc);stroke:#1a1300;stroke-width:1;cursor:grab;}
+  .star.next{fill:none;stroke:var(--acc);stroke-dasharray:3 3;}
+  .num{fill:#fff;font:bold 12px system-ui,sans-serif;paint-order:stroke;stroke:#000;stroke-width:3px;pointer-events:none;}
+  .other{opacity:.45;}
+</style>
+</head>
+<body>
+<header>
+  <h1>별자리 배치 도구</h1>
+  <label>별자리 <select id="con"></select></label>
+  <span id="drop">그림 파일을 여기에 놓기 (또는 <input type="file" id="file" accept="image/*" style="width:180px">)</span>
+  <label>검정 기준 <input type="number" id="black" value="16" min="0" max="120" style="width:64px"></label>
+  <label>크기 <input type="range" id="size" min="60" max="480" step="1"> <span id="sizeV"></span></label>
+  <button type="button" id="starMode">별 찍기</button>
+  <button type="button" id="restart">1번 별부터</button>
+  <button type="button" id="saveWebp" disabled>WebP 저장</button>
+  <button type="button" id="reset">이 별자리 초기화</button>
+</header>
+<div id="wrap"><div id="sky"><img class="bg" src="../sky/night.webp" alt=""><svg id="svg" viewBox="0 0 1916 821"></svg></div></div>
+<div id="out">
+  <div class="hint" id="status"></div>
+  <div class="hint">js/sky-figures.js 의 해당 줄(머리 줄)을 아래로 바꿉니다:</div>
+  <textarea id="figLine" readonly></textarea>
+  <div class="hint">js/constellations.js 의 stars 를 아래로 바꿉니다 (별 개수는 바꾸지 않습니다):</div>
+  <textarea id="starLine" readonly></textarea>
+</div>
+<script src="../js/i18n/ko.js"></script>
+<script src="../js/constellations.js"></script>
+<script src="../js/sky-figures.js"></script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+const r1 = n => Math.round(n * 10) / 10;
+const svg = $('svg');
+const KEY = k => 'weavo.skyEditor.' + k;
+
+// Working copy of every constellation: where it sits, its picture, its stars.
+const work = {};
+for (const c of CONSTELLATIONS) {
+  const f = SKY_FIGURES[c.key] || {};
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(KEY(c.key)) || 'null'); } catch (e) { /* private mode */ }
+  work[c.key] = saved || {
+    at: (f.at || [100, 100, 200]).slice(), label: f.label ? f.label.slice() : null,
+    img: f.img ? { src: f.img.src, box: f.img.box.slice() } : null,
+    stars: c.stars.map(p => p.slice()), preview: null,
+  };
+}
+let sel = CONSTELLATIONS[0].key, starMode = false, next = 0, webpBlob = null;
+function keep() { try { const w = Object.assign({}, work[sel]); localStorage.setItem(KEY(sel), JSON.stringify(w)); } catch (e) { /* too big or private */ } }
+
+for (const c of CONSTELLATIONS) {
+  const o = document.createElement('option');
+  o.value = c.key; o.textContent = `${tr('conName_' + c.key)} (${c.key}, 별 ${c.stars.length}개)`;
+  $('con').appendChild(o);
+}
+$('con').addEventListener('change', () => { sel = $('con').value; next = 0; webpBlob = null; $('saveWebp').disabled = true; draw(); centre(); });
+
+// ── drawing ──
+function draw() {
+  svg.replaceChildren();
+  for (const c of CONSTELLATIONS) {
+    const w = work[c.key], [X, Y, S] = w.at, s = S / 100, mine = c.key === sel;
+    const g = el('g', { class: mine ? '' : 'other' });
+    const fig = el('g', { transform: `translate(${X} ${Y}) scale(${s})` });
+    const src = w.preview || (w.img && ('..' + w.img.src.split('?')[0]));
+    if (w.img && src) {
+      const [ix, iy, iw, ih] = w.img.box;
+      fig.appendChild(el('image', { href: src, x: ix, y: iy, width: iw, height: ih, preserveAspectRatio: 'xMidYMid meet' }));
+    }
+    g.appendChild(fig);
+    if (mine) {
+      const hit = el('rect', { x: X, y: Y, width: S, height: S, fill: 'transparent', stroke: '#ffd98e', 'stroke-opacity': .35, 'stroke-dasharray': '4 4', 'data-drag': 'fig' });
+      g.appendChild(hit);
+      const at = i => [X + w.stars[i][0] * s, Y + w.stars[i][1] * s];
+      for (const [a, b] of c.links) { const [x1, y1] = at(a), [x2, y2] = at(b); g.appendChild(el('line', { x1, y1, x2, y2, class: 'link' })); }
+      w.stars.forEach((_, i) => {
+        const [x, y] = at(i);
+        g.appendChild(el('circle', { cx: x, cy: y, r: 6, class: 'star' + (starMode && i === next ? ' next' : ''), 'data-star': i }));
+        const t = el('text', { x: x + 8, y: y - 8, class: 'num' }); t.textContent = i + 1; g.appendChild(t);
+      });
+    }
+    svg.appendChild(g);
+  }
+  $('size').value = work[sel].at[2]; $('sizeV').textContent = work[sel].at[2];
+  output();
+}
+function output() {
+  const w = work[sel], c = CONSTELLATIONS.find(x => x.key === sel);
+  const img = w.img ? `, img: { src: '${w.img.src}', box: [${w.img.box.map(r1).join(', ')}] }` : '';
+  const label = w.label ? `, label: [${w.label.join(', ')}]` : '';
+  $('figLine').value = `  ${sel}: { at: [${w.at.map(Math.round).join(', ')}]${label}${img},`;
+  $('starLine').value = `stars: [${w.stars.map(p => `[${r1(p[0])}, ${r1(p[1])}]`).join(', ')}],`;
+  $('status').textContent = starMode ? `별 찍기: ${next + 1}번 별을 찍을 차례입니다 (전체 ${c.stars.length}개).` : '그림을 끌어 옮기고, 크기 막대로 크기를 바꿉니다.';
+}
+function centre() {
+  const [X, , S] = work[sel].at, k = $('sky').clientHeight / 821;
+  $('wrap').scrollLeft = Math.max(0, (X + S / 2) * k - $('wrap').clientWidth / 2);
+}
+function sizeSky() {
+  const k = $('sky').clientHeight / 821;
+  $('sky').style.width = (1916 * k) + 'px';
+  svg.style.width = (1916 * k) + 'px';
+}
+
+// ── pointer: move the figure, place or drag stars ──
+function toSky(e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+let drag = null;
+svg.addEventListener('pointerdown', e => {
+  const w = work[sel], [X, Y, S] = w.at, s = S / 100, p = toSky(e);
+  const star = e.target.getAttribute && e.target.getAttribute('data-star');
+  if (star != null) { drag = { kind: 'star', i: +star }; svg.setPointerCapture(e.pointerId); return; }
+  if (starMode) {
+    const n = CONSTELLATIONS.find(x => x.key === sel).stars.length;
+    w.stars[next] = [(p.x - X) / s, (p.y - Y) / s];
+    next = (next + 1) % n; keep(); draw(); return;
+  }
+  if (p.x >= X && p.x <= X + S && p.y >= Y && p.y <= Y + S) { drag = { kind: 'fig', dx: p.x - X, dy: p.y - Y }; svg.setPointerCapture(e.pointerId); }
+});
+svg.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const w = work[sel], p = toSky(e);
+  if (drag.kind === 'fig') { w.at[0] = Math.round(p.x - drag.dx); w.at[1] = Math.round(p.y - drag.dy); }
+  else { const [X, Y, S] = w.at, s = S / 100; w.stars[drag.i] = [(p.x - X) / s, (p.y - Y) / s]; }
+  draw();
+});
+svg.addEventListener('pointerup', () => { if (drag) keep(); drag = null; });
+
+$('size').addEventListener('input', () => {
+  const w = work[sel], S0 = w.at[2], S1 = +$('size').value;
+  w.at[0] = Math.round(w.at[0] + (S0 - S1) / 2); w.at[1] = Math.round(w.at[1] + (S0 - S1) / 2); w.at[2] = S1;
+  keep(); draw();
+});
+$('starMode').addEventListener('click', () => { starMode = !starMode; $('starMode').classList.toggle('on', starMode); draw(); });
+$('restart').addEventListener('click', () => { next = 0; draw(); });
+$('reset').addEventListener('click', () => {
+  if (!confirm('이 별자리의 작업 내용을 지우고 파일에 있는 값으로 되돌릴까요?')) return;
+  try { localStorage.removeItem(KEY(sel)); } catch (e) { /* private mode */ }
+  location.reload();
+});
+
+// ── a painted animal: made transparent and trimmed (as tools/sky-art.js) ──
+function process(file) {
+  const fr = new FileReader();
+  fr.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const W = img.naturalWidth, H = img.naturalHeight, t0 = +$('black').value || 0, span = 255 - t0;
+      const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+      const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0);
+      const im = cx.getImageData(0, 0, W, H), p = im.data;
+      // The same rule as tools/sky-art.js: a picture that is already
+      // transparent keeps its alpha, one on an opaque ground is keyed on black.
+      let clear = 0, probes = 0;
+      for (let i = 3; i < p.length; i += 4 * 101) { probes++; if (p[i] < 250) clear++; }
+      const keyed = clear < probes * 0.05;
+      let x0 = W, y0 = H, x1 = -1, y1 = -1;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const i = (y * W + x) * 4, m = Math.max(p[i], p[i + 1], p[i + 2]);
+        let a;
+        if (keyed) {
+          a = m <= t0 ? 0 : (m - t0) / span * 255;
+          if (a > 0) { const k = 255 / m; p[i] = Math.min(255, p[i] * k); p[i + 1] = Math.min(255, p[i + 1] * k); p[i + 2] = Math.min(255, p[i + 2] * k); }
+        } else a = p[i + 3];
+        a = a < 6 ? 0 : Math.min(255, Math.round(a / 4) * 4);
+        p[i + 3] = a;
+        if (!a) { p[i] = p[i + 1] = p[i + 2] = 0; continue; }
+        if (a > 10) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      }
+      if (x1 < 0) { alert('검은색뿐인 그림입니다.'); return; }
+      cx.putImageData(im, 0, 0);
+      const pad = Math.round(Math.max(x1 - x0, y1 - y0) * 0.03);
+      x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(W - 1, x1 + pad); y1 = Math.min(H - 1, y1 + pad);
+      const cw = x1 - x0 + 1, ch = y1 - y0 + 1, s = Math.min(1, 560 / Math.max(cw, ch));
+      const o = document.createElement('canvas'); o.width = Math.round(cw * s); o.height = Math.round(ch * s);
+      const ox = o.getContext('2d'); ox.imageSmoothingQuality = 'high'; ox.drawImage(cv, x0, y0, cw, ch, 0, 0, o.width, o.height);
+      const w = work[sel];
+      w.preview = o.toDataURL('image/webp', 0.8);
+      const bw = o.width >= o.height ? 100 : 100 * o.width / o.height, bh = o.width >= o.height ? 100 * o.height / o.width : 100;
+      w.img = { src: `/sky/con-${sel}.webp?v=${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`, box: [(100 - bw) / 2, (100 - bh) / 2, bw, bh] };
+      o.toBlob(b => { webpBlob = b; $('saveWebp').disabled = !b; }, 'image/webp', 0.8);
+      keep(); draw();
+    };
+    img.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+$('file').addEventListener('change', () => { if ($('file').files[0]) process($('file').files[0]); });
+const drop = $('drop');
+['dragenter', 'dragover'].forEach(t => document.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => document.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+document.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) process(f); });
+$('saveWebp').addEventListener('click', () => {
+  if (!webpBlob) return;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(webpBlob); a.download = `con-${sel}.webp`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+});
+
+window.addEventListener('resize', sizeSky);
+sizeSky(); draw(); centre();
+</script>
+</body>
+</html>

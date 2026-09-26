@@ -18,7 +18,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>별자리 | Weavo</title>
-<meta name="description" content="게임에서 작품을 하나 완성할 때마다 별이 하나 켜집니다. 모은 별로 나만의 별자리를 만들어 보세요.">
+<meta name="description" content="게임에서 작품을 하나 완성할 때마다 밤하늘에 별이 하나 켜집니다. 별을 모아 열세 개의 별자리를 완성해 보세요.">
 <link rel="canonical" href="https://weavo.art/ko/stars">
 <link rel="alternate" hreflang="en" href="https://weavo.art/en/stars">
 <link rel="alternate" hreflang="ko" href="https://weavo.art/ko/stars">
@@ -26,7 +26,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Weavo">
 <meta property="og:title" content="별자리 | Weavo">
-<meta property="og:description" content="게임에서 작품을 하나 완성할 때마다 별이 하나 켜집니다. 모은 별로 나만의 별자리를 만들어 보세요.">
+<meta property="og:description" content="게임에서 작품을 하나 완성할 때마다 밤하늘에 별이 하나 켜집니다. 별을 모아 열세 개의 별자리를 완성해 보세요.">
 <meta property="og:url" content="https://weavo.art/ko/stars">
 <meta property="og:image" content="https://weavo.art/og-image-ko.png">
 <meta property="og:image:width" content="1200">
@@ -36,7 +36,7 @@
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="별자리 | Weavo">
-<meta name="twitter:description" content="게임에서 작품을 하나 완성할 때마다 별이 하나 켜집니다. 모은 별로 나만의 별자리를 만들어 보세요.">
+<meta name="twitter:description" content="게임에서 작품을 하나 완성할 때마다 밤하늘에 별이 하나 켜집니다. 별을 모아 열세 개의 별자리를 완성해 보세요.">
 <meta name="twitter:image" content="https://weavo.art/og-image-ko.png">
 <meta name="twitter:image:alt" content="Weavo — 함께 만드는 예술 모자이크 커뮤니티">
 
@@ -72,8 +72,8 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/stars.css?v=20260924-113213">
-<link rel="stylesheet" href="/css/base.css?v=20260924-113213">
+<link rel="stylesheet" href="/css/stars.css?v=20260926-202121">
+<link rel="stylesheet" href="/css/base.css?v=20260926-202121">
 </head>
 
 <body class="stars-dark">
@@ -106,14 +106,14 @@
   </header>
 
   <main class="main main-scroll">
-    <div class="stars-page" id="starsPage">
+    <div class="stars-page stars-page-top" id="starsPage">
 
       <header class="st-head">
         <div class="st-head-copy">
           <div class="st-brand"><span class="st-brand-mark" aria-hidden="true">&#10022;</span>Pieces of People, A Brighter Sky</div>
           <h1>별자리</h1>
           <p class="st-tagline">작은 한 칸이, 하나의 별이 됩니다.</p>
-          <p class="st-lead">게임에서 작품을 하나 완성할 때마다 별이 하나 켜집니다. 별 6개가 모이면 별자리 하나가 되고, 별자리 6개가 모이면 하나의 밤이 됩니다.</p>
+          <p class="st-lead">게임에서 작품을 하나 완성할 때마다 밤하늘에 별이 하나 켜집니다. 별이 모여 양자리부터 전갈자리까지, 열세 개의 별자리가 차례로 완성됩니다.</p>
         </div>
         <div class="st-head-links">
           <a class="st-go" href="/ko/game?g=find" data-game-link="find"><span aria-hidden="true">&#128269;</span> 조각 찾기</a>
@@ -123,7 +123,7 @@
 
       <p class="st-notice" id="stOff" hidden></p>
 
-      <section class="st-section" id="stMineWrap">
+      <section class="st-section st-mine" id="stMineWrap">
         <div class="st-section-head">
           <h2 class="st-h2" id="stMineTitle">내 별자리</h2>
           <div class="st-owner" id="stOwner" hidden>
@@ -132,32 +132,36 @@
           </div>
         </div>
         <div class="st-summary" id="stSummary"></div>
-        <div class="st-allwrap" id="stAllWrap" hidden>
-          <button type="button" class="st-big-btn" id="stAll"><span aria-hidden="true">&#9974;</span> 전체 별자리 크게 보기</button>
-        </div>
-        <div class="st-stage" id="stStage" hidden>
-          <div class="st-stage-sky" id="stStageSky"></div>
-          <div class="st-stage-info">
-            <span class="st-stage-night" id="stStageNight"></span>
-            <h3 class="st-stage-name" id="stStageName"></h3>
-            <p class="st-stage-line" id="stStageLine"></p>
-            <div class="st-pips" id="stStagePips"></div>
-          </div>
-        </div>
-        <div class="st-strip-wrap" id="stStripWrap" hidden>
-          <div class="st-strip" id="stStrip"></div>
-        </div>
+        <div class="st-skies" id="stSkies" hidden></div>
         <div class="st-empty" id="stEmpty" hidden></div>
       </section>
+    </div>
 
-      <div class="st-full" id="stFull" hidden role="dialog" aria-modal="true">
-        <div class="st-full-bar">
-          <span class="st-full-title" id="stFullTitle"></span>
-          <button type="button" class="st-full-close" id="stFullClose" aria-label="닫기">&#10005;</button>
+    <div class="st-sky-wrap" id="stSkyWrap" hidden>
+      <div class="st-sky-view" id="stSkyView" tabindex="0" aria-label="밤하늘 — 좌우로 밀어서 둘러볼 수 있습니다">
+        <div class="st-sky-canvas" id="stSkyCanvas">
+          <img class="st-sky-bg" id="stSkyBg" src="/sky/night.webp" alt="" width="1916" height="821" decoding="async" fetchpriority="high">
+          <svg class="st-sky-layer" id="stSkyLayer" viewBox="0 0 1916 821" role="group" aria-label="별자리"></svg>
         </div>
-        <div class="st-full-body" id="stFullBody"></div>
       </div>
+      <div class="st-sky-tools">
+        <button type="button" class="st-sky-btn" id="stSkyBig"><span aria-hidden="true">&#10530;</span> 크게 보기</button>
+        <button type="button" class="st-sky-btn st-sky-close" id="stSkyClose" aria-label="닫기" hidden>&#10005;</button>
+      </div>
+      <p class="st-sky-hint" id="stSkyHint" hidden>&larr; 밀어서 밤하늘을 둘러보세요 &rarr;</p>
+      <div class="st-sky-cap" id="stSkyCap">
+        <button type="button" class="st-cap-nav" id="stCapPrev" aria-label="이전 별자리">&lsaquo;</button>
+        <div class="st-cap-body" aria-live="polite">
+          <div class="st-cap-top"><span class="st-cap-tag" id="stCapTag"></span><span class="st-cap-no" id="stCapNo"></span></div>
+          <h3 class="st-cap-name" id="stCapName"></h3>
+          <p class="st-cap-line" id="stCapLine"></p>
+          <div class="st-cap-pips"><span class="st-pips" id="stCapPips"></span><span class="st-cap-count" id="stCapCount"></span></div>
+        </div>
+        <button type="button" class="st-cap-nav" id="stCapNext" aria-label="다음 별자리">&rsaquo;</button>
+      </div>
+    </div>
 
+    <div class="stars-page stars-page-foot">
       <p class="st-foot">각자의 작품이 모여, 하나의 더 큰 이야기가 됩니다.</p>
     </div>
   </main>
@@ -422,15 +426,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260924-113213"></script>
-<script src="/js/i18n/ko.js?v=20260924-113213"></script>
-<script src="/js/common.js?v=20260924-113213"></script>
-<script src="/js/auth.js?v=20260924-113213"></script>
-<script src="/js/notifications.js?v=20260924-113213"></script>
-<script src="/js/push.js?v=20260924-113213"></script>
-<script src="/js/lightbox.js?v=20260924-113213"></script>
-<script src="/js/constellations.js?v=20260924-113213"></script>
-<script src="/js/stars.js?v=20260924-113213"></script>
+<script src="/js/supabase-client.js?v=20260926-202121"></script>
+<script src="/js/i18n/ko.js?v=20260926-202121"></script>
+<script src="/js/common.js?v=20260926-202121"></script>
+<script src="/js/auth.js?v=20260926-202121"></script>
+<script src="/js/notifications.js?v=20260926-202121"></script>
+<script src="/js/push.js?v=20260926-202121"></script>
+<script src="/js/lightbox.js?v=20260926-202121"></script>
+<script src="/js/constellations.js?v=20260926-202121"></script>
+<script src="/js/sky-figures.js?v=20260926-202121"></script>
+<script src="/js/stars.js?v=20260926-202121"></script>
 
 </body>
 </html>

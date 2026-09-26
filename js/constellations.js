@@ -1,73 +1,89 @@
-// Constellation shapes, plus the two helpers a game's result screen uses.
+// The thirteen constellations of the sky page, plus the helpers a game's
+// result screen and the profile strip use.
 // No DOM. Needs js/i18n/{en,ko}.js for tr(); the one function that reads
 // the database also needs sb and me (js/supabase-client.js, js/auth.js).
 // Used by js/stars.js (the sky page), js/game.js and js/coloring.js (the star
-// a finished artwork awards) and js/profile-view.js (the strip).
+// a finished artwork awards) and js/profile-view.js (the strip). The animal
+// drawings and where each constellation sits on the panorama live in
+// js/sky-figures.js, which only the sky page loads.
 //
-// Finishing an artwork in either game lights one star; STAR_CONSTELLATION_SIZE
-// of them make a constellation. Constellations are drawn from the pool below
-// IN ORDER and the pool cycles, so the sky keeps growing however many artworks
-// the site ends up with: with 22 public artworks a player can reach 7
-// constellations, with 100 they can reach 33 (user asked, 2026-09-21). Adding
-// more shapes here is the only thing needed to keep them varied — no SQL, no
-// migration. Six constellations make a NIGHT, which carries its own name and
-// tint so the later ones still feel like new ground even when a shape returns.
+// Finishing an artwork in either game lights one star. Constellations fill
+// IN THE ORDER BELOW, smallest first (user decision 2026-09-26): Aries takes
+// 4 stars, Scorpius 17, all thirteen 121 — and then the same thirteen start
+// over as the next sky. Nothing about a constellation is stored: the order
+// of a player's stars decides everything, so editing this list re-draws
+// everyone's sky and needs no SQL.
 
-// Every shape below has exactly this many slots, and a result screen
-// counts down to the next constellation with it.
-const STAR_CONSTELLATION_SIZE = 6;
-const CONSTELLATIONS_PER_NIGHT = 6;
-
-// Each shape: six star slots on a 0–100 square (y grows downward, like the
-// canvas and SVG it is drawn into) and the lines between them. Slot k holds
-// the k-th star of that constellation, so a half-finished shape is always the
-// same half — a player recognises what is still missing.
-const CONSTELLATION_SHAPES = [
-  { key: 'firstStep',  stars: [[12, 78], [28, 66], [44, 70], [60, 52], [76, 44], [90, 26]],
-    links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]] },
-  { key: 'hope',       stars: [[18, 42], [34, 32], [42, 54], [24, 64], [58, 26], [80, 18]],
-    links: [[0, 1], [1, 2], [2, 3], [3, 0], [1, 4], [4, 5]] },
-  { key: 'growth',     stars: [[50, 88], [50, 62], [50, 36], [28, 50], [72, 46], [50, 14]],
-    links: [[0, 1], [1, 2], [2, 5], [1, 3], [2, 4]] },
-  { key: 'connection', stars: [[50, 14], [82, 32], [82, 68], [50, 86], [18, 68], [18, 32]],
-    links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0]] },
-  { key: 'courage',    stars: [[14, 78], [34, 62], [54, 46], [74, 30], [56, 22], [80, 52]],
-    links: [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5]] },
-  { key: 'company',    stars: [[12, 26], [34, 36], [56, 50], [80, 50], [12, 74], [34, 64]],
-    links: [[0, 1], [1, 2], [4, 5], [5, 2], [2, 3]] },
-  { key: 'quietNight', stars: [[10, 30], [26, 68], [44, 34], [62, 70], [80, 32], [94, 58]],
-    links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]] },
-  { key: 'wave',       stars: [[10, 58], [28, 42], [46, 60], [64, 42], [82, 60], [94, 46]],
-    links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]] },
-  { key: 'lantern',    stars: [[50, 12], [34, 34], [66, 34], [38, 64], [62, 64], [50, 86]],
-    links: [[0, 1], [0, 2], [1, 3], [2, 4], [3, 5], [4, 5]] },
-  { key: 'bridge',     stars: [[10, 70], [30, 40], [54, 28], [78, 42], [94, 72], [54, 62]],
-    links: [[0, 1], [1, 2], [2, 3], [3, 4], [2, 5]] },
-  { key: 'flower',     stars: [[50, 50], [50, 18], [80, 38], [70, 78], [30, 78], [20, 38]],
-    links: [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5]] },
-  { key: 'compass',    stars: [[50, 50], [50, 12], [88, 50], [50, 88], [12, 50], [74, 26]],
-    links: [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5]] },
+// key: the i18n names (conName_/conLine_ + key). group: 'zodiac' (birthday
+// constellations) or 'animal'. stars/links: the traditional stick figure on
+// a 0–100 box, y growing downward, in the order the slots fill — slot k
+// holds the k-th star of that constellation, so a half-finished figure is
+// always the same half and a player can see what is still missing.
+const CONSTELLATIONS = [
+  { key: 'aries', group: 'zodiac', accent: '#FFD98E',
+    stars: [[21.7, 45.1], [60.5, 7.9], [84, 14], [94.7, 26.4]],
+    links: [[0, 1], [1, 2], [2, 3]] },
+  { key: 'delphinus', group: 'animal', accent: '#7FE3E0',
+    stars: [[21.2, 70.8], [39.2, 44.1], [53, 22.7], [72.8, 16.6], [63.7, 36.5]],
+    links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 1]] },
+  { key: 'cancer', group: 'zodiac', accent: '#FFB38E',
+    stars: [[54.5, 12.8], [51, 32.7], [50.7, 51.8], [21, 72], [80, 72]],
+    links: [[0, 1], [1, 2], [2, 3], [2, 4]] },
+  { key: 'capricornus', group: 'zodiac', accent: '#C6E58C',
+    stars: [[71, 8.9], [80.1, 27], [78.5, 57.3], [90.6, 81.1], [48.3, 84.4], [6, 62.5], [20.4, 36.1], [54.4, 40.6]],
+    links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 1]] },
+  { key: 'phoenix', group: 'animal', accent: '#FF9E7A',
+    stars: [[65.7, 21.5], [68.7, 35.8], [66.5, 50.9], [52.9, 75.1], [31.7, 31.3], [6, 10.9], [84.6, 35.8], [94.4, 12.4]],
+    links: [[0, 1], [1, 2], [2, 3], [1, 4], [4, 5], [1, 6], [6, 7]] },
+  { key: 'leo', group: 'zodiac', accent: '#FFC96B',
+    stars: [[78.8, 58], [75.8, 45.8], [71.2, 32.1], [74.2, 19.2], [86.4, 19.2], [93.9, 32.1], [27.3, 43.5], [36.4, 57.9], [14.1, 38.2]],
+    links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [2, 6], [6, 8], [8, 7], [7, 0], [6, 7]] },
+  { key: 'cygnus', group: 'animal', accent: '#E4E8F5',
+    stars: [[31.7, 84.1], [63.4, 61.5], [72.5, 43.4], [79.3, 27.5], [46.8, 44.9], [27.2, 31.3], [6, 12.4], [81.6, 56.9], [95.9, 40.3]],
+    links: [[0, 1], [1, 2], [2, 3], [1, 4], [4, 5], [5, 6], [1, 7], [7, 8]] },
+  { key: 'pavo', group: 'animal', accent: '#7FD6C4',
+    stars: [[88.4, 13.9], [89.9, 25.2], [86.1, 43.4], [69.5, 52.4], [52.9, 47.1], [27.2, 64.5], [7.6, 78.1], [28.7, 90.2], [52.9, 88.7]],
+    links: [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [3, 6], [3, 7], [3, 8]] },
+  { key: 'lepus', group: 'animal', accent: '#D9C8FF',
+    stars: [[52.1, 13.1], [67.2, 12.2], [80.8, 39.9], [75.5, 52.7], [52.9, 54.2], [46.8, 66.3], [92.9, 78.4], [27.2, 70.8], [6, 86],
+            [19.6, 51.2]],
+    links: [[0, 2], [1, 2], [2, 3], [3, 4], [4, 9], [4, 5], [5, 6], [5, 7], [7, 8]] },
+  { key: 'taurus', group: 'zodiac', accent: '#FFB08E',
+    stars: [[69.5, 65.5], [69.4, 55.2], [73.2, 46.6], [77, 38.4], [71.8, 25.2], [94.4, 34.9], [55.6, 55.5], [56, 68.5], [65, 83.7],
+            [89.9, 79.9], [48.3, 21]],
+    links: [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [0, 6], [6, 7], [7, 8], [7, 9], [3, 10]] },
+  { key: 'pegasus', group: 'animal', accent: '#9EC7FF',
+    stars: [[71.2, 65.3], [63.6, 47.1], [42.4, 54.7], [47, 72.9], [77, 58], [78.2, 47.4], [83, 39.2], [66, 33], [77.6, 25.6],
+            [87.9, 57.7], [94.7, 70.6]],
+    links: [[0, 1], [1, 2], [2, 3], [3, 0], [0, 4], [4, 5], [5, 6], [1, 7], [7, 8], [0, 9], [9, 10]] },
+  { key: 'pisces', group: 'zodiac', accent: '#8FD3FF',
+    stars: [[12.1, 83.5], [31.8, 85], [53, 88.3], [68.5, 84], [81.5, 72], [88, 58], [79.5, 45], [68, 51.5], [71, 66],
+            [9.1, 68.3], [22, 53.9], [27.3, 41.1], [38.8, 26.7], [50, 30.9], [36.4, 42.6]],
+    links: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 4],
+            [0, 9], [9, 10], [10, 11], [11, 12], [12, 13], [13, 14], [14, 11]] },
+  { key: 'scorpius', group: 'zodiac', accent: '#FF8A8A',
+    stars: [[27.2, 61.8], [40.8, 64.8], [42.3, 73.9], [48.3, 82.9], [16.6, 70.8], [49.8, 64.8], [61.9, 60.3], [74, 55], [84.6, 51.2],
+            [89.9, 42.1], [93.7, 31.6], [92.9, 21], [86.1, 11.9], [77, 7.4], [66.5, 10.4], [63.4, 18.7], [68.3, 28.5]],
+    links: [[4, 0], [0, 1], [1, 2], [2, 3], [1, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10],
+            [10, 11], [11, 12], [12, 13], [13, 14], [14, 15], [15, 16]] },
 ];
-
-// A night's name and tint. Cycles like the shapes do.
-const CONSTELLATION_NIGHTS = [
-  { key: 'firstLight', accent: '#9EC7FF' },
-  { key: 'wind',       accent: '#9EFFBF' },
-  { key: 'tide',       accent: '#7FE3E0' },
-  { key: 'woods',      accent: '#C6E58C' },
-  { key: 'snow',       accent: '#E4E8F5' },
-  { key: 'dawn',       accent: '#FFC98E' },
-];
+// One sky is all thirteen — 121 stars.
+const SKY_SIZE = CONSTELLATIONS.length;
 
 // ── helpers ──────────────────────────────────────────────────────────────
-// Constellation index → its shape, its night, and the night's name. Index 0
-// is the first constellation a player completes.
+// Constellation index → its figure. Index 0 is the first constellation a
+// player fills; index 13 is Aries again, in the second sky.
 function constellationShape(index) {
-  return CONSTELLATION_SHAPES[((index % CONSTELLATION_SHAPES.length) + CONSTELLATION_SHAPES.length) % CONSTELLATION_SHAPES.length];
+  const n = CONSTELLATIONS.length;
+  return CONSTELLATIONS[((index % n) + n) % n];
 }
+function constellationSize(index) {
+  return constellationShape(index).stars.length;
+}
+// Kept under its old name because the profile strip reads `.accent` from it.
+// `index` here is the sky the constellation belongs to (0 = the first sky).
 function constellationNight(index) {
-  const n = Math.floor(index / CONSTELLATIONS_PER_NIGHT);
-  return { index: n, ...CONSTELLATION_NIGHTS[((n % CONSTELLATION_NIGHTS.length) + CONSTELLATION_NIGHTS.length) % CONSTELLATION_NIGHTS.length] };
+  return { index: Math.floor(index / SKY_SIZE), accent: constellationShape(index).accent };
 }
 // Names live in the i18n tables so both languages read naturally; a missing
 // key falls back to the key itself rather than breaking the page.
@@ -77,19 +93,36 @@ function constellationName(index) {
 function constellationLine(index) {
   return tr('conLine_' + constellationShape(index).key);
 }
-function nightName(index) {
-  const n = constellationNight(index);
-  return tr('conNight_' + n.key, { n: n.index + 1 });
+function constellationGroup(index) {
+  return tr('conGroup_' + constellationShape(index).group);
 }
-// How a run of stars splits into constellations: [{ index, stars, full }].
+function nightName(index) {
+  return tr('conSky', { n: Math.floor(index / SKY_SIZE) + 1 });
+}
+// How a run of stars splits into constellations:
+// [{ index, stars, full, size }]. Always at least one entry.
 function groupIntoConstellations(stars) {
   const out = [];
-  for (let i = 0; i < stars.length; i += STAR_CONSTELLATION_SIZE) {
-    const slice = stars.slice(i, i + STAR_CONSTELLATION_SIZE);
-    out.push({ index: out.length, stars: slice, full: slice.length === STAR_CONSTELLATION_SIZE });
+  let at = 0;
+  while (at < stars.length) {
+    const size = constellationSize(out.length);
+    const slice = stars.slice(at, at + size);
+    out.push({ index: out.length, stars: slice, full: slice.length === size, size });
+    at += size;
   }
-  if (!out.length) out.push({ index: 0, stars: [], full: false });
+  if (!out.length) out.push({ index: 0, stars: [], full: false, size: constellationSize(0) });
   return out;
+}
+// Where a player with `total` stars stands: the constellation now filling,
+// how many of its stars they have, and whether the last star just finished
+// the one before it (then `have` is 0 and index - 1 is the finished one).
+function constellationProgress(total) {
+  let index = 0, start = 0;
+  while (start + constellationSize(index) <= total) {
+    start += constellationSize(index);
+    index++;
+  }
+  return { index, have: total - start, size: constellationSize(index), finished: total > 0 && start === total };
 }
 
 // ── result screens ───────────────────────────────────────────────────
@@ -112,10 +145,10 @@ function starAwardLines(total, isNew) {
   const out = [];
   if (!Number.isFinite(total)) return out;
   if (isNew) out.push(tr('starNewFound'));
-  if (total > 0 && total % STAR_CONSTELLATION_SIZE === 0) {
-    out.push(tr('starConstellationDone', { name: constellationName(total / STAR_CONSTELLATION_SIZE - 1) }));
-  } else if (total > 0) {
-    out.push(tr('starsNextIn', { n: STAR_CONSTELLATION_SIZE - (total % STAR_CONSTELLATION_SIZE) }));
+  if (total > 0) {
+    const p = constellationProgress(total);
+    if (p.finished) out.push(tr('starConstellationDone', { name: constellationName(p.index - 1) }));
+    else out.push(tr('starsNextIn', { n: p.size - p.have }));
   }
   return out;
 }

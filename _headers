@@ -61,6 +61,13 @@
 /og-image-ko.png
   Cache-Control: public, max-age=86400
 
+# The sky page's photograph and painted animals (/sky/night.webp,
+# /sky/con-*.webp). A week, not a year: they are referenced by path from
+# js/sky-figures.js, so a replaced picture gets a new ?v= there (or a new
+# file name) and is fetched fresh; an untouched one stays cached.
+/sky/*
+  Cache-Control: public, max-age=604800
+
 # The service worker has no ?v= to bust it (the browser fetches /sw.js by
 # that exact path), so it must never be cached hard — otherwise a fix to it
 # would take up to 24h to reach devices. Same for the manifest, which the

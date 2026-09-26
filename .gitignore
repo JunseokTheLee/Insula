@@ -1,3 +1,7 @@
 .superdesign
 .wrangler
 .claude/launch.json
+
+# Source artwork for the sky page: only the processed /sky/*.webp files are published
+sky/src/
+sky/*.png

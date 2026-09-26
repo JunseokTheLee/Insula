@@ -4,11 +4,12 @@
    the header, modals, lightbox and toast follow along without their own
    overrides; the few hard-coded white boxes are re-coloured below.
 
-   The sky is meant to look like a sky (2026-09-21, "make it big and sparkle"):
-   a full-width panel per night, stars with a blurred halo and a four-point
-   sparkle that breathes, lines that draw themselves in, a nebula wash and a
-   drifting star field. Everything is SVG + CSS — no library, no build step,
-   and every animation stops under prefers-reduced-motion (bottom of file). */
+   Since 2026-09-26 the page is one panorama: a photograph of the night sky
+   dragged sideways, thirteen constellations laid on it as painted,
+   translucent animals (transparent WebP under /sky/), and a star for every
+   finished artwork. Everything on top of the photograph is SVG + CSS — no
+   library, no build step, no SVG filter — and every animation stops under
+   prefers-reduced-motion (bottom of file). */
 body.stars-dark{
   --bg:#070b17;--surface:#111832;--text:#f2f4fb;--muted:rgba(242,244,251,.66);
   --border:rgba(255,255,255,.09);--border-strong:rgba(255,255,255,.2);
@@ -147,20 +148,6 @@ body.stars-dark{
 }
 .st-go:hover{background:rgba(255,255,255,.12);border-color:rgba(255,217,142,.5);box-shadow:0 0 24px rgba(255,217,142,.16);}
 
-/* ---------- "show me all of it" buttons ---------- */
-.st-allwrap{margin:0 0 18px;}
-.st-allwrap[hidden]{display:none;}
-.st-big-btn{
-  appearance:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;
-  font-family:'Pretendard',sans-serif;font-size:13.5px;font-weight:700;
-  padding:11px 20px;border-radius:var(--r-full);
-  color:var(--text);border:1px solid rgba(255,217,142,.4);
-  background:linear-gradient(120deg,rgba(255,217,142,.16),rgba(158,199,255,.14));
-  transition:background .16s linear,box-shadow .16s linear,transform .14s ease-out;
-}
-.st-big-btn:hover{background:linear-gradient(120deg,rgba(255,217,142,.26),rgba(158,199,255,.22));box-shadow:0 0 28px rgba(255,217,142,.2);transform:translateY(-1px);}
-.st-big-btn:active{transform:none;}
-
 /* ---------- sections ---------- */
 .st-section{margin:0 0 52px;}
 .st-section[hidden]{display:none;}
@@ -189,44 +176,7 @@ body.stars-dark{
 .stars-dark .admin-btn{background:rgba(255,255,255,.06);color:var(--text);border-color:var(--border-strong);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
 .stars-dark .admin-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,217,142,.5);}
 
-/* ---------- the stage: the constellation you are working on ----------
-   One wide panel in the middle of the page rather than a grid of small
-   cards (2026-09-21, user direction): a constellation has to be BIG to
-   read as a constellation. The caption sits on a scrim over the bottom of
-   the sky, where the shape never reaches. */
-.st-stage{
-  position:relative;overflow:hidden;margin:0 0 18px;
-  border:1px solid rgba(255,255,255,.11);border-radius:var(--r-lg);
-  background:
-    radial-gradient(85% 70% at 16% 6%, rgba(120,150,255,.20), transparent 62%),
-    radial-gradient(75% 70% at 88% 96%, rgba(190,130,255,.18), transparent 60%),
-    linear-gradient(170deg,#0e1530 0%,#0a1022 55%,#080c1c 100%);
-  box-shadow:0 34px 90px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.03) inset;
-}
-.st-stage[hidden]{display:none;}
-/* The panel decides the shape; the sky inside slices to fill it (js sets
-   preserveAspectRatio). Wide on a monitor, square on a phone, so the
-   constellation stays big instead of shrinking with the width. */
-.st-stage-sky{position:relative;line-height:0;aspect-ratio:16/10;}
-.st-sky{position:absolute;inset:0;width:100%;height:100%;display:block;}
-@media (max-width:760px){ .st-stage-sky{aspect-ratio:1/1;} }
-@media (max-width:420px){ .st-stage-sky{aspect-ratio:5/6;} }
-.st-stage-info{
-  position:absolute;left:0;right:0;bottom:0;z-index:3;pointer-events:none;
-  padding:80px 30px 26px;
-  background:linear-gradient(180deg,rgba(8,12,26,0) 0%,rgba(8,12,26,.74) 48%,rgba(8,12,26,.94) 100%);
-}
-.st-stage-night{
-  display:inline-block;font-family:'Pretendard',sans-serif;font-size:11.5px;font-weight:800;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--st-accent);
-  text-shadow:0 0 18px currentColor;margin:0 0 6px;
-}
-.st-stage-name{
-  font-family:'Pretendard',sans-serif;font-size:clamp(24px,3vw,38px);font-weight:800;
-  letter-spacing:-.02em;margin:0 0 6px;color:#fff;
-  text-shadow:0 0 34px rgba(158,199,255,.4), 0 2px 18px rgba(0,0,0,.6);
-}
-.st-stage-line{font-family:'Pretendard',sans-serif;font-size:14.5px;line-height:1.6;color:rgba(242,244,251,.78);margin:0 0 12px;word-break:keep-all;}
+/* the caption card's progress dots */
 .st-pips{display:flex;gap:8px;}
 .st-pip{
   width:11px;height:11px;border-radius:50%;
@@ -248,30 +198,9 @@ body.stars-dark{
    (ANIM_BUDGET in js/stars.js). Halos and cores are painted once. */
 .st-spark{transform-box:fill-box;transform-origin:center;animation:st-twinkle 3.6s ease-in-out infinite;}
 
-/* The far field behind a constellation (scatter(), js/stars.js).
-   .st-way slides the whole group by exactly one field width and starts
-   over — --way and the duration come from JS, because the width differs
-   per sky and the speed must not. The five bands inside it dim on
-   different clocks, which is what makes the background twinkle. The
-   constellation is NOT in this group: it stays exactly where it is. */
-@keyframes st-way-flow{ from{transform:translate3d(0,0,0);} to{transform:translate3d(var(--way,-960px),0,0);} }
-@keyframes st-way-dim{ 0%,100%{opacity:.5;} 50%{opacity:.16;} }
-@keyframes st-haze-dim{ 0%,100%{opacity:.9;} 50%{opacity:.45;} }
-.st-way{animation:st-way-flow 140s linear infinite;will-change:transform;}
-.st-way-band{animation:st-way-dim 8s ease-in-out infinite;}
-.st-haze{animation:st-haze-dim 26s ease-in-out infinite;}
-/* Lines draw themselves the first time a sky is painted. */
+/* In the constellation being filled, lit lines draw themselves in. */
 @keyframes st-draw{ from{stroke-dashoffset:var(--len);} to{stroke-dashoffset:0;} }
 .st-line-lit{animation:st-draw 1.5s cubic-bezier(.22,.8,.3,1) both;}
-
-/* A meteor crosses now and then; a few per sky on different clocks. */
-@keyframes st-shoot{
-  0%{opacity:0;transform:translate(0,0);}
-  3%{opacity:1;}
-  16%{opacity:0;transform:translate(340px,190px);}
-  100%{opacity:0;transform:translate(340px,190px);}
-}
-.st-meteor{transform-box:view-box;animation:st-shoot 13s linear infinite;}
 
 /* ---------- the card that follows a star ---------- */
 .st-tip{
@@ -291,56 +220,142 @@ body.stars-dark{
 .st-tip-by{font-family:'Pretendard',sans-serif;font-size:11.5px;color:rgba(242,244,251,.62);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .st-tip-game{font-family:'Pretendard',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--st-gold);margin-top:2px;}
 
-/* ---------- the strip: pick any constellation ---------- */
-.st-strip-wrap{position:relative;}
-.st-strip-wrap[hidden]{display:none;}
-.st-strip{
-  display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;
-  padding:4px 2px 14px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;
+/* ---------- the panorama ----------
+   A photograph of the night sky, as tall as the view, dragged sideways
+   (2026-09-26). The wrapper is the one part of this page that ignores the
+   frame and runs edge to edge (CLAUDE.md §7 lists it as an exception): a
+   window onto the sky with gutters round it reads as a picture in a box.
+   It sits between two .stars-page blocks in the markup for that reason. */
+.stars-page.stars-page-top{padding-bottom:0;}
+.stars-page.stars-page-foot{padding-top:6px;}
+.st-section.st-mine{margin-bottom:14px;}
+.st-skies{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;}
+.st-skies[hidden]{display:none;}
+.st-sky-pill{
+  appearance:none;cursor:pointer;font:700 12.5px 'Pretendard',sans-serif;color:var(--muted);
+  padding:7px 14px;border-radius:var(--r-full);border:1px solid var(--border-strong);background:rgba(255,255,255,.04);
 }
-.st-strip::-webkit-scrollbar{height:8px;}
-.st-strip::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:var(--r-full);}
-.st-chip{
-  position:relative;flex:0 0 auto;width:112px;scroll-snap-align:start;
-  appearance:none;cursor:pointer;padding:8px 8px 10px;
-  border:1px solid rgba(255,255,255,.10);border-radius:var(--r-md);
-  background:linear-gradient(170deg,rgba(255,255,255,.05),rgba(255,255,255,.01));
-  transition:border-color .16s linear,box-shadow .16s linear,transform .16s ease-out,background .16s linear;
+.st-sky-pill.on{color:#0b1020;background:var(--st-gold);border-color:transparent;}
+.st-sky-wrap{position:relative;background:#050814;}
+.st-sky-view{
+  position:relative;height:78vh;height:78svh;min-height:380px;max-height:980px;
+  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+  scrollbar-width:none;cursor:grab;outline:none;
 }
-.st-chip svg{display:block;width:100%;height:auto;opacity:.72;}
-.st-chip:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.24);background:rgba(255,255,255,.07);}
-.st-chip.done svg{opacity:1;}
-.st-chip.on{
-  border-color:var(--st-accent);
-  box-shadow:0 0 0 1px var(--st-accent) inset, 0 12px 34px rgba(0,0,0,.45), 0 0 34px color-mix(in srgb, var(--st-accent) 30%, transparent);
-  background:linear-gradient(170deg,rgba(255,255,255,.10),rgba(255,255,255,.02));
+.st-sky-view::-webkit-scrollbar{display:none;}
+.st-sky-view.dragging{cursor:grabbing;}
+.st-sky-view:focus-visible{box-shadow:inset 0 0 0 2px rgba(255,217,142,.7);}
+/* Sized and placed by layoutSky() (js/stars.js). Absolute so that `top`
+   can go negative: on a wide screen the picture is allowed to be a little
+   taller than the view, and it is the empty top of the sky that is cut. */
+.st-sky-canvas{position:absolute;left:0;top:0;user-select:none;-webkit-user-select:none;}
+.st-sky-bg,.st-sky-layer{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.st-sky-bg{-webkit-user-drag:none;pointer-events:none;}
+/* The fades at the edges say there is more sky that way. */
+.st-sky-wrap::before,.st-sky-wrap::after{
+  content:'';position:absolute;top:0;bottom:0;width:64px;z-index:2;pointer-events:none;
+  opacity:0;transition:opacity .2s linear;
 }
-.st-chip-no{
-  position:absolute;top:6px;left:6px;width:19px;height:19px;border-radius:50%;
-  display:grid;place-items:center;font-family:'Pretendard',sans-serif;font-size:10px;font-weight:800;
-  color:rgba(242,244,251,.5);border:1px solid rgba(255,255,255,.14);background:rgba(8,12,26,.6);
-}
-.st-chip.done .st-chip-no{color:#0b1020;background:var(--st-accent);border-color:transparent;}
-.st-chip-name{
-  display:block;font-family:'Pretendard',sans-serif;font-size:11.5px;font-weight:700;
-  color:rgba(242,244,251,.5);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.st-chip.done .st-chip-name{color:var(--text);}
-.st-chip.on .st-chip-name{color:var(--st-accent);}
+.st-sky-wrap::before{left:0;background:linear-gradient(90deg,rgba(5,8,20,.8),transparent);}
+.st-sky-wrap::after{right:0;background:linear-gradient(270deg,rgba(5,8,20,.8),transparent);}
+.st-sky-wrap.can-l::before,.st-sky-wrap.can-r::after{opacity:1;}
 
-@media (max-width:1000px){
-  .st-stage-info{padding:64px 20px 20px;}
+.st-sky-tools{position:absolute;top:14px;right:14px;z-index:3;display:flex;gap:8px;}
+.st-sky-btn{
+  appearance:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+  font:700 13px 'Pretendard',sans-serif;color:#f2f4fb;padding:9px 14px;border-radius:var(--r-full);
+  border:1px solid rgba(255,255,255,.22);background:rgba(8,12,28,.62);
 }
+.st-sky-btn:hover{background:rgba(20,28,56,.85);border-color:rgba(255,217,142,.5);}
+.st-sky-close{width:42px;height:42px;padding:0;justify-content:center;font-size:17px;}
+.st-sky-hint{
+  position:absolute;left:14px;top:14px;z-index:3;margin:0;pointer-events:none;
+  font:600 12.5px 'Pretendard',sans-serif;color:rgba(242,244,251,.8);padding:7px 14px;border-radius:var(--r-full);
+  background:rgba(8,12,28,.55);border:1px solid rgba(255,255,255,.12);white-space:nowrap;
+}
+
+/* The caption card: which constellation, and how far along. It sits over
+   the horizon — below y 640 of the picture, where no animal reaches — so
+   it never covers the sky, on a phone either (2026-09-26). */
+.st-sky-cap{
+  position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:3;
+  width:min(580px,calc(100% - 24px));display:flex;align-items:center;gap:8px;padding:12px 10px;
+  border-radius:18px;background:rgba(7,11,25,.8);border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 18px 50px rgba(0,0,0,.45);
+}
+.st-cap-nav{
+  appearance:none;cursor:pointer;flex:0 0 40px;height:40px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#f2f4fb;font-size:24px;line-height:1;
+}
+.st-cap-nav:hover:not(:disabled){background:rgba(255,255,255,.12);}
+.st-cap-nav:disabled{opacity:.3;cursor:default;}
+.st-cap-body{flex:1;min-width:0;text-align:center;font-family:'Pretendard',sans-serif;}
+.st-cap-top{display:flex;justify-content:center;gap:8px;font-size:11.5px;font-weight:800;letter-spacing:.08em;color:var(--cap-accent,#9EC7FF);}
+.st-cap-no{color:rgba(242,244,251,.5);}
+.st-cap-name{margin:3px 0 2px;font-size:21px;font-weight:800;color:#fff;letter-spacing:-.01em;}
+.st-cap-line{margin:0 0 7px;font-size:13px;color:rgba(242,244,251,.74);word-break:keep-all;}
+.st-cap-pips{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
+.st-cap-pips .st-pips{gap:6px;flex-wrap:wrap;justify-content:center;}
+.st-cap-pips .st-pip{width:9px;height:9px;}
+.st-cap-count{font-size:12px;font-weight:700;color:rgba(242,244,251,.7);}
+
+/* ---------- the animals ----------
+   Each is a painting (sky-figures.js `img`). Three states, told by opacity
+   alone — no filters (see the header): waiting (a faint ghost), being
+   filled (brighter, dashed lines to come), finished (bright; its lines take
+   the constellation's own colour, --acc). */
+.st-con-hit{fill:transparent;cursor:pointer;outline:none;}
+.st-con-hit:focus-visible{stroke:#FFD98E;stroke-opacity:.7;stroke-width:1.5px;stroke-dasharray:6 6;vector-effect:non-scaling-stroke;}
+.st-fig-art{opacity:.3;transition:opacity .45s ease;}
+.st-con.going .st-fig-art{opacity:.72;}
+.st-con.done .st-fig-art{opacity:.94;}
+.st-con.sel .st-fig-art,.st-con-hit:focus-visible + .st-fig .st-fig-art{opacity:1;}
+.st-con.locked.sel .st-fig-art{opacity:.5;}
+.st-link{stroke:#fff;stroke-opacity:.1;stroke-width:1.2px;stroke-linecap:round;}
+.st-con.going .st-link{stroke-opacity:.28;stroke-dasharray:4 6;}
+.st-link.lit{stroke:var(--acc);stroke-opacity:.8;stroke-width:1.25px;stroke-dasharray:none;}
+.st-slot-far{fill:rgba(255,255,255,.42);}
+.st-slot-ring{fill:none;stroke:rgba(255,255,255,.35);stroke-width:1px;stroke-dasharray:3 4;}
+.st-slot-dot{fill:rgba(255,255,255,.55);}
+/* Where the next star lands. */
+@keyframes st-next{ 0%,100%{opacity:.25;transform:scale(.8);} 50%{opacity:.95;transform:scale(1.25);} }
+.st-next{fill:none;stroke-width:1.6px;transform-box:fill-box;transform-origin:center;animation:st-next 2.4s ease-in-out infinite;}
+.st-con-label{
+  font:700 15px 'Pretendard',sans-serif;letter-spacing:.02em;text-anchor:middle;
+  fill:rgba(242,244,251,.45);paint-order:stroke;stroke:rgba(4,7,18,.85);stroke-width:4px;stroke-linejoin:round;
+}
+.st-con.going .st-con-label,.st-con.done .st-con-label{fill:#f4f6ff;}
+.st-con-count{fill:var(--acc);}
+/* A few pinpricks over the photograph that fade in and out. */
+@keyframes st-tw{ 0%,100%{opacity:.55;} 50%{opacity:.12;} }
+.st-tw{animation:st-tw 7s ease-in-out infinite;}
+
+/* ---------- full screen ----------
+   The same sky, fixed over everything. Nothing is redrawn — the layout
+   simply gets more room. */
+.st-sky-wrap.full{position:fixed;inset:0;z-index:600;}
+.st-sky-wrap.full .st-sky-view{height:100vh;height:100dvh;max-height:none;min-height:0;}
+.st-sky-wrap.full .st-sky-tools{top:calc(14px + env(safe-area-inset-top,0px));}
+/* .main is its own stacking context (z-index 1), level with the header and
+   the footer; lift it while the sky is full screen so nothing that comes
+   later in the page can paint over it. */
+html.st-full-open .stars-dark .main{z-index:60;}
+/* The page behind is covered; its background need not keep moving. */
+html.st-full-open .stars-dark .app::before,html.st-full-open .stars-dark .app::after,
+html.st-full-open .stars-dark .stars-page::before{animation-play-state:paused;}
+
 @media (max-width:760px){
-  /* The caption used to float over the sky and cover the constellation
-     (2026-09-22). Below 760px it sits under it instead. */
-  .st-stage-info{position:static;padding:14px 16px 16px;background:rgba(8,12,26,.6);border-top:1px solid rgba(255,255,255,.07);}
+  .st-sky-view{height:84vh;height:84svh;min-height:420px;}
+  .st-sky-cap{bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:10px 8px;}
+  .st-cap-name{font-size:18px;}
+  .st-cap-line{font-size:12.5px;}
+  .st-sky-tools{top:10px;right:10px;}
+  .st-sky-btn{padding:8px 11px;font-size:12px;}
+  .st-sky-hint{left:10px;top:10px;font-size:12px;}
 }
 @media (max-width:640px){
   .stars-page{padding-top:18px;}
   .st-head{align-items:flex-start;}
-  .st-stage-line{font-size:13.5px;margin-bottom:10px;}
-  .st-chip{width:96px;}
   .st-tip{max-width:210px;}
   .st-tip img{width:36px;height:36px;}
 }
@@ -350,43 +365,6 @@ body.stars-dark{
   .stars-dark .app::before,.stars-dark .app::after,
   .stars-page h1,.st-brand-mark,
   .stars-dark .stars-page::before,
-  .st-spark,.st-line-lit,.st-meteor,.st-way,.st-way-band,.st-haze,
-  .st-full{animation:none !important;}
-  .st-meteor{display:none;}
-  .st-tip,.st-burst{transition:none;}
+  .st-spark,.st-line-lit,.st-next,.st-tw{animation:none !important;}
+  .st-tip,.st-burst,.st-sky-wrap::before,.st-sky-wrap::after,.st-fig-art{transition:none;}
 }
-
-/* ---------- full screen ----------
-   Everything at once. Built when it opens and emptied when it closes, so
-   it costs nothing while shut. */
-.st-full{
-  position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;
-  background:radial-gradient(90% 70% at 50% 0%, #101a3a 0%, #070b17 62%, #05070f 100%);
-  animation:st-full-in .22s ease-out;
-}
-.st-full[hidden]{display:none;}
-/* The page underneath is hidden by this layer but would keep animating,
-   and the overlay's own sky is the biggest one we draw. Pause everything
-   behind, keep what is inside running (an id beats the html class). */
-html.st-full-open .st-way,html.st-full-open .st-way-band,html.st-full-open .st-haze,
-html.st-full-open .st-spark,html.st-full-open .st-meteor,html.st-full-open .st-line-lit,
-html.st-full-open .stars-dark .app::before,html.st-full-open .stars-dark .app::after,
-html.st-full-open .stars-dark .stars-page::before{animation-play-state:paused;}
-#stFull .st-way,#stFull .st-way-band,#stFull .st-haze,#stFull .st-spark,
-#stFull .st-meteor{animation-play-state:running;}
-@keyframes st-full-in{from{opacity:0;}to{opacity:1;}}
-.st-full-bar{
-  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px;
-  padding:calc(12px + env(safe-area-inset-top,0px)) 18px 12px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-.st-full-title{font-family:'Pretendard',sans-serif;font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.01em;}
-.st-full-close{
-  appearance:none;cursor:pointer;width:40px;height:40px;border-radius:50%;flex-shrink:0;
-  border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text);
-  font-size:16px;line-height:1;display:grid;place-items:center;
-}
-.st-full-close:hover{background:rgba(255,255,255,.14);}
-.st-full-body{flex:1;min-height:0;display:grid;place-items:center;padding:12px 14px;}
-.st-full-sky{display:block;width:100%;height:auto;max-height:100%;}
-

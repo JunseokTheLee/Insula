@@ -1,27 +1,32 @@
 // The sky page (/{lang}/stars).
 //
-// Shape of it (2026-09-21→22, user direction):
-//   * the constellation you are WORKING ON fills a big stage in the middle
-//   * every constellation you have is a chip under it; picking one stages it
-//   * a full-screen view, for every constellation at once
+// One panorama (user decision 2026-09-26): a photograph of the night sky
+// (sky/night.webp) fitted to the height of the screen and dragged sideways,
+// with the thirteen constellations of js/constellations.js laid on it as
+// painted, translucent animals (js/sky-figures.js). Every finished artwork
+// lights the next star. Constellations already finished are bright and take
+// their own colour, the one being filled shows where its next star goes,
+// and the ones still ahead wait as faint ghosts. A caption card names the
+// chosen constellation and steps through them; "크게 보기" fills the screen
+// with the same sky.
 //
-// PERFORMANCE (2026-09-22, "버벅거린다"). There are NO SVG filters on this
-// page: feGaussianBlur re-runs every time the thing it wraps changes, and
-// every star animated, so a phone was doing hundreds of filter passes a
-// frame. A radial gradient looks the same and costs nothing once painted.
-// The background star field is five <path>s, not 190 <circle>s, and only
-// the first ANIM_BUDGET sparkles breathe. Those three drift as one group
-// (a Milky Way, user 2026-09-22) — a transform, which costs nothing per
-// frame; the constellation above them never moves.
+// PERFORMANCE is part of this page's job (2026-09-22, "버벅거린다"). There
+// are NO SVG filters: feGaussianBlur re-runs whenever what it wraps changes.
+// Halos are radial gradients, a constellation's state is the opacity of its
+// painting. Only ANIM_BUDGET sparkles breathe, the constellation being
+// filled first. The photograph is one <img>, and everything else is one
+// <svg> in the photograph's own pixels laid over it, so a resize changes two
+// CSS sizes and redraws nothing.
 //
 // Needs sb, me, tr, common.js (getSiteSettings/toast/openArtworkById/
-// profileUrl/cdnUrl), lightbox.js (the artwork a star opens) and
-// constellations.js (the shapes) already loaded.
+// artworkUrl/cdnUrl), lightbox.js (the artwork a star opens),
+// constellations.js (which star goes where) and sky-figures.js (the
+// paintings and where they sit) already loaded.
 "use strict";
 
 (function starsPage() {
   const root = document.getElementById('starsPage');
-  if (!root) return;
+  if (!root || typeof SKY_FIGURES === 'undefined' || typeof CONSTELLATIONS === 'undefined') return;
   const $ = id => document.getElementById(id);
   const SVG = 'http://www.w3.org/2000/svg';
 
@@ -30,7 +35,10 @@
   let viewName = '';
   let myStars = [];           // the list, already in the order they light
   let groups = [];            // split into constellations
-  let picked = 0;             // which constellation is on the stage
+  let current = 0;            // the constellation being filled (index over all skies)
+  let skyNo = 0;              // which sky of thirteen is on screen
+  let picked = 0;             // 0..12: the one the caption is about
+  let hits = [];              // the lit stars, for the hover card
 
   let uidN = 0;               // unique ids for per-SVG gradients
   const ANIM_BUDGET = 46;     // how many sparkles may breathe at once
@@ -38,15 +46,18 @@
 
   const FIND = '#FFD98E';     // find the piece — warm
   const COLOR = '#9EC7FF';    // colour by number — cool
+  const STAR_R = 6.5;         // a star's size, in the photograph's pixels
+  const AR = SKY_W / SKY_H;
   const isMine = () => !!(me.id && viewId === me.id);
+  const reduceMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   function el(name, attrs) {
     const n = document.createElementNS(SVG, name);
     for (const k in attrs) if (attrs[k] != null) n.setAttribute(k, String(attrs[k]));
     return n;
   }
-  // A seeded generator: a given sky's background must be the same every time
-  // it is painted, or it would reshuffle on every click.
+  // A seeded generator: the twinkling pinpricks must land in the same places
+  // every time the sky is drawn, or they would reshuffle on every click.
   function rnd(seed) {
     let s = (seed * 9301 + 49297) % 233280;
     return () => (s = (s * 9301 + 49297) % 233280) / 233280;
@@ -67,8 +78,8 @@
     return node;
   }
 
-  // ---------- shared SVG furniture (gradients only, never filters) ----------
-  function skyDefs(svg, accent) {
+  // ---------- SVG furniture (gradients only, never filters) ----------
+  function skyDefs(svg) {
     const id = 'sky' + (++uidN);
     const defs = el('defs', {});
     svg.appendChild(defs);
@@ -85,90 +96,46 @@
       made.set(colour, url);
       return url;
     };
-    const lg = el('linearGradient', { id: id + 'l', x1: '0', y1: '0', x2: '1', y2: '1' });
-    lg.appendChild(el('stop', { offset: '0', 'stop-color': accent, 'stop-opacity': '.95' }));
-    lg.appendChild(el('stop', { offset: '.5', 'stop-color': '#ffffff', 'stop-opacity': '.85' }));
-    lg.appendChild(el('stop', { offset: '1', 'stop-color': accent, 'stop-opacity': '.95' }));
-    defs.appendChild(lg);
-    return { halo, line: `url(#${id}l)` };
+    return { halo };
   }
-  // The far field: a slow river of light behind the constellation.
-  //
-  // Few nodes, many sub-circles. The stars are split into five bands that
-  // fade on different clocks, so what the eye sees is stars changing
-  // brightness rather than one layer pulsing, and all five sit in a group
-  // that slides exactly one field-width and starts over. Every star is
-  // therefore drawn twice, one width apart, which is what makes the loop
-  // seamless; the svg viewport clips the copy that is off screen.
-  //
-  // Cost: six painted nodes and seven animations, every one of them a
-  // transform or an opacity — the two the compositor can run by itself.
-  // No filter, ever: see the note at the top of the file.
-  const WAY_SPEED = 7;        // user units per second: noticed only if you wait
-  const WAY_BANDS = 5;        // five clocks, so no two stars blink together
-  function scatter(svg, w, h, seed, n) {
-    const r = rnd(seed);
-    const bands = new Array(WAY_BANDS).fill('');
-    for (let i = 0; i < n; i++) {
-      const x = r() * w, y = (r() * h).toFixed(1), q = +(r() * 1.4 + .35).toFixed(2);
-      const dot = cx => `M${cx.toFixed(1)} ${y} m${-q} 0 a${q} ${q} 0 1 0 ${q * 2} 0 a${q} ${q} 0 1 0 ${-q * 2} 0 `;
-      bands[i % WAY_BANDS] += dot(x) + dot(x + w);
+  // A few pinpricks over the photograph that fade in and out on three
+  // different clocks, so the sky is never quite still. Three nodes, opacity
+  // only. They stay above the horizon (y < 620).
+  function twinkles(svg) {
+    const r = rnd(11);
+    for (let b = 0; b < 3; b++) {
+      let d = '';
+      for (let i = 0; i < 26; i++) {
+        const x = (r() * SKY_W).toFixed(1), y = (r() * 600 + 20).toFixed(1), q = +(r() * 1.1 + .5).toFixed(2);
+        d += `M${x} ${y} m${-q} 0 a${q} ${q} 0 1 0 ${q * 2} 0 a${q} ${q} 0 1 0 ${-q * 2} 0 `;
+      }
+      const p = el('path', { d, fill: '#fff', opacity: .4, class: 'st-tw', 'aria-hidden': 'true' });
+      p.style.animationDuration = (6 + b * 1.7).toFixed(1) + 's';
+      p.style.animationDelay = (-b * 2.3).toFixed(1) + 's';
+      svg.appendChild(p);
     }
-    // A faint band of haze for the stars to run along, drawn under them.
-    const gid = 'way' + (++uidN);
-    const dd = el('defs', {});
-    const rg = el('radialGradient', { id: gid });
-    rg.appendChild(el('stop', { offset: '0', 'stop-color': '#dce7ff', 'stop-opacity': '.14' }));
-    rg.appendChild(el('stop', { offset: '.55', 'stop-color': '#c9d8ff', 'stop-opacity': '.06' }));
-    rg.appendChild(el('stop', { offset: '1', 'stop-color': '#c9d8ff', 'stop-opacity': '0' }));
-    dd.appendChild(rg);
-    svg.appendChild(dd);
-    svg.appendChild(el('ellipse', {
-      cx: (w * .5).toFixed(1), cy: (h * .46).toFixed(1), rx: (w * .78).toFixed(1), ry: (h * .23).toFixed(1),
-      transform: `rotate(-13 ${(w * .5).toFixed(1)} ${(h * .46).toFixed(1)})`,
-      fill: `url(#${gid})`, class: 'st-haze', 'aria-hidden': 'true',
-    }));
-    const g = el('g', { class: 'st-way', 'aria-hidden': 'true' });
-    g.style.setProperty('--way', (-w) + 'px');
-    g.style.animationDuration = Math.round(w / WAY_SPEED) + 's';
-    bands.forEach((d, i) => {
-      const p = el('path', { d, fill: '#fff', opacity: .34, class: 'st-way-band' });
-      p.style.animationDuration = (6.5 + i * 1.4).toFixed(1) + 's';
-      p.style.animationDelay = (-i * 1.7).toFixed(1) + 's';
-      g.appendChild(p);
-    });
-    svg.appendChild(g);
-  }
-  function meteor(svg, x, y, delay) {
-    const g = el('g', { class: 'st-meteor', 'aria-hidden': 'true' });
-    g.style.animationDelay = delay + 's';
-    g.append(
-      el('line', { x1: x, y1: y, x2: x - 54, y2: y - 30, stroke: '#fff', 'stroke-width': 1.6, 'stroke-linecap': 'round', opacity: .85 }),
-      el('circle', { cx: x, cy: y, r: 2.1, fill: '#fff' }),
-    );
-    svg.appendChild(g);
   }
 
-  // ---------- one star ----------
+  // ---------- one lit star ----------
   function drawStar(parent, x, y, R, star, defs, seedIdx) {
-    if (!star) {
-      parent.append(
-        el('circle', { cx: x, cy: y, r: R * 0.62, fill: 'none', stroke: 'rgba(255,255,255,.10)', 'stroke-width': 1, 'stroke-dasharray': '3 5' }),
-        el('circle', { cx: x, cy: y, r: Math.max(2, R * 0.22), fill: 'rgba(255,255,255,.3)' }),
-      );
-      return null;
-    }
     const colour = star.source === 'find' ? FIND : COLOR;
     // A colouring star earned on the hard board burns a little bigger.
     const k = star.level >= 3 ? 1.22 : star.level >= 2 ? 1.08 : 1;
     const g = el('g', { class: 'st-hit', tabindex: '0', role: 'button' });
-    const halo = el('circle', { cx: x, cy: y, r: R * 3.1 * k, fill: defs.halo(colour) });
-    const spark = el('path', { d: sparkPath(R * 2.2 * k), fill: colour, opacity: .95, transform: `translate(${x} ${y})` });
+    const halo = el('circle', { cx: x, cy: y, r: R * 2.5 * k, fill: defs.halo(colour) });
+    // The group places the sparkle; the path inside it breathes. They must be
+    // two elements: the breathing is a CSS transform (scale), and a CSS
+    // transform REPLACES an SVG transform attribute on the same element —
+    // with both on one path every breathing sparkle jumped to the sky's top
+    // left corner (2026-09-26).
+    const sparkAt = el('g', { transform: `translate(${x} ${y})` });
+    const spark = el('path', { d: sparkPath(R * 1.65 * k), fill: colour, opacity: .95 });
     breathe(spark, ((seedIdx * 0.53) % 4).toFixed(2));
+    sparkAt.appendChild(spark);
     const burst = el('circle', { cx: x, cy: y, r: R * 1.15 * k, fill: 'none', stroke: '#fff', 'stroke-width': 1.1, opacity: 0, class: 'st-burst' });
-    const core = el('circle', { cx: x, cy: y, r: R * 0.42 * k, fill: '#fff' });
-    const hit = el('circle', { cx: x, cy: y, r: Math.max(16, R * 1.9), fill: 'transparent' });
-    g.append(halo, spark, burst, core, hit);
+    const core = el('circle', { cx: x, cy: y, r: R * 0.36 * k, fill: '#fff' });
+    const hit = el('circle', { cx: x, cy: y, r: Math.max(16, R * 2.4), fill: 'transparent' });
+    g.append(halo, sparkAt, burst, core, hit);
 
     const title = star.art_title || tr('untitledArtwork');
     const game = tr(star.source === 'find' ? 'starsGameFind' : 'starsGameColor');
@@ -183,78 +150,294 @@
     parent.appendChild(g);
     return { g, star, x, y };
   }
+  // A slot not lit yet. In the constellation being filled it is a dashed
+  // ring, and the NEXT one pulses — that is where the next finished artwork
+  // lands. Further ahead it is only a dot, so the sky does not fill up with
+  // rings nobody can earn yet.
+  function drawSlot(parent, x, y, filling, next, accent) {
+    if (!filling) {
+      parent.appendChild(el('circle', { cx: x, cy: y, r: 1.9, class: 'st-slot-far' }));
+      return;
+    }
+    parent.append(
+      el('circle', { cx: x, cy: y, r: STAR_R * .75, class: 'st-slot-ring' }),
+      el('circle', { cx: x, cy: y, r: 2.2, class: 'st-slot-dot' }),
+    );
+    if (next) {
+      const ring = el('circle', { cx: x, cy: y, r: STAR_R * 1.35, class: 'st-next' });
+      ring.style.stroke = accent;
+      parent.appendChild(ring);
+    }
+  }
 
-  // ---------- the stage: one constellation, big ----------
-  const STAGE_W = 960, STAGE_H = 600;
-  function renderStage() {
-    const host = $('stStageSky'), stage = $('stStage');
-    if (!host || !groups.length) { if (stage) stage.hidden = true; return; }
-    const group = groups[Math.min(picked, groups.length - 1)];
-    const shape = constellationShape(group.index);
-    const night = constellationNight(group.index);
-    stage.style.setProperty('--st-accent', night.accent);
-    host.innerHTML = '';
-    resetAnim();
+  // ---------- the panorama ----------
+  function stateOf(gi) { return gi < current ? 'done' : gi === current ? 'going' : 'locked'; }
+  function drawConstellation(svg, k, defs) {
+    const gi = skyNo * SKY_SIZE + k;
+    const c = constellationShape(gi);
+    const f = SKY_FIGURES[c.key];
+    if (!f) return;                       // a constellation with no drawing yet
+    const [X, Y, S] = f.at;
+    const s = S / 100;
+    const state = stateOf(gi);
+    const got = (groups[gi] && groups[gi].stars) || [];
+    const g = el('g', { class: `st-con ${state}` + (k === picked ? ' sel' : ''), 'data-k': k });
+    g.style.setProperty('--acc', c.accent);
 
-    const svg = el('svg', { viewBox: `0 0 ${STAGE_W} ${STAGE_H}`, class: 'st-sky', role: 'img', preserveAspectRatio: 'xMidYMid slice' });
-    svg.setAttribute('aria-label', constellationName(group.index));
-    const defs = skyDefs(svg, night.accent);
-    scatter(svg, STAGE_W, STAGE_H, group.index + 7, 90);
-    meteor(svg, STAGE_W * 0.82, 70, 2);
+    // Pressing the constellation (not one of its stars) chooses it.
+    const pick = el('rect', { x: X, y: Y, width: S, height: S, class: 'st-con-hit', tabindex: '0', role: 'button' });
+    pick.setAttribute('aria-label', tr('starsPickCon', { name: constellationName(gi) }));
+    pick.addEventListener('click', () => choose(k, true));
+    pick.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(k, true); } });
+    g.appendChild(pick);
 
-    const S = 4.4, ox = (STAGE_W - 100 * S) / 2, oy = (STAGE_H - 100 * S) / 2;
-    const at = i => [ox + shape.stars[i][0] * S, oy + shape.stars[i][1] * S];
+    // The painted animal: a transparent WebP under /sky/, laid in the same
+    // 0–100 box as the stars. A picture that fails to load simply leaves the
+    // stars and lines on their own — the stars are the point of the page.
+    const fig = el('g', { class: 'st-fig', transform: `translate(${X} ${Y}) scale(${s})`, 'aria-hidden': 'true' });
+    if (f.img) {
+      const [ix, iy, iw, ih] = f.img.box;
+      fig.appendChild(el('image', { href: f.img.src, x: ix, y: iy, width: iw, height: ih, class: 'st-fig-art', preserveAspectRatio: 'xMidYMid meet' }));
+    }
+    g.appendChild(fig);
 
-    const lines = el('g', {});
-    shape.links.forEach(([a, b], n) => {
+    const at = i => [X + c.stars[i][0] * s, Y + c.stars[i][1] * s];
+    const lines = el('g', { 'aria-hidden': 'true' });
+    c.links.forEach(([a, b], n) => {
       const [x1, y1] = at(a), [x2, y2] = at(b);
-      const lit = !!(group.stars[a] && group.stars[b]);
-      const line = el('line', {
-        x1, y1, x2, y2,
-        stroke: lit ? defs.line : 'rgba(255,255,255,.11)',
-        'stroke-width': lit ? 2.4 : 1.4, 'stroke-linecap': 'round',
-        'stroke-dasharray': lit ? null : '5 9', opacity: lit ? .95 : 1,
-      });
-      if (lit) {
+      const lit = !!(got[a] && got[b]);
+      const line = el('line', { x1, y1, x2, y2, class: 'st-link' + (lit ? ' lit' : '') });
+      // Lines draw themselves in, but only in the constellation being filled —
+      // a whole sky of lines animating on every visit is noise.
+      if (lit && state === 'going') {
         const len = Math.hypot(x2 - x1, y2 - y1);
-        line.setAttribute('class', 'st-line-lit');
+        line.classList.add('st-line-lit');
         line.style.setProperty('--len', len);
         line.style.strokeDasharray = len;
         line.style.animationDelay = (n * 0.12) + 's';
       }
       lines.appendChild(line);
     });
-    svg.appendChild(lines);
+    g.appendChild(lines);
 
-    const hits = [], dots = el('g', {});
-    shape.stars.forEach((_, i) => {
+    c.stars.forEach((_, i) => {
       const [x, y] = at(i);
-      const made = drawStar(dots, x, y, 17, group.stars[i] || null, defs, i);
-      if (made) hits.push(made);
+      if (got[i]) hits.push(drawStar(g, x, y, STAR_R, got[i], defs, gi * 7 + i));
+      else drawSlot(g, x, y, state === 'going', state === 'going' && i === got.length, c.accent);
     });
-    svg.appendChild(dots);
-    host.appendChild(svg);
-    wireTips(host, svg, hits);
 
-    $('stStageNight').textContent = nightName(group.index);
-    $('stStageName').textContent = constellationName(group.index);
-    $('stStageLine').textContent = group.full ? constellationLine(group.index)
-      : tr('starsNextIn', { n: STAR_CONSTELLATION_SIZE - group.stars.length });
-    const pips = $('stStagePips');
-    pips.innerHTML = '';
-    for (let i = 0; i < STAR_CONSTELLATION_SIZE; i++) {
+    const L = f.label || [50, 106];
+    const t = el('text', { x: X + L[0] * s, y: Y + L[1] * s + 6, class: 'st-con-label', 'aria-hidden': 'true' });
+    t.textContent = constellationName(gi);
+    if (state === 'going') {
+      const n = el('tspan', { class: 'st-con-count', dx: 6 });
+      n.textContent = `${got.length}/${c.stars.length}`;
+      t.appendChild(n);
+    }
+    g.appendChild(t);
+    svg.appendChild(g);
+  }
+  function renderSky() {
+    const svg = $('stSkyLayer');
+    if (!svg) return;
+    svg.replaceChildren();
+    resetAnim();
+    hits = [];
+    const defs = skyDefs(svg);
+    twinkles(svg);
+    // The constellation being filled goes first so its sparkles get the
+    // animation budget; then the finished ones, newest first.
+    const order = [...Array(SKY_SIZE).keys()].sort((a, b) => {
+      const rank = k => { const gi = skyNo * SKY_SIZE + k; return gi === current ? -1e6 : gi < current ? -gi : gi; };
+      return rank(a) - rank(b);
+    });
+    for (const k of order) drawConstellation(svg, k, defs);
+    wireTips($('stSkyWrap'), svg, hits);
+  }
+
+  // ---------- size, scroll, choose ----------
+  // The picture always fills the height. On a wide screen that leaves almost
+  // nothing to drag, so it may grow up to 10% taller than the view and lose
+  // the empty top of the sky (no drawing starts above y 110).
+  let scale = 1;              // CSS pixels per photograph pixel
+  function layoutSky() {
+    const view = $('stSkyView'), cv = $('stSkyCanvas');
+    if (!view || !cv) return;
+    const vw = view.clientWidth, vh = view.clientHeight;
+    if (!vw || !vh) return;
+    const keep = view.scrollWidth > vw ? (view.scrollLeft + vw / 2) / view.scrollWidth : null;
+    let h = vh;
+    if (vw > 760) {
+      const want = vw * 1.3 / AR;
+      if (want > h) h = Math.min(want, vh * 1.10);
+    }
+    const w = Math.round(h * AR);
+    cv.style.width = w + 'px';
+    cv.style.height = Math.round(h) + 'px';
+    cv.style.top = Math.round(vh - h) + 'px';
+    scale = h / SKY_H;
+    if (keep != null) view.scrollLeft = keep * w - vw / 2;
+    edges();
+  }
+  function centerOn(k, smooth) {
+    const f = SKY_FIGURES[constellationShape(skyNo * SKY_SIZE + k).key];
+    const view = $('stSkyView');
+    if (!f || !view) return;
+    const left = Math.max(0, (f.at[0] + f.at[2] / 2) * scale - view.clientWidth / 2);
+    if (smooth && !reduceMotion() && view.scrollTo) view.scrollTo({ left, behavior: 'smooth' });
+    else view.scrollLeft = left;
+  }
+  // Fades on the edges say "there is more this way".
+  function edges() {
+    const view = $('stSkyView'), wrap = $('stSkyWrap');
+    if (!view || !wrap) return;
+    wrap.classList.toggle('can-l', view.scrollLeft > 4);
+    wrap.classList.toggle('can-r', view.scrollLeft + view.clientWidth < view.scrollWidth - 4);
+  }
+  function choose(k, scroll) {
+    picked = Math.max(0, Math.min(SKY_SIZE - 1, k));
+    const svg = $('stSkyLayer');
+    svg.querySelectorAll('.st-con.sel').forEach(n => n.classList.remove('sel'));
+    const g = svg.querySelector(`.st-con[data-k="${picked}"]`);
+    if (g) g.classList.add('sel');
+    renderCaption();
+    if (scroll) centerOn(picked, true);
+    rememberScroll();
+  }
+  function renderCaption() {
+    const gi = skyNo * SKY_SIZE + picked;
+    const c = constellationShape(gi);
+    const got = (groups[gi] && groups[gi].stars) || [];
+    const state = stateOf(gi);
+    $('stSkyCap').style.setProperty('--cap-accent', c.accent);
+    $('stCapTag').textContent = constellationGroup(gi);
+    $('stCapNo').textContent = `${picked + 1} / ${SKY_SIZE}`;
+    $('stCapName').textContent = constellationName(gi);
+    $('stCapLine').textContent = state === 'locked' ? tr('starsConLocked', { n: c.stars.length }) : constellationLine(gi);
+    const pips = $('stCapPips');
+    pips.replaceChildren();
+    c.stars.forEach((_, i) => {
       const p = document.createElement('span');
-      const s = group.stars[i];
+      const s = got[i];
       p.className = 'st-pip' + (s ? ' on' : '');
       if (s) p.style.setProperty('--pip', s.source === 'find' ? FIND : COLOR);
       pips.appendChild(p);
+    });
+    $('stCapCount').textContent = state === 'done' ? tr('starsConDone') : `${got.length} / ${c.stars.length}`;
+    $('stCapPrev').disabled = picked === 0;
+    $('stCapNext').disabled = picked === SKY_SIZE - 1;
+  }
+
+  // Dragging with a mouse. Touch already scrolls natively, and the wheel is
+  // left alone on purpose: taking it over would trap a mouse user who only
+  // wants to scroll the page past the sky (CLAUDE.md §7, the dead-wheel
+  // regression).
+  function wirePan(view) {
+    let down = null, dragged = false;
+    view.addEventListener('pointerdown', e => {
+      dragged = false;
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      down = { x: e.clientX, left: view.scrollLeft, id: e.pointerId };
+    });
+    view.addEventListener('pointermove', e => {
+      if (!down || e.pointerId !== down.id) return;
+      const dx = e.clientX - down.x;
+      if (!dragged && Math.abs(dx) > 5) {
+        dragged = true;
+        view.classList.add('dragging');
+        try { view.setPointerCapture(e.pointerId); } catch (err) { /* already released */ }
+        hideHint();
+      }
+      if (dragged) view.scrollLeft = down.left - dx;
+    });
+    const end = () => { down = null; view.classList.remove('dragging'); };
+    view.addEventListener('pointerup', end);
+    view.addEventListener('pointercancel', end);
+    // A drag must not finish as a click on the star it started on.
+    view.addEventListener('click', e => {
+      if (!dragged) return;
+      dragged = false;
+      e.stopPropagation();
+      e.preventDefault();
+    }, true);
+  }
+
+  // Where the sky was, so a reload or a trip back from an artwork lands on
+  // the same stretch of it (CLAUDE.md §7: survive the reload).
+  const SCROLL_KEY = 'weavo.stars.view';
+  let scrollTimer = 0;
+  function rememberScroll() {
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => {
+      const view = $('stSkyView');
+      if (!view || !view.scrollWidth) return;
+      try {
+        sessionStorage.setItem(SCROLL_KEY, JSON.stringify({
+          who: viewId || '', sky: skyNo, picked, x: view.scrollLeft / view.scrollWidth,
+        }));
+      } catch (e) { /* private mode */ }
+    }, 250);
+  }
+  function restoreScroll() {
+    let nav = '';
+    try { nav = performance.getEntriesByType('navigation')[0].type; } catch (e) { /* old browser */ }
+    if (nav !== 'reload' && nav !== 'back_forward') return false;
+    try {
+      const m = JSON.parse(sessionStorage.getItem(SCROLL_KEY) || 'null');
+      if (!m || m.who !== (viewId || '') || m.sky !== skyNo) return false;
+      choose(m.picked, false);
+      const view = $('stSkyView');
+      view.scrollLeft = m.x * view.scrollWidth;
+      return true;
+    } catch (e) { return false; }
+  }
+
+  const HINT_KEY = 'weavo.stars.dragHint';
+  function showHint() {
+    const h = $('stSkyHint');
+    if (!h) return;
+    let seen = false;
+    try { seen = localStorage.getItem(HINT_KEY) === '1'; } catch (e) { /* private mode */ }
+    h.hidden = seen;
+  }
+  function hideHint() {
+    const h = $('stSkyHint');
+    if (!h || h.hidden) return;
+    h.hidden = true;
+    try { localStorage.setItem(HINT_KEY, '1'); } catch (e) { /* private mode */ }
+  }
+
+  // ---------- full screen ----------
+  // The same sky, filling the screen: the wrapper becomes fixed and the
+  // layout recomputes. Nothing is drawn twice.
+  let full = false, scrollLock = '';
+  function setFull(on) {
+    const wrap = $('stSkyWrap');
+    if (!wrap || on === full) return;
+    full = on;
+    wrap.classList.toggle('full', on);
+    $('stSkyBig').hidden = on;
+    $('stSkyClose').hidden = !on;
+    const html = document.documentElement;
+    if (on) {
+      scrollLock = html.style.overflow;
+      html.style.overflow = 'hidden';
+      html.classList.add('st-full-open');
+      $('stSkyClose').focus();
+    } else {
+      html.style.overflow = scrollLock;
+      html.classList.remove('st-full-open');
+      $('stSkyBig').focus();
     }
-    stage.hidden = false;
+    layoutSky();
+    centerOn(picked, false);
   }
 
   // A card that follows whichever star the pointer is over.
-  function wireTips(host, svg, hits) {
-    if (!hits.length) return;
+  function wireTips(host, svg, list) {
+    const old = host.querySelector('.st-tip');
+    if (old) old.remove();
+    if (!list.length) return;
     const tip = document.createElement('div');
     tip.className = 'st-tip';
     const img = document.createElement('img'); img.alt = '';
@@ -273,8 +456,7 @@
       t3.textContent = tr(s.source === 'find' ? 'starsGameFind' : 'starsGameColor')
         + (s.level ? ' · ' + tr(s.level === 1 ? 'cgLevelEasy' : s.level === 3 ? 'cgLevelHard' : 'cgLevelNormal') : '');
       if (s.thumb) { img.src = cdnUrl(s.thumb); img.style.display = ''; } else img.style.display = 'none';
-      // getScreenCTM, not a width ratio: a sky drawn with
-      // preserveAspectRatio=slice can scale its axes differently.
+      // getScreenCTM, not a ratio: the sky is scaled and scrolled.
       const panel = host.getBoundingClientRect();
       const m = svg.getScreenCTM();
       let px = 0, py = 0;
@@ -284,186 +466,142 @@
       tip.classList.add('on');
     };
     const hide = () => tip.classList.remove('on');
-    for (const hit of hits) {
+    for (const hit of list) {
       hit.g.addEventListener('pointerenter', () => show(hit));
       hit.g.addEventListener('focus', () => show(hit));
       hit.g.addEventListener('pointerleave', hide);
       hit.g.addEventListener('blur', hide);
     }
-    host.addEventListener('pointerleave', hide);
+  }
+  function hideTip() {
+    const t = document.querySelector('#stSkyWrap .st-tip.on');
+    if (t) t.classList.remove('on');
   }
 
-  // ---------- the strip: pick any constellation ----------
-  function renderStrip() {
-    const wrap = $('stStripWrap'), strip = $('stStrip');
-    if (!wrap || !strip) return;
-    strip.innerHTML = '';
-    if (!groups.length) { wrap.hidden = true; return; }
-    groups.forEach((g, i) => {
-      const shape = constellationShape(g.index);
-      const night = constellationNight(g.index);
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'st-chip' + (g.full ? ' done' : ' going') + (i === picked ? ' on' : '');
-      b.style.setProperty('--st-accent', night.accent);
-      b.setAttribute('aria-pressed', String(i === picked));
-      const svg = el('svg', { viewBox: '0 0 100 100', 'aria-hidden': 'true' });
-      shape.links.forEach(([p, q]) => {
-        const lit = !!(g.stars[p] && g.stars[q]);
-        svg.appendChild(el('line', {
-          x1: shape.stars[p][0], y1: shape.stars[p][1], x2: shape.stars[q][0], y2: shape.stars[q][1],
-          stroke: lit ? night.accent : 'rgba(255,255,255,.14)', 'stroke-width': lit ? 2 : 1.2, 'stroke-linecap': 'round',
-        }));
-      });
-      shape.stars.forEach(([x, y], k) => {
-        const s = g.stars[k];
-        svg.appendChild(el('circle', { cx: x, cy: y, r: s ? 4.6 : 2, fill: s ? (s.source === 'find' ? FIND : COLOR) : 'rgba(255,255,255,.22)' }));
-      });
-      const no = document.createElement('span'); no.className = 'st-chip-no'; no.textContent = g.index + 1;
-      const nm = document.createElement('span'); nm.className = 'st-chip-name'; nm.textContent = constellationName(g.index);
-      b.append(svg, no, nm);
-      b.addEventListener('click', () => { picked = i; renderStage(); renderStrip(); });
-      strip.appendChild(b);
-    });
-    wrap.hidden = false;
-  }
-
-  // ---------- full screen ----------
-  // Drawn fresh when it opens and thrown away on close, so it costs nothing
-  // while shut.
-  let fullOpen = false, scrollLock = '';
-  function openFull() {
-    const box = $('stFull'), body = $('stFullBody'), title = $('stFullTitle');
-    if (!box) return;
-    body.innerHTML = '';
-    title.textContent = tr('starsFullTitle', { n: groups.filter(g => g.full).length });
-    body.appendChild(allSkySvg());
-    box.hidden = false;
-    // Never record our own lock as the value to restore.
-    if (!fullOpen) scrollLock = document.documentElement.style.overflow;
-    fullOpen = true;
-    document.documentElement.style.overflow = 'hidden';
-    // The page behind is covered; stop paying for its animations.
-    document.documentElement.classList.add('st-full-open');
-    $('stFullClose').focus();
-  }
-  function closeFull() {
-    const box = $('stFull');
-    if (!box || !fullOpen) return;
-    box.hidden = true;
-    $('stFullBody').innerHTML = '';
-    fullOpen = false;
-    document.documentElement.style.overflow = scrollLock;
-    document.documentElement.classList.remove('st-full-open');
-  }
-  // Every constellation on one field, laid out to suit the screen's shape.
-  function allSkySvg() {
-    const n = Math.max(1, groups.length);
-    const ar = (window.innerWidth || 1000) / Math.max(360, (window.innerHeight || 800) - 150);
-    let cols = Math.max(1, Math.round(Math.sqrt(n * ar)));
-    cols = Math.min(cols, n);
-    const rows = Math.ceil(n / cols);
-    const CELL = 100, W = cols * CELL, H = rows * CELL;
-    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'st-full-sky', role: 'img' });
-    svg.setAttribute('aria-label', tr('starsFullTitle', { n: groups.filter(g => g.full).length }));
-    const defs = skyDefs(svg, '#9EC7FF');
-    scatter(svg, W, H, 5, Math.min(260, n * 40));
-    resetAnim();
-
-    groups.forEach((g, k) => {
-      const shape = constellationShape(g.index);
-      const night = constellationNight(g.index);
-      const cx = (k % cols) * CELL, cy = Math.floor(k / cols) * CELL;
-      const S = 0.74, ox = cx + (CELL - 100 * S) / 2, oy = cy + (CELL - 100 * S) / 2 - 4;
-      const at = i => [ox + shape.stars[i][0] * S, oy + shape.stars[i][1] * S];
-      for (const [a, b] of shape.links) {
-        const [x1, y1] = at(a), [x2, y2] = at(b);
-        const lit = !!(g.stars[a] && g.stars[b]);
-        svg.appendChild(el('line', {
-          x1, y1, x2, y2, stroke: lit ? night.accent : 'rgba(255,255,255,.12)',
-          'stroke-width': lit ? 1.1 : .7, 'stroke-linecap': 'round', 'stroke-dasharray': lit ? null : '2 4',
-        }));
-      }
-      shape.stars.forEach((_, i) => {
-        const [x, y] = at(i);
-        const s = g.stars[i];
-        if (!s) { svg.appendChild(el('circle', { cx: x, cy: y, r: 1.1, fill: 'rgba(255,255,255,.22)' })); return; }
-        const colour = s.source === 'find' ? FIND : COLOR;
-        svg.appendChild(el('circle', { cx: x, cy: y, r: 7, fill: defs.halo(colour) }));
-        const sp = el('path', { d: sparkPath(4.4), fill: colour, opacity: .95, transform: `translate(${x} ${y})` });
-        breathe(sp, (((k * 6 + i) * 0.31) % 4).toFixed(2));
-        svg.appendChild(sp);
-        svg.appendChild(el('circle', { cx: x, cy: y, r: 1.5, fill: '#fff' }));
-      });
-      const t = el('text', {
-        x: cx + CELL / 2, y: cy + CELL - 5, 'text-anchor': 'middle',
-        fill: g.full ? 'rgba(242,244,251,.82)' : 'rgba(242,244,251,.38)',
-        'font-size': 6.4, 'font-weight': 700, 'font-family': 'Pretendard, sans-serif',
-      });
-      t.textContent = `${g.index + 1}. ${constellationName(g.index)}`;
-      svg.appendChild(t);
-    });
-    return svg;
-  }
-
-  // ---------- summary ----------
+  // ---------- summary and the skies after the first ----------
   function renderSummary(list) {
     const host = $('stSummary');
-    const full = groupIntoConstellations(list).filter(g => g.full).length;
+    const done = groups.filter(g => g.full).length;
+    const p = constellationProgress(list.length);
     const week = Date.now() - 7 * 86400000;
     const recent = list.filter(s => Date.parse(s.earned_at) >= week).length;
-    const rest = list.length % STAR_CONSTELLATION_SIZE;
-    const bits = [tr('starsCount', { n: list.length }), tr('starsConstellationCount', { n: full })];
-    if (list.length) bits.push(tr('starsNextIn', { n: STAR_CONSTELLATION_SIZE - rest }));
+    const bits = [tr('starsCount', { n: list.length }), tr('starsConstellationCount', { n: done })];
+    if (list.length) bits.push(tr('starsNextIn', { n: p.size - p.have }));
     if (recent) bits.push(tr('starsThisWeek', { n: recent }));
     host.textContent = list.length ? bits.join(' · ') : '';
   }
+  // Only once someone has finished all thirteen: one button per sky.
+  function renderSkies() {
+    const box = $('stSkies');
+    if (!box) return;
+    const last = Math.floor(current / SKY_SIZE);
+    box.replaceChildren();
+    if (last === 0) { box.hidden = true; return; }
+    for (let n = 0; n <= last; n++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'st-sky-pill' + (n === skyNo ? ' on' : '');
+      b.setAttribute('aria-pressed', String(n === skyNo));
+      b.textContent = tr('conSky', { n: n + 1 });
+      b.addEventListener('click', () => {
+        if (n === skyNo) return;
+        skyNo = n;
+        renderSkies();
+        renderSky();
+        choose(n === last ? current % SKY_SIZE : 0, false);
+        centerOn(picked, false);
+      });
+      box.appendChild(b);
+    }
+    box.hidden = false;
+  }
 
   // ---------- share ----------
-  function shareCanvas(group) {
+  // The finished constellation on the same patch of the photograph, 1200×630.
+  // The photograph is same-origin, so the canvas can still be exported.
+  function loadImage(src) {
+    return new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error('image failed to load: ' + src));
+      i.src = src;
+    });
+  }
+  function skyPhoto() {
+    const img = $('stSkyBg');
+    if (img && img.complete && img.naturalWidth) return Promise.resolve(img);
+    return loadImage(SKY_IMAGE);
+  }
+  // The animal on the card: its painting (same-origin, so the canvas stays
+  // exportable). ctx is already in the figure's 0–100 box. Without the
+  // picture the card still carries the stars, the lines and the name.
+  async function drawFigure(ctx, f) {
+    if (!f.img) return;
+    try {
+      const art = await loadImage(f.img.src);
+      const [ix, iy, iw, ih] = f.img.box;
+      // the same fit as preserveAspectRatio="xMidYMid meet" on the page
+      const k = Math.min(iw / art.naturalWidth, ih / art.naturalHeight);
+      const dw = art.naturalWidth * k, dh = art.naturalHeight * k;
+      ctx.drawImage(art, ix + (iw - dw) / 2, iy + (ih - dh) / 2, dw, dh);
+    } catch (e) {
+      console.warn('stars: share card without the painting:', e);
+    }
+  }
+  async function shareCanvas(gi) {
     const W = 1200, H = 630;
     const cv = document.createElement('canvas');
     cv.width = W; cv.height = H;
     const ctx = cv.getContext('2d');
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, '#0a1024'); bg.addColorStop(1, '#0c1330');
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-    const neb = ctx.createRadialGradient(W * .22, H * .2, 10, W * .22, H * .2, 520);
-    neb.addColorStop(0, 'rgba(120,150,255,.28)'); neb.addColorStop(1, 'rgba(120,150,255,0)');
-    ctx.fillStyle = neb; ctx.fillRect(0, 0, W, H);
-    const r = rnd(group.index + 11);
-    ctx.fillStyle = 'rgba(255,255,255,.3)';
-    for (let i = 0; i < 180; i++) { ctx.beginPath(); ctx.arc(r() * W, r() * H, r() * 1.5 + .3, 0, 7); ctx.fill(); }
-
-    const shape = constellationShape(group.index);
-    const night = constellationNight(group.index);
-    const S = 3.3, ox = W / 2 - 50 * S, oy = 96;
-    const at = i => [ox + shape.stars[i][0] * S, oy + shape.stars[i][1] * S];
-    ctx.strokeStyle = night.accent; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
-    ctx.shadowColor = night.accent; ctx.shadowBlur = 16;
-    for (const [a, b] of shape.links) {
+    const c = constellationShape(gi);
+    const f = SKY_FIGURES[c.key];
+    const got = (groups[gi] && groups[gi].stars) || [];
+    try {
+      const img = await skyPhoto();
+      const [X, Y, S] = f.at;
+      const sw = Math.min(SKY_W, S * 2.4), sh = sw * H / W;
+      const sx = Math.max(0, Math.min(SKY_W - sw, X + S / 2 - sw / 2));
+      const sy = Math.max(0, Math.min(SKY_H - sh, Y + S / 2 - sh / 2));
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+      ctx.fillStyle = 'rgba(5,8,20,.5)';
+      ctx.fillRect(0, 0, W, H);
+    } catch (e) {
+      console.warn('stars: share card without the photo:', e);
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#0a1024'); bg.addColorStop(1, '#0c1330');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    }
+    const S = 4.1, ox = W / 2 - 50 * S, oy = 36;
+    ctx.save();
+    ctx.translate(ox, oy); ctx.scale(S, S);
+    await drawFigure(ctx, f);
+    ctx.restore();
+    const at = i => [ox + c.stars[i][0] * S, oy + c.stars[i][1] * S];
+    ctx.strokeStyle = c.accent; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+    ctx.shadowColor = c.accent; ctx.shadowBlur = 16;
+    for (const [a, b] of c.links) {
       const [x1, y1] = at(a), [x2, y2] = at(b);
       ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
     }
-    shape.stars.forEach((_, i) => {
+    c.stars.forEach((_, i) => {
       const [x, y] = at(i);
-      const s = group.stars[i];
-      const c = !s ? 'rgba(255,255,255,.2)' : s.source === 'find' ? FIND : COLOR;
-      ctx.fillStyle = c; ctx.shadowColor = c; ctx.shadowBlur = 28;
-      ctx.globalAlpha = .22; ctx.beginPath(); ctx.arc(x, y, 22, 0, 7); ctx.fill();
-      ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill();
+      const s = got[i];
+      const col = !s ? 'rgba(255,255,255,.2)' : s.source === 'find' ? FIND : COLOR;
+      ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 28;
+      ctx.globalAlpha = .22; ctx.beginPath(); ctx.arc(x, y, 20, 0, 7); ctx.fill();
+      ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.shadowBlur = 10;
-      ctx.beginPath(); ctx.arc(x, y, 3.2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill();
     });
     ctx.shadowBlur = 0;
     ctx.textAlign = 'center';
     ctx.fillStyle = '#F4F6FF';
     ctx.font = 'bold 48px Pretendard, sans-serif';
-    ctx.fillText(constellationName(group.index), W / 2, 518);
-    ctx.fillStyle = 'rgba(244,246,255,.74)';
+    ctx.fillText(constellationName(gi), W / 2, 518);
+    ctx.fillStyle = 'rgba(244,246,255,.78)';
     ctx.font = '24px Pretendard, sans-serif';
-    ctx.fillText(constellationLine(group.index), W / 2, 558);
-    ctx.fillStyle = 'rgba(244,246,255,.5)';
+    ctx.fillText(constellationLine(gi), W / 2, 558);
+    ctx.fillStyle = 'rgba(244,246,255,.55)';
     ctx.font = '20px Pretendard, sans-serif';
     ctx.fillText('weavo.art', W / 2, 600);
     return new Promise(res => cv.toBlob(res, 'image/png'));
@@ -472,14 +610,15 @@
     const btn = $('stShare');
     const done = groups.filter(g => g.full);
     if (!done.length) { toast(tr('starsShareNone')); return; }
-    const onStage = groups[Math.min(picked, groups.length - 1)];
-    const group = onStage && onStage.full ? onStage : done[done.length - 1];
+    // The one in the caption if it is finished, otherwise the newest finished.
+    const shown = skyNo * SKY_SIZE + picked;
+    const gi = groups[shown] && groups[shown].full ? shown : done[done.length - 1].index;
     btn.disabled = true;
     try {
-      const blob = await shareCanvas(group);
+      const blob = await shareCanvas(gi);
       if (!blob) throw new Error('no image');
-      const file = new File([blob], `weavo-constellation-${group.index + 1}.png`, { type: 'image/png' });
-      const text = tr('starsShareText', { name: constellationName(group.index) });
+      const file = new File([blob], `weavo-constellation-${constellationShape(gi).key}.png`, { type: 'image/png' });
+      const text = tr('starsShareText', { name: constellationName(gi) });
       const url = `${location.origin}/${CURRENT_LANG}/stars`;
       const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
       if (coarse && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -532,41 +671,54 @@
 
   // ---------- render ----------
   function hideSky() {
-    $('stStage').hidden = true;
-    $('stStripWrap').hidden = true;
-    $('stAllWrap').hidden = true;
+    if (full) setFull(false);
+    $('stSkyWrap').hidden = true;
+    $('stSkies').hidden = true;
   }
-  function renderMine(res) {
-    const empty = $('stEmpty');
-    myStars = res.rows;
+  // The sky is shown even with no stars at all — a visitor or a new member
+  // sees the thirteen outlines waiting, which is the point of the page.
+  function showSky() {
     groups = groupIntoConstellations(myStars);
     const going = groups.findIndex(g => !g.full);
-    picked = going === -1 ? groups.length - 1 : going;
+    current = going === -1 ? groups.length : going;
+    skyNo = Math.floor(current / SKY_SIZE);
+    picked = current % SKY_SIZE;
+    $('stSkyWrap').hidden = false;
+    renderSkies();
+    renderSky();
+    layoutSky();
+    if (!restoreScroll()) {
+      choose(picked, false);
+      centerOn(picked, false);
+    }
+    showHint();
+  }
+  function setEmpty(lines) {
+    const empty = $('stEmpty');
+    empty.replaceChildren();
+    lines.forEach((text, i) => {
+      const p = document.createElement('p');
+      if (i) p.className = 'st-empty-hint';
+      p.textContent = text;
+      empty.appendChild(p);
+    });
+    empty.hidden = !lines.length;
+  }
+  function renderMine(res) {
+    myStars = res.rows;
+    groups = groupIntoConstellations(myStars);
     renderSummary(myStars);
-
     $('stMineTitle').textContent = isMine() || !viewName
       ? tr('starsMineTitle') : tr('starsOtherTitle', { name: viewName });
-
-    if (res.missing || res.failed || !myStars.length) {
+    if (res.missing || res.failed) {
       hideSky();
-      empty.innerHTML = '';
-      const p = document.createElement('p');
-      p.textContent = res.missing ? tr('starsOff') : res.failed ? tr('starsLoadFailed')
-        : (isMine() || !viewId ? tr('starsEmptyMine') : tr('starsEmptyOther'));
-      empty.appendChild(p);
-      if (!res.missing && !res.failed && (isMine() || !viewId)) {
-        const hint = document.createElement('p');
-        hint.className = 'st-empty-hint';
-        hint.textContent = tr('starsEmptyMineHint');
-        empty.appendChild(hint);
-      }
-      empty.hidden = false;
+      setEmpty([tr(res.missing ? 'starsOff' : 'starsLoadFailed')]);
       return;
     }
-    empty.hidden = true;
-    $('stAllWrap').hidden = false;
-    renderStage();
-    renderStrip();
+    if (!myStars.length) {
+      setEmpty(isMine() ? [tr('starsEmptyMine'), tr('starsEmptyMineHint')] : [tr('starsEmptyOther')]);
+    } else setEmpty([]);
+    showSky();
   }
 
   async function load() {
@@ -577,15 +729,11 @@
     const owner = $('stOwner');
 
     if (!viewId) {
-      hideSky();
-      $('stSummary').textContent = '';
-      const empty = $('stEmpty');
-      empty.innerHTML = '';
-      const p = document.createElement('p');
-      p.textContent = tr('starsSignIn');
-      empty.appendChild(p);
-      empty.hidden = false;
       owner.hidden = true;
+      $('stSummary').textContent = '';
+      myStars = [];
+      setEmpty([tr('starsSignIn')]);
+      showSky();
       return;
     }
     if (wanted && wanted !== me.id) {
@@ -594,8 +742,7 @@
       if (data && data.stars_hidden) {
         hideSky();
         $('stSummary').textContent = '';
-        $('stEmpty').textContent = tr('starsHiddenNotice');
-        $('stEmpty').hidden = false;
+        setEmpty([tr('starsHiddenNotice')]);
         owner.hidden = true;
         return;
       }
@@ -615,14 +762,32 @@
       $('stOff').textContent = tr('starsOff');
       $('stOff').hidden = false;
       $('stMineWrap').hidden = true;
+      hideSky();
       return;
     }
+    const view = $('stSkyView');
+    wirePan(view);
+    // Only a person moving the sky dismisses the hint — the page's own
+    // centring on load scrolls too, and must not count.
+    let touched = false;
+    for (const ev of ['pointerdown', 'wheel', 'keydown', 'touchstart']) {
+      view.addEventListener(ev, () => { touched = true; }, { passive: true });
+    }
+    view.addEventListener('scroll', () => {
+      edges();
+      hideTip();
+      if (touched) hideHint();
+      rememberScroll();
+    }, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(() => layoutSky()).observe(view);
+    else addEventListener('resize', layoutSky);
+    $('stCapPrev').addEventListener('click', () => choose(picked - 1, true));
+    $('stCapNext').addEventListener('click', () => choose(picked + 1, true));
+    $('stSkyBig').addEventListener('click', () => setFull(true));
+    $('stSkyClose').addEventListener('click', () => setFull(false));
+    addEventListener('keydown', e => { if (e.key === 'Escape' && full) setFull(false); });
     $('stHide').addEventListener('change', e => setHidden(e.target.checked));
     $('stShare').addEventListener('click', shareConstellation);
-    $('stAll').addEventListener('click', openFull);
-    $('stFullClose').addEventListener('click', closeFull);
-    $('stFull').addEventListener('click', e => { if (e.target === $('stFull')) closeFull(); });
-    addEventListener('keydown', e => { if (e.key === 'Escape' && fullOpen) closeFull(); });
     await load();
   })();
 
