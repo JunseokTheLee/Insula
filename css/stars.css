@@ -317,19 +317,20 @@ body.stars-dark{
    Each is a painting (sky-figures.js `img`), told apart by opacity alone —
    no filters (see the header). Until a constellation is complete its
    animal is barely there, and being filled looks exactly like not yet
-   started (user decision 2026-09-26: a fifth of the old faint state or
-   less) — only its stars show the progress. Complete, it is bright, its
+   started (user decision 2026-09-26: 0.03 — a tenth of the old faint
+   state), and it has no name on the sky until then — only its stars and,
+   while it is being filled, its count show the progress. Complete, it is bright, its
    lines in its own colour (--acc); and the first time its owner sees it
    complete it lights up all at once (.reveal, js/stars.js), a bloom of its
    colour swelling behind it. */
 .st-con-hit{fill:transparent;cursor:pointer;outline:none;}
 .st-con-hit:focus-visible{stroke:#FFD98E;stroke-opacity:.7;stroke-width:1.5px;stroke-dasharray:6 6;vector-effect:non-scaling-stroke;}
-.st-fig-art{opacity:.06;transition:opacity .45s ease;}
+.st-fig-art{opacity:.03;transition:opacity .45s ease;}
 .st-con.done .st-fig-art{opacity:.94;}
 .st-con.done.sel .st-fig-art,.st-con.done .st-con-hit:focus-visible + .st-fig .st-fig-art{opacity:1;}
 /* backwards, not both: once the reveal ends the painting settles on
    whatever its state asks for (.94, or 1 when chosen). */
-@keyframes st-reveal{ 0%{opacity:.06;} 100%{opacity:1;} }
+@keyframes st-reveal{ 0%{opacity:.03;} 100%{opacity:1;} }
 .st-con.done.reveal .st-fig-art{animation:st-reveal 1.1s cubic-bezier(.3,.7,.2,1) .6s backwards;}
 @keyframes st-bloom{ 0%{opacity:0;transform:scale(.55);} 45%{opacity:.85;transform:scale(1);} 100%{opacity:0;transform:scale(1.25);} }
 .st-bloom{opacity:0;pointer-events:none;transform-box:fill-box;transform-origin:center;}

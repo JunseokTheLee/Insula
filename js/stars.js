@@ -170,6 +170,8 @@
 
   // ---------- the panorama ----------
   function stateOf(gi) { return gi < current ? 'done' : gi === current ? 'going' : 'locked'; }
+  // A constellation's name is kept back until it is complete.
+  function shownName(gi) { return stateOf(gi) === 'done' ? constellationName(gi) : tr('starsConHidden'); }
   function drawConstellation(svg, k, defs) {
     const gi = skyNo * SKY_SIZE + k;
     const c = constellationShape(gi);
@@ -185,7 +187,7 @@
 
     // Pressing the constellation (not one of its stars) chooses it.
     const pick = el('rect', { x: X, y: Y, width: S, height: S, class: 'st-con-hit', tabindex: '0', role: 'button' });
-    pick.setAttribute('aria-label', tr('starsPickCon', { name: constellationName(gi) }));
+    pick.setAttribute('aria-label', tr('starsPickCon', { name: shownName(gi) }));
     pick.addEventListener('click', () => choose(k, true));
     pick.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(k, true); } });
     g.appendChild(pick);
@@ -230,15 +232,19 @@
       else drawSlot(g, x, y, state === 'going', state === 'going' && i === got.length, c.accent);
     });
 
+    // The name only once it is complete (user decision 2026-09-26); the one
+    // being filled shows just how far along it is, the rest nothing.
     const L = f.label || [50, 106];
-    const t = el('text', { x: X + L[0] * s, y: Y + L[1] * s + 6, class: 'st-con-label', 'aria-hidden': 'true' });
-    t.textContent = constellationName(gi);
-    if (state === 'going') {
-      const n = el('tspan', { class: 'st-con-count', dx: 6 });
-      n.textContent = `${got.length}/${c.stars.length}`;
-      t.appendChild(n);
+    if (state !== 'locked') {
+      const t = el('text', { x: X + L[0] * s, y: Y + L[1] * s + 6, class: 'st-con-label', 'aria-hidden': 'true' });
+      if (state === 'done') t.textContent = constellationName(gi);
+      else {
+        const n = el('tspan', { class: 'st-con-count' });
+        n.textContent = `${got.length}/${c.stars.length}`;
+        t.appendChild(n);
+      }
+      g.appendChild(t);
     }
-    g.appendChild(t);
     svg.appendChild(g);
   }
   function renderSky() {
@@ -384,11 +390,16 @@
     const c = constellationShape(gi);
     const got = (groups[gi] && groups[gi].stars) || [];
     const state = stateOf(gi);
+    // Until it is complete the caption keeps the constellation a secret too:
+    // no name, no group, no line that would give the animal away.
+    const done = state === 'done';
     $('stSkyCap').style.setProperty('--cap-accent', c.accent);
-    $('stCapTag').textContent = constellationGroup(gi);
+    $('stCapTag').textContent = done ? constellationGroup(gi) : '';
     $('stCapNo').textContent = `${picked + 1} / ${SKY_SIZE}`;
-    $('stCapName').textContent = constellationName(gi);
-    $('stCapLine').textContent = state === 'locked' ? tr('starsConLocked', { n: c.stars.length }) : constellationLine(gi);
+    $('stCapName').textContent = shownName(gi);
+    $('stCapLine').textContent = done ? constellationLine(gi)
+      : state === 'going' ? tr('starsConHiddenLine', { n: c.stars.length - got.length })
+      : tr('starsConLocked', { n: c.stars.length });
     const pips = $('stCapPips');
     pips.replaceChildren();
     c.stars.forEach((_, i) => {

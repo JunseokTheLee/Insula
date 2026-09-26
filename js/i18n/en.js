@@ -428,6 +428,8 @@ const T = {
   starsTipOpen: 'View artwork ›',
   starsEmptySlot: 'An empty place, for now',
   starsConLocked: 'A constellation of {n} stars, still ahead.',
+  starsConHidden: 'A constellation yet to appear',
+  starsConHiddenLine: 'Finish {n} more to reveal it.',
   starsConDone: 'Complete',
   starsPickCon: 'Show {name}',
   starsHideLabel: 'Hide my constellations from others',

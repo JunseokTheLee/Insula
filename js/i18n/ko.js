@@ -428,6 +428,8 @@ const T = {
   starsTipOpen: '작품 보기 ›',
   starsEmptySlot: '아직 비어 있는 자리',
   starsConLocked: '별 {n}개로 완성되는 별자리입니다.',
+  starsConHidden: '아직 드러나지 않은 별자리',
+  starsConHiddenLine: '별 {n}개를 더 모으면 모습이 드러납니다.',
   starsConDone: '완성',
   starsPickCon: '{name} 보기',
   starsHideLabel: '내 별자리를 다른 사람에게 숨기기',
