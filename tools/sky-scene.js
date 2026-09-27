@@ -18,7 +18,7 @@
 //   sky/night-bare.webp              the looped photograph with the trees painted out
 //   sky/trees-{left,mid,right}.webp  the tree silhouettes, cropped
 //   sky/sea-glint.webp               the lights on the water, lifted out
-//   sky/sea-ripple-{a,b}.webp        faint wave streaks, two random sets
+//   sky/sea-wave-{a,b}.webp          wave crests that roll in, two random sets
 //   js/sky-scene.js                  where each layer sits + the twinkling stars
 //                                    (the page reads it; do not edit it by hand)
 //
@@ -234,37 +234,48 @@ async function main() {
     await sharp(buf, { raw: { width: w, height: gh, channels: 4 } }).webp({ quality: 85, alphaQuality: 80 }).toFile(path.join(OUT_DIR, 'sea-glint.webp'));
     layers.glint = { x: bx, y: by, w, h: gh };
   }
-  // Ripples: short pale streaks, denser and longer towards the viewer, only
-  // on water. Two random sets drift against each other.
+  // Waves (2026-09-27, "파도 치는 효과"): a band of wave crests — a wavy
+  // line of foam broken into runs, a paler wave face under it — drawn at the
+  // TOP of an image as tall as the sea. The page slides the image down the
+  // sea (translateY 0 → 100%), growing it as it comes (perspective) and
+  // fading it in and out, several copies apart, so crest after crest rolls
+  // in towards the viewer. Two random sets, so neighbours differ.
+  const BAND = 16;
   for (const [key, seed] of [['a', 7], ['b', 19]]) {
-    const { x: bx, y: by, w, h } = seaBox;
+    const { w, h } = seaBox;
     const buf = Buffer.alloc(w * h * 4);
     const r = rnd(seed);
-    for (let y = by; y < H; y++) {
-      const depth = (y - by) / h;                 // 0 far → 1 near
-      const perRow = Math.round(w / 1916 * (10 + depth * 38));
-      for (let n = 0; n < perRow; n++) {
-        const x = bx + Math.floor(r() * w);
-        const len = Math.round(3 + r() * (6 + depth * 26));
-        const peak = (0.10 + r() * 0.22) * (0.6 + depth * 0.6);
-        for (let d = 0; d < len; d++) {
-          const xx = x + d;
-          if (xx >= bx + w || !isSea(xx, y)) continue;
-          const t = d / Math.max(1, len - 1), a = peak * Math.sin(Math.PI * t);
-          const o = ((y - by) * w + (xx - bx)) * 4;
-          buf[o] = 175; buf[o + 1] = 196; buf[o + 2] = 255;
-          buf[o + 3] = Math.max(buf[o + 3], Math.round(a * 255));
-        }
+    const p1 = r() * 6.3, p2 = r() * 6.3;
+    // Foam runs: 40–220 px of crest, 15–90 px of calm between.
+    const foam = new Float32Array(w);
+    for (let x = Math.floor(r() * 60); x < w;) {
+      const len = 40 + Math.floor(r() * 180), peak = 0.55 + r() * 0.45;
+      for (let d = 0; d < len && x + d < w; d++) foam[x + d] = peak * Math.sin(Math.PI * d / len) ** 0.6;
+      x += len + 15 + Math.floor(r() * 75);
+    }
+    for (let x = 0; x < w; x++) {
+      const I = foam[x];
+      if (!I) continue;
+      const cy = 5 + 1.8 * Math.sin(x / 41 + p1) + 1.1 * Math.sin(x / 17 + p2);
+      for (let y = 0; y < BAND && y < h; y++) {
+        const crest = Math.exp(-(((y - cy) / 1.15) ** 2));
+        const face = y > cy ? 0.42 * Math.exp(-(y - cy) / 4.5) : 0;
+        const a = Math.min(1, I * (crest + face));
+        if (a < 0.02) continue;
+        const k = crest / (crest + face + 1e-6);             // 1 on the crest, 0 on the face
+        const o = (y * w + x) * 4;
+        buf[o] = Math.round(150 + 80 * k); buf[o + 1] = Math.round(182 + 58 * k); buf[o + 2] = 255;
+        buf[o + 3] = Math.round(a * 235);
       }
     }
-    await sharp(buf, { raw: { width: w, height: h, channels: 4 } }).webp({ quality: 80, alphaQuality: 70 }).toFile(path.join(OUT_DIR, `sea-ripple-${key}.webp`));
-    layers['ripple' + key.toUpperCase()] = { ...seaBox };
+    await sharp(buf, { raw: { width: w, height: h, channels: 4 } }).webp({ quality: 85, alphaQuality: 85 }).toFile(path.join(OUT_DIR, `sea-wave-${key}.webp`));
+    layers['wave' + key.toUpperCase()] = { ...seaBox };
   }
 
   // ---- stars to twinkle: the most striking star in each patch of sky ----
   // A grid keeps them spread over the whole sky instead of all landing in
   // the Milky Way, where the brightest points are.
-  const COLS = 12, ROWS = 3, TOP = 14, BOTTOM = 540;
+  const COLS = 20, ROWS = 4, TOP = 14, BOTTOM = 540;
   const best = new Map();
   for (let y = TOP; y < BOTTOM; y++) for (let x = 7; x < W - 7; x++) {
     const p = y * W + x, l = lumAt(photoL, p);
@@ -285,7 +296,7 @@ async function main() {
   }
   const kept = [];
   for (const c of [...best.values()].sort((a, b) => b[2] - a[2])) {
-    if (!kept.some(k => (k[0] - c[0]) ** 2 + (k[1] - c[1]) ** 2 < 60 * 60)) kept.push(c);
+    if (!kept.some(k => (k[0] - c[0]) ** 2 + (k[1] - c[1]) ** 2 < 42 * 42)) kept.push(c);
   }
   const twinkles = kept.sort((a, b) => a[0] - b[0])
     .map(([x, y, c]) => [x, y, +(4.5 + Math.min(1, (c - 10) / 120) * 5).toFixed(1)]);
@@ -305,14 +316,14 @@ const SKY_SCENE = {
     { key: 'right', src: '/sky/trees-right.webp?v=${v}', box: ${box(layers.right)} },
   ],
   glint: { src: '/sky/sea-glint.webp?v=${v}', box: ${box(layers.glint)} },
-  ripples: [
-    { src: '/sky/sea-ripple-a.webp?v=${v}', box: ${box(layers.rippleA)} },
-    { src: '/sky/sea-ripple-b.webp?v=${v}', box: ${box(layers.rippleB)} },
+  waves: [
+    { src: '/sky/sea-wave-a.webp?v=${v}', box: ${box(layers.waveA)} },
+    { src: '/sky/sea-wave-b.webp?v=${v}', box: ${box(layers.waveB)} },
   ],
 };
 const SKY_TWINKLES = ${JSON.stringify(twinkles)};
 `);
-  for (const f of ['night-bare', 'trees-left', 'trees-mid', 'trees-right', 'sea-glint', 'sea-ripple-a', 'sea-ripple-b']) {
+  for (const f of ['night-bare', 'trees-left', 'trees-mid', 'trees-right', 'sea-glint', 'sea-wave-a', 'sea-wave-b']) {
     console.log(`${f}.webp ${(fs.statSync(path.join(OUT_DIR, f + '.webp')).size / 1024).toFixed(1)} KB`);
   }
   console.log('split', split1, split2, JSON.stringify(layers), 'twinkles', twinkles.length);

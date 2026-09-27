@@ -247,7 +247,7 @@ body.stars-dark{
   padding:7px 14px;border-radius:var(--r-full);border:1px solid var(--border-strong);background:rgba(255,255,255,.04);
 }
 .st-sky-pill.on{color:#0b1020;background:var(--st-gold);border-color:transparent;}
-.st-sky-wrap{position:relative;background:#050814;}
+.st-sky-wrap{position:relative;background:#050814;padding-bottom:12px;}
 /* The sky has no end (2026-09-26, "360도 돌아보는 느낌"): the view does not
    scroll at all. js/stars.js moves the track below with a transform —
    drags, a fling's momentum, horizontal wheel and trackpad swipes — and
@@ -268,11 +268,13 @@ body.stars-dark{
 .st-sky-bg{position:absolute;top:0;left:0;height:100%;width:50%;display:block;-webkit-user-drag:none;pointer-events:none;}
 .st-sky-layer{position:absolute;inset:0;width:100%;height:100%;display:block;}
 /* Soft fades at both sides: the sky goes on either way. */
-.st-sky-wrap::before,.st-sky-wrap::after{
+/* On the view, not the wrap: the caption card now sits below the sky and
+   must not be shaded. */
+.st-sky-view::before,.st-sky-view::after{
   content:'';position:absolute;top:0;bottom:0;width:48px;z-index:2;pointer-events:none;
 }
-.st-sky-wrap::before{left:0;background:linear-gradient(90deg,rgba(5,8,20,.55),transparent);}
-.st-sky-wrap::after{right:0;background:linear-gradient(270deg,rgba(5,8,20,.55),transparent);}
+.st-sky-view::before{left:0;background:linear-gradient(90deg,rgba(5,8,20,.55),transparent);}
+.st-sky-view::after{right:0;background:linear-gradient(270deg,rgba(5,8,20,.55),transparent);}
 
 .st-sky-tools{position:absolute;top:14px;right:14px;z-index:3;display:flex;gap:8px;}
 .st-sky-btn{
@@ -288,11 +290,11 @@ body.stars-dark{
   background:rgba(8,12,28,.55);border:1px solid rgba(255,255,255,.12);white-space:nowrap;
 }
 
-/* The caption card: which constellation, and how far along. It sits over
-   the horizon — below y 640 of the picture, where no animal reaches — so
-   it never covers the sky, on a phone either (2026-09-26). */
+/* The caption card: which constellation, and how far along. It sits BELOW
+   the picture (2026-09-27), not over its horizon as before: the sea and the
+   trees move now and the card hid them. */
 .st-sky-cap{
-  position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:3;
+  position:relative;z-index:3;margin:12px auto 0;
   width:min(580px,calc(100% - 24px));display:flex;align-items:center;gap:8px;padding:12px 10px;
   border-radius:18px;background:rgba(7,11,25,.8);border:1px solid rgba(255,255,255,.12);
   box-shadow:0 18px 50px rgba(0,0,0,.45);
@@ -352,23 +354,35 @@ body.stars-dark{
 .st-con-count{fill:var(--acc);}
 /* ---------- the living photograph (2026-09-27) ----------
    js/sky-scene.js layers over each copy of the photograph (stars.js
-   buildScene): the sea shimmers, the trees lean in the wind, the brightest
-   stars twinkle, and one shooting star crosses every twenty seconds. Only
+   buildScene): waves roll in over the sea, the trees lean in the wind,
+   the brightest stars twinkle, and a shooting star crosses every ten
+   seconds. Only
    transform and opacity move, so it all runs on the compositor — no script
    per frame, no repaint, no filters. .st-offscreen (the sky scrolled out of
    view) stops it all. */
 .st-scene{position:absolute;top:0;height:100%;pointer-events:none;}
 .st-scene img{position:absolute;display:block;max-width:none;-webkit-user-drag:none;user-select:none;}
-/* The sea: faint wave streaks drift against each other, and the light on
-   the water swells and wavers. */
-.st-sea-ripple{opacity:.5;animation:st-ripple 9s ease-in-out infinite alternate;}
-.st-sea-ripple-1{animation-duration:12s;animation-delay:-5s;animation-direction:alternate-reverse;}
-@keyframes st-ripple{ from{transform:translateX(-.5%);opacity:.3;} to{transform:translateX(.5%);opacity:.75;} }
+/* The sea (2026-09-27, "파도 치는 효과"): crests of foam roll in from the
+   far shore towards the viewer. Each .st-wave is a band drawn at the top of
+   an image as tall as the sea box; it slides down the box (translateY 0 →
+   100%), growing as it comes near (perspective), and fades in only below
+   the island and shore lights (~30%) so it never crosses them. Four copies
+   a quarter-period apart (stars.js buildScene) keep the waves coming.
+   Under them, the light on the water swells and dims. */
+.st-waves{position:absolute;overflow:hidden;}
+.st-wave{transform-origin:50% 0;opacity:0;animation:st-wave 8s cubic-bezier(.45,.05,.8,.6) infinite;}
+@keyframes st-wave{
+  0%{transform:translateY(0) scale(.75,.5);opacity:0;}
+  30%{opacity:0;}
+  42%{opacity:1;}
+  82%{opacity:.9;}
+  100%{transform:translateY(100%) scale(1.3,2.1);opacity:0;}
+}
 .st-sea-glint{transform-origin:50% 0;animation:st-glint 5.5s ease-in-out infinite;}
 @keyframes st-glint{
-  0%,100%{transform:translateX(0) scaleY(1);opacity:.35;}
-  35%{transform:translateX(.12%) scaleY(1.08);opacity:.9;}
-  70%{transform:translateX(-.1%) scaleY(1.03);opacity:.55;}
+  0%,100%{transform:scaleY(1);opacity:.35;}
+  35%{transform:scaleY(1.1);opacity:.95;}
+  70%{transform:scaleY(1.04);opacity:.55;}
 }
 /* The trees lean from their roots (the bottom edge). A skew moves every
    point by its height alone, so the left and right groups — which meet
@@ -376,9 +390,9 @@ body.stars-dark{
 .st-tree{transform-origin:50% 100%;animation:st-sway 7s ease-in-out infinite;}
 .st-tree-mid{animation-duration:5.8s;animation-delay:-2.2s;}
 @keyframes st-sway{
-  0%,100%{transform:skewX(-.45deg);}
-  45%{transform:skewX(.6deg);}
-  60%{transform:skewX(.4deg);}
+  0%,100%{transform:skewX(-.9deg);}
+  45%{transform:skewX(1.2deg);}
+  60%{transform:skewX(.8deg);}
 }
 /* A twinkling star: a soft glow and a thin cross, breathing in size and
    light. Positioned by its centre. */
@@ -400,13 +414,13 @@ body.stars-dark{
 /* The shooting star: the wrapper sits where it starts and turns to its
    angle (js/stars.js wireMeteor re-places it on every iteration while it
    is invisible); the tail runs along it for the first second of each
-   twenty. */
+   ten. */
 .st-meteor{position:absolute;width:0;height:0;pointer-events:none;transform-origin:0 0;}
 .st-meteor-tail{
   position:absolute;left:0;top:-1px;width:170px;height:2px;border-radius:2px;
   background:linear-gradient(90deg,rgba(255,255,255,0),rgba(190,212,255,.5) 70%,#fff);
   transform-origin:100% 50%;opacity:0;
-  animation:st-meteor 20s linear 3s infinite;
+  animation:st-meteor 10s linear 3s infinite;
 }
 .st-meteor-tail::after{
   content:"";position:absolute;right:-3px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;
@@ -414,9 +428,9 @@ body.stars-dark{
 }
 @keyframes st-meteor{
   0%{opacity:0;transform:translateX(-60px) scaleX(.2);}
-  1%{opacity:1;}
-  4.5%{opacity:.9;transform:translateX(360px) scaleX(1);}
-  6%{opacity:0;transform:translateX(420px) scaleX(.6);}
+  2%{opacity:1;}
+  9%{opacity:.9;transform:translateX(360px) scaleX(1);}
+  12%{opacity:0;transform:translateX(420px) scaleX(.6);}
   100%{opacity:0;transform:translateX(420px) scaleX(.6);}
 }
 .st-offscreen .st-scene img,.st-offscreen .st-twk,.st-offscreen .st-meteor-tail{animation-play-state:paused;}
@@ -424,8 +438,10 @@ body.stars-dark{
 /* ---------- full screen ----------
    The same sky, fixed over everything. Nothing is redrawn — the layout
    simply gets more room. */
-.st-sky-wrap.full{position:fixed;inset:0;z-index:600;}
-.st-sky-wrap.full .st-sky-view{height:100vh;height:100dvh;max-height:none;min-height:0;}
+/* Full screen: the sky takes what the caption card leaves. */
+.st-sky-wrap.full{position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));}
+.st-sky-wrap.full .st-sky-view{flex:1 1 auto;height:auto;max-height:none;min-height:0;}
+.st-sky-wrap.full .st-sky-cap{flex:none;margin-top:10px;}
 .st-sky-wrap.full .st-sky-tools{top:calc(14px + env(safe-area-inset-top,0px));}
 /* .main is its own stacking context (z-index 1), level with the header and
    the footer; lift it while the sky is full screen so nothing that comes
@@ -437,7 +453,7 @@ html.st-full-open .stars-dark .stars-page::before{animation-play-state:paused;}
 
 @media (max-width:760px){
   .st-sky-view{height:84vh;height:84svh;min-height:420px;}
-  .st-sky-cap{bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:10px 8px;}
+  .st-sky-cap{padding:10px 8px;}
   .st-cap-name{font-size:18px;}
   .st-cap-line{font-size:12.5px;}
   .st-sky-tools{top:10px;right:10px;}
@@ -457,7 +473,8 @@ html.st-full-open .stars-dark .stars-page::before{animation-play-state:paused;}
   .stars-page h1,.st-brand-mark,
   .stars-dark .stars-page::before,
   .st-spark,.st-line-lit,.st-next,.st-con.reveal .st-fig-art,.st-con.reveal .st-bloom,
-  .st-sea-ripple,.st-sea-glint,.st-tree,.st-twk{animation:none !important;}
+  .st-wave,.st-sea-glint,.st-tree,.st-twk{animation:none !important;}
+  .st-waves{display:none;}
   .st-twk{opacity:.7;}
   .st-meteor{display:none;}
   .st-tip,.st-burst,.st-fig-art{transition:none;}

@@ -106,7 +106,7 @@
     return { halo };
   }
   // ---------- the living photograph (2026-09-27) ----------
-  // The sea shimmers, the trees lean in the wind, the brightest stars
+  // Waves roll in over the sea, the trees lean in the wind, the brightest stars
   // twinkle (js/sky-scene.js, made by tools/sky-scene.js). Every one of them
   // is an HTML element that only changes transform and opacity, so the
   // browser moves them on the compositor: no script runs per frame and
@@ -132,7 +132,23 @@
     const sc = document.createElement('div');
     sc.className = 'st-scene';
     sc.setAttribute('aria-hidden', 'true');
-    SKY_SCENE.ripples.forEach((r, i) => sc.appendChild(sceneImg(r.src, r.box, 'st-sea-ripple st-sea-ripple-' + i)));
+    // Waves: crests roll in from the far shore towards the viewer — the
+    // same band slid down the sea box, WAVE_COUNT copies spread over one
+    // period (css .st-wave), the two random sets alternating.
+    if (SKY_SCENE.waves) {
+      const box = SKY_SCENE.waves[0].box;
+      const sea = boxStyle(document.createElement('div'), box);
+      sea.className = 'st-waves';
+      const WAVE_COUNT = 4, PERIOD = 8;
+      for (let i = 0; i < WAVE_COUNT; i++) {
+        const wv = SKY_SCENE.waves[i % SKY_SCENE.waves.length];
+        const im = sceneImg(wv.src, [0, 0, SKY_W, SKY_H], 'st-wave');
+        im.style.left = '0'; im.style.top = '0'; im.style.width = '100%'; im.style.height = '100%';
+        im.style.animationDelay = (-i * PERIOD / WAVE_COUNT).toFixed(2) + 's';
+        sea.appendChild(im);
+      }
+      sc.appendChild(sea);
+    }
     sc.appendChild(sceneImg(SKY_SCENE.glint.src, SKY_SCENE.glint.box, 'st-sea-glint'));
     // Fixed durations from a seeded generator: every copy twinkles the same
     // star at the same moment, so no seam shows between copies.
@@ -153,7 +169,7 @@
     for (const t of SKY_SCENE.trees) sc.appendChild(sceneImg(t.src, t.box, 'st-tree st-tree-' + t.key));
     return sc;
   }
-  // One shooting star every twenty seconds (the CSS clock), somewhere new
+  // One shooting star every ten seconds (the CSS clock), somewhere new
   // each time: its place and angle change while it is invisible, on the
   // animation's own iteration event — no timer.
   function wireMeteor(view) {
