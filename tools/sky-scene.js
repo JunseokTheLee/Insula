@@ -258,14 +258,16 @@ async function main() {
       if (!I) continue;
       const cy = 5 + 1.8 * Math.sin(x / 41 + p1) + 1.1 * Math.sin(x / 17 + p2);
       for (let y = 0; y < BAND && y < h; y++) {
-        const crest = Math.exp(-(((y - cy) / 1.15) ** 2));
-        const face = y > cy ? 0.42 * Math.exp(-(y - cy) / 4.5) : 0;
+        const crest = Math.exp(-(((y - cy) / 1.6) ** 2));
+        const face = y > cy ? 0.3 * Math.exp(-(y - cy) / 5) : 0;
         const a = Math.min(1, I * (crest + face));
         if (a < 0.02) continue;
         const k = crest / (crest + face + 1e-6);             // 1 on the crest, 0 on the face
         const o = (y * w + x) * 4;
-        buf[o] = Math.round(150 + 80 * k); buf[o + 1] = Math.round(182 + 58 * k); buf[o + 2] = 255;
-        buf[o + 3] = Math.round(a * 235);
+        // Moonlit water, not white paint: the crest a soft grey-blue, the face
+        // barely lighter than the sea itself (2026-09-27, "너무 밝아").
+        buf[o] = Math.round(70 + 60 * k); buf[o + 1] = Math.round(92 + 62 * k); buf[o + 2] = Math.round(140 + 60 * k);
+        buf[o + 3] = Math.round(a * 150);
       }
     }
     await sharp(buf, { raw: { width: w, height: h, channels: 4 } }).webp({ quality: 85, alphaQuality: 85 }).toFile(path.join(OUT_DIR, `sea-wave-${key}.webp`));
@@ -330,6 +332,8 @@ const SKY_TWINKLES = ${JSON.stringify(twinkles)};
 }
 function stamp() {
   const d = new Date();
-  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  // Date and time: a layer made again the same day must still get a new
+  // ?v=, or browsers keep the old one for the week /sky/ is cached.
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}`;
 }
 main().catch(e => { console.error('sky-scene:', e); process.exit(1); });
