@@ -1,7 +1,9 @@
 // The sky page (/{lang}/stars).
 //
 // One panorama (user decision 2026-09-26): a photograph of the night sky
-// (sky/night-loop.webp) fitted to the height of the screen and dragged sideways,
+// (sky/night-loop.webp; on screen the tree-less sky/night-bare.webp with the
+// trees, sea and twinkles of js/sky-scene.js moving over it — buildScene)
+// fitted to the height of the screen and dragged sideways,
 // with the thirteen constellations of js/constellations.js laid on it as
 // painted, translucent animals (js/sky-figures.js). Every finished artwork
 // lights the next star. Constellations already finished are bright and take
@@ -20,8 +22,9 @@
 //
 // Needs sb, me, tr, common.js (getSiteSettings/toast/openArtworkById/
 // artworkUrl/cdnUrl), lightbox.js (the artwork a star opens),
-// constellations.js (which star goes where) and sky-figures.js (the
-// paintings and where they sit) already loaded.
+// constellations.js (which star goes where), sky-figures.js (the
+// paintings and where they sit) and sky-scene.js (the moving layers;
+// optional — without it the whole photograph is shown still) already loaded.
 "use strict";
 
 (function starsPage() {
@@ -102,22 +105,84 @@
     };
     return { halo };
   }
-  // A few pinpricks over the photograph that fade in and out on three
-  // different clocks, so the sky is never quite still. Three nodes, opacity
-  // only. They stay above the horizon (y < 620).
-  function twinkles(svg) {
-    const r = rnd(11);
-    for (let b = 0; b < 3; b++) {
-      let d = '';
-      for (let i = 0; i < 26; i++) {
-        const x = (r() * SKY_W).toFixed(1), y = (r() * 600 + 20).toFixed(1), q = +(r() * 1.1 + .5).toFixed(2);
-        d += `M${x} ${y} m${-q} 0 a${q} ${q} 0 1 0 ${q * 2} 0 a${q} ${q} 0 1 0 ${-q * 2} 0 `;
-      }
-      const p = el('path', { d, fill: '#fff', opacity: .4, class: 'st-tw', 'aria-hidden': 'true' });
-      p.style.animationDuration = (6 + b * 1.7).toFixed(1) + 's';
-      p.style.animationDelay = (-b * 2.3).toFixed(1) + 's';
-      svg.appendChild(p);
+  // ---------- the living photograph (2026-09-27) ----------
+  // The sea shimmers, the trees lean in the wind, the brightest stars
+  // twinkle (js/sky-scene.js, made by tools/sky-scene.js). Every one of them
+  // is an HTML element that only changes transform and opacity, so the
+  // browser moves them on the compositor: no script runs per frame and
+  // nothing is repainted — the SVG above stays still. (The twinkles used to
+  // be SVG paths whose opacity changed, which repaints the whole SVG.)
+  // One scene per copy of the photograph, placed exactly like it.
+  const hasScene = () => typeof SKY_SCENE !== 'undefined' && typeof SKY_TWINKLES !== 'undefined';
+  function boxStyle(n, [x, y, w, h]) {
+    n.style.left = (x / SKY_W * 100) + '%';
+    n.style.top = (y / SKY_H * 100) + '%';
+    n.style.width = (w / SKY_W * 100) + '%';
+    n.style.height = (h / SKY_H * 100) + '%';
+    return n;
+  }
+  function sceneImg(src, box, cls) {
+    const im = document.createElement('img');
+    im.src = src; im.alt = ''; im.decoding = 'async';
+    im.className = cls;
+    im.draggable = false;
+    return boxStyle(im, box);
+  }
+  function buildScene() {
+    const sc = document.createElement('div');
+    sc.className = 'st-scene';
+    sc.setAttribute('aria-hidden', 'true');
+    SKY_SCENE.ripples.forEach((r, i) => sc.appendChild(sceneImg(r.src, r.box, 'st-sea-ripple st-sea-ripple-' + i)));
+    sc.appendChild(sceneImg(SKY_SCENE.glint.src, SKY_SCENE.glint.box, 'st-sea-glint'));
+    // Fixed durations from a seeded generator: every copy twinkles the same
+    // star at the same moment, so no seam shows between copies.
+    const r = rnd(5);
+    for (const [x, y, s] of SKY_TWINKLES) {
+      const t = document.createElement('span');
+      t.className = 'st-twk' + (s >= 8 ? ' big' : '');
+      const d = s * 3.2;                     // glow diameter, photograph pixels
+      t.style.left = (x / SKY_W * 100) + '%';
+      t.style.top = (y / SKY_H * 100) + '%';
+      t.style.width = (d / SKY_W * 100) + '%';
+      t.style.animationDuration = (2.6 + r() * 3.4).toFixed(2) + 's';
+      t.style.animationDelay = (-r() * 6).toFixed(2) + 's';
+      sc.appendChild(t);
     }
+    // The left and right groups meet across the loop seam: same class, same
+    // clock. The middle group has its own.
+    for (const t of SKY_SCENE.trees) sc.appendChild(sceneImg(t.src, t.box, 'st-tree st-tree-' + t.key));
+    return sc;
+  }
+  // One shooting star every twenty seconds (the CSS clock), somewhere new
+  // each time: its place and angle change while it is invisible, on the
+  // animation's own iteration event — no timer.
+  function wireMeteor(view) {
+    if (view.querySelector('.st-meteor')) return;
+    const m = document.createElement('div');
+    m.className = 'st-meteor';
+    m.setAttribute('aria-hidden', 'true');
+    const tail = document.createElement('span');
+    tail.className = 'st-meteor-tail';
+    m.appendChild(tail);
+    const place = () => {
+      const w = view.clientWidth || 800;
+      const k = Math.max(.45, Math.min(1, w / 900));          // shorter on a phone
+      const left = Math.random() < .5;
+      const ang = 22 + Math.random() * 20;
+      m.style.left = ((left ? 35 : 8) + Math.random() * 55) + '%';
+      m.style.top = (4 + Math.random() * 26) + '%';
+      m.style.transform = `rotate(${left ? 180 - ang : ang}deg) scale(${k})`;
+    };
+    place();
+    tail.addEventListener('animationiteration', place);
+    view.appendChild(m);
+  }
+  // Nothing moves while the sky is off screen.
+  function wirePause(wrap, view) {
+    if (!('IntersectionObserver' in window)) return;
+    new IntersectionObserver(es => {
+      for (const e of es) wrap.classList.toggle('st-offscreen', !e.isIntersecting);
+    }).observe(view);
   }
 
   // ---------- one lit star ----------
@@ -263,7 +328,6 @@
     // The same sky once per copy on the track, each shifted by one width.
     for (let i = 0; i < copies; i++) {
       const copy = el('g', { transform: `translate(${i * SKY_W} 0)` });
-      twinkles(copy);
       resetAnim();
       for (const k of order) drawConstellation(copy, k, defs);
       svg.appendChild(copy);
@@ -296,7 +360,11 @@
   // cloned for the rest — the same file, so it comes from the cache.
   function placePhotos() {
     const cv = $('stSkyCanvas'), first = $('stSkyBg'), layer = $('stSkyLayer');
-    cv.querySelectorAll('.st-sky-bg.st-copy').forEach(n => n.remove());
+    cv.querySelectorAll('.st-sky-bg.st-copy, .st-scene').forEach(n => n.remove());
+    // The markup loads the bare photograph (no trees); without the scene
+    // file (a stale cache) the page falls back to the whole one.
+    const scene = hasScene();
+    if (!scene && first.src.includes('night-bare')) first.src = SKY_IMAGE;
     for (let i = 0; i < copies; i++) {
       let im = first;
       if (i) {
@@ -308,6 +376,16 @@
       }
       im.style.left = (i * 100 / copies) + '%';
       im.style.width = (100 / copies) + '%';
+    }
+    // After every photograph, so each scene lies over all of them (a tree
+    // leaning over the seam covers the next copy's photograph too).
+    if (scene) {
+      for (let i = 0; i < copies; i++) {
+        const sc = buildScene();
+        sc.style.left = (i * 100 / copies) + '%';
+        sc.style.width = (100 / copies) + '%';
+        cv.insertBefore(sc, layer);
+      }
     }
   }
   function layoutSky() {
@@ -692,9 +770,12 @@
       i.src = src;
     });
   }
+  // The card wants the whole photograph. The one on the page is the bare
+  // photograph under the swaying trees (js/sky-scene.js), so it is only
+  // reused when it is the full one (the scene failed to load).
   function skyPhoto() {
     const img = $('stSkyBg');
-    if (img && img.complete && img.naturalWidth) return Promise.resolve(img);
+    if (img && img.complete && img.naturalWidth && !img.src.includes('night-bare')) return Promise.resolve(img);
     return loadImage(SKY_IMAGE);
   }
   // The animal on the card: its painting (same-origin, so the canvas stays
@@ -960,6 +1041,8 @@
     // Only a person moving the sky dismisses the hint (wirePan does it);
     // the page's own centring on load must not count.
     wirePan(view);
+    if (hasScene() && !reduceMotion()) wireMeteor(view);
+    wirePause($('stSkyWrap'), view);
     if (window.ResizeObserver) new ResizeObserver(() => layoutSky()).observe(view);
     else addEventListener('resize', layoutSky);
     // Anywhere but a star or its card puts the card away.

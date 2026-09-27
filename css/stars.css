@@ -350,9 +350,76 @@ body.stars-dark{
 }
 .st-con.going .st-con-label,.st-con.done .st-con-label{fill:#f4f6ff;}
 .st-con-count{fill:var(--acc);}
-/* A few pinpricks over the photograph that fade in and out. */
-@keyframes st-tw{ 0%,100%{opacity:.55;} 50%{opacity:.12;} }
-.st-tw{animation:st-tw 7s ease-in-out infinite;}
+/* ---------- the living photograph (2026-09-27) ----------
+   js/sky-scene.js layers over each copy of the photograph (stars.js
+   buildScene): the sea shimmers, the trees lean in the wind, the brightest
+   stars twinkle, and one shooting star crosses every twenty seconds. Only
+   transform and opacity move, so it all runs on the compositor — no script
+   per frame, no repaint, no filters. .st-offscreen (the sky scrolled out of
+   view) stops it all. */
+.st-scene{position:absolute;top:0;height:100%;pointer-events:none;}
+.st-scene img{position:absolute;display:block;max-width:none;-webkit-user-drag:none;user-select:none;}
+/* The sea: faint wave streaks drift against each other, and the light on
+   the water swells and wavers. */
+.st-sea-ripple{opacity:.5;animation:st-ripple 9s ease-in-out infinite alternate;}
+.st-sea-ripple-1{animation-duration:12s;animation-delay:-5s;animation-direction:alternate-reverse;}
+@keyframes st-ripple{ from{transform:translateX(-.5%);opacity:.3;} to{transform:translateX(.5%);opacity:.75;} }
+.st-sea-glint{transform-origin:50% 0;animation:st-glint 5.5s ease-in-out infinite;}
+@keyframes st-glint{
+  0%,100%{transform:translateX(0) scaleY(1);opacity:.35;}
+  35%{transform:translateX(.12%) scaleY(1.08);opacity:.9;}
+  70%{transform:translateX(-.1%) scaleY(1.03);opacity:.55;}
+}
+/* The trees lean from their roots (the bottom edge). A skew moves every
+   point by its height alone, so the left and right groups — which meet
+   across the loop seam — stay joined as long as they share a clock. */
+.st-tree{transform-origin:50% 100%;animation:st-sway 7s ease-in-out infinite;}
+.st-tree-mid{animation-duration:5.8s;animation-delay:-2.2s;}
+@keyframes st-sway{
+  0%,100%{transform:skewX(-.45deg);}
+  45%{transform:skewX(.6deg);}
+  60%{transform:skewX(.4deg);}
+}
+/* A twinkling star: a soft glow and a thin cross, breathing in size and
+   light. Positioned by its centre. */
+.st-twk{
+  position:absolute;aspect-ratio:1;margin:0;transform:translate(-50%,-50%) scale(.6);opacity:.2;
+  background:radial-gradient(circle,#fff 0,rgba(255,255,255,.9) 9%,rgba(190,212,255,.38) 24%,rgba(190,212,255,0) 58%);
+  border-radius:50%;animation:st-twk 4s ease-in-out infinite;
+}
+.st-twk.big::before,.st-twk.big::after{
+  content:"";position:absolute;left:50%;top:50%;width:150%;height:1.5px;border-radius:1px;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.85),rgba(255,255,255,0));
+  transform:translate(-50%,-50%);
+}
+.st-twk.big::after{transform:translate(-50%,-50%) rotate(90deg);}
+@keyframes st-twk{
+  0%,100%{opacity:.15;transform:translate(-50%,-50%) scale(.55);}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.1);}
+}
+/* The shooting star: the wrapper sits where it starts and turns to its
+   angle (js/stars.js wireMeteor re-places it on every iteration while it
+   is invisible); the tail runs along it for the first second of each
+   twenty. */
+.st-meteor{position:absolute;width:0;height:0;pointer-events:none;transform-origin:0 0;}
+.st-meteor-tail{
+  position:absolute;left:0;top:-1px;width:170px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(190,212,255,.5) 70%,#fff);
+  transform-origin:100% 50%;opacity:0;
+  animation:st-meteor 20s linear 3s infinite;
+}
+.st-meteor-tail::after{
+  content:"";position:absolute;right:-3px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;
+  background:radial-gradient(circle,#fff 0,rgba(255,255,255,.6) 40%,rgba(255,255,255,0) 70%);
+}
+@keyframes st-meteor{
+  0%{opacity:0;transform:translateX(-60px) scaleX(.2);}
+  1%{opacity:1;}
+  4.5%{opacity:.9;transform:translateX(360px) scaleX(1);}
+  6%{opacity:0;transform:translateX(420px) scaleX(.6);}
+  100%{opacity:0;transform:translateX(420px) scaleX(.6);}
+}
+.st-offscreen .st-scene img,.st-offscreen .st-twk,.st-offscreen .st-meteor-tail{animation-play-state:paused;}
 
 /* ---------- full screen ----------
    The same sky, fixed over everything. Nothing is redrawn — the layout
@@ -389,6 +456,9 @@ html.st-full-open .stars-dark .stars-page::before{animation-play-state:paused;}
   .stars-dark .app::before,.stars-dark .app::after,
   .stars-page h1,.st-brand-mark,
   .stars-dark .stars-page::before,
-  .st-spark,.st-line-lit,.st-next,.st-tw,.st-con.reveal .st-fig-art,.st-con.reveal .st-bloom{animation:none !important;}
+  .st-spark,.st-line-lit,.st-next,.st-con.reveal .st-fig-art,.st-con.reveal .st-bloom,
+  .st-sea-ripple,.st-sea-glint,.st-tree,.st-twk{animation:none !important;}
+  .st-twk{opacity:.7;}
+  .st-meteor{display:none;}
   .st-tip,.st-burst,.st-fig-art{transition:none;}
 }
