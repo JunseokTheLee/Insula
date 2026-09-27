@@ -704,21 +704,70 @@ document.addEventListener('weavo:authchange', () => {
 // Artworks from before thumbnails existed have no thumb_url; those show the
 // empty placeholder until the original lands, which is still better than
 // the previous picture.
+//
+// Left alone, the thumbnail sits at its own 480px and then jumps to the
+// original's size. So while it is up we size it to exactly the box the
+// original will get (same max-width/max-height clamp as the CSS), soften
+// it slightly, and the swap reads as the same picture sharpening in place.
+// Only inside the modal: the standalone artwork page already stretches
+// the <img> through its width attribute.
 let lbImgToken = 0;
+function lbImgLimit(value, base) {
+  if (!value || value === 'none') return Infinity;
+  const n = parseFloat(value);
+  if (!isFinite(n)) return Infinity;
+  return value.endsWith('%') ? base * n / 100 : n;
+}
+// Fit (w, h) into the box the CSS allows the <img>. `upscale` false means the
+// true size is known and, like the CSS, the image never grows past it.
+function lbImgFit(w, h, upscale) {
+  const st = getComputedStyle(lbStage);
+  const boxW = lbStage.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight);
+  const boxH = lbStage.clientHeight - parseFloat(st.paddingTop) - parseFloat(st.paddingBottom);
+  if (!(boxW > 0) || !(boxH > 0)) return null; // modal not laid out yet
+  const im = getComputedStyle(lbImg);
+  let s = Math.min(lbImgLimit(im.maxWidth, boxW) / w, lbImgLimit(im.maxHeight, boxH) / h);
+  if (!upscale) s = Math.min(1, s);
+  return isFinite(s) && s > 0 ? { w: Math.round(w * s), h: Math.round(h * s) } : null;
+}
+function clearLbImgSize() { lbImg.style.width = ''; lbImg.style.height = ''; }
 function setLightboxImage(sub) {
   const token = ++lbImgToken;
   const full = sub.image_url ? cdnUrl(sub.image_url) : null;
   const thumb = sub.thumb_url ? cdnUrl(sub.thumb_url) : null;
   // Whatever happens next, the previous artwork stops being on screen now.
   lbImg.removeAttribute('src');
+  clearLbImgSize();
+  lbImg.classList.remove('lb-img-soft');
   lbImg.classList.add('lb-img-loading');
+  let settled = false;
   const settle = () => {
     if (token !== lbImgToken) return;
-    lbImg.classList.remove('lb-img-loading');
+    settled = true;
+    clearLbImgSize();
+    lbImg.classList.remove('lb-img-loading', 'lb-img-soft');
   };
   if (!full) { if (thumb) lbImg.src = thumb; settle(); return; }
-  if (thumb && thumb !== full) lbImg.src = thumb;
   const pre = new Image();
+  if (thumb && thumb !== full) {
+    lbImg.src = thumb;
+    if (lbImg.closest('.lightbox-overlay')) {
+      lbImg.classList.add('lb-img-soft');
+      // Re-measured every frame until the original lands: the modal opens
+      // after this call, the original's real size arrives with its first
+      // bytes, and the user may resize or blow the image up meanwhile.
+      const stretch = () => {
+        if (settled || token !== lbImgToken) return;
+        const known = pre.naturalWidth > 0;
+        const w = known ? pre.naturalWidth : lbImg.naturalWidth;
+        const h = known ? pre.naturalHeight : lbImg.naturalHeight;
+        const fit = w > 0 && h > 0 ? lbImgFit(w, h, !known) : null;
+        if (fit) { lbImg.style.width = fit.w + 'px'; lbImg.style.height = fit.h + 'px'; }
+        requestAnimationFrame(stretch);
+      };
+      requestAnimationFrame(stretch);
+    }
+  }
   pre.onload = () => {
     if (token !== lbImgToken) return;   // another artwork was opened meanwhile
     lbImg.src = full;

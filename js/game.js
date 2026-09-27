@@ -1097,6 +1097,9 @@
     if (!lines.length) { box.hidden = true; return; }
     $('starAwardText').textContent = lines.join(' · ');
     box.hidden = false;
+    // The star that completed a constellation gets the full celebration
+    // (js/star-celebrate.js; absent while a stale page is cached).
+    if (typeof celebrateNewConstellation === 'function') celebrateNewConstellation(total, isNew);
   }
   function confetti() {
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;

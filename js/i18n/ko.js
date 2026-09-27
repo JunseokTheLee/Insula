@@ -444,6 +444,10 @@ const T = {
   // 게임 결과 화면과 다른 페이지에서
   starNewFound: '새로운 별을 찾았어요!',
   starConstellationDone: '별자리 완성 · {name}',
+  conCelebrateKicker: '별자리 완성!',
+  conCelebrateMeta: '{group} · {sky} · 별 {n}개',
+  conCelebrateView: '내 별자리 보기',
+  conCelebrateClose: '닫기',
   starViewSky: '내 별자리 보기',
   starAlready: '이미 이 작품의 별을 가지고 있어요',
   starNeedSignIn: '로그인하면 이 완성이 별로 남습니다',

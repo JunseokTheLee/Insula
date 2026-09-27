@@ -444,6 +444,10 @@ const T = {
   // Result screens and other pages
   starNewFound: 'You found a new star!',
   starConstellationDone: 'Constellation complete · {name}',
+  conCelebrateKicker: 'Constellation complete!',
+  conCelebrateMeta: '{group} · {sky} · {n} stars',
+  conCelebrateView: 'See my constellations',
+  conCelebrateClose: 'Close',
   starViewSky: 'See my constellations',
   starAlready: 'You already have this artwork\'s star',
   starNeedSignIn: 'Sign in and a finish like this becomes a star',

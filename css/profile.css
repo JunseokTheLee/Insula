@@ -200,6 +200,9 @@
   background:var(--gray-100);box-shadow:var(--shadow-sm);cursor:zoom-in;
   transition:transform .12s ease-out,box-shadow .12s ease-out;
 }
+/* "Coloured artworks": the finished pixel board, not the picture — scaled
+   up cell by cell and shown whole, like the colouring page's cards. */
+.pmw-thumb.pmw-pix{object-fit:contain;image-rendering:pixelated;background:var(--gray-50);}
 .pmw-thumb-link:hover .pmw-thumb{transform:translateY(-2px);box-shadow:var(--shadow-md);}
 /* The medal sits on the picture, so it needs its own dark disc — a bare
    emoji vanishes on a bright artwork (same reason the lightbox zoom bar

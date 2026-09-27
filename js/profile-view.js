@@ -135,7 +135,10 @@ async function renderProfileStars(userId) {
   if (!groups.length) return;
   const NS = 'http://www.w3.org/2000/svg';
   track.innerHTML = '';
-  for (const g of groups.slice(-3).reverse()) {
+  // Every finished constellation, newest first — the meta line below counts
+  // them all, so showing only the latest three made "4 constellations" look
+  // like one was missing. At most 13 per sky, and the strip wraps.
+  for (const g of groups.slice().reverse()) {
     const shape = constellationShape(g.index);
     const night = constellationNight(g.index);
     const a = document.createElement('a');
@@ -170,6 +173,33 @@ async function renderProfileStars(userId) {
   if (all) all.href = `/${CURRENT_LANG}/stars` + (me.id === userId ? '' : `?user=${encodeURIComponent(userId)}`);
   box.style.display = '';
 }
+// The long side's cell count of a colouring level — the same options the
+// colouring page reads (pixelBoardOptions in js/pixel-board.js, which this
+// page does not load). No level means the pre-levels function answered:
+// those boards were the middle size.
+function coloredGridFor(settings, level) {
+  const k = level === 1 ? 'pixelEasyGrid' : level === 3 ? 'pixelHardGrid' : 'pixelNormalGrid';
+  const def = typeof SITE_SETTING_DEFAULTS !== 'undefined' ? SITE_SETTING_DEFAULTS[k] : null;
+  const n = Number((settings && settings[k]) ?? def);
+  return Number.isFinite(n) && n >= 4 ? Math.round(n) : (level === 1 ? 24 : level === 3 ? 64 : 40);
+}
+// Shrink the thumbnail to `grid` cells on its long side; CSS scales the
+// canvas back up pixel by pixel (image-rendering: pixelated).
+function paintColoredBoard(canvas, src, grid) {
+  const img = new Image();
+  img.decoding = 'async';
+  img.onload = () => {
+    const w0 = img.naturalWidth, h0 = img.naturalHeight;
+    if (!w0 || !h0) return;
+    const w = w0 >= h0 ? grid : Math.max(4, Math.round(grid * w0 / h0));
+    const h = w0 >= h0 ? Math.max(4, Math.round(grid * h0 / w0)) : grid;
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, w, h);
+  };
+  img.src = src;
+}
 async function renderProfileColoredWorks(userId) {
   const box = document.getElementById('profileColoredWorks');
   const track = document.getElementById('profileColoredWorksTrack');
@@ -188,6 +218,7 @@ async function renderProfileColoredWorks(userId) {
     rows = data;
   } catch (e) { console.error('load colored artworks threw:', e); return; }
   if (!Array.isArray(rows) || !rows.length) return;
+  const settings = await getSiteSettings().catch(() => ({}));
   track.innerHTML = '';
   for (const w of rows) {
     const name = w.author_name || tr('anonymous');
@@ -196,13 +227,15 @@ async function renderProfileColoredWorks(userId) {
     const link = document.createElement('a');
     link.className = 'pmw-thumb-link';
     link.href = artworkUrl(w.artwork_id);
-    const img = document.createElement('img');
-    img.className = 'pmw-thumb';
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    img.src = cdnUrl(w.thumb_url || w.image_url);
-    img.alt = w.art_title ? tr('artworkThumbAlt', { title: w.art_title, name }) : tr('artworkImgAltFallback', { name });
-    link.appendChild(img);
+    link.setAttribute('aria-label', w.art_title ? tr('artworkThumbAlt', { title: w.art_title, name }) : tr('artworkImgAltFallback', { name }));
+    // What they coloured, not the picture: the finished board at the level
+    // they finished it, drawn the way the colouring page draws a finished
+    // card (js/coloring.js previewInto).
+    const canvas = document.createElement('canvas');
+    canvas.className = 'pmw-thumb pmw-pix';
+    canvas.width = 4; canvas.height = 4;
+    paintColoredBoard(canvas, cdnUrl(w.thumb_url || w.image_url), coloredGridFor(settings, w.level));
+    link.appendChild(canvas);
     if (typeof bindArtworkLightbox === 'function') bindArtworkLightbox(link, w.artwork_id);
     const title = document.createElement('div');
     title.className = 'pmw-title';
@@ -284,14 +317,15 @@ async function fetchUserArtwork(userId) {
 // Distinct projects this profile's owner has contributed to, with how many
 // cells of each hold something of theirs. One query over mosaic_pixels
 // covers whole artworks and pieces alike (a cut artwork's own row is never
-// placed — supabase_mosaic_pieces.sql — only its pieces are), and live and
-// archived campaigns alike: a reshape freezes the pre-reshape grid as its
-// own archived project row (supabase_mosaic_reshape.sql), whose cells
-// still point at this user's rows — one card per iteration they were in.
+// placed — supabase_mosaic_pieces.sql — only its pieces are). Only live
+// campaigns: a reshape freezes the pre-reshape grid as its own archived
+// project row (supabase_mosaic_reshape.sql) whose cells still point at this
+// user's rows, and listing those showed the same campaign twice.
 async function fetchParticipatedProjects(artwork, userId) {
   const { data: rows, error } = await fetchAllRows(() => sb.from('mosaic_pixels')
     .select('project_id,mosaic_submissions!mosaic_pixels_submission_id_fkey!inner(author_id),mosaic_projects!inner(*)', { count: 'exact' })
-    .eq('mosaic_submissions.author_id', userId));
+    .eq('mosaic_submissions.author_id', userId)
+    .eq('mosaic_projects.is_archived', false));
   if (error) console.error('load participated projects error:', error);
   const byProject = new Map();
   for (const row of rows || []) {

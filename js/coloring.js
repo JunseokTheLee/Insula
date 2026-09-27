@@ -978,6 +978,9 @@
     if (!lines.length) return;
     $('starAwardText').textContent = lines.join(' · ');
     box.hidden = false;
+    // The star that completed a constellation gets the full celebration
+    // (js/star-celebrate.js; absent while a stale page is cached).
+    if (typeof celebrateNewConstellation === 'function') celebrateNewConstellation(total, isNew);
   }
   function fmtDur(ms) {
     const total = Math.max(0, ms) / 1000;

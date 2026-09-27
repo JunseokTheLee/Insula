@@ -1040,6 +1040,59 @@ html[lang="ko"] * {
   font-family:'Pretendard',sans-serif;font-size:13.5px;font-weight:600;color:var(--text);
 }
 .star-award[hidden]{display:none;}
+
+/* A game finish that completes a constellation (js/star-celebrate.js,
+   2026-09-27): full-screen over the result screen. Stars light one by one,
+   lines draw, then the painting and the name come up together (--sc-reveal).
+   Only transforms and opacity animate — no filters (css/stars.css explains
+   why). .sc-still (reduced motion) shows the finished figure at once. */
+.sc-overlay{
+  position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;
+  padding:16px;padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom));
+  background:radial-gradient(ellipse at 50% 42%,#1a2140 0%,#0b1020 55%,#05070f 100%);
+  opacity:0;transition:opacity .3s ease-out;overscroll-behavior:contain;
+}
+.sc-overlay.open{opacity:1;}
+.sc-sparks{position:absolute;inset:0;width:100%;height:100%;}
+.sc-card{
+  position:relative;width:min(420px,100%);max-height:100%;overflow-y:auto;text-align:center;color:#F4F1E8;
+  font-family:'Pretendard',sans-serif;transform:scale(.94);transition:transform .45s cubic-bezier(.2,.9,.3,1.2);
+}
+.sc-overlay.open .sc-card{transform:scale(1);}
+.sc-kicker{font-size:14px;font-weight:800;letter-spacing:.14em;color:#FFD98E;text-transform:uppercase;
+  animation:sc-rise .6s ease-out .15s both;}
+.sc-figure{position:relative;width:min(300px,72vw);aspect-ratio:1;margin:14px auto 6px;}
+.sc-figure svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.sc-bloom{position:absolute;inset:-18%;border-radius:50%;
+  background:radial-gradient(circle,var(--sc-accent) 0%,transparent 62%);
+  opacity:0;transform:scale(.3);animation:sc-bloom 1.6s ease-out .35s forwards;}
+.sc-animal{position:absolute;opacity:.03;transform:scale(.96);
+  animation:sc-animal 1.4s ease-out var(--sc-reveal) forwards;}
+.sc-link{stroke:var(--sc-accent);stroke-width:.9;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;opacity:.85;
+  animation:sc-draw .5s ease-out forwards;}
+.sc-star{opacity:0;transform:scale(0);animation:sc-pop .55s cubic-bezier(.2,.9,.3,1.5) forwards;}
+.sc-star-halo{fill:var(--sc-accent);opacity:.28;}
+.sc-star-core{fill:#FFFFFF;}
+.sc-late{opacity:0;animation:sc-rise .7s ease-out var(--sc-reveal) both;}
+.sc-name{font-size:30px;font-weight:800;margin:6px 0 4px;color:#FFFFFF;}
+.sc-line{font-size:15px;margin:0 0 6px;color:rgba(244,241,232,.85);}
+.sc-meta{font-size:12.5px;margin:0 0 18px;color:rgba(244,241,232,.6);}
+.sc-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.sc-btn{min-height:44px;padding:0 20px;border-radius:var(--r-full);border:1px solid rgba(244,241,232,.35);
+  background:transparent;color:#F4F1E8;font:inherit;font-size:14px;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;text-decoration:none;}
+.sc-btn:hover{border-color:#F4F1E8;}
+.sc-btn-primary{background:#FFD98E;border-color:#FFD98E;color:#1a1408;}
+.sc-btn-primary:hover{background:#FFE7B5;border-color:#FFE7B5;}
+@keyframes sc-rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+@keyframes sc-bloom{0%{opacity:0;transform:scale(.3);}45%{opacity:.55;}100%{opacity:.22;transform:scale(1);}}
+@keyframes sc-animal{from{opacity:.03;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
+@keyframes sc-draw{to{stroke-dashoffset:0;}}
+@keyframes sc-pop{0%{opacity:0;transform:scale(0);}60%{opacity:1;transform:scale(1.6);}100%{opacity:1;transform:scale(1);}}
+.sc-still .sc-card,.sc-still .sc-kicker,.sc-still .sc-bloom,.sc-still .sc-animal,.sc-still .sc-link,
+.sc-still .sc-star,.sc-still .sc-late{animation:none;transition:none;opacity:1;transform:none;stroke-dashoffset:0;}
+.sc-still .sc-bloom{opacity:.22;}
+@media (prefers-reduced-motion:reduce){.sc-overlay{transition:none;}}
 /* "Shining in N skies" under an artwork — the artist's half of the games. */
 .artwork-stars{font-family:'Pretendard',sans-serif;font-size:12.5px;font-weight:600;color:#B07B1E;margin-top:6px;}
 .star-award-mark{color:#E8B84B;font-size:16px;line-height:1;}
@@ -1073,6 +1126,13 @@ html[lang="ko"] * {
    left alone — blurring it would make a correct picture look worse. */
 .lightbox-overlay img.lb-img-loading,
 #artworkStage img.lb-img-loading{background:rgba(247,247,245,.06);min-width:120px;min-height:120px;}
+/* In the modal the thumbnail is stretched to the original's final size
+   (js/lightbox.js), which makes it look coarse; a light blur hides that,
+   and when the original swaps in the blur eases off — it reads as the same
+   picture coming into focus rather than a second image replacing the first. */
+.lightbox-overlay img{transition:transform .15s ease-out,filter .35s ease-out;}
+.lightbox-overlay img.lb-img-soft{filter:blur(3px);}
+@media (prefers-reduced-motion:reduce){.lightbox-overlay img{transition:none;}}
 
 /* Lightbox edit dialog: the note under the "private" checkbox. */
 .lb-edit-private-hint{font-size:12px;color:var(--muted);line-height:1.45;margin:4px 0 0 24px;}
