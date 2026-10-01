@@ -648,6 +648,12 @@ body.lb-img-fs-lock{overflow:hidden;}
 #lb-comments-btn.active{background:rgba(247,247,245,.16);}
 #lb-exhibit-btn .icon::before{content:"🗂";}
 #lb-edit-btn .icon::before{content:"✎";}
+/* Artwork edit dialog (made by lightbox.js). Like every other dialog it is
+   sized and padded by id — the bare .modal-panel has neither, which left the
+   fields flush against the panel edge. */
+#lb-edit-dialog{width:520px;max-width:calc(100vw - 32px);padding:28px 30px 24px;}
+#lb-edit-dialog h3{font-family:'Pretendard',sans-serif;font-size:18px;font-weight:700;margin:0 0 16px;color:var(--primary);}
+@media (max-width:640px){#lb-edit-dialog{padding:22px 18px 18px;}}
 #lb-delete-btn .icon::before{content:"🗑";}
 #lb-play-btn .icon::before{content:"🎮";}
 #lb-play-btn{text-decoration:none;}

@@ -329,7 +329,8 @@ lbBlockBtn.onclick = async () => {
 // ---------- edit this artwork's details (author only — button + modal built
 // dynamically here, same rationale as the exhibit dropdown / report button
 // above: keeps it out of every page's copy of the lightbox markup). Only the
-// five text detail fields are editable; the image and its placement are not
+// text detail fields are editable (the portfolio link left the form on
+// 2026-10-01 — a saved link is kept and still shown); the image and its placement are not
 // (that would be a delete-and-resubmit — see supabase_mosaic_edit_art_details.sql). ----------
 const lbEditBtn = document.createElement('button');
 lbEditBtn.type = 'button';
@@ -347,7 +348,7 @@ const lbEditModal = document.createElement('div');
 lbEditModal.id = 'lb-edit-modal';
 lbEditModal.className = 'modal-overlay';
 lbEditModal.innerHTML = `
-  <div class="modal-panel">
+  <div class="modal-panel" id="lb-edit-dialog">
     <h3>${tr('editArtworkTitle')}</h3>
     <div class="field">
       <label for="lb-edit-title">${tr('artTitleLabel')} <span class="field-required">${tr('requiredHint')}</span></label>
@@ -370,10 +371,6 @@ lbEditModal.innerHTML = `
     <div class="field" id="lb-edit-process-row" style="display:none;">
       <label for="lb-edit-process">${tr('artProcessLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
       <textarea id="lb-edit-process" placeholder="${tr('artProcessPlaceholder')}" maxlength="500"></textarea>
-    </div>
-    <div class="field">
-      <label for="lb-edit-link">${tr('artLinkLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
-      <input type="text" id="lb-edit-link" placeholder="https://your-portfolio.com" maxlength="300">
     </div>
     <div class="field" id="lb-edit-optout-row" style="display:none;">
       <label class="lb-edit-check"><input type="checkbox" id="lb-edit-optout"> ${tr('editOptOutColoring')}</label>
@@ -405,7 +402,6 @@ function openLbEditModal() {
   completedEl.max = new Date().getFullYear();
   completedEl.value = artDateToYear(sub.art_completed_date);
   lbEditModal.querySelector('#lb-edit-desc').value = sub.art_description || '';
-  lbEditModal.querySelector('#lb-edit-link').value = sub.art_link || '';
   lbEditModal.querySelector('#lb-edit-error').textContent = '';
   // The opt-out column exists only once supabase_pixel_game.sql is applied;
   // the row shows when it can be read.
@@ -449,8 +445,6 @@ lbEditModal.querySelector('#lb-edit-save').onclick = async () => {
   // (profile-view.js, 2026-10-01) — otherwise an edit could take it away again.
   const titleEl = lbEditModal.querySelector('#lb-edit-title');
   if (!titleEl.value.trim()) { errorEl.textContent = tr('titleRequired'); titleEl.focus(); return; }
-  const link = lbEditModal.querySelector('#lb-edit-link').value.trim();
-  if (link && !safeHref(link)) { errorEl.textContent = tr('linkMustBeValidUrl'); return; }
   const completedYear = artYearToDate(lbEditModal.querySelector('#lb-edit-completed').value);
   if (completedYear.error) { errorEl.textContent = completedYear.error; return; }
   errorEl.textContent = '';
@@ -459,7 +453,6 @@ lbEditModal.querySelector('#lb-edit-save').onclick = async () => {
     art_material: lbEditModal.querySelector('#lb-edit-material').value.trim() || null,
     art_completed_date: completedYear.date,
     art_description: lbEditModal.querySelector('#lb-edit-desc').value.trim() || null,
-    art_link: link || null,
   };
   const saveBtn = lbEditModal.querySelector('#lb-edit-save');
   saveBtn.disabled = true;
