@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261001-111320">
-<link rel="stylesheet" href="/css/admin.css?v=20261001-111320">
+<link rel="stylesheet" href="/css/base.css?v=20261001-113946">
+<link rel="stylesheet" href="/css/admin.css?v=20261001-113946">
 </head>
 <body>
 
@@ -272,6 +272,13 @@
           <p class="admin-help" id="adminNewMembersCount"></p>
           <div class="admin-list" id="adminNewMembers"></div>
           <p class="empty-note admin-empty" id="adminNewMembersEmpty" style="display:none;">No accounts were created in this window.</p>
+        </section>
+        <section class="admin-section" id="adminIncompleteSection">
+          <h2>Incomplete sign-ups</h2>
+          <p class="admin-help">Accounts that signed in with Google or Apple and left before choosing a username. Only an account with no username, no artworks and no comments, created <strong>more than 24 hours ago</strong>, can be deleted (so nobody is removed while filling in the form). The server re-checks the same conditions, deletes one account at a time, and each deletion is kept in the "Log" tab. A deleted person can sign in again with the same account and sign up from the start.</p>
+          <p class="admin-help" id="adminIncompleteCount"></p>
+          <div class="admin-list" id="adminIncomplete"></div>
+          <p class="empty-note admin-empty" id="adminIncompleteEmpty" style="display:none;">No incomplete sign-ups.</p>
         </section>
         <section class="admin-section">
           <h2>Admins</h2>
@@ -692,15 +699,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261001-111320"></script>
-<script src="/js/i18n/en.js?v=20261001-111320"></script>
-<script src="/js/common.js?v=20261001-111320"></script>
-<script src="/js/auth.js?v=20261001-111320"></script>
-<script src="/js/notifications.js?v=20261001-111320"></script>
-<script src="/js/push.js?v=20261001-111320"></script>
-<script src="/js/color-engine.js?v=20261001-111320"></script>
-<script src="/js/pixel-board.js?v=20261001-111320"></script>
-<script src="/js/matching.js?v=20261001-111320"></script>
-<script src="/js/admin.js?v=20261001-111320"></script>
+<script src="/js/supabase-client.js?v=20261001-113946"></script>
+<script src="/js/i18n/en.js?v=20261001-113946"></script>
+<script src="/js/common.js?v=20261001-113946"></script>
+<script src="/js/auth.js?v=20261001-113946"></script>
+<script src="/js/notifications.js?v=20261001-113946"></script>
+<script src="/js/push.js?v=20261001-113946"></script>
+<script src="/js/color-engine.js?v=20261001-113946"></script>
+<script src="/js/pixel-board.js?v=20261001-113946"></script>
+<script src="/js/matching.js?v=20261001-113946"></script>
+<script src="/js/admin.js?v=20261001-113946"></script>
 </body>
 </html>

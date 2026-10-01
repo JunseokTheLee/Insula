@@ -886,6 +886,62 @@ async function loadAdminNewMembers() {
   }
   empty.style.display = rows.length ? 'none' : '';
 }
+// ---------- incomplete sign-ups (supabase_admin_delete_incomplete.sql) ----------
+// People who signed in with Google/Apple and left the username form: a bare
+// profile row with no username. The one kind of account an admin may delete
+// (CLAUDE.md §13 exception, 2026-10-01). The button only appears once the
+// account is a day old, and admin_delete_incomplete_account re-checks every
+// condition (no username, not an admin, > 24 h, no artworks, no comments) —
+// this list is a convenience, not the guard.
+const INCOMPLETE_MIN_AGE_MS = 24 * 3600 * 1000;
+async function loadAdminIncomplete() {
+  const list = document.getElementById('adminIncomplete');
+  if (!list) return;
+  const { data, error } = await sb.from('profiles')
+    .select('id,username,name,avatar_url,created_at,is_admin')
+    .is('username', null)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) { console.error('load incomplete sign-ups error:', error); return; }
+  const rows = (data || []).filter(p => !p.is_admin);
+  list.innerHTML = '';
+  document.getElementById('adminIncompleteCount').textContent = tr('adminIncompleteCount', { n: adminNum(rows.length) });
+  for (const p of rows) {
+    const row = adminMemberRow(p, { withTime: true });
+    const age = Date.now() - new Date(p.created_at).getTime();
+    if (age >= INCOMPLETE_MIN_AGE_MS) {
+      row.appendChild(adminActionBtn(tr('adminIncompleteDelete'), () => deleteAdminIncomplete(p), 'danger'));
+    } else {
+      const wait = document.createElement('span');
+      wait.className = 'admin-meta';
+      wait.textContent = tr('adminIncompleteTooNew', { h: Math.max(1, Math.ceil((INCOMPLETE_MIN_AGE_MS - age) / 3600000)) });
+      row.appendChild(wait);
+    }
+    list.appendChild(row);
+  }
+  document.getElementById('adminIncompleteEmpty').style.display = rows.length ? 'none' : '';
+}
+async function deleteAdminIncomplete(p) {
+  const proceed = await confirmDialog(
+    tr('adminIncompleteMessage', { when: adminDateTime(p.created_at) }),
+    { title: tr('adminIncompleteTitle'), okLabel: tr('adminIncompleteDelete') }
+  );
+  if (!proceed) return;
+  const { error } = await sb.rpc('admin_delete_incomplete_account', { p_user: p.id });
+  if (error) {
+    console.error('admin_delete_incomplete_account error:', error);
+    const msg = String(error.message || '');
+    if (error.code === 'PGRST202' || error.code === '42883') toast(tr('adminIncompleteUnavailable'));
+    else if (/too recent/.test(msg)) toast(tr('adminIncompleteRefusedNew'));
+    else if (/not an incomplete/.test(msg)) toast(tr('adminIncompleteRefusedActive'));
+    else toast(tr('adminIncompleteFailed'));
+    loadAdminIncomplete();
+    return;
+  }
+  toast(tr('adminIncompleteDone'));
+  await Promise.all([loadAdminIncomplete(), loadAdminNewMembers()]);
+  if (adminTabsLoaded.has('log')) loadAdminLog();
+}
 async function loadAdminAdmins() {
   const { data, error } = await sb.from('profiles').select('id,username,name,avatar_url,created_at').eq('is_admin', true).order('username');
   if (error) { console.error('load admins error:', error); return; }
@@ -1187,7 +1243,7 @@ async function adminLogAction(action, targetType, targetId, detail) {
   }
 }
 
-const ADMIN_LOG_ACTIONS = ['artwork_delete', 'comment_delete', 'upload_block', 'upload_unblock', 'broadcast'];
+const ADMIN_LOG_ACTIONS = ['artwork_delete', 'comment_delete', 'upload_block', 'upload_unblock', 'broadcast', 'incomplete_account_delete'];
 
 async function loadAdminLog() {
   const list = document.getElementById('adminLog');
@@ -1757,7 +1813,7 @@ const ADMIN_TAB_LOADERS = {
   comments:  () => resetAdminComments(),
   campaigns: () => loadAdminCampaigns(),
   tools:     () => Promise.all([loadAdminPool(), loadAdminPieces(), loadAdminThumbs(), loadAdminPixel()]),
-  members:   () => Promise.all([loadAdminNewMembers(), loadAdminAdmins(), loadAdminBlocked(), loadAdminRankExcluded()]),
+  members:   () => Promise.all([loadAdminNewMembers(), loadAdminIncomplete(), loadAdminAdmins(), loadAdminBlocked(), loadAdminRankExcluded()]),
   games:     () => Promise.all([resetAdminGames(), loadAdminGameTop()]),
   broadcast: () => loadAdminBroadcast(),
   settings:  () => loadAdminSettings(),
