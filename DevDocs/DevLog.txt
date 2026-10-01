@@ -5,6 +5,7 @@ Weavo 개발 기록 (DevDocs/DevLog.txt)
 - 접두어: feat(새 기능) / fix(수정) / chore(정리·문서·설정)
 
 ========== 2026-10-01 ==========
+chore: 관리자 앱 정보를 사이트 옵션에서 빼 별도 "앱 정보" 탭으로
 feat: 관리자 사이트 옵션에 앱 정보(스토어 번호·Team ID·번들 ID·패키지) 입력 카드
 feat: 하단에 "Weavo 앱 다운로드" 버튼 — PC는 QR 팝업, 휴대폰은 앱/스토어로 이동
 feat: /app 주소와 QR 코드 — 앱 있으면 열기, 없으면 아이폰 App Store·안드로이드 Play

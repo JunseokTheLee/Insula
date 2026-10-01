@@ -1081,15 +1081,17 @@ function adminVisitsChartSvg(rows) {
 // getSiteSettings). A change saves just that key through the
 // admin_set_site_settings RPC and writes the result into this tab's cached
 // copy, so the admin sees the effect on the next page they open.
-async function loadAdminSettings() {
-  const inputs = document.querySelectorAll('#adminSettings input[data-setting], #adminSettings select[data-setting]');
+// `scope` is the container whose [data-setting] inputs to bind: the "Site
+// options" tab, or the "App info" tab (2026-10-01) — both edit the same row.
+async function loadAdminSettings(scope = 'adminSettings', unavailableId = 'adminSettingsUnavailable') {
+  const inputs = document.querySelectorAll(`#${scope} input[data-setting], #${scope} select[data-setting]`);
   if (!inputs.length) return;
   // Read the row directly (not getSiteSettings): this page must show what
   // is stored, not a cached copy.
   const { data, error } = await sb.from('site_settings').select('settings').eq('id', true).maybeSingle();
   if (error) {
     if (error.code !== 'PGRST205' && error.code !== '42P01') console.error('load site_settings error:', error);
-    adminShow('adminSettingsUnavailable', true); // inputs stay disabled
+    adminShow(unavailableId, true); // inputs stay disabled
     return;
   }
   const settings = { ...SITE_SETTING_DEFAULTS, ...((data && data.settings) || {}) };
@@ -1816,6 +1818,7 @@ const ADMIN_TAB_LOADERS = {
   members:   () => Promise.all([loadAdminNewMembers(), loadAdminIncomplete(), loadAdminAdmins(), loadAdminBlocked(), loadAdminRankExcluded()]),
   games:     () => Promise.all([resetAdminGames(), loadAdminGameTop()]),
   broadcast: () => loadAdminBroadcast(),
+  app:       () => loadAdminSettings('adminAppSettings', 'adminAppUnavailable'),
   settings:  () => loadAdminSettings(),
   log:       () => loadAdminLog(),
 };
