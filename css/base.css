@@ -1072,6 +1072,41 @@ html[lang="ko"] * {
 .hiw-steps-compact h4{font-family:'Pretendard',sans-serif;font-weight:700;font-size:14.5px;margin:0 0 4px;color:var(--primary);}
 .hiw-steps-compact p{font-family:'Pretendard',sans-serif;font-size:13px;line-height:1.55;color:var(--muted);margin:0;}
 @media (max-width:640px){ .feature-col{padding:22px 18px;} }
+/* ---------- About page feature cards (2026-10-02) ----------
+   One card per main feature, each with its own accent (--af, set inline)
+   on the left edge and on its number/tag. The games card holds three
+   sub-cards; the constellation one is a small night sky. */
+.legal-body .about-lead{font-size:15px;line-height:1.75;color:var(--text);}
+.about-features{display:grid;gap:16px;margin:6px 0 30px;}
+.about-feature{position:relative;padding:24px 26px 22px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+.about-feature::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--af,var(--primary));}
+.about-feature-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.about-feature-num{font-family:'Pretendard',sans-serif;font-size:13px;font-weight:700;color:var(--af,var(--primary));}
+.about-feature .feature-tag{margin:0;color:var(--af,var(--muted));}
+.about-feature h3{font-family:'Pretendard',sans-serif;font-size:19px;font-weight:700;line-height:1.35;margin:0 0 10px;color:var(--primary);}
+.legal-body .about-feature p{margin:0 0 10px;}
+.legal-body .about-points{margin:0 0 12px;padding-left:18px;}
+.about-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.legal-body .about-link{display:inline-flex;align-items:center;padding:7px 14px;border-radius:var(--r-full);background:var(--bg);border:1px solid var(--border);font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;color:var(--primary);text-decoration:none;transition:border-color .15s;}
+.legal-body .about-link:hover{border-color:var(--af,var(--primary));}
+.about-sub{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 4px;}
+.about-sub-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 16px 14px;display:flex;flex-direction:column;}
+.about-sub-card h4{font-family:'Pretendard',sans-serif;font-size:15px;font-weight:700;margin:0 0 6px;color:var(--primary);}
+.legal-body .about-sub-card p{font-size:13px;line-height:1.6;margin:0 0 8px;}
+.legal-body .about-sub-points{font-size:12.5px;line-height:1.55;margin:0 0 10px;padding-left:16px;}
+.legal-body .about-sub-points li{margin-bottom:3px;}
+.legal-body .about-sub-link{margin-top:auto;font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;text-decoration:none;color:var(--af,var(--primary));}
+.about-sub-card.about-sky{grid-column:1/-1;border:none;color:#E8ECFF;
+  background:radial-gradient(1px 1px at 12% 22%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 78% 18%,#fff 50%,transparent 51%),
+    radial-gradient(1.5px 1.5px at 62% 70%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 30% 80%,#cfd8ff 50%,transparent 51%),
+    radial-gradient(1px 1px at 90% 60%,#fff 50%,transparent 51%),linear-gradient(135deg,#101833,#221a44);}
+.about-sky h4{color:#fff;}
+.legal-body .about-sky p,.legal-body .about-sky .about-sub-points{color:rgba(232,236,255,.8);}
+.legal-body .about-sky .about-sub-link{color:#C9B8FF;}
+@media (max-width:640px){
+  .about-feature{padding:20px 18px 18px;}
+  .about-sub{grid-template-columns:1fr;}
+}
 
 /* ---------- entry banners (home hero, campaign header) ----------
    Lives here, not in game.css, because these appear on the HOME and CAMPAIGN
