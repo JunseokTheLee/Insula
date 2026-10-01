@@ -20,7 +20,7 @@ body.pf-dark{
 .pf-dark #logoutBtn{background:transparent;color:var(--text);border-color:var(--border-strong);}
 .pf-dark .backnav{background:transparent;border-bottom-color:var(--border);}
 .pf-dark .backnav .back{color:var(--text);}
-.pf-dark .field input[type="text"],.pf-dark .field textarea,.pf-dark .field select{background:#1c201d;color:var(--text);border-color:var(--border-strong);}
+.pf-dark .field input[type="text"],.pf-dark .field input[type="number"],.pf-dark .field textarea,.pf-dark .field select{background:#1c201d;color:var(--text);border-color:var(--border-strong);}
 .pf-dark .field select option{background:#1c201d;color:var(--text);}
 .pf-dark .lb-exhibit-menu,.pf-dark .ep-disabilities-menu{background:#1c201d;}
 .pf-dark #toast{background:#f2f1ec;color:#0e100f;}

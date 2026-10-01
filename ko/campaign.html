@@ -42,9 +42,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260927-205831">
-<link rel="stylesheet" href="/css/home.css?v=20260927-205831">
-<link rel="stylesheet" href="/css/project.css?v=20260927-205831">
+<link rel="stylesheet" href="/css/base.css?v=20261001-104748">
+<link rel="stylesheet" href="/css/home.css?v=20261001-104748">
+<link rel="stylesheet" href="/css/project.css?v=20261001-104748">
 </head>
 <body data-mobile-fs>
 
@@ -66,7 +66,7 @@
           <button type="button" class="lang-btn" data-lang="ko">한</button>
         </div>
         <img id="myAvatar" alt="">
-        <span id="myName" class="guest">게스트</span>
+        <span id="myName" class="guest" role="button" tabindex="0">회원가입</span>
         <button id="loginBtn" class="id-btn">로그인</button>
         <button id="logoutBtn" class="id-btn" style="display:none">로그아웃</button>
       </div>
@@ -91,7 +91,7 @@
       <div class="project-progress" id="projectProgress"></div>
       <div class="project-stats-row" id="projectStatsRow">
         <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🧩</span><div><div class="stat-value" id="statCellsFilled">0</div><div class="stat-label">채워진 칸</div></div></div>
-        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🎨</span><div><div class="stat-value" id="statContributors">0</div><div class="stat-label">참여 아티스트</div></div></div>
+        <div class="stat-tile"><span class="stat-icon" aria-hidden="true">🎨</span><div><div class="stat-value" id="statContributors">0</div><div class="stat-label">참여 작가</div></div></div>
         <div class="stat-tile"><span class="stat-icon" aria-hidden="true">⬜</span><div><div class="stat-value" id="statCellsRemaining">0</div><div class="stat-label">남은 칸</div></div></div>
       </div>
       <div class="project-actions-row">
@@ -286,8 +286,8 @@
 <div id="auth-modal" class="modal-overlay">
   <div id="auth-dialog" class="modal-panel">
     <div class="auth-icon">🖼️</div>
-    <h3>Weavo에 참여하기</h3>
-    <p>커뮤니티 Weavo에 작품을 제출하려면 로그인하세요.</p>
+    <h3>Weavo 회원가입 · 로그인</h3>
+    <p>Google 또는 Apple 계정으로 바로 가입할 수 있어요. 처음이면 자동으로 회원가입되고, 이미 가입했다면 로그인됩니다.</p>
     <button id="google-signin-btn" class="oauth-signin-btn">
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
         <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2z"/>
@@ -324,15 +324,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260927-205831"></script>
-<script src="/js/i18n/ko.js?v=20260927-205831"></script>
-<script src="/js/common.js?v=20260927-205831"></script>
-<script src="/js/color-engine.js?v=20260927-205831"></script>
-<script src="/js/matching.js?v=20260927-205831"></script>
-<script src="/js/auth.js?v=20260927-205831"></script>
-<script src="/js/notifications.js?v=20260927-205831"></script>
-<script src="/js/push.js?v=20260927-205831"></script>
-<script src="/js/lightbox.js?v=20260927-205831"></script>
-<script src="/js/project.js?v=20260927-205831"></script>
+<script src="/js/supabase-client.js?v=20261001-104748"></script>
+<script src="/js/i18n/ko.js?v=20261001-104748"></script>
+<script src="/js/common.js?v=20261001-104748"></script>
+<script src="/js/color-engine.js?v=20261001-104748"></script>
+<script src="/js/matching.js?v=20261001-104748"></script>
+<script src="/js/auth.js?v=20261001-104748"></script>
+<script src="/js/notifications.js?v=20261001-104748"></script>
+<script src="/js/push.js?v=20261001-104748"></script>
+<script src="/js/lightbox.js?v=20261001-104748"></script>
+<script src="/js/project.js?v=20261001-104748"></script>
 </body>
 </html>

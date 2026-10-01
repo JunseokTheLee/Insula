@@ -41,7 +41,7 @@
 <meta name="twitter:image:alt" content="Weavo — Collaborative Art Mosaic Community">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"Privacy Policy","item":"https://weavo.art/en/privacy"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20260927-205831">
+<link rel="stylesheet" href="/css/base.css?v=20261001-104748">
 </head>
 <body>
 
@@ -63,7 +63,7 @@
           <button type="button" class="lang-btn" data-lang="ko">한</button>
         </div>
         <img id="myAvatar" alt="">
-        <span id="myName" class="guest">Guest</span>
+        <span id="myName" class="guest" role="button" tabindex="0">Sign up</span>
         <button id="loginBtn" class="id-btn">Sign in</button>
         <button id="logoutBtn" class="id-btn" style="display:none">Sign out</button>
       </div>
@@ -179,8 +179,8 @@
 <div id="auth-modal" class="modal-overlay">
   <div id="auth-dialog" class="modal-panel">
     <div class="auth-icon">🖼️</div>
-    <h3>Join Weavo</h3>
-    <p>Sign in to contribute your artwork to a community weavo.</p>
+    <h3>Sign up or sign in to Weavo</h3>
+    <p>Use your Google or Apple account. The first time, you are signed up automatically; after that, the same button signs you in.</p>
     <button id="google-signin-btn" class="oauth-signin-btn">
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
         <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2z"/>
@@ -217,11 +217,11 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20260927-205831"></script>
-<script src="/js/i18n/en.js?v=20260927-205831"></script>
-<script src="/js/common.js?v=20260927-205831"></script>
-<script src="/js/auth.js?v=20260927-205831"></script>
-<script src="/js/notifications.js?v=20260927-205831"></script>
-<script src="/js/push.js?v=20260927-205831"></script>
+<script src="/js/supabase-client.js?v=20261001-104748"></script>
+<script src="/js/i18n/en.js?v=20261001-104748"></script>
+<script src="/js/common.js?v=20261001-104748"></script>
+<script src="/js/auth.js?v=20261001-104748"></script>
+<script src="/js/notifications.js?v=20261001-104748"></script>
+<script src="/js/push.js?v=20261001-104748"></script>
 </body>
 </html>

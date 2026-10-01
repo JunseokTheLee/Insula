@@ -97,8 +97,13 @@ function updateIdentityUI() {
   // Same rule as every other place a person is named (artist page, artwork
   // credits): the chosen username, falling back to the account name only
   // during onboarding before one has been set.
-  nameEl.textContent = me.id ? (me.username || me.name) : tr('guest');
+  // Signed out, the name slot is a "Sign up" button (2026-10-01): newcomers
+  // could not tell that "Sign in" also creates the account. Both open the
+  // same Google/Apple dialog — the first sign-in IS the sign-up.
+  nameEl.textContent = me.id ? (me.username || me.name) : (tr('signUp') || tr('guest'));
   nameEl.classList.toggle('guest', !me.id);
+  if (me.id) { nameEl.removeAttribute('role'); nameEl.removeAttribute('tabindex'); }
+  else { nameEl.setAttribute('role', 'button'); nameEl.tabIndex = 0; }
   const av = document.getElementById('myAvatar');
   if (me.avatar) { av.src = cdnUrl(me.avatar); av.alt = tr('artistAvatarAlt', { name: me.username || me.name }); av.style.display = 'inline-block'; } else { av.style.display = 'none'; }
   document.getElementById('loginBtn').style.display = me.id ? 'none' : '';
@@ -136,6 +141,9 @@ document.getElementById('auth-modal').addEventListener('click', e => { if (e.tar
 function goToMyProfile() { me.id ? (location.href = profileUrl(me.id)) : openAuthModal(); }
 document.getElementById('myAvatar').onclick = goToMyProfile;
 document.getElementById('myName').onclick = goToMyProfile;
+document.getElementById('myName').addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && !me.id) { e.preventDefault(); openAuthModal(); }
+});
 const deleteAcctCtaEl = document.getElementById('deleteAcctCta');
 if (deleteAcctCtaEl) deleteAcctCtaEl.onclick = goToMyProfile;
 

@@ -42,6 +42,7 @@ function renderLightboxArtistCard(sub) {
   avatarWrap.innerHTML = '';
   document.getElementById('lightbox-artist-bio').textContent = '';
   aboutEl.classList.remove('visible');
+  renderLightboxDisabilities([]);
   document.getElementById('lightbox-country-map').style.display = 'none';
   if (!sub.author_id) { cardEl.style.display = 'none'; return; }
   cardEl.style.display = '';
@@ -73,9 +74,15 @@ let lbArtistDetailsToken = 0;
 async function loadLightboxArtistDetails(sub) {
   if (!sub.author_id) { renderLightboxCountryMap(null); return; }
   const myToken = ++lbArtistDetailsToken;
-  const { data: profile } = await sb.from('profiles')
-    .select('avatar_url,bio,country_id').eq('id', sub.author_id).maybeSingle();
+  let { data: profile, error } = await sb.from('profiles')
+    .select('avatar_url,bio,country_id,disabilities').eq('id', sub.author_id).maybeSingle();
+  if (error) {
+    // Without the disabilities column the rest of the card must still fill in.
+    ({ data: profile } = await sb.from('profiles')
+      .select('avatar_url,bio,country_id').eq('id', sub.author_id).maybeSingle());
+  }
   if (myToken !== lbArtistDetailsToken) return; // a newer lightbox item opened while this was in flight
+  renderLightboxDisabilities((profile && profile.disabilities) || []);
   if (profile && profile.avatar_url) {
     const avatarWrap = document.getElementById('lightbox-artist-avatar-wrap');
     avatarWrap.innerHTML = '';
@@ -85,6 +92,82 @@ async function loadLightboxArtistDetails(sub) {
   document.getElementById('lightbox-artist-about').classList.toggle('visible', !!(profile && profile.bio));
   renderLightboxCountryMap(profile && profile.country_id);
 }
+
+// The kinds of disability the artist chose to list on their profile
+// (2026-10-01), as small chips under their name — the same labels and the
+// same filter as the profile page (profile-view.js): "no disability" and
+// "prefer not to say" are not shown. The holder is made here, once, rather
+// than in each of the 18 page copies of the lightbox markup.
+function renderLightboxDisabilities(keys) {
+  let el = document.getElementById('lightbox-artist-dis');
+  if (!el) {
+    const info = document.querySelector('#lightbox-artist-card .lb-artist-info');
+    if (!info) return;
+    el = document.createElement('div');
+    el.id = 'lightbox-artist-dis';
+    el.className = 'lb-artist-dis';
+    info.appendChild(el);
+  }
+  el.textContent = '';
+  const shown = (keys || []).filter(k => k !== 'no_disability' && k !== 'prefer_not_to_say');
+  if (!shown.length || typeof disabilityLabel !== 'function') { el.hidden = true; return; }
+  el.setAttribute('aria-label', tr('lbDisabilityAria'));
+  for (const key of shown) {
+    const chip = document.createElement('span');
+    chip.className = 'lb-artist-dis-tag';
+    chip.textContent = disabilityLabel(key);
+    el.appendChild(chip);
+  }
+  el.hidden = false;
+}
+
+// ---------- "About the artist" / "About the artwork" cards ----------
+// Two clearly separate cards (2026-10-01, from the user's mock-up): each has
+// its own colour, icon and heading, and folds away on its heading. Built on
+// the existing markup at load — #lightbox-artist-about becomes the artist
+// card, #lightbox-cap-desc is wrapped in the artwork card — so none of the
+// 18 page copies change. The headings come from i18n, which also evens out
+// the pages whose static label still said "아티스트 소개".
+const LB_CARD_ICONS = {
+  artist: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8z"/></svg>',
+  story: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="1.8"/><path d="M5 18l4.5-5 3 3 2.5-2.5L19 18z"/></svg>',
+};
+function lbCardHead(kind, label) {
+  const head = document.createElement('button');
+  head.type = 'button';
+  head.className = 'lb-card-head';
+  head.setAttribute('aria-expanded', 'true');
+  head.innerHTML = `<span class="lb-card-icon">${LB_CARD_ICONS[kind]}</span><span class="lb-card-title"></span><span class="lb-card-chev" aria-hidden="true"></span>`;
+  head.querySelector('.lb-card-title').textContent = label;
+  head.addEventListener('click', () => {
+    const card = head.parentElement;
+    const open = card.classList.toggle('collapsed') === false;
+    head.setAttribute('aria-expanded', String(open));
+  });
+  return head;
+}
+(function buildLbInfoCards() {
+  const about = document.getElementById('lightbox-artist-about');
+  const bio = document.getElementById('lightbox-artist-bio');
+  if (about && bio && !about.classList.contains('lb-card')) {
+    about.classList.add('lb-card', 'lb-card-artist');
+    const oldLabel = about.querySelector('.lb-artist-about-label');
+    if (oldLabel) oldLabel.remove();
+    about.insertBefore(lbCardHead('artist', tr('lbArtistAbout')), bio);
+    bio.classList.add('lb-card-body');
+  }
+  const desc = document.getElementById('lightbox-cap-desc');
+  if (desc && !desc.closest('.lb-card')) {
+    const card = document.createElement('section');
+    card.id = 'lightbox-story';
+    card.className = 'lb-card lb-card-story';
+    card.hidden = true;
+    desc.parentNode.insertBefore(card, desc);
+    card.appendChild(lbCardHead('story', tr('lbArtStory')));
+    card.appendChild(desc);
+    desc.classList.add('lb-card-body');
+  }
+})();
 
 // ---------- mini country locator map (bottom of lightbox sidebar) ----------
 let worldTopoPromise = null;
@@ -457,6 +540,8 @@ function applyArtDetailsToCaption(sub) {
   ].filter(Boolean).join(' · ');
   renderLightboxPieceNote(sub);
   document.getElementById('lightbox-cap-desc').textContent = sub.art_description || '';
+  const storyCard = document.getElementById('lightbox-story');
+  if (storyCard) storyCard.hidden = !sub.art_description;
   const linkEl = document.getElementById('lightbox-cap-link');
   const href = sub.art_link ? safeHref(sub.art_link) : null;
   if (href) { linkEl.textContent = sub.art_link; linkEl.href = href; }

@@ -161,9 +161,16 @@ body.modal-open{position:fixed;left:0;right:0;width:100%;}
 .nav-link:hover{color:var(--primary);background:none;}
 .nav-link.active{color:var(--primary);font-weight:600;background:none;}
 
+/* Wraps rather than overflows (2026-10-01): the Android app's WebView scales
+   text with the phone's font-size setting (iOS does not), and at a large
+   setting the row — language toggle, avatar, name, admin, sign-out — ran
+   past the right edge and hid "Log out". min-width:0 + wrap keeps every
+   button on screen at any text size, without overriding the person's
+   chosen size (they may need it). */
 #identity{
   display:inline-flex;align-items:center;gap:14px;font-size:14px;flex-shrink:0;
   margin-left:auto;border:none;padding:0;
+  flex-wrap:wrap;justify-content:flex-end;row-gap:8px;min-width:0;max-width:100%;
 }
 
 /* Wide enough for logo, centered nav-links, and identity to share a row
@@ -182,7 +189,15 @@ body.modal-open{position:fixed;left:0;right:0;width:100%;}
 #myAvatar{width:30px;height:30px;border-radius:50%;object-fit:cover;display:none;cursor:pointer;border:1px solid var(--border-strong);}
 #myName{font-family:'Pretendard',sans-serif;font-weight:600;font-size:14px;cursor:pointer;color:var(--text);}
 #myName:not(.guest):hover{text-decoration:underline;}
-#myName.guest{color:var(--muted);font-weight:500;}
+#myName{overflow-wrap:anywhere;}
+/* Signed out, the name slot is the "Sign up" button (auth.js updateIdentityUI). */
+#myName.guest{
+  display:inline-flex;align-items:center;padding:8px 16px;border-radius:var(--r-full);
+  background:var(--primary-soft);color:var(--primary-dark);border:1px solid var(--primary);
+  font-weight:700;font-size:13px;line-height:1;white-space:nowrap;
+}
+#myName.guest:hover{background:#fff;text-decoration:none;}
+#myName.guest:focus-visible{outline:2px solid var(--primary);outline-offset:2px;}
 .id-btn{
   appearance:none;border:none;cursor:pointer;font-family:'Pretendard',sans-serif;font-size:13px;
   padding:9px 18px;border-radius:var(--r-full);font-weight:600;line-height:1;
@@ -314,7 +329,10 @@ body.modal-open{position:fixed;left:0;right:0;width:100%;}
 /* Live username availability hint: it sits inside the label right after the
    label text, so give it breathing room and enough weight to read at a glance. */
 #ep-username-hint{margin-left:10px;font-weight:600;font-size:12.5px;}
-.field input[type="text"],.field textarea,.field select{
+.field .field-required{font-weight:600;color:var(--accent-warm);}
+/* number inputs (the artwork's year) got none of this and rendered as a thin
+   bare box — too small to tap on a phone (2026-10-01). */
+.field input[type="text"],.field input[type="number"],.field textarea,.field select{
   width:100%;padding:10px 12px;border:1px solid var(--border-strong);border-radius:var(--r-sm);
   font-size:13px;font-family:'Pretendard',sans-serif;color:var(--text);background:#fff;outline:none;transition:border-color .12s linear;
 }
@@ -549,16 +567,51 @@ body.lb-img-fs-lock{overflow:hidden;}
 .lb-artist-follow-btn:hover{opacity:.85;}
 .lb-artist-follow-btn.following{background:transparent;color:var(--bg);border:1px solid rgba(247,247,245,.3);}
 .lb-artist-follow-btn.following:hover{background:rgba(247,247,245,.1);opacity:1;}
-#lightbox-artist-about{
-  margin:4px 0 10px;padding-top:10px;border-top:1px solid rgba(247,247,245,.15);
-  display:none;text-align:left;
-}
+#lightbox-artist-about{display:none;text-align:left;}
 #lightbox-artist-about.visible{display:block;}
 .lb-artist-about-label{
   color:var(--bg);font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;
   margin-bottom:6px;
 }
 .lb-artist-bio{color:rgba(247,247,245,.75);font-size:12.5px;line-height:1.6;}
+/* Disabilities the artist lists on their profile, under their name
+   (lightbox.js renderLightboxDisabilities). */
+.lb-artist-dis{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
+.lb-artist-dis-tag{
+  font-family:'Pretendard',sans-serif;font-size:11px;font-weight:600;line-height:1.3;
+  padding:3px 9px;border-radius:var(--r-full);
+  color:#CFE9FF;background:rgba(120,170,255,.16);border:1px solid rgba(140,185,255,.38);
+}
+/* "About the artist" / "About the artwork": two cards that read as two
+   different things at a glance — each its own tint, icon and heading, and
+   each folds on its heading (lightbox.js buildLbInfoCards; 2026-10-01). */
+.lb-card{
+  margin:10px 0;border-radius:14px;text-align:left;overflow:hidden;
+  border:1px solid var(--lb-card-line);background:var(--lb-card-bg);
+}
+.lb-card-artist{--lb-card-bg:rgba(74,190,130,.12);--lb-card-line:rgba(96,206,148,.38);--lb-card-ink:#8FE3B5;}
+.lb-card-story{--lb-card-bg:rgba(110,140,255,.12);--lb-card-line:rgba(140,165,255,.40);--lb-card-ink:#B4C4FF;}
+.lb-card-head{
+  appearance:none;width:100%;display:flex;align-items:center;gap:9px;cursor:pointer;
+  padding:11px 14px;background:none;border:none;text-align:left;
+  font-family:'Pretendard',sans-serif;font-size:13.5px;font-weight:700;color:var(--lb-card-ink);
+}
+.lb-card-head:focus-visible{outline:2px solid var(--lb-card-ink);outline-offset:-2px;border-radius:14px;}
+.lb-card-icon{display:inline-flex;width:20px;height:20px;flex-shrink:0;}
+.lb-card-icon svg{width:100%;height:100%;fill:currentColor;}
+.lb-card-title{flex:1;min-width:0;}
+.lb-card-chev{
+  width:8px;height:8px;flex-shrink:0;margin-right:3px;
+  border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+  transform:rotate(45deg) translateY(-2px);transition:transform .15s ease-out;
+}
+.lb-card.collapsed .lb-card-chev{transform:rotate(-45deg);}
+.lb-card .lb-card-body,#lightbox-cap-desc.lb-card-body{
+  margin:0;padding:0 14px 13px;color:rgba(247,247,245,.88);
+  font-size:13px;line-height:1.65;white-space:pre-line;
+}
+.lb-card.collapsed .lb-card-body{display:none;}
+@media (prefers-reduced-motion:reduce){.lb-card-chev{transition:none;}}
 #lightbox-cap-link{color:var(--mint);font-size:12.5px;display:inline-block;margin-top:6px;}
 #lightbox-cap-link:empty{display:none;}
 #lightbox-cap-link:hover{text-decoration:underline;}

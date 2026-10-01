@@ -24,7 +24,7 @@ body.stars-dark{
 .stars-dark .lang-toggle{background:rgba(255,255,255,.1);}
 .stars-dark .lang-btn.active{background:#f2f4fb;color:#070b17;}
 .stars-dark #logoutBtn{background:transparent;color:var(--text);border-color:var(--border-strong);}
-.stars-dark .field input[type="text"],.stars-dark .field textarea,.stars-dark .field select{background:#151d36;color:var(--text);border-color:var(--border-strong);}
+.stars-dark .field input[type="text"],.stars-dark .field input[type="number"],.stars-dark .field textarea,.stars-dark .field select{background:#151d36;color:var(--text);border-color:var(--border-strong);}
 .stars-dark .field select option{background:#151d36;color:var(--text);}
 .stars-dark #toast{background:#f2f4fb;color:#070b17;}
 .stars-dark .btn-cancel:hover{background:rgba(255,255,255,.08);}

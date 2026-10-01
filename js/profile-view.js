@@ -969,7 +969,6 @@ document.getElementById('profileUploadBtn').onclick = () => {
   document.getElementById('ua-completed').max = new Date().getFullYear();
   document.getElementById('ua-completed').value = '';
   document.getElementById('ua-desc').value = '';
-  document.getElementById('ua-link').value = '';
   document.getElementById('ua-error').textContent = '';
   document.getElementById('upload-art-modal').classList.add('open');
 };
@@ -980,8 +979,13 @@ document.getElementById('ua-submit').onclick = async () => {
   const file = artPicker.getFile();
   const errorEl = document.getElementById('ua-error');
   if (!file) { errorEl.textContent = tr('addImageFirst'); return; }
-  const link = document.getElementById('ua-link').value.trim();
-  if (link && !safeHref(link)) { errorEl.textContent = tr('linkMustBeValidUrl'); return; }
+  // A title is required (2026-10-01): it names the artwork everywhere it is
+  // shown — lightbox, star cards, notifications, push titles.
+  const titleEl = document.getElementById('ua-title');
+  if (!titleEl.value.trim()) { errorEl.textContent = tr('titleRequired'); titleEl.focus(); return; }
+  // The portfolio-link field was taken off the form (2026-10-01); the
+  // column stays and the artwork edit dialog can still set it.
+  const link = '';
   const completedYear = artYearToDate(document.getElementById('ua-completed').value);
   if (completedYear.error) { errorEl.textContent = completedYear.error; return; }
   errorEl.textContent = '';
