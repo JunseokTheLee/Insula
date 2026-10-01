@@ -11,6 +11,11 @@ function adminShow(id, on) { const el = document.getElementById(id); if (el) el.
 function adminDate(iso) {
   return new Date(iso).toLocaleDateString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
+// Year, month, day and time — for lists where the hour matters (artworks).
+function adminFullDateTime(iso) {
+  return new Date(iso).toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US',
+    { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
 function adminActionBtn(label, onClick, cls) {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'admin-btn' + (cls ? ' ' + cls : ''); b.textContent = label; b.onclick = onClick;
@@ -1497,7 +1502,10 @@ function adminArtCardEl(sub) {
     resetAdminArtworks();
   };
   const date = document.createElement('div');
-  date.className = 'admin-art-date'; date.textContent = adminDate(sub.created_at);
+  // Date AND time (2026-10-01): when reviewing a burst of uploads, which came
+  // first and how close together they were is the useful part.
+  date.className = 'admin-art-date'; date.textContent = adminFullDateTime(sub.created_at);
+  date.title = new Date(sub.created_at).toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US');
   info.append(title, by, date);
 
   card.append(check, img, open, info);
