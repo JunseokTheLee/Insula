@@ -589,8 +589,10 @@ body.lb-img-fs-lock{overflow:hidden;}
   margin:10px 0;border-radius:14px;text-align:left;overflow:hidden;
   border:1px solid var(--lb-card-line);background:var(--lb-card-bg);
 }
-.lb-card-artist{--lb-card-bg:rgba(103,161,131,.06);--lb-card-line:rgba(124,179,150,.06);--lb-card-ink:#8FE3B5;}
-.lb-card-story{--lb-card-bg:rgba(146,161,219,.06);--lb-card-line:rgba(169,181,226,.06);--lb-card-ink:#B4C4FF;}
+/* Colours come from the admin "Design" tab (lightbox.js sets --lb-artist-*
+   / --lb-story-* on the root); the fallbacks are the shipped defaults. */
+.lb-card-artist{--lb-card-bg:var(--lb-artist-bg,rgba(103,161,131,.06));--lb-card-line:var(--lb-artist-line,rgba(124,179,150,.06));--lb-card-ink:#8FE3B5;}
+.lb-card-story{--lb-card-bg:var(--lb-story-bg,rgba(146,161,219,.06));--lb-card-line:var(--lb-story-line,rgba(169,181,226,.06));--lb-card-ink:#B4C4FF;}
 .lb-card-head{
   appearance:none;width:100%;display:flex;align-items:center;gap:9px;cursor:pointer;
   padding:11px 14px;background:none;border:none;text-align:left;

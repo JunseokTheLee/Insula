@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261001-123435">
-<link rel="stylesheet" href="/css/admin.css?v=20261001-123435">
+<link rel="stylesheet" href="/css/base.css?v=20261001-125202">
+<link rel="stylesheet" href="/css/admin.css?v=20261001-125202">
 </head>
 <body>
 
@@ -68,6 +68,7 @@
           <button type="button" class="admin-tab" data-tab="games" role="tab" aria-selected="false">Game records</button>
           <button type="button" class="admin-tab" data-tab="members" role="tab" aria-selected="false">Members</button>
           <button type="button" class="admin-tab" data-tab="broadcast" role="tab" aria-selected="false">Announce</button>
+          <button type="button" class="admin-tab" data-tab="design" role="tab" aria-selected="false">Design</button>
           <button type="button" class="admin-tab" data-tab="app" role="tab" aria-selected="false">App info</button>
           <button type="button" class="admin-tab" data-tab="settings" role="tab" aria-selected="false">Site options</button>
           <button type="button" class="admin-tab" data-tab="log" role="tab" aria-selected="false">Log</button>
@@ -346,6 +347,49 @@
           <div class="admin-toolbar">
             <button type="button" class="admin-btn primary" id="adminBroadcastSendBtn" disabled>Send announcement</button>
             <span class="admin-help" id="adminBroadcastTargets"></span>
+          </div>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="design" role="tabpanel" hidden>
+        <section class="admin-section" id="adminDesignSection">
+          <h2>Design</h2>
+          <p class="admin-help">Colours used on the site. Saved in the same <code>site_settings</code> row as the site options and applied to visitors from their next page load (within about a minute). A change saves when you release a slider or pick a colour.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminDesignUnavailable" style="display:none;">Not available yet — run <code>supabase_site_settings.sql</code> in the Supabase SQL editor first.</p>
+          <div class="admin-settings" id="adminDesignSettings">
+            <div class="admin-option-card">
+              <h3>Lightbox · artwork info cards</h3>
+              <p class="admin-help">Background and border of the <strong>About the artist</strong> and <strong>About the artwork</strong> cards shown beside (on a phone, below) an opened artwork. Change a colour with the picker or the hue, saturation and lightness sliders; opacity 0% is fully transparent, 100% solid.</p>
+              <div class="design-preview" aria-label="Preview (lightbox background)">
+                <div class="design-preview-label">Preview (lightbox background)</div>
+                <div class="lb-card lb-card-artist design-preview-card" data-preview="artist"><div class="lb-card-head"><span class="lb-card-title">About the artist</span></div><p class="lb-card-body">The artist's own introduction goes in this card.</p></div>
+                <div class="lb-card lb-card-story design-preview-card" data-preview="story"><div class="lb-card-head"><span class="lb-card-title">About the artwork</span></div><p class="lb-card-body">The story behind the artwork goes in this card.</p></div>
+              </div>
+              <div class="design-color" data-color-key="lbArtistBg">
+                <div class="design-color-head"><span class="design-swatch" aria-hidden="true"></span><strong>About the artist — background</strong><span class="design-value"></span><button type="button" class="admin-btn design-reset">Reset to default</button></div>
+                <div class="design-row"><label for="design-lbArtistBg">Colour</label><input id="design-lbArtistBg" type="color" data-setting="lbArtistBg" disabled><output data-setting-output="lbArtistBg"></output></div>
+                <div class="design-hsl"></div>
+                <div class="design-row"><label for="design-lbArtistBgAlpha">Opacity</label><input id="design-lbArtistBgAlpha" type="range" min="0" max="100" step="1" data-setting="lbArtistBgAlpha" disabled><span><output data-setting-output="lbArtistBgAlpha"></output>%</span></div>
+              </div>
+              <div class="design-color" data-color-key="lbArtistLine">
+                <div class="design-color-head"><span class="design-swatch" aria-hidden="true"></span><strong>About the artist — border</strong><span class="design-value"></span><button type="button" class="admin-btn design-reset">Reset to default</button></div>
+                <div class="design-row"><label for="design-lbArtistLine">Colour</label><input id="design-lbArtistLine" type="color" data-setting="lbArtistLine" disabled><output data-setting-output="lbArtistLine"></output></div>
+                <div class="design-hsl"></div>
+                <div class="design-row"><label for="design-lbArtistLineAlpha">Opacity</label><input id="design-lbArtistLineAlpha" type="range" min="0" max="100" step="1" data-setting="lbArtistLineAlpha" disabled><span><output data-setting-output="lbArtistLineAlpha"></output>%</span></div>
+              </div>
+              <div class="design-color" data-color-key="lbStoryBg">
+                <div class="design-color-head"><span class="design-swatch" aria-hidden="true"></span><strong>About the artwork — background</strong><span class="design-value"></span><button type="button" class="admin-btn design-reset">Reset to default</button></div>
+                <div class="design-row"><label for="design-lbStoryBg">Colour</label><input id="design-lbStoryBg" type="color" data-setting="lbStoryBg" disabled><output data-setting-output="lbStoryBg"></output></div>
+                <div class="design-hsl"></div>
+                <div class="design-row"><label for="design-lbStoryBgAlpha">Opacity</label><input id="design-lbStoryBgAlpha" type="range" min="0" max="100" step="1" data-setting="lbStoryBgAlpha" disabled><span><output data-setting-output="lbStoryBgAlpha"></output>%</span></div>
+              </div>
+              <div class="design-color" data-color-key="lbStoryLine">
+                <div class="design-color-head"><span class="design-swatch" aria-hidden="true"></span><strong>About the artwork — border</strong><span class="design-value"></span><button type="button" class="admin-btn design-reset">Reset to default</button></div>
+                <div class="design-row"><label for="design-lbStoryLine">Colour</label><input id="design-lbStoryLine" type="color" data-setting="lbStoryLine" disabled><output data-setting-output="lbStoryLine"></output></div>
+                <div class="design-hsl"></div>
+                <div class="design-row"><label for="design-lbStoryLineAlpha">Opacity</label><input id="design-lbStoryLineAlpha" type="range" min="0" max="100" step="1" data-setting="lbStoryLineAlpha" disabled><span><output data-setting-output="lbStoryLineAlpha"></output>%</span></div>
+              </div>
+            </div>
           </div>
         </section>
         </div>
@@ -734,15 +778,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261001-123435"></script>
-<script src="/js/i18n/en.js?v=20261001-123435"></script>
-<script src="/js/common.js?v=20261001-123435"></script>
-<script src="/js/auth.js?v=20261001-123435"></script>
-<script src="/js/notifications.js?v=20261001-123435"></script>
-<script src="/js/push.js?v=20261001-123435"></script>
-<script src="/js/color-engine.js?v=20261001-123435"></script>
-<script src="/js/pixel-board.js?v=20261001-123435"></script>
-<script src="/js/matching.js?v=20261001-123435"></script>
-<script src="/js/admin.js?v=20261001-123435"></script>
+<script src="/js/supabase-client.js?v=20261001-125202"></script>
+<script src="/js/i18n/en.js?v=20261001-125202"></script>
+<script src="/js/common.js?v=20261001-125202"></script>
+<script src="/js/auth.js?v=20261001-125202"></script>
+<script src="/js/notifications.js?v=20261001-125202"></script>
+<script src="/js/push.js?v=20261001-125202"></script>
+<script src="/js/color-engine.js?v=20261001-125202"></script>
+<script src="/js/pixel-board.js?v=20261001-125202"></script>
+<script src="/js/matching.js?v=20261001-125202"></script>
+<script src="/js/admin.js?v=20261001-125202"></script>
 </body>
 </html>

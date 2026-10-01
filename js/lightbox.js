@@ -169,6 +169,26 @@ function lbCardHead(kind, label) {
   }
 })();
 
+// The cards' colours from the admin "Design" tab (site options lb*): set as
+// CSS variables on the root, which css/base.css reads with the shipped
+// defaults as fallbacks — so an unreadable or stale settings row (or an old
+// common.js without hexAlphaToRgba) simply leaves the defaults.
+(function applyLbCardColors() {
+  if (typeof getSiteSettings !== 'function' || typeof hexAlphaToRgba !== 'function') return;
+  getSiteSettings().then(s => {
+    const root = document.documentElement.style;
+    for (const [cssVar, hex, alpha] of [
+      ['--lb-artist-bg', s.lbArtistBg, s.lbArtistBgAlpha],
+      ['--lb-artist-line', s.lbArtistLine, s.lbArtistLineAlpha],
+      ['--lb-story-bg', s.lbStoryBg, s.lbStoryBgAlpha],
+      ['--lb-story-line', s.lbStoryLine, s.lbStoryLineAlpha],
+    ]) {
+      const v = hexAlphaToRgba(hex, alpha);
+      if (v) root.setProperty(cssVar, v);
+    }
+  }).catch(() => {});
+})();
+
 // ---------- mini country locator map (bottom of lightbox sidebar) ----------
 let worldTopoPromise = null;
 function loadWorldTopo() {

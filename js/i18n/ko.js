@@ -387,6 +387,7 @@ const T = {
   artMaterialLabel: '재료', artMaterialPlaceholder: '예: 캔버스에 유화',
   artCompletedLabel: '작업연도', artYearPlaceholder: '예: 2020',
   artCompletedYearInvalid: '{min}년에서 {max}년 사이의 연도를 입력하세요.',
+  designHue: '색상', designSat: '채도', designLight: '명도',
   appDownload: 'Weavo 앱 다운로드', appDownloadTitle: 'Weavo 앱으로 열기', appDownloadQrAlt: 'Weavo 앱 다운로드 QR 코드',
   appDownloadHint: '휴대폰 카메라로 QR 코드를 찍어 주세요. 앱이 있으면 바로 열리고, 없으면 스토어로 이동합니다.', appDownloadClose: '닫기',
   lbArtistAbout: '작가 소개', lbArtStory: '작품 이야기', lbDisabilityAria: '작가가 밝힌 장애 유형',

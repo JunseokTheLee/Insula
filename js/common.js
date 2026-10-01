@@ -714,7 +714,25 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   appIosBundleId: '',       // e.g. art.weavo.app
   appAndroidPackage: 'art.weavo.app',  // Play Store package (matches .well-known/assetlinks.json)
   appAndroidOnPlay: false,  // the Play Store listing is live
+  // Admin "Design" tab (2026-10-01): the lightbox's "About the artist" /
+  // "About the artwork" cards — background and border, each a colour
+  // (#RRGGBB) and an opacity in percent. The defaults are the values the
+  // cards shipped with (css/base.css keeps the same fallbacks), so nothing
+  // changes until an admin saves something. Applied by lightbox.js.
+  lbArtistBg: '#67A183', lbArtistBgAlpha: 6,
+  lbArtistLine: '#7CB396', lbArtistLineAlpha: 6,
+  lbStoryBg: '#92A1DB', lbStoryBgAlpha: 6,
+  lbStoryLine: '#A9B5E2', lbStoryLineAlpha: 6,
 });
+// "#RRGGBB" + opacity in percent → "rgba(r,g,b,a)", or null when the colour
+// is not a valid hex (the caller then keeps its CSS default).
+function hexAlphaToRgba(hex, pct) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  const a = Math.min(100, Math.max(0, Number(pct)));
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${Number.isFinite(a) ? +(a / 100).toFixed(3) : 1})`;
+}
 const SITE_SETTINGS_TTL_MS = 60 * 1000;
 const SITE_SETTINGS_CACHE_KEY = 'weavo.siteSettings';
 let siteSettingsPromise = null;

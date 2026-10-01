@@ -1174,6 +1174,106 @@ async function saveAdminSetting(input) {
   toast(tr('adminSettingSaved'));
 }
 
+// ---------- Design tab (2026-10-01) ----------
+// Each colour (data-setting="lb…", #RRGGBB) and its opacity (…Alpha, 0–100)
+// are ordinary site options, bound and saved by loadAdminSettings like any
+// other. The hue / saturation / lightness sliders are only a way of editing
+// the colour: they write the colour input and save IT on release, so what is
+// stored is always one hex value. The preview cards use the same CSS as the
+// real lightbox (css/base.css .lb-card-*), fed through the same variables.
+function hexToHsl(hex) {
+  const n = parseInt(String(hex).replace('#', ''), 16);
+  const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
+  let h = 0, s = 0;
+  if (d) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    h = max === r ? 60 * (((g - b) / d) % 6) : max === g ? 60 * ((b - r) / d + 2) : 60 * ((r - g) / d + 4);
+  }
+  return { h: Math.round((h + 360) % 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = l - c / 2;
+  const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+  return '#' + [r, g, b].map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+}
+function hexToRgbText(hex) {
+  const n = parseInt(String(hex).replace('#', ''), 16);
+  return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
+}
+function paintAdminDesignPreview() {
+  const box = document.querySelector('#adminDesignSettings .design-preview');
+  if (!box || typeof hexAlphaToRgba !== 'function') return;
+  const val = id => (document.getElementById(id) || {}).value;
+  for (const [cssVar, key] of [['--lb-artist-bg', 'lbArtistBg'], ['--lb-artist-line', 'lbArtistLine'], ['--lb-story-bg', 'lbStoryBg'], ['--lb-story-line', 'lbStoryLine']]) {
+    const v = hexAlphaToRgba(val(`design-${key}`), val(`design-${key}Alpha`));
+    if (v) box.style.setProperty(cssVar, v);
+  }
+}
+function initAdminDesign() {
+  document.querySelectorAll('#adminDesignSettings .design-color').forEach(group => {
+    const key = group.dataset.colorKey;
+    const colorEl = document.getElementById(`design-${key}`);
+    const alphaEl = document.getElementById(`design-${key}Alpha`);
+    if (!colorEl || !alphaEl) return;
+    const swatch = group.querySelector('.design-swatch');
+    const valueEl = group.querySelector('.design-value');
+    const showValue = () => {
+      const rgba = hexAlphaToRgba(colorEl.value, alphaEl.value);
+      // Over the lightbox's dark ground, the way the colour really shows.
+      if (swatch) swatch.style.background = rgba ? `linear-gradient(${rgba},${rgba}),#1b201d` : colorEl.value;
+      if (valueEl) valueEl.textContent = `${hexToRgbText(colorEl.value)} · ${alphaEl.value}%`;
+      paintAdminDesignPreview();
+    };
+    if (!group.dataset.bound) {
+      group.dataset.bound = '1';
+      const box = group.querySelector('.design-hsl');
+      const sliders = {};
+      for (const [part, max, label] of [['h', 360, tr('designHue')], ['s', 100, tr('designSat')], ['l', 100, tr('designLight')]]) {
+        const row = document.createElement('div'); row.className = 'design-row';
+        const id = `design-${key}-${part}`;
+        const lab = document.createElement('label'); lab.htmlFor = id; lab.textContent = label;
+        const input = document.createElement('input');
+        input.type = 'range'; input.id = id; input.min = '0'; input.max = String(max); input.step = '1';
+        const out = document.createElement('output'); out.htmlFor = id;
+        row.append(lab, input, out);
+        box.appendChild(row);
+        sliders[part] = { input, out };
+      }
+      const fromSliders = () => {
+        colorEl.value = hslToHex(+sliders.h.input.value, +sliders.s.input.value, +sliders.l.input.value);
+        for (const p of ['h', 's', 'l']) sliders[p].out.textContent = sliders[p].input.value + (p === 'h' ? '°' : '%');
+        syncAdminSettingOutput(colorEl);
+        showValue();
+      };
+      group.syncSliders = () => {
+        const hsl = hexToHsl(colorEl.value);
+        for (const p of ['h', 's', 'l']) {
+          sliders[p].input.value = String(hsl[p]);
+          sliders[p].out.textContent = hsl[p] + (p === 'h' ? '°' : '%');
+          sliders[p].input.disabled = colorEl.disabled;
+        }
+        showValue();
+      };
+      for (const p of ['h', 's', 'l']) {
+        sliders[p].input.addEventListener('input', fromSliders);
+        sliders[p].input.addEventListener('change', () => saveAdminSetting(colorEl));
+      }
+      colorEl.addEventListener('input', () => group.syncSliders());
+      alphaEl.addEventListener('input', showValue);
+      group.querySelector('.design-reset').onclick = async () => {
+        colorEl.value = String(SITE_SETTING_DEFAULTS[key]).toLowerCase();
+        alphaEl.value = String(SITE_SETTING_DEFAULTS[`${key}Alpha`]);
+        group.syncSliders();
+        await saveAdminSetting(colorEl);
+        await saveAdminSetting(alphaEl);
+      };
+    }
+    group.syncSliders();
+  });
+}
+
 // ---------- site options: open-cell grey preview ----------
 // The contrast / brightness sliders and the tint colour repaint a small
 // canvas with the newest live campaign that has a grid image (one small PNG
@@ -1818,6 +1918,7 @@ const ADMIN_TAB_LOADERS = {
   members:   () => Promise.all([loadAdminNewMembers(), loadAdminIncomplete(), loadAdminAdmins(), loadAdminBlocked(), loadAdminRankExcluded()]),
   games:     () => Promise.all([resetAdminGames(), loadAdminGameTop()]),
   broadcast: () => loadAdminBroadcast(),
+  design:    () => loadAdminSettings('adminDesignSettings', 'adminDesignUnavailable').then(initAdminDesign),
   app:       () => loadAdminSettings('adminAppSettings', 'adminAppUnavailable'),
   settings:  () => loadAdminSettings(),
   log:       () => loadAdminLog(),

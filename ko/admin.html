@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261001-123435">
-<link rel="stylesheet" href="/css/admin.css?v=20261001-123435">
+<link rel="stylesheet" href="/css/base.css?v=20261001-125202">
+<link rel="stylesheet" href="/css/admin.css?v=20261001-125202">
 </head>
 
 <body>
@@ -73,6 +73,7 @@
           <button type="button" class="admin-tab" data-tab="games" role="tab" aria-selected="false">게임 기록</button>
           <button type="button" class="admin-tab" data-tab="members" role="tab" aria-selected="false">회원</button>
           <button type="button" class="admin-tab" data-tab="broadcast" role="tab" aria-selected="false">공지</button>
+          <button type="button" class="admin-tab" data-tab="design" role="tab" aria-selected="false">디자인</button>
           <button type="button" class="admin-tab" data-tab="app" role="tab" aria-selected="false">앱 정보</button>
           <button type="button" class="admin-tab" data-tab="settings" role="tab" aria-selected="false">사이트 옵션</button>
           <button type="button" class="admin-tab" data-tab="log" role="tab" aria-selected="false">기록</button>
@@ -351,6 +352,49 @@
           <div class="admin-toolbar">
             <button type="button" class="admin-btn primary" id="adminBroadcastSendBtn" disabled>공지 발송</button>
             <span class="admin-help" id="adminBroadcastTargets"></span>
+          </div>
+        </section>
+        </div>
+
+        <div class="admin-panel" data-panel="design" role="tabpanel" hidden>
+        <section class="admin-section" id="adminDesignSection">
+          <h2>디자인</h2>
+          <p class="admin-help">사이트 화면의 색을 정합니다. 사이트 옵션과 같은 <code>site_settings</code> 행에 저장되고, 방문자에게는 다음 페이지 로드부터(늦어도 1분 안에) 적용됩니다. 슬라이더를 놓거나 색을 고르는 순간 저장됩니다.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminDesignUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_site_settings.sql</code> 을 먼저 실행하세요.</p>
+          <div class="admin-settings" id="adminDesignSettings">
+            <div class="admin-option-card">
+              <h3>라이트박스 · 작품 정보 카드</h3>
+              <p class="admin-help">작품을 열었을 때 오른쪽(휴대폰은 아래)에 나오는 <strong>작가 소개</strong>·<strong>작품 이야기</strong> 카드의 배경과 테두리입니다. 색은 색 고르기나 색상·채도·명도 슬라이더로 바꾸고, 불투명도 0% 는 완전히 투명, 100% 는 불투명입니다.</p>
+              <div class="design-preview" aria-label="미리보기 (라이트박스 바탕)">
+                <div class="design-preview-label">미리보기 (라이트박스 바탕)</div>
+                <div class="lb-card lb-card-artist design-preview-card" data-preview="artist"><div class="lb-card-head"><span class="lb-card-title">작가 소개</span></div><p class="lb-card-body">작가가 직접 쓴 소개가 이 카드에 들어갑니다.</p></div>
+                <div class="lb-card lb-card-story design-preview-card" data-preview="story"><div class="lb-card-head"><span class="lb-card-title">작품 이야기</span></div><p class="lb-card-body">작품에 담긴 이야기가 이 카드에 들어갑니다.</p></div>
+              </div>
+              <div class="design-color" data-color-key="lbArtistBg">
+                <div class="design-color-head"><span class="design-swatch" aria-hidden="true"></span><strong>작가 소개 — 배경</strong><span class="design-value"></span><button type="button" class="admin-btn design-reset">기본값으로</button></div>
+                <div class="design-row"><label for="design-lbArtistBg">색</label><input id="design-lbArtistBg" type="color" data-setting="lbArtistBg" disabled><output data-setting-output="lbArtistBg"></output></div>
+                <div class="design-hsl"></div>
+                <div class="design-row"><label for="design-lbArtistBgAlpha">불투명도</label><input id="design-lbArtistBgAlpha" type="range" min="0" max="100" step="1" data-setting="lbArtistBgAlpha" disabled><span><output data-setting-output="lbArtistBgAlpha"></output>%</span></div>
+              </div>
+              <div class="design-color" data-color-key="lbArtistLine">
+                <div class="design-color-head"><span class="design-swatch" aria-hidden="true"></span><strong>작가 소개 — 테두리</strong><span class="design-value"></span><button type="button" class="admin-btn design-reset">기본값으로</button></div>
+                <div class="design-row"><label for="design-lbArtistLine">색</label><input id="design-lbArtistLine" type="color" data-setting="lbArtistLine" disabled><output data-setting-output="lbArtistLine"></output></div>
+                <div class="design-hsl"></div>
+                <div class="design-row"><label for="design-lbArtistLineAlpha">불투명도</label><input id="design-lbArtistLineAlpha" type="range" min="0" max="100" step="1" data-setting="lbArtistLineAlpha" disabled><span><output data-setting-output="lbArtistLineAlpha"></output>%</span></div>
+              </div>
+              <div class="design-color" data-color-key="lbStoryBg">
+                <div class="design-color-head"><span class="design-swatch" aria-hidden="true"></span><strong>작품 이야기 — 배경</strong><span class="design-value"></span><button type="button" class="admin-btn design-reset">기본값으로</button></div>
+                <div class="design-row"><label for="design-lbStoryBg">색</label><input id="design-lbStoryBg" type="color" data-setting="lbStoryBg" disabled><output data-setting-output="lbStoryBg"></output></div>
+                <div class="design-hsl"></div>
+                <div class="design-row"><label for="design-lbStoryBgAlpha">불투명도</label><input id="design-lbStoryBgAlpha" type="range" min="0" max="100" step="1" data-setting="lbStoryBgAlpha" disabled><span><output data-setting-output="lbStoryBgAlpha"></output>%</span></div>
+              </div>
+              <div class="design-color" data-color-key="lbStoryLine">
+                <div class="design-color-head"><span class="design-swatch" aria-hidden="true"></span><strong>작품 이야기 — 테두리</strong><span class="design-value"></span><button type="button" class="admin-btn design-reset">기본값으로</button></div>
+                <div class="design-row"><label for="design-lbStoryLine">색</label><input id="design-lbStoryLine" type="color" data-setting="lbStoryLine" disabled><output data-setting-output="lbStoryLine"></output></div>
+                <div class="design-hsl"></div>
+                <div class="design-row"><label for="design-lbStoryLineAlpha">불투명도</label><input id="design-lbStoryLineAlpha" type="range" min="0" max="100" step="1" data-setting="lbStoryLineAlpha" disabled><span><output data-setting-output="lbStoryLineAlpha"></output>%</span></div>
+              </div>
+            </div>
           </div>
         </section>
         </div>
@@ -838,16 +882,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261001-123435"></script>
-<script src="/js/i18n/ko.js?v=20261001-123435"></script>
-<script src="/js/common.js?v=20261001-123435"></script>
-<script src="/js/auth.js?v=20261001-123435"></script>
-<script src="/js/notifications.js?v=20261001-123435"></script>
-<script src="/js/push.js?v=20261001-123435"></script>
-<script src="/js/color-engine.js?v=20261001-123435"></script>
-<script src="/js/pixel-board.js?v=20261001-123435"></script>
-<script src="/js/matching.js?v=20261001-123435"></script>
-<script src="/js/admin.js?v=20261001-123435"></script>
+<script src="/js/supabase-client.js?v=20261001-125202"></script>
+<script src="/js/i18n/ko.js?v=20261001-125202"></script>
+<script src="/js/common.js?v=20261001-125202"></script>
+<script src="/js/auth.js?v=20261001-125202"></script>
+<script src="/js/notifications.js?v=20261001-125202"></script>
+<script src="/js/push.js?v=20261001-125202"></script>
+<script src="/js/color-engine.js?v=20261001-125202"></script>
+<script src="/js/pixel-board.js?v=20261001-125202"></script>
+<script src="/js/matching.js?v=20261001-125202"></script>
+<script src="/js/admin.js?v=20261001-125202"></script>
 
 </body>
 </html>
