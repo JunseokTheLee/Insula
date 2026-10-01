@@ -291,8 +291,8 @@ lbEditModal.innerHTML = `
   <div class="modal-panel">
     <h3>${tr('editArtworkTitle')}</h3>
     <div class="field">
-      <label for="lb-edit-title">${tr('artTitleLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
-      <input type="text" id="lb-edit-title" placeholder="${tr('artTitlePlaceholder')}" maxlength="80">
+      <label for="lb-edit-title">${tr('artTitleLabel')} <span class="field-required">${tr('requiredHint')}</span></label>
+      <input type="text" id="lb-edit-title" placeholder="${tr('artTitlePlaceholder')}" maxlength="80" required aria-required="true">
     </div>
     <div style="display:flex;gap:10px;">
       <div class="field" style="flex:1;">
@@ -372,6 +372,10 @@ lbEditModal.querySelector('#lb-edit-save').onclick = async () => {
   const sub = lbCurrentSub;
   if (!sub) return;
   const errorEl = lbEditModal.querySelector('#lb-edit-error');
+  // A title is required here too, the same rule as the upload form
+  // (profile-view.js, 2026-10-01) — otherwise an edit could take it away again.
+  const titleEl = lbEditModal.querySelector('#lb-edit-title');
+  if (!titleEl.value.trim()) { errorEl.textContent = tr('titleRequired'); titleEl.focus(); return; }
   const link = lbEditModal.querySelector('#lb-edit-link').value.trim();
   if (link && !safeHref(link)) { errorEl.textContent = tr('linkMustBeValidUrl'); return; }
   const completedYear = artYearToDate(lbEditModal.querySelector('#lb-edit-completed').value);
