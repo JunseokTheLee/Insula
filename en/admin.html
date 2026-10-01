@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261001-113946">
-<link rel="stylesheet" href="/css/admin.css?v=20261001-113946">
+<link rel="stylesheet" href="/css/base.css?v=20261001-122535">
+<link rel="stylesheet" href="/css/admin.css?v=20261001-122535">
 </head>
 <body>
 
@@ -518,6 +518,30 @@
                 <p class="admin-help">The private key goes <strong>neither in this repository nor on this screen</strong> — it lives only as a Supabase secret.</p>
               </div>
             </div>
+            <div class="admin-option-card" id="adminAppCard">
+              <h3>App info · download QR</h3>
+              <p class="admin-help">When on, every page footer gets a <strong>Get the Weavo app</strong> button. On a computer it shows a QR code; on a phone it goes to <code>/app</code>, which <strong>opens the app if installed, otherwise sends iPhone to the App Store and Android to Google Play</strong>. The QR code always points at <code>https://weavo.art/app</code>, so changing the values below never means making a new one. All of these values are public (they show in store URLs anyway).</p>
+              <label class="admin-setting"><input type="checkbox" data-setting="appDownloadEnabled" disabled><span>Show the "Get the Weavo app" footer button <em>(default: off — appears only once at least one store is filled in)</em></span></label>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminAppIosId"><strong>App Store app id</strong> — the number in <code>apps.apple.com/app/id<b>1234567890</b></code></label>
+                <input id="adminAppIosId" type="text" inputmode="numeric" class="admin-text" data-setting="appIosAppId" placeholder="1234567890" autocomplete="off" spellcheck="false" disabled>
+                <label for="adminAppTeamId"><strong>Apple Team ID</strong> — 10 letters/digits from Apple Developer → Membership. With the bundle ID below, scanning the QR on an iPhone <strong>opens the installed app directly</strong> (universal links)</label>
+                <input id="adminAppTeamId" type="text" class="admin-text" data-setting="appIosTeamId" placeholder="ABCDE12345" maxlength="10" autocomplete="off" spellcheck="false" disabled>
+                <label for="adminAppBundleId"><strong>iOS bundle ID</strong> — the Bundle Identifier in Xcode</label>
+                <input id="adminAppBundleId" type="text" class="admin-text" data-setting="appIosBundleId" placeholder="art.weavo.app" autocomplete="off" spellcheck="false" disabled>
+                <label for="adminAppAndroidPkg"><strong>Android package name</strong> — the <code>?id=<b>art.weavo.app</b></code> in the Google Play URL. Opening the installed app directly is handled by <code>.well-known/assetlinks.json</code> (already in place)</label>
+                <input id="adminAppAndroidPkg" type="text" class="admin-text" data-setting="appAndroidPackage" placeholder="art.weavo.app" autocomplete="off" spellcheck="false" disabled>
+              </div>
+              <label class="admin-setting"><input type="checkbox" data-setting="appAndroidOnPlay" disabled><span>Live on Google Play <em>(turn on to send Android users to the Play Store)</em></span></label>
+              <div class="admin-app-preview">
+                <img src="/app-qr.svg" width="112" height="112" alt="QR code to get the Weavo app">
+                <div>
+                  <p class="admin-help">Use this QR as is on prints and posters.</p>
+                  <p class="admin-help"><a href="/app-qr.svg" download="weavo-app-qr.svg">Download the QR code (SVG)</a> · <a href="/app" target="_blank" rel="noopener">Open /app</a> · <a href="/.well-known/apple-app-site-association" target="_blank" rel="noopener">Check the iPhone link file</a></p>
+                  <p class="admin-help">The app needs its side too: on iPhone, Associated Domains <code>applinks:weavo.art</code>; on Android, an <code>autoVerify</code> intent filter for <code>weavo.art</code>. "Open the app if installed" works once that app update is in the stores.</p>
+                </div>
+              </div>
+            </div>
 
             <div class="admin-option-card">
               <h3>Artwork pieces</h3>
@@ -699,15 +723,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261001-113946"></script>
-<script src="/js/i18n/en.js?v=20261001-113946"></script>
-<script src="/js/common.js?v=20261001-113946"></script>
-<script src="/js/auth.js?v=20261001-113946"></script>
-<script src="/js/notifications.js?v=20261001-113946"></script>
-<script src="/js/push.js?v=20261001-113946"></script>
-<script src="/js/color-engine.js?v=20261001-113946"></script>
-<script src="/js/pixel-board.js?v=20261001-113946"></script>
-<script src="/js/matching.js?v=20261001-113946"></script>
-<script src="/js/admin.js?v=20261001-113946"></script>
+<script src="/js/supabase-client.js?v=20261001-122535"></script>
+<script src="/js/i18n/en.js?v=20261001-122535"></script>
+<script src="/js/common.js?v=20261001-122535"></script>
+<script src="/js/auth.js?v=20261001-122535"></script>
+<script src="/js/notifications.js?v=20261001-122535"></script>
+<script src="/js/push.js?v=20261001-122535"></script>
+<script src="/js/color-engine.js?v=20261001-122535"></script>
+<script src="/js/pixel-board.js?v=20261001-122535"></script>
+<script src="/js/matching.js?v=20261001-122535"></script>
+<script src="/js/admin.js?v=20261001-122535"></script>
 </body>
 </html>

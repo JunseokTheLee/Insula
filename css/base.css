@@ -766,6 +766,35 @@ body.lb-img-fs-lock{overflow:hidden;}
 #legal-footer a:hover,#legal-footer button:hover{color:var(--primary);}
 #legal-footer .sep{color:var(--border-strong);font-size:11px;}
 @media (max-width:640px){ #legal-footer{padding:12px 16px;} }
+/* "Get the Weavo app" (common.js wireAppDownload): a small pill so it reads
+   as a button among the plain legal links; the row may wrap on a phone. */
+#legal-footer{flex-wrap:wrap;row-gap:8px;}
+#legal-footer .app-dl-btn{
+  padding:5px 12px;border-radius:var(--r-full);font-weight:600;
+  color:var(--primary-dark);background:var(--primary-soft);border:1px solid var(--border-strong);
+}
+#legal-footer .app-dl-btn:hover{color:var(--primary-dark);border-color:var(--primary);}
+/* The QR pop-up on a computer (common.js openAppDownloadModal). */
+.app-dl-panel{position:relative;width:min(400px,calc(100vw - 32px));padding:28px 24px 24px;text-align:center;}
+.app-dl-panel h3{margin:0 0 16px;font-family:'Pretendard',sans-serif;font-size:20px;font-weight:700;color:var(--text);}
+.app-dl-qr{display:block;width:200px;height:200px;margin:0 auto;image-rendering:pixelated;}
+.app-dl-hint{margin:16px 0 0;font-family:'Pretendard',sans-serif;font-size:13px;line-height:1.6;color:var(--muted);word-break:keep-all;}
+.app-dl-stores{display:flex;justify-content:center;gap:8px;margin-top:16px;flex-wrap:wrap;}
+.app-dl-stores:empty{display:none;}
+.app-dl-store{
+  font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;text-decoration:none;
+  padding:8px 16px;border-radius:var(--r-full);border:1px solid var(--border-strong);color:var(--text);
+}
+.app-dl-store:hover{border-color:var(--primary);color:var(--primary);}
+.app-dl-close{
+  position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;
+  border:none;background:none;cursor:pointer;color:var(--muted);
+}
+.app-dl-close::before,.app-dl-close::after{
+  content:'';position:absolute;left:9px;top:16px;width:16px;height:2px;border-radius:1px;background:currentColor;transform:rotate(45deg);
+}
+.app-dl-close::after{transform:rotate(-45deg);}
+.app-dl-close:hover{color:var(--text);background:var(--surface);}
 
 #toast{
   position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(8px);

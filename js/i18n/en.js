@@ -387,6 +387,8 @@ const T = {
   artMaterialLabel: 'Material', artMaterialPlaceholder: 'e.g. Oil on canvas',
   artCompletedLabel: 'Year completed', artYearPlaceholder: 'e.g. 2020',
   artCompletedYearInvalid: 'Enter a year between {min} and {max}.',
+  appDownload: 'Get the Weavo app', appDownloadTitle: 'Open in the Weavo app', appDownloadQrAlt: 'QR code to get the Weavo app',
+  appDownloadHint: 'Scan the QR code with your phone camera. It opens the app if you have it, or the app store if you do not.', appDownloadClose: 'Close',
   lbArtistAbout: 'About the artist', lbArtStory: 'About the artwork', lbDisabilityAria: 'Disabilities the artist lists',
   artStatementLabel: 'Artist statement', artStatementPlaceholder: "What's the story behind this piece?",
   artLinkLabel: 'Link to more of your work',

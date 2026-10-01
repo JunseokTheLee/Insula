@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261001-113946">
-<link rel="stylesheet" href="/css/admin.css?v=20261001-113946">
+<link rel="stylesheet" href="/css/base.css?v=20261001-122535">
+<link rel="stylesheet" href="/css/admin.css?v=20261001-122535">
 </head>
 
 <body>
@@ -523,6 +523,30 @@
                 <p class="admin-help">비밀 키는 <strong>저장소에도 이 화면에도 넣지 않습니다</strong> — Supabase 비밀값으로만 둡니다.</p>
               </div>
             </div>
+            <div class="admin-option-card" id="adminAppCard">
+              <h3>앱 정보 · 다운로드 QR</h3>
+              <p class="admin-help">켜면 모든 페이지 하단에 <strong>Weavo 앱 다운로드</strong> 버튼이 생깁니다. PC 에서는 QR 코드 창이 뜨고, 휴대폰에서는 <code>/app</code> 으로 이동해 <strong>앱이 있으면 앱을 열고, 없으면 아이폰은 App Store · 안드로이드는 Google Play</strong> 로 보냅니다. QR 코드는 늘 <code>https://weavo.art/app</code> 을 가리키므로 아래 값을 바꿔도 다시 만들 필요가 없습니다. 아래 값은 모두 공개 정보입니다(앱스토어 주소에 이미 드러나는 값).</p>
+              <label class="admin-setting"><input type="checkbox" data-setting="appDownloadEnabled" disabled><span>하단 "Weavo 앱 다운로드" 버튼 표시 <em>(기본: 끔 — 스토어 정보가 하나 이상 채워져야 실제로 보임)</em></span></label>
+              <div class="admin-setting admin-setting-range">
+                <label for="adminAppIosId"><strong>App Store 앱 번호</strong> — 앱 주소 <code>apps.apple.com/app/id<b>1234567890</b></code> 의 숫자</label>
+                <input id="adminAppIosId" type="text" inputmode="numeric" class="admin-text" data-setting="appIosAppId" placeholder="1234567890" autocomplete="off" spellcheck="false" disabled>
+                <label for="adminAppTeamId"><strong>Apple Team ID</strong> — Apple Developer → Membership 의 10자리 영문·숫자. 아래 번들 ID 와 함께 있어야 아이폰에서 QR 을 찍었을 때 <strong>설치된 앱이 바로 열립니다</strong>(유니버설 링크)</label>
+                <input id="adminAppTeamId" type="text" class="admin-text" data-setting="appIosTeamId" placeholder="ABCDE12345" maxlength="10" autocomplete="off" spellcheck="false" disabled>
+                <label for="adminAppBundleId"><strong>iOS 번들 ID</strong> — Xcode 의 Bundle Identifier</label>
+                <input id="adminAppBundleId" type="text" class="admin-text" data-setting="appIosBundleId" placeholder="art.weavo.app" autocomplete="off" spellcheck="false" disabled>
+                <label for="adminAppAndroidPkg"><strong>Android 패키지 이름</strong> — Google Play 주소 <code>?id=<b>art.weavo.app</b></code> 의 값. 설치된 앱이 바로 열리는 것은 <code>.well-known/assetlinks.json</code>(이미 있음)이 맡습니다</label>
+                <input id="adminAppAndroidPkg" type="text" class="admin-text" data-setting="appAndroidPackage" placeholder="art.weavo.app" autocomplete="off" spellcheck="false" disabled>
+              </div>
+              <label class="admin-setting"><input type="checkbox" data-setting="appAndroidOnPlay" disabled><span>Google Play 에 공개됨 <em>(켜야 안드로이드 사용자를 Play 스토어로 보냅니다)</em></span></label>
+              <div class="admin-app-preview">
+                <img src="/app-qr.svg" width="112" height="112" alt="Weavo 앱 다운로드 QR 코드">
+                <div>
+                  <p class="admin-help">인쇄물·포스터에는 이 QR 을 그대로 쓰면 됩니다.</p>
+                  <p class="admin-help"><a href="/app-qr.svg" download="weavo-app-qr.svg">QR 코드 내려받기 (SVG)</a> · <a href="/app" target="_blank" rel="noopener">/app 열어 보기</a> · <a href="/.well-known/apple-app-site-association" target="_blank" rel="noopener">아이폰 연결 파일 확인</a></p>
+                  <p class="admin-help">앱 쪽에서도 설정이 필요합니다: 아이폰은 Associated Domains 에 <code>applinks:weavo.art</code>, 안드로이드는 <code>weavo.art</code> 의 <code>autoVerify</code> 인텐트 필터. 앱 업데이트가 스토어에 나간 뒤부터 "앱이 있으면 바로 열기" 가 동작합니다.</p>
+                </div>
+              </div>
+            </div>
 
             <div class="admin-option-card">
               <h3>작품 조각</h3>
@@ -803,16 +827,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261001-113946"></script>
-<script src="/js/i18n/ko.js?v=20261001-113946"></script>
-<script src="/js/common.js?v=20261001-113946"></script>
-<script src="/js/auth.js?v=20261001-113946"></script>
-<script src="/js/notifications.js?v=20261001-113946"></script>
-<script src="/js/push.js?v=20261001-113946"></script>
-<script src="/js/color-engine.js?v=20261001-113946"></script>
-<script src="/js/pixel-board.js?v=20261001-113946"></script>
-<script src="/js/matching.js?v=20261001-113946"></script>
-<script src="/js/admin.js?v=20261001-113946"></script>
+<script src="/js/supabase-client.js?v=20261001-122535"></script>
+<script src="/js/i18n/ko.js?v=20261001-122535"></script>
+<script src="/js/common.js?v=20261001-122535"></script>
+<script src="/js/auth.js?v=20261001-122535"></script>
+<script src="/js/notifications.js?v=20261001-122535"></script>
+<script src="/js/push.js?v=20261001-122535"></script>
+<script src="/js/color-engine.js?v=20261001-122535"></script>
+<script src="/js/pixel-board.js?v=20261001-122535"></script>
+<script src="/js/matching.js?v=20261001-122535"></script>
+<script src="/js/admin.js?v=20261001-122535"></script>
 
 </body>
 </html>

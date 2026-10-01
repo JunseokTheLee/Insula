@@ -702,6 +702,18 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   pushEnabled: false,
   pushPublicKey: '',
   pushEndpoint: '',
+  // The mobile app (2026-10-01): the footer's "Get the Weavo app" button,
+  // /app (functions/app.js — opens the app if installed, else the right
+  // store) and /.well-known/apple-app-site-association (iPhone universal
+  // links) all read these. Store ids and the Apple team/bundle id are
+  // public values. The button stays hidden until it is switched on AND at
+  // least one store is filled in.
+  appDownloadEnabled: false,
+  appIosAppId: '',          // App Store numeric id: apps.apple.com/app/id<this>
+  appIosTeamId: '',         // Apple Developer Team ID (10 characters)
+  appIosBundleId: '',       // e.g. art.weavo.app
+  appAndroidPackage: 'art.weavo.app',  // Play Store package (matches .well-known/assetlinks.json)
+  appAndroidOnPlay: false,  // the Play Store listing is live
 });
 const SITE_SETTINGS_TTL_MS = 60 * 1000;
 const SITE_SETTINGS_CACHE_KEY = 'weavo.siteSettings';
@@ -779,6 +791,83 @@ function refreshSiteSettings() {
         : (findOff && colorOff);
       if (hide) el.style.display = 'none';
     }
+  }).catch(() => {});
+})();
+
+// ---------- "Get the Weavo app" (2026-10-01) ----------
+// Store links from the admin site options (SITE_SETTING_DEFAULTS app*);
+// null for a store that is not set up yet. functions/app.js builds the
+// same two URLs server-side — keep them in step.
+function appStoreLinks(s) {
+  const ios = /^\d{5,15}$/.test(String(s.appIosAppId || '').trim())
+    ? `https://apps.apple.com/app/id${String(s.appIosAppId).trim()}` : null;
+  const pkg = String(s.appAndroidPackage || '').trim();
+  const android = s.appAndroidOnPlay && /^[a-zA-Z][\w]*(\.[a-zA-Z][\w]*)+$/.test(pkg)
+    ? `https://play.google.com/store/apps/details?id=${encodeURIComponent(pkg)}` : null;
+  return { ios, android };
+}
+// A phone or tablet goes straight to /app, which opens the app or the
+// right store; a computer gets the QR code to scan with the phone instead.
+function isMobileDevice() {
+  const ua = navigator.userAgent || '';
+  if (/Android|iPhone|iPad|iPod/i.test(ua)) return true;
+  return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;   // iPadOS reports itself as a Mac
+}
+function openAppDownloadModal(links) {
+  let modal = document.getElementById('app-dl-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'app-dl-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-panel app-dl-panel" role="dialog" aria-modal="true" aria-labelledby="app-dl-title">
+        <button type="button" class="app-dl-close" aria-label=""></button>
+        <h3 id="app-dl-title"></h3>
+        <img class="app-dl-qr" src="/app-qr.svg" width="200" height="200" alt="">
+        <p class="app-dl-hint"></p>
+        <div class="app-dl-stores"></div>
+      </div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+    modal.querySelector('.app-dl-close').onclick = () => modal.classList.remove('open');
+    document.body.appendChild(modal);
+  }
+  modal.querySelector('#app-dl-title').textContent = tr('appDownloadTitle');
+  modal.querySelector('.app-dl-qr').alt = tr('appDownloadQrAlt');
+  modal.querySelector('.app-dl-hint').textContent = tr('appDownloadHint');
+  modal.querySelector('.app-dl-close').setAttribute('aria-label', tr('appDownloadClose'));
+  const stores = modal.querySelector('.app-dl-stores');
+  stores.innerHTML = '';
+  for (const [key, url] of [['ios', links.ios], ['android', links.android]]) {
+    if (!url) continue;
+    const a = document.createElement('a');
+    a.className = 'app-dl-store'; a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = key === 'ios' ? 'App Store' : 'Google Play';
+    stores.appendChild(a);
+  }
+  modal.classList.add('open');
+  modal.querySelector('.app-dl-close').focus({ preventScroll: true });
+}
+// The footer button itself — added here rather than in the 36 page copies of
+// the footer, so it can stay hidden until an admin turns it on, and never
+// shows inside the app (window.WeavoAppBridge is the app's WebView).
+(function wireAppDownload() {
+  const footer = document.getElementById('legal-footer');
+  if (!footer || typeof getSiteSettings !== 'function') return;
+  getSiteSettings().then(s => {
+    if (!s.appDownloadEnabled || window.WeavoAppBridge) return;
+    const links = appStoreLinks(s);
+    if (!links.ios && !links.android) return;
+    if (footer.querySelector('.app-dl-btn')) return;
+    const sep = document.createElement('span');
+    sep.className = 'sep'; sep.setAttribute('aria-hidden', 'true'); sep.textContent = '·';
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'app-dl-btn';
+    btn.textContent = tr('appDownload');
+    btn.onclick = () => {
+      if (isMobileDevice()) location.href = '/app?src=footer';
+      else openAppDownloadModal(links);
+    };
+    footer.append(sep, btn);
   }).catch(() => {});
 })();
 

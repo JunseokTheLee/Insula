@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--
+  Source of /app-qr.svg — the "Get the Weavo app" QR code (2026-10-01).
+  It always encodes https://weavo.art/app?src=qr: /app (functions/app.js)
+  decides where to go — the app if installed (universal / app links), the
+  App Store or Play Store otherwise — so the picture never has to change
+  when store ids do; those live in the admin page's site options.
+
+  Regenerate (only if the encoded address changes), from the repo root:
+    chrome --headless=new --disable-gpu --virtual-time-budget=10000
+           --user-data-dir=<temp dir> --dump-dom
+           "file:///<repo>/tools/app-qr.html" > <temp>.html
+  then copy the <svg> inside #out into app-qr.svg.
+
+  The QR library comes from a CDN here, which is fine: this page only runs
+  on a developer's machine (functions/tools/[[path]].js answers 404).
+-->
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+</head>
+<body>
+<div id="out"></div>
+<script>
+  const qr = qrcode(0, 'M');
+  qr.addData('https://weavo.art/app?src=qr');
+  qr.make();
+  const n = qr.getModuleCount(), q = 4, size = n + q * 2;
+  let d = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    if (qr.isDark(r, c)) d += `M${c + q} ${r + q}h1v1h-1z`;
+  }
+  document.getElementById('out').innerHTML =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="QR code: weavo.art/app">` +
+    `<rect width="${size}" height="${size}" fill="#fff"/><path fill="#111" d="${d}"/></svg>`;
+</script>
+</body>
+</html>

@@ -270,3 +270,9 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
   .admin-row.admin-member{flex-direction:row;gap:10px;}
   .admin-member-date{font-size:11.5px;}
 }
+
+/* App info card (site options): the download QR next to its links. */
+.admin-app-preview{display:flex;gap:14px;align-items:flex-start;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.admin-app-preview img{flex:0 0 112px;width:112px;height:112px;border:1px solid var(--border);border-radius:8px;image-rendering:pixelated;background:#fff;}
+.admin-app-preview .admin-help{margin:0 0 6px;}
+@media (max-width:640px){ .admin-app-preview{flex-direction:column;} }
