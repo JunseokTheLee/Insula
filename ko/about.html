@@ -72,7 +72,7 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261002-011037">
+<link rel="stylesheet" href="/css/base.css?v=20261002-012658">
 </head>
 
 <body>
@@ -176,14 +176,25 @@
                 <a class="about-sub-link" href="/ko/coloring">색칠하러 가기 →</a>
               </div>
               <div class="about-sub-card about-sky" data-stars-link>
-                <h4>✦ 별자리 — Pieces of People, A Brighter Sky</h4>
-                <p>게임으로 작품을 완성할 때마다 나만의 밤하늘에 별이 하나씩 켜집니다. 별이 모이면 13개의 별자리가 하나씩 모습을 드러냅니다.</p>
-                <ul class="about-sub-points">
+                <div class="about-sky-text">
+                  <h4>✦ 별자리 — Pieces of People, A Brighter Sky</h4>
+                  <p>게임으로 작품을 완성할 때마다 나만의 밤하늘에 별이 하나씩 켜집니다. 별이 모이면 13개의 별자리가 하나씩 모습을 드러냅니다.</p>
+                  <ul class="about-sub-points">
               <li>별을 누르면 그 별이 된 작품과 작가를 다시 만날 수 있습니다.</li>
               <li>작가는 자기 작품이 몇 명의 하늘에서 빛나고 있는지 볼 수 있습니다.</li>
               <li>순위나 경쟁 없이, 내가 만난 작품들의 기록으로만 남습니다. 누가 만든 작품이든, 내 하늘에서는 똑같이 하나의 별입니다.</li>
             </ul>
-                <a class="about-sub-link" href="/ko/stars">내 별자리 보기 →</a>
+                  <a class="about-sub-link" href="/ko/stars">내 별자리 보기 →</a>
+                </div>
+                <figure class="about-sky-fig">
+                  <svg class="about-sky-svg" viewBox="-8 -10 116 120" role="img" aria-label="양자리">
+                    <defs><radialGradient id="aboutSkyGlow"><stop offset="0" stop-color="#FFD98E" stop-opacity=".9"/><stop offset=".35" stop-color="#FFD98E" stop-opacity=".25"/><stop offset="1" stop-color="#FFD98E" stop-opacity="0"/></radialGradient></defs>
+                    <image href="/sky/con-aries.webp?v=20260926" x="0.2" y="0" width="99.6" height="100" preserveAspectRatio="xMidYMid meet" class="about-sky-art"/>
+                    <g class="about-sky-lines"><line x1="21.7" y1="45.1" x2="60.5" y2="7.9"/><line x1="60.5" y1="7.9" x2="84" y2="14"/><line x1="84" y1="14" x2="94.7" y2="26.4"/></g>
+                    <g class="about-sky-stars"><g class="about-sky-star" style="--d:0.0s"><circle cx="21.7" cy="45.1" r="7" fill="url(#aboutSkyGlow)"/><path d="M21.7 41.7L22.652 44.148L25.099999999999998 45.1L22.652 46.052L21.7 48.5L20.747999999999998 46.052L18.3 45.1L20.747999999999998 44.148Z"/></g><g class="about-sky-star" style="--d:0.7s"><circle cx="60.5" cy="7.9" r="7" fill="url(#aboutSkyGlow)"/><path d="M60.5 3.7L61.676 6.724L64.7 7.9L61.676 9.076L60.5 12.100000000000001L59.324 9.076L56.3 7.9L59.324 6.724Z"/></g><g class="about-sky-star" style="--d:1.4s"><circle cx="84" cy="14" r="7" fill="url(#aboutSkyGlow)"/><path d="M84 10.6L84.952 13.048L87.4 14L84.952 14.952L84 17.4L83.048 14.952L80.6 14L83.048 13.048Z"/></g><g class="about-sky-star" style="--d:2.1s"><circle cx="94.7" cy="26.4" r="7" fill="url(#aboutSkyGlow)"/><path d="M94.7 23L95.652 25.447999999999997L98.10000000000001 26.4L95.652 27.352L94.7 29.799999999999997L93.748 27.352L91.3 26.4L93.748 25.447999999999997Z"/></g></g>
+                  </svg>
+                  <figcaption><strong>양자리</strong><span>첫 번째 별자리 · 별 4개</span><em>첫 별이 길을 엽니다.</em></figcaption>
+                </figure>
               </div>
             </div>
             <div class="about-links"><a class="about-link" href="/ko/game">게임 메뉴 →</a></div>
@@ -438,12 +449,12 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261002-011037"></script>
-<script src="/js/i18n/ko.js?v=20261002-011037"></script>
-<script src="/js/common.js?v=20261002-011037"></script>
-<script src="/js/auth.js?v=20261002-011037"></script>
-<script src="/js/notifications.js?v=20261002-011037"></script>
-<script src="/js/push.js?v=20261002-011037"></script>
+<script src="/js/supabase-client.js?v=20261002-012658"></script>
+<script src="/js/i18n/ko.js?v=20261002-012658"></script>
+<script src="/js/common.js?v=20261002-012658"></script>
+<script src="/js/auth.js?v=20261002-012658"></script>
+<script src="/js/notifications.js?v=20261002-012658"></script>
+<script src="/js/push.js?v=20261002-012658"></script>
 
 </body>
 </html>

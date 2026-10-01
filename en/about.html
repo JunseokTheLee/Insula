@@ -42,7 +42,7 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Weavo","url":"https://weavo.art/en/","logo":"https://weavo.art/logo.png"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Weavo","item":"https://weavo.art/en/"},{"@type":"ListItem","position":2,"name":"About","item":"https://weavo.art/en/about"}]}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261002-011037">
+<link rel="stylesheet" href="/css/base.css?v=20261002-012658">
 </head>
 <body>
 
@@ -141,14 +141,25 @@
                 <a class="about-sub-link" href="/en/coloring">Start coloring →</a>
               </div>
               <div class="about-sub-card about-sky" data-stars-link>
-                <h4>✦ Constellations — Pieces of People, A Brighter Sky</h4>
-                <p>Every artwork you complete in a game lights one star in your own night sky. As stars gather, 13 constellations reveal themselves one by one.</p>
-                <ul class="about-sub-points">
+                <div class="about-sky-text">
+                  <h4>✦ Constellations — Pieces of People, A Brighter Sky</h4>
+                  <p>Every artwork you complete in a game lights one star in your own night sky. As stars gather, 13 constellations reveal themselves one by one.</p>
+                  <ul class="about-sub-points">
               <li>Tap a star to meet the artwork and artist behind it again.</li>
               <li>Artists can see how many people's skies their work is shining in.</li>
               <li>No rankings, no competition — just a record of the artworks you met. Whoever made it, in your sky it is one star like any other.</li>
             </ul>
-                <a class="about-sub-link" href="/en/stars">See my sky →</a>
+                  <a class="about-sub-link" href="/en/stars">See my sky →</a>
+                </div>
+                <figure class="about-sky-fig">
+                  <svg class="about-sky-svg" viewBox="-8 -10 116 120" role="img" aria-label="Aries">
+                    <defs><radialGradient id="aboutSkyGlow"><stop offset="0" stop-color="#FFD98E" stop-opacity=".9"/><stop offset=".35" stop-color="#FFD98E" stop-opacity=".25"/><stop offset="1" stop-color="#FFD98E" stop-opacity="0"/></radialGradient></defs>
+                    <image href="/sky/con-aries.webp?v=20260926" x="0.2" y="0" width="99.6" height="100" preserveAspectRatio="xMidYMid meet" class="about-sky-art"/>
+                    <g class="about-sky-lines"><line x1="21.7" y1="45.1" x2="60.5" y2="7.9"/><line x1="60.5" y1="7.9" x2="84" y2="14"/><line x1="84" y1="14" x2="94.7" y2="26.4"/></g>
+                    <g class="about-sky-stars"><g class="about-sky-star" style="--d:0.0s"><circle cx="21.7" cy="45.1" r="7" fill="url(#aboutSkyGlow)"/><path d="M21.7 41.7L22.652 44.148L25.099999999999998 45.1L22.652 46.052L21.7 48.5L20.747999999999998 46.052L18.3 45.1L20.747999999999998 44.148Z"/></g><g class="about-sky-star" style="--d:0.7s"><circle cx="60.5" cy="7.9" r="7" fill="url(#aboutSkyGlow)"/><path d="M60.5 3.7L61.676 6.724L64.7 7.9L61.676 9.076L60.5 12.100000000000001L59.324 9.076L56.3 7.9L59.324 6.724Z"/></g><g class="about-sky-star" style="--d:1.4s"><circle cx="84" cy="14" r="7" fill="url(#aboutSkyGlow)"/><path d="M84 10.6L84.952 13.048L87.4 14L84.952 14.952L84 17.4L83.048 14.952L80.6 14L83.048 13.048Z"/></g><g class="about-sky-star" style="--d:2.1s"><circle cx="94.7" cy="26.4" r="7" fill="url(#aboutSkyGlow)"/><path d="M94.7 23L95.652 25.447999999999997L98.10000000000001 26.4L95.652 27.352L94.7 29.799999999999997L93.748 27.352L91.3 26.4L93.748 25.447999999999997Z"/></g></g>
+                  </svg>
+                  <figcaption><strong>Aries</strong><span>The first constellation · 4 stars</span><em>The first star opens the way.</em></figcaption>
+                </figure>
               </div>
             </div>
             <div class="about-links"><a class="about-link" href="/en/game">Games →</a></div>
@@ -304,11 +315,11 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261002-011037"></script>
-<script src="/js/i18n/en.js?v=20261002-011037"></script>
-<script src="/js/common.js?v=20261002-011037"></script>
-<script src="/js/auth.js?v=20261002-011037"></script>
-<script src="/js/notifications.js?v=20261002-011037"></script>
-<script src="/js/push.js?v=20261002-011037"></script>
+<script src="/js/supabase-client.js?v=20261002-012658"></script>
+<script src="/js/i18n/en.js?v=20261002-012658"></script>
+<script src="/js/common.js?v=20261002-012658"></script>
+<script src="/js/auth.js?v=20261002-012658"></script>
+<script src="/js/notifications.js?v=20261002-012658"></script>
+<script src="/js/push.js?v=20261002-012658"></script>
 </body>
 </html>
