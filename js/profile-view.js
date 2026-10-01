@@ -970,8 +970,44 @@ document.getElementById('profileUploadBtn').onclick = () => {
   document.getElementById('ua-completed').value = '';
   document.getElementById('ua-desc').value = '';
   document.getElementById('ua-error').textContent = '';
+  prefillUploadProcess();
   document.getElementById('upload-art-modal').classList.add('open');
 };
+// "Process story" (supabase_mosaic_art_process.sql): how the artist works
+// rarely changes between artworks, so the field starts with the text of
+// their most recent artwork that has one. Read from that artwork rather
+// than kept anywhere else, so it follows them across devices and an edit
+// in the lightbox is what the next upload sees. The same read tells us
+// whether the column exists — until the SQL runs the field stays hidden.
+let uaProcessSeq = 0;
+async function prefillUploadProcess() {
+  const row = document.getElementById('ua-process-row');
+  const input = document.getElementById('ua-process');
+  const note = document.getElementById('ua-process-note');
+  if (!row || !input) return;
+  const seq = ++uaProcessSeq;
+  input.value = '';
+  input.dataset.touched = '';
+  if (note) note.hidden = true;
+  const { data, error } = await sb.from('mosaic_submissions').select('art_process')
+    .eq('author_id', me.id).is('parent_id', null).not('art_process', 'is', null)
+    .order('created_at', { ascending: false }).limit(1);
+  if (seq !== uaProcessSeq) return;   // the dialog was reopened meanwhile
+  if (error) {
+    // Missing column: stay hidden. Any other failure: stay hidden too —
+    // showing it without knowing the column exists could fail the insert.
+    if (!isSchemaMismatchError(error)) console.error('process story prefill error:', error);
+    return;
+  }
+  row.hidden = false;
+  const last = data && data[0] && data[0].art_process;
+  // Never overwrite what the artist has already started typing.
+  if (last && !input.dataset.touched && !input.value) {
+    input.value = last;
+    if (note) { note.textContent = tr('artProcessPrefilled'); note.hidden = false; }
+  }
+}
+document.getElementById('ua-process')?.addEventListener('input', e => { e.target.dataset.touched = '1'; });
 function closeUploadArtModal() { document.getElementById('upload-art-modal').classList.remove('open'); }
 document.getElementById('ua-cancel').onclick = closeUploadArtModal;
 document.getElementById('upload-art-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeUploadArtModal(); });
@@ -994,6 +1030,9 @@ document.getElementById('ua-submit').onclick = async () => {
     material: document.getElementById('ua-material').value.trim(),
     completedDate: completedYear.date,
     description: document.getElementById('ua-desc').value.trim(),
+    // Only while the field is shown, i.e. once the column is known to exist.
+    process: document.getElementById('ua-process-row')?.hidden === false
+      ? document.getElementById('ua-process').value.trim() : '',
     link
   };
   const visChoice = document.querySelector('input[name="ua-visibility"]:checked');
@@ -1021,6 +1060,7 @@ document.getElementById('ua-submit').onclick = async () => {
       art_title: meta.title || null, art_material: meta.material || null, art_completed_date: meta.completedDate,
       art_description: meta.description || null, art_link: meta.link || null
     };
+    if (meta.process) row.art_process = meta.process;
     if (!isPublic) row.is_public = false;   // the default is public; only say otherwise
     let { data: inserted, error: insErr } = await sb.from('mosaic_submissions')
       .insert(uploaded.microThumb ? { ...row, micro_thumb: uploaded.microThumb } : row).select('id').single();

@@ -42,8 +42,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261001-133719">
-<link rel="stylesheet" href="/css/profile.css?v=20261001-133719">
+<link rel="stylesheet" href="/css/base.css?v=20261001-154402">
+<link rel="stylesheet" href="/css/profile.css?v=20261001-154402">
 </head>
 <body>
 
@@ -240,8 +240,13 @@
       </div>
     </div>
     <div class="field">
-      <label for="ua-desc">작가 노트 <span class="field-hint">(선택)</span></label>
+      <label for="ua-desc">작품 이야기 <span class="field-hint">(선택)</span></label>
       <textarea id="ua-desc" placeholder="이 작품에 담긴 이야기는 무엇인가요?" maxlength="500"></textarea>
+    </div>
+    <div class="field" id="ua-process-row" hidden>
+      <label for="ua-process">작업 이야기 <span class="field-hint">(선택)</span></label>
+      <textarea id="ua-process" placeholder="어떻게 작업하나요? 작업 방식·도구·환경 등을 들려주세요." maxlength="500"></textarea>
+      <div class="field-note" id="ua-process-note" hidden></div>
     </div>
     <div class="field">
       <label>공개 범위</label>
@@ -423,19 +428,19 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261001-133719"></script>
-<script src="/js/i18n/ko.js?v=20261001-133719"></script>
-<script src="/js/common.js?v=20261001-133719"></script>
-<script src="/js/color-engine.js?v=20261001-133719"></script>
-<script src="/js/pixel-board.js?v=20261001-133719"></script>
-<script src="/js/project-preview.js?v=20261001-133719"></script>
-<script src="/js/matching.js?v=20261001-133719"></script>
-<script src="/js/auth.js?v=20261001-133719"></script>
-<script src="/js/notifications.js?v=20261001-133719"></script>
-<script src="/js/push.js?v=20261001-133719"></script>
-<script src="/js/lightbox.js?v=20261001-133719"></script>
-<script src="/js/graph-common.js?v=20261001-133719"></script>
-<script src="/js/constellations.js?v=20261001-133719"></script>
-<script src="/js/profile-view.js?v=20261001-133719"></script>
+<script src="/js/supabase-client.js?v=20261001-154402"></script>
+<script src="/js/i18n/ko.js?v=20261001-154402"></script>
+<script src="/js/common.js?v=20261001-154402"></script>
+<script src="/js/color-engine.js?v=20261001-154402"></script>
+<script src="/js/pixel-board.js?v=20261001-154402"></script>
+<script src="/js/project-preview.js?v=20261001-154402"></script>
+<script src="/js/matching.js?v=20261001-154402"></script>
+<script src="/js/auth.js?v=20261001-154402"></script>
+<script src="/js/notifications.js?v=20261001-154402"></script>
+<script src="/js/push.js?v=20261001-154402"></script>
+<script src="/js/lightbox.js?v=20261001-154402"></script>
+<script src="/js/graph-common.js?v=20261001-154402"></script>
+<script src="/js/constellations.js?v=20261001-154402"></script>
+<script src="/js/profile-view.js?v=20261001-154402"></script>
 </body>
 </html>

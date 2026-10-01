@@ -723,6 +723,8 @@ const SITE_SETTING_DEFAULTS = Object.freeze({
   lbArtistLine: '#7CB396', lbArtistLineAlpha: 6,
   lbStoryBg: '#92A1DB', lbStoryBgAlpha: 6,
   lbStoryLine: '#A9B5E2', lbStoryLineAlpha: 6,
+  lbProcessBg: '#A886C1', lbProcessBgAlpha: 6,
+  lbProcessLine: '#C3A6D9', lbProcessLineAlpha: 6,
 });
 // "#RRGGBB" + opacity in percent → "rgba(r,g,b,a)", or null when the colour
 // is not a valid hex (the caller then keeps its CSS default).

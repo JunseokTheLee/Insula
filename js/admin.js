@@ -1211,7 +1211,7 @@ function paintAdminDesignPreview() {
   const box = document.querySelector('#adminDesignSettings .design-preview');
   if (!box || typeof hexAlphaToRgba !== 'function') return;
   const val = id => (document.getElementById(id) || {}).value;
-  for (const [cssVar, key] of [['--lb-artist-bg', 'lbArtistBg'], ['--lb-artist-line', 'lbArtistLine'], ['--lb-story-bg', 'lbStoryBg'], ['--lb-story-line', 'lbStoryLine']]) {
+  for (const [cssVar, key] of [['--lb-artist-bg', 'lbArtistBg'], ['--lb-artist-line', 'lbArtistLine'], ['--lb-story-bg', 'lbStoryBg'], ['--lb-story-line', 'lbStoryLine'], ['--lb-process-bg', 'lbProcessBg'], ['--lb-process-line', 'lbProcessLine']]) {
     const v = hexAlphaToRgba(val(`design-${key}`), val(`design-${key}Alpha`));
     if (v) box.style.setProperty(cssVar, v);
   }

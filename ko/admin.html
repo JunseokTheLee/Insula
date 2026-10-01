@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261001-133719">
-<link rel="stylesheet" href="/css/admin.css?v=20261001-133719">
+<link rel="stylesheet" href="/css/base.css?v=20261001-154402">
+<link rel="stylesheet" href="/css/admin.css?v=20261001-154402">
 </head>
 
 <body>
@@ -364,11 +364,12 @@
           <div class="admin-settings" id="adminDesignSettings">
             <div class="admin-option-card">
               <h3>라이트박스 · 작품 정보 카드</h3>
-              <p class="admin-help">작품을 열었을 때 오른쪽(휴대폰은 아래)에 나오는 <strong>작가 소개</strong>·<strong>작품 이야기</strong> 카드의 배경과 테두리입니다. 색은 색 고르기나 색상·채도·명도 슬라이더로 바꾸고, 불투명도 0% 는 완전히 투명, 100% 는 불투명입니다.</p>
+              <p class="admin-help">작품을 열었을 때 오른쪽(휴대폰은 아래)에 나오는 <strong>작가 소개</strong>·<strong>작품 이야기</strong>·<strong>작업 이야기</strong> 카드의 배경과 테두리입니다. 색은 색 고르기나 색상·채도·명도 슬라이더로 바꾸고, 불투명도 0% 는 완전히 투명, 100% 는 불투명입니다.</p>
               <div class="design-preview" aria-label="미리보기 (라이트박스 바탕)">
                 <div class="design-preview-label">미리보기 (라이트박스 바탕)</div>
                 <div class="lb-card lb-card-artist design-preview-card" data-preview="artist"><div class="lb-card-head"><span class="lb-card-title">작가 소개</span></div><p class="lb-card-body">작가가 직접 쓴 소개가 이 카드에 들어갑니다.</p></div>
                 <div class="lb-card lb-card-story design-preview-card" data-preview="story"><div class="lb-card-head"><span class="lb-card-title">작품 이야기</span></div><p class="lb-card-body">작품에 담긴 이야기가 이 카드에 들어갑니다.</p></div>
+                <div class="lb-card lb-card-process design-preview-card" data-preview="process"><div class="lb-card-head"><span class="lb-card-title">작업 이야기</span></div><p class="lb-card-body">작가가 어떻게 작업하는지가 이 카드에 들어갑니다.</p></div>
               </div>
               <div class="design-color" data-color-key="lbArtistBg">
                 <div class="design-color-head"><span class="design-swatch" aria-hidden="true"></span><strong>작가 소개 — 배경</strong><span class="design-value"></span><button type="button" class="admin-btn design-reset">기본값으로</button></div>
@@ -393,6 +394,18 @@
                 <div class="design-row"><label for="design-lbStoryLine">색</label><input id="design-lbStoryLine" type="color" data-setting="lbStoryLine" disabled><output data-setting-output="lbStoryLine"></output></div>
                 <div class="design-hsl"></div>
                 <div class="design-row"><label for="design-lbStoryLineAlpha">불투명도</label><input id="design-lbStoryLineAlpha" type="range" min="0" max="100" step="1" data-setting="lbStoryLineAlpha" disabled><span><output data-setting-output="lbStoryLineAlpha"></output>%</span></div>
+              </div>
+              <div class="design-color" data-color-key="lbProcessBg">
+                <div class="design-color-head"><span class="design-swatch" aria-hidden="true"></span><strong>작업 이야기 — 배경</strong><span class="design-value"></span><button type="button" class="admin-btn design-reset">기본값으로</button></div>
+                <div class="design-row"><label for="design-lbProcessBg">색</label><input id="design-lbProcessBg" type="color" data-setting="lbProcessBg" disabled><output data-setting-output="lbProcessBg"></output></div>
+                <div class="design-hsl"></div>
+                <div class="design-row"><label for="design-lbProcessBgAlpha">불투명도</label><input id="design-lbProcessBgAlpha" type="range" min="0" max="100" step="1" data-setting="lbProcessBgAlpha" disabled><span><output data-setting-output="lbProcessBgAlpha"></output>%</span></div>
+              </div>
+              <div class="design-color" data-color-key="lbProcessLine">
+                <div class="design-color-head"><span class="design-swatch" aria-hidden="true"></span><strong>작업 이야기 — 테두리</strong><span class="design-value"></span><button type="button" class="admin-btn design-reset">기본값으로</button></div>
+                <div class="design-row"><label for="design-lbProcessLine">색</label><input id="design-lbProcessLine" type="color" data-setting="lbProcessLine" disabled><output data-setting-output="lbProcessLine"></output></div>
+                <div class="design-hsl"></div>
+                <div class="design-row"><label for="design-lbProcessLineAlpha">불투명도</label><input id="design-lbProcessLineAlpha" type="range" min="0" max="100" step="1" data-setting="lbProcessLineAlpha" disabled><span><output data-setting-output="lbProcessLineAlpha"></output>%</span></div>
               </div>
             </div>
           </div>
@@ -882,16 +895,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261001-133719"></script>
-<script src="/js/i18n/ko.js?v=20261001-133719"></script>
-<script src="/js/common.js?v=20261001-133719"></script>
-<script src="/js/auth.js?v=20261001-133719"></script>
-<script src="/js/notifications.js?v=20261001-133719"></script>
-<script src="/js/push.js?v=20261001-133719"></script>
-<script src="/js/color-engine.js?v=20261001-133719"></script>
-<script src="/js/pixel-board.js?v=20261001-133719"></script>
-<script src="/js/matching.js?v=20261001-133719"></script>
-<script src="/js/admin.js?v=20261001-133719"></script>
+<script src="/js/supabase-client.js?v=20261001-154402"></script>
+<script src="/js/i18n/ko.js?v=20261001-154402"></script>
+<script src="/js/common.js?v=20261001-154402"></script>
+<script src="/js/auth.js?v=20261001-154402"></script>
+<script src="/js/notifications.js?v=20261001-154402"></script>
+<script src="/js/push.js?v=20261001-154402"></script>
+<script src="/js/color-engine.js?v=20261001-154402"></script>
+<script src="/js/pixel-board.js?v=20261001-154402"></script>
+<script src="/js/matching.js?v=20261001-154402"></script>
+<script src="/js/admin.js?v=20261001-154402"></script>
 
 </body>
 </html>

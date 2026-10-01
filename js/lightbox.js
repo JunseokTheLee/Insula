@@ -130,6 +130,7 @@ function renderLightboxDisabilities(keys) {
 // the pages whose static label still said "아티스트 소개".
 const LB_CARD_ICONS = {
   artist: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8z"/></svg>',
+  process: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 013 3L8 18.5z"/><path d="M14 6.5l3.5 3.5" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1.2"/></svg>',
   story: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="1.8"/><path d="M5 18l4.5-5 3 3 2.5-2.5L19 18z"/></svg>',
 };
 function lbCardHead(kind, label) {
@@ -167,7 +168,43 @@ function lbCardHead(kind, label) {
     card.appendChild(desc);
     desc.classList.add('lb-card-body');
   }
+  // "Process story" card (2026-10-01): made here, after the artwork card,
+  // since no page copy of the markup has an element for it.
+  const story = document.getElementById('lightbox-story');
+  if (story && !document.getElementById('lightbox-process')) {
+    const card = document.createElement('section');
+    card.id = 'lightbox-process';
+    card.className = 'lb-card lb-card-process';
+    card.hidden = true;
+    card.appendChild(lbCardHead('process', tr('lbArtProcess')));
+    const body = document.createElement('p');
+    body.id = 'lightbox-cap-process';
+    body.className = 'lb-card-body';
+    card.appendChild(body);
+    story.after(card);
+  }
 })();
+
+// The process story is not in the list queries (ARTWORK_ROW_COLS) — those
+// would fail outright on a database without the column — so it is read
+// here, once per artwork, and kept on the row. A missing column simply
+// leaves the card hidden (supabase_mosaic_art_process.sql).
+function renderLightboxProcess(sub) {
+  const card = document.getElementById('lightbox-process');
+  const body = document.getElementById('lightbox-cap-process');
+  if (!card || !body) return;
+  const show = () => {
+    body.textContent = sub.art_process || '';
+    card.hidden = !sub.art_process;
+  };
+  card.hidden = true;
+  if (sub.art_process !== undefined) { show(); return; }
+  sb.from('mosaic_submissions').select('art_process').eq('id', sub.id).maybeSingle().then(({ data, error }) => {
+    if (error || !data) return;
+    sub.art_process = data.art_process || null;
+    if (lbCurrentSub === sub) show();
+  });
+}
 
 // The cards' colours from the admin "Design" tab (site options lb*): set as
 // CSS variables on the root, which css/base.css reads with the shipped
@@ -182,6 +219,8 @@ function lbCardHead(kind, label) {
       ['--lb-artist-line', s.lbArtistLine, s.lbArtistLineAlpha],
       ['--lb-story-bg', s.lbStoryBg, s.lbStoryBgAlpha],
       ['--lb-story-line', s.lbStoryLine, s.lbStoryLineAlpha],
+      ['--lb-process-bg', s.lbProcessBg, s.lbProcessBgAlpha],
+      ['--lb-process-line', s.lbProcessLine, s.lbProcessLineAlpha],
     ]) {
       const v = hexAlphaToRgba(hex, alpha);
       if (v) root.setProperty(cssVar, v);
@@ -328,6 +367,10 @@ lbEditModal.innerHTML = `
       <label for="lb-edit-desc">${tr('artStatementLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
       <textarea id="lb-edit-desc" placeholder="${tr('artStatementPlaceholder')}" maxlength="500"></textarea>
     </div>
+    <div class="field" id="lb-edit-process-row" style="display:none;">
+      <label for="lb-edit-process">${tr('artProcessLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
+      <textarea id="lb-edit-process" placeholder="${tr('artProcessPlaceholder')}" maxlength="500"></textarea>
+    </div>
     <div class="field">
       <label for="lb-edit-link">${tr('artLinkLabel')} <span class="field-hint">${tr('optionalHint')}</span></label>
       <input type="text" id="lb-edit-link" placeholder="https://your-portfolio.com" maxlength="300">
@@ -374,6 +417,16 @@ function openLbEditModal() {
     lbEditModal.querySelector('#lb-edit-optout').checked = sub.coloring_opt_out;
     optRow.style.display = '';
   });
+  // The process story (supabase_mosaic_art_process.sql) — same pattern.
+  const procRow = lbEditModal.querySelector('#lb-edit-process-row');
+  procRow.style.display = 'none';
+  lbEditModal.querySelector('#lb-edit-process').value = '';
+  sb.from('mosaic_submissions').select('art_process').eq('id', sub.id).maybeSingle().then(({ data, error }) => {
+    if (error || !data || lbCurrentSub !== sub) return;
+    sub.art_process = data.art_process || null;
+    lbEditModal.querySelector('#lb-edit-process').value = sub.art_process || '';
+    procRow.style.display = '';
+  });
   // Same for the visibility flag (supabase_portfolios.sql) — its own read,
   // so one missing column does not hide the other row.
   const privRow = lbEditModal.querySelector('#lb-edit-private-row');
@@ -414,6 +467,18 @@ lbEditModal.querySelector('#lb-edit-save').onclick = async () => {
   saveBtn.disabled = false;
   if (error) { console.error('edit artwork error:', error); errorEl.textContent = tr('couldNotUpdateArtwork'); return; }
   Object.assign(sub, patch);
+  // The process story is its own update too — the column may not exist yet
+  // (supabase_mosaic_art_process.sql); the row only shows once it was read.
+  const procRow = lbEditModal.querySelector('#lb-edit-process-row');
+  if (procRow.style.display !== 'none') {
+    const proc = lbEditModal.querySelector('#lb-edit-process').value.trim() || null;
+    if (proc !== (sub.art_process || null)) {
+      const { error: procErr } = await sb.from('mosaic_submissions').update({ art_process: proc }).eq('id', sub.id);
+      if (procErr) { console.error('process story update error:', procErr); toast(tr('couldNotUpdateArtwork')); }
+      else sub.art_process = proc;
+    }
+    renderLightboxProcess(sub);
+  }
   // Opt-out is its own update: the column may not exist yet, and a failure
   // here must not undo the details that were just saved.
   const optRow = lbEditModal.querySelector('#lb-edit-optout-row');
@@ -893,6 +958,7 @@ function populateLightboxContent(sub) {
   closeLbExhibitMenu();
   setLightboxImage(sub);
   applyArtDetailsToCaption(sub);
+  renderLightboxProcess(sub);
   renderLightboxPieceUsage(sub).then(u => renderLightboxPlay(sub, u));
   renderLightboxStarCount(sub);
   renderLightboxMedals(sub);

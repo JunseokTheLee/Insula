@@ -326,6 +326,7 @@ body.modal-open{position:fixed;left:0;right:0;width:100%;}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
 .field label{font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;color:var(--text);}
 .field .field-hint{font-weight:400;color:var(--muted);}
+.field .field-note{margin-top:4px;font-size:12px;color:var(--muted);}
 /* Live username availability hint: it sits inside the label right after the
    label text, so give it breathing room and enough weight to read at a glance. */
 #ep-username-hint{margin-left:10px;font-weight:600;font-size:12.5px;}
@@ -593,6 +594,7 @@ body.lb-img-fs-lock{overflow:hidden;}
    / --lb-story-* on the root); the fallbacks are the shipped defaults. */
 .lb-card-artist{--lb-card-bg:var(--lb-artist-bg,rgba(103,161,131,.06));--lb-card-line:var(--lb-artist-line,rgba(124,179,150,.06));--lb-card-ink:#8FE3B5;}
 .lb-card-story{--lb-card-bg:var(--lb-story-bg,rgba(146,161,219,.06));--lb-card-line:var(--lb-story-line,rgba(169,181,226,.06));--lb-card-ink:#B4C4FF;}
+.lb-card-process{--lb-card-bg:var(--lb-process-bg,rgba(168,134,193,.06));--lb-card-line:var(--lb-process-line,rgba(195,166,217,.06));--lb-card-ink:#E1B8FF;}
 .lb-card-head{
   appearance:none;width:100%;display:flex;align-items:center;gap:9px;cursor:pointer;
   padding:11px 14px;background:none;border:none;text-align:left;
