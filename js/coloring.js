@@ -56,11 +56,17 @@
     for (const l of LEVELS) { const r = recOf(id, l); if (r && r.count && !r.completed && r.count > most) { most = r.count; pick = l; } }
     return pick;
   }
+  // The level a plain "start" opens: the one being played, else Normal
+  // (2026-10-03 user decision — it used to be the lowest level not yet
+  // finished, i.e. Easy for every new artwork). If Normal is already done,
+  // the next unfinished one (Hard, then Easy); all done → Normal again.
+  // Choosing a level chip still opens exactly that level.
+  const DEFAULT_LEVEL = 2;
   function suggestedLevel(id) {
     const going = inProgress(id);
     if (going) return going;
-    for (const l of LEVELS) { const r = recOf(id, l); if (!r || !r.completed) return l; }
-    return 3;
+    for (const l of [DEFAULT_LEVEL, 3, 1]) { const r = recOf(id, l); if (!r || !r.completed) return l; }
+    return DEFAULT_LEVEL;
   }
   function mineIds() {
     const ids = new Set();
