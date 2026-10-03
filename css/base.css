@@ -1280,6 +1280,10 @@ html[lang="ko"] * {
    picture coming into focus rather than a second image replacing the first. */
 .lightbox-overlay img{transition:transform .15s ease-out,filter .35s ease-out;}
 .lightbox-overlay img.lb-img-soft{filter:blur(3px);}
+/* Hidden for the fraction of a second until the sharp image's size is known
+   (lightbox.js setLightboxImage), so the stand-in never appears at one size
+   and then shrinks to another. */
+.lightbox-overlay img.lb-img-wait{visibility:hidden;}
 @media (prefers-reduced-motion:reduce){.lightbox-overlay img{transition:none;}}
 
 /* Lightbox edit dialog: the note under the "private" checkbox. */

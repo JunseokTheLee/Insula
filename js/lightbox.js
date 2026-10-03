@@ -894,9 +894,17 @@ function lbImgFit(w, h, upscale) {
   const boxH = lbStage.clientHeight - parseFloat(st.paddingTop) - parseFloat(st.paddingBottom);
   if (!(boxW > 0) || !(boxH > 0)) return null; // modal not laid out yet
   const im = getComputedStyle(lbImg);
-  let s = Math.min(lbImgLimit(im.maxWidth, boxW) / w, lbImgLimit(im.maxHeight, boxH) / h);
+  // The <img> has a 1px border and box-sizing:border-box, so the picture
+  // itself gets the limit minus the border, and the size set on the
+  // element must add it back — otherwise the stand-in comes out a couple
+  // of pixels off the settled image.
+  const bx = im.boxSizing === 'border-box' ? parseFloat(im.borderLeftWidth) + parseFloat(im.borderRightWidth) + parseFloat(im.paddingLeft) + parseFloat(im.paddingRight) : 0;
+  const by = im.boxSizing === 'border-box' ? parseFloat(im.borderTopWidth) + parseFloat(im.borderBottomWidth) + parseFloat(im.paddingTop) + parseFloat(im.paddingBottom) : 0;
+  let s = Math.min((lbImgLimit(im.maxWidth, boxW) - bx) / w, (lbImgLimit(im.maxHeight, boxH) - by) / h);
   if (!upscale) s = Math.min(1, s);
-  return isFinite(s) && s > 0 ? { w: Math.round(w * s), h: Math.round(h * s) } : null;
+  // Not rounded: the browser lays the settled image out at fractional
+  // pixels too, so a rounded stand-in could still be off by a pixel.
+  return isFinite(s) && s > 0 ? { w: w * s + bx, h: h * s + by } : null;
 }
 function clearLbImgSize() { lbImg.style.width = ''; lbImg.style.height = ''; }
 function setLightboxImage(sub) {
@@ -922,29 +930,53 @@ function setLightboxImage(sub) {
     if (token !== lbImgToken) return;
     settled = true;
     clearLbImgSize();
-    lbImg.classList.remove('lb-img-loading', 'lb-img-soft');
+    lbImg.classList.remove('lb-img-loading', 'lb-img-soft', 'lb-img-wait');
   };
   if (!full) { if (thumb) lbImg.src = thumb; settle(); return; }
   const pre = new Image();
+  // The blurred stand-in is drawn at the size the sharp image WILL have, so
+  // nothing jumps when it lands (2026-10-03). It used to be stretched to
+  // fill the stage until then — and a small original (say 700 px in a
+  // 900 px stage) then shrank back to its own size the moment it arrived,
+  // since the lightbox never enlarges past an image's real size. The real
+  // size comes from whichever is first: the browser reporting it while the
+  // image downloads, or lbProbeDims reading the file's first bytes. Until
+  // then the stand-in stays hidden (a fraction of a second); if neither has
+  // answered after LB_DIMS_WAIT ms it shows at its own size, which is never
+  // larger than the final one, so the change can only be a small growth.
+  let dims = null;
+  const shownAt = performance.now();
+  let sizeStandIn = () => {};
   if (thumb && sub.thumb_url !== sub.image_url) {
     lbImg.src = thumb;
     if (lbImg.closest('.lightbox-overlay')) {
-      lbImg.classList.add('lb-img-soft');
-      // Re-measured every frame until the original lands: the modal opens
-      // after this call, the original's real size arrives with its first
-      // bytes, and the user may resize or blow the image up meanwhile.
+      lbImg.classList.add('lb-img-soft', 'lb-img-wait');
+      // Re-measured every frame until the sharp image lands: the modal opens
+      // after this call, its real size arrives with its first bytes, and
+      // the user may resize or blow the image up meanwhile.
+      // Also run straight away when the size arrives and at the wait limit,
+      // not only per frame — frames stop while the tab is in the background.
+      sizeStandIn = () => {
+        if (settled || token !== lbImgToken) return;
+        const d = pre.naturalWidth > 0 ? { w: pre.naturalWidth, h: pre.naturalHeight } : dims;
+        let fit = null;
+        if (d) fit = lbImgFit(d.w, d.h, false);
+        else if (performance.now() - shownAt >= LB_DIMS_WAIT && lbImg.naturalWidth > 0) fit = lbImgFit(lbImg.naturalWidth, lbImg.naturalHeight, false);
+        if (fit) {
+          lbImg.style.width = fit.w + 'px'; lbImg.style.height = fit.h + 'px';
+          lbImg.classList.remove('lb-img-wait');
+        }
+      };
       const stretch = () => {
         if (settled || token !== lbImgToken) return;
-        const known = pre.naturalWidth > 0;
-        const w = known ? pre.naturalWidth : lbImg.naturalWidth;
-        const h = known ? pre.naturalHeight : lbImg.naturalHeight;
-        const fit = w > 0 && h > 0 ? lbImgFit(w, h, !known) : null;
-        if (fit) { lbImg.style.width = fit.w + 'px'; lbImg.style.height = fit.h + 'px'; }
+        sizeStandIn();
         requestAnimationFrame(stretch);
       };
       requestAnimationFrame(stretch);
+      setTimeout(() => sizeStandIn(), LB_DIMS_WAIT);
     }
   }
+  const probe = url => lbProbeDims(url).then(d => { if (d && token === lbImgToken && !settled) { dims = d; sizeStandIn(); } });
   // The sharp image is the display copy (≤1600 px, a few hundred KB) when
   // there is one, not the original (supabase_mosaic_display_image.sql); a
   // missing display file falls back to the original. Zoom and full screen
@@ -960,12 +992,64 @@ function setLightboxImage(sub) {
   pre.onload = show;
   pre.onerror = () => {
     if (token !== lbImgToken) return;
-    if (sharp !== full) { sharp = full; pre.src = full; return; }   // no display file yet
+    if (sharp !== full) { sharp = full; dims = null; pre.src = full; probe(full); return; }   // no display file yet
     settle();                           // broken original: keep the thumbnail
   };
   pre.src = sharp;
+  probe(sharp);
   // Already cached (a re-open, a warmed hover, or the browser had it): no wait at all.
   if (pre.complete && pre.naturalWidth) show();
+}
+// The pixel size of a JPEG/PNG from its first bytes (one ranged request,
+// ~64 KB at most): the stand-in can be sized before the image itself has
+// arrived — and on browsers that only report naturalWidth at the very end.
+// Cached per URL, so a re-open is instant. Resolves null when it cannot tell.
+const LB_DIMS_WAIT = 700;
+const lbDimsCache = new Map();
+async function lbProbeDims(url) {
+  if (!url) return null;
+  if (lbDimsCache.has(url)) return lbDimsCache.get(url);
+  const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), 4000) : 0;
+  try {
+    const res = await fetch(url, { headers: { Range: 'bytes=0-65535' }, signal: ctrl ? ctrl.signal : undefined });
+    if (!res.ok) return null;
+    const d = lbParseImageDims(new Uint8Array(await res.arrayBuffer()));
+    if (d) { if (lbDimsCache.size > 200) lbDimsCache.clear(); lbDimsCache.set(url, d); }
+    return d;
+  } catch (e) {
+    return null;   // offline, blocked or aborted: the stand-in falls back to its own size
+  } finally {
+    clearTimeout(timer);
+  }
+}
+function lbParseImageDims(b) {
+  // PNG: width/height in the IHDR chunk right after the signature.
+  if (b.length > 24 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47) {
+    const w = (b[16] << 24 | b[17] << 16 | b[18] << 8 | b[19]) >>> 0;
+    const h = (b[20] << 24 | b[21] << 16 | b[22] << 8 | b[23]) >>> 0;
+    return w && h ? { w, h } : null;
+  }
+  // JPEG: walk the segments to the first start-of-frame marker.
+  if (b.length > 4 && b[0] === 0xFF && b[1] === 0xD8) {
+    let i = 2;
+    while (i + 9 < b.length) {
+      if (b[i] !== 0xFF) { i++; continue; }
+      const m = b[i + 1];
+      if (m === 0xD8 || m === 0x01 || (m >= 0xD0 && m <= 0xD7)) { i += 2; continue; }
+      const len = b[i + 2] << 8 | b[i + 3];
+      if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) {
+        const h = b[i + 5] << 8 | b[i + 6], w = b[i + 7] << 8 | b[i + 8];
+        if (!(w && h)) return null;
+        // EXIF orientation is not read here; the display copies (re-encoded
+        // through a canvas) carry none, and an original rotated 90° only
+        // makes the stand-in briefly the wrong shape until it lands.
+        return { w, h };
+      }
+      i += 2 + len;
+    }
+  }
+  return null;
 }
 // Zoom and full screen want every pixel: swap the original in (once loaded)
 // where the display copy is showing. Asked for while the image is still
