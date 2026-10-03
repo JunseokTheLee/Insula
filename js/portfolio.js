@@ -642,9 +642,10 @@ function wireShow() {
     const dx = ev.changedTouches[0].clientX - x0; x0 = null;
     if (Math.abs(dx) > 40) stepShow(dx < 0 ? 1 : -1);
   }, { passive: true });
-  // The stage pauses while the pointer rests on it — reading time.
-  e.root.querySelector('.pf-show-stage').addEventListener('mouseenter', () => { if (show.playing) { cancelAnimationFrame(show.raf); } });
-  e.root.querySelector('.pf-show-stage').addEventListener('mouseleave', () => { if (show.playing) restartShowBar(); });
+  // No pause-on-hover (removed 2026-10-03): the slideshow fills the screen,
+  // so the cursor that pressed "Slideshow" is already resting on the stage —
+  // the timer stopped before the first slide ever advanced, while the
+  // button still said "Pause". The Pause button is the way to stop.
 }
 
 // ---------- more by this artist ----------
