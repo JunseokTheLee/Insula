@@ -42,6 +42,30 @@ function renderProjectJsonLd(project) {
 }
 
 // ---------- project detail ----------
+// Phones' full-screen campaign view shows the title and description as a
+// small card over the mosaic (css/project.css). ⌄ folds it to the title;
+// the choice is kept for the session so it stays out of the way once
+// dismissed. Elsewhere the button is hidden by CSS and does nothing.
+const PROJECT_INTRO_KEY = 'weavo.campaign.introFolded';
+function setupProjectIntro(hasDesc) {
+  const intro = document.getElementById('projectIntro');
+  const btn = document.getElementById('projectIntroToggle');
+  if (!intro || !btn) return;   // an old cached campaign.html
+  intro.classList.toggle('no-desc', !hasDesc);
+  let folded = false;
+  try { folded = sessionStorage.getItem(PROJECT_INTRO_KEY) === '1'; } catch (e) {}
+  const apply = () => {
+    intro.classList.toggle('collapsed', folded);
+    btn.setAttribute('aria-expanded', String(!folded));
+    btn.setAttribute('aria-label', tr(folded ? 'campaignIntroExpand' : 'campaignIntroCollapse'));
+  };
+  apply();
+  btn.onclick = () => {
+    folded = !folded;
+    try { sessionStorage.setItem(PROJECT_INTRO_KEY, folded ? '1' : '0'); } catch (e) {}
+    apply();
+  };
+}
 async function openProject(id) {
   const { data: project, error } = await sb.from('mosaic_projects').select('*').eq('id', id).maybeSingle();
   if (error || !project) { console.error('load project error:', error); toast(tr('projectNotFound')); return; }
@@ -62,6 +86,7 @@ async function openProject(id) {
   const descEl = document.getElementById('projectDesc');
   descEl.textContent = project.description || '';
   descEl.style.display = project.description ? '' : 'none';
+  setupProjectIntro(!!project.description);
   const refPreview = document.getElementById('referencePreview');
   refPreview.classList.remove('enlarged');
   refPreview.setAttribute('aria-label', tr('enlargePreview'));

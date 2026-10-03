@@ -67,7 +67,7 @@ async function renderHeroPreview() {
   }
 }
 // The campaign on screen, named under its mosaic: title (a link to the
-// campaign), description (two lines, the full text on hover) and "1 / 3"
+// campaign), its whole description and "1 / 3"
 // when there is more than one. Re-runs its fade-in on every switch.
 function renderHeroCampaign(p) {
   const box = document.getElementById('heroCampaign');
@@ -79,7 +79,6 @@ function renderHeroCampaign(p) {
   title.href = projectUrl(p.id);
   const text = (p.description || '').trim();
   desc.textContent = text;
-  desc.title = text;
   desc.hidden = !text;
   document.getElementById('heroCampaignCount').textContent =
     heroProjects.length > 1 ? `${heroIndex + 1} / ${heroProjects.length}` : '';

@@ -26,6 +26,7 @@ const T = {
   couldNotDeleteArtwork: '작품을 삭제할 수 없습니다', artworkDeleted: '작품이 삭제되었습니다',
   noCommentsYet: '아직 댓글이 없습니다.',
   couldNotPostComment: '댓글을 게시할 수 없습니다', couldNotDeleteComment: '댓글을 삭제할 수 없습니다',
+  campaignIntroExpand: '설명 펼치기', campaignIntroCollapse: '설명 접기',
   archivedBadge: '보관됨',
   viewingNetwork: '{name}님의 네트워크 보는 중',
   userNotFound: '사용자를 찾을 수 없습니다',

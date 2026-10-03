@@ -3,7 +3,13 @@
    narrows the dark stage further to hug a portrait mosaic (2026-09-11). */
 .project-head{max-width:var(--frame-max);margin-left:auto;margin-right:auto;padding:28px var(--gutter) 20px;animation:fadeIn .3s ease-out;}
 .project-head h1{margin:0 0 8px;font-family:'Pretendard',sans-serif;font-weight:700;font-size:30px;color:var(--primary);letter-spacing:-.01em;}
-.project-head p{color:var(--muted);font-family:'Pretendard',sans-serif;font-size:15px;line-height:1.6;margin:0 0 12px;max-width:560px;}
+.project-head p{color:var(--muted);font-family:'Pretendard',sans-serif;font-size:15px;line-height:1.6;margin:0 0 12px;max-width:560px;white-space:pre-line;}
+/* Fold button for the title/description card — phones' full-screen mode only. */
+.project-intro-toggle{display:none;position:absolute;top:6px;right:6px;width:32px;height:32px;border:none;border-radius:50%;background:transparent;cursor:pointer;color:var(--primary);}
+.project-intro-toggle::before{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translate(-50%,-70%) rotate(45deg);transition:transform .15s ease-out;}
+.project-intro.collapsed .project-intro-toggle::before{transform:translate(-50%,-30%) rotate(-135deg);}
+.project-intro.no-desc .project-intro-toggle{display:none !important;}
+body[data-mobile-fs] .project-intro.no-desc{padding-right:14px;}
 .project-progress{color:var(--muted);font-family:'Pretendard',sans-serif;font-size:12px;font-weight:600;}
 
 .project-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:560px;margin:16px 0 0;}
@@ -122,13 +128,26 @@
      layout settles) and float the only control that has to stay reachable
      (the Weavo/List toggle + reference preview) into the bottom-left corner,
      clear of the "←" (top-left) and zoom bar (top-right). Title, progress,
-     description and colour-need list drop away. */
+     description and colour-need list drop away — except the title and the
+     description, which since 2026-10-03 float as a small glass card above
+     those controls (tap ⌄ to fold it down to the title). */
   body[data-mobile-fs] .main{overflow:hidden;}
   body[data-mobile-fs] .project-head{
-    position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:150;margin:0;padding:0;width:auto;
+    position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:150;margin:0;padding:0;width:auto;
+    pointer-events:none; /* the empty part of the strip must not swallow mosaic drags */
   }
-  body[data-mobile-fs] .project-head h1,
-  body[data-mobile-fs] .project-head > p,
+  body[data-mobile-fs] .project-head > *{pointer-events:auto;}
+  body[data-mobile-fs] .project-head-controls{pointer-events:none;}
+  body[data-mobile-fs] .project-head-controls > *{pointer-events:auto;}
+  body[data-mobile-fs] .project-intro{
+    position:relative;margin:0 0 8px;padding:10px 42px 10px 14px;max-width:560px;
+    background:rgba(255,255,255,.93);border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.16);
+  }
+  body[data-mobile-fs] .project-intro h1{font-size:16px;line-height:1.3;margin:0;}
+  body[data-mobile-fs] .project-intro p{font-size:13px;line-height:1.55;margin:4px 0 0;max-width:none;
+    max-height:32vh;overflow-y:auto;overscroll-behavior:contain;white-space:pre-line;word-break:keep-all;}
+  body[data-mobile-fs] .project-intro.collapsed p{display:none !important;}
+  body[data-mobile-fs] .project-intro-toggle{display:block;}
   body[data-mobile-fs] .project-progress,
   body[data-mobile-fs] .archived-banner,
   body[data-mobile-fs] .project-stats-row,
