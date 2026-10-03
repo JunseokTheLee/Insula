@@ -930,42 +930,37 @@ function setLightboxImage(sub) {
     if (token !== lbImgToken) return;
     settled = true;
     clearLbImgSize();
-    lbImg.classList.remove('lb-img-loading', 'lb-img-soft', 'lb-img-wait');
+    lbImg.classList.remove('lb-img-loading', 'lb-img-soft');
   };
   if (!full) { if (thumb) lbImg.src = thumb; settle(); return; }
   const pre = new Image();
-  // The blurred stand-in is drawn at the size the sharp image WILL have, so
-  // nothing jumps when it lands (2026-10-03). It used to be stretched to
-  // fill the stage until then — and a small original (say 700 px in a
-  // 900 px stage) then shrank back to its own size the moment it arrived,
-  // since the lightbox never enlarges past an image's real size. The real
-  // size comes from whichever is first: the browser reporting it while the
-  // image downloads, or lbProbeDims reading the file's first bytes. Until
-  // then the stand-in stays hidden (a fraction of a second); if neither has
-  // answered after LB_DIMS_WAIT ms it shows at its own size, which is never
-  // larger than the final one, so the change can only be a small growth.
+  // The blurred stand-in shows at once, stretched to fill the stage — most
+  // originals are large enough to fill it anyway, so for them nothing
+  // changes size when the sharp image lands. A small original (say 700 px in
+  // a 900 px stage) is the exception: the lightbox never enlarges past an
+  // image's real size, so the stand-in is brought down to that size as soon
+  // as it is known — the browser reporting it while downloading, or
+  // lbProbeDims reading the file's first bytes — usually well before the
+  // image itself arrives, instead of shrinking at the very end.
+  // (2026-10-03: a version that hid the stand-in until the size was known,
+  // then showed it at its own size after 0.7 s, flickered small → large on
+  // ordinary artworks and was reverted the same day.)
   let dims = null;
-  const shownAt = performance.now();
   let sizeStandIn = () => {};
   if (thumb && sub.thumb_url !== sub.image_url) {
     lbImg.src = thumb;
     if (lbImg.closest('.lightbox-overlay')) {
-      lbImg.classList.add('lb-img-soft', 'lb-img-wait');
-      // Re-measured every frame until the sharp image lands: the modal opens
-      // after this call, its real size arrives with its first bytes, and
-      // the user may resize or blow the image up meanwhile.
-      // Also run straight away when the size arrives and at the wait limit,
-      // not only per frame — frames stop while the tab is in the background.
+      lbImg.classList.add('lb-img-soft');
+      // Re-measured every frame until the sharp image lands (the modal opens
+      // after this call; the user may resize or blow the image up), and
+      // straight away when the real size arrives — frames stop while the tab
+      // is in the background.
       sizeStandIn = () => {
         if (settled || token !== lbImgToken) return;
         const d = pre.naturalWidth > 0 ? { w: pre.naturalWidth, h: pre.naturalHeight } : dims;
-        let fit = null;
-        if (d) fit = lbImgFit(d.w, d.h, false);
-        else if (performance.now() - shownAt >= LB_DIMS_WAIT && lbImg.naturalWidth > 0) fit = lbImgFit(lbImg.naturalWidth, lbImg.naturalHeight, false);
-        if (fit) {
-          lbImg.style.width = fit.w + 'px'; lbImg.style.height = fit.h + 'px';
-          lbImg.classList.remove('lb-img-wait');
-        }
+        const fit = d ? lbImgFit(d.w, d.h, false)
+          : lbImg.naturalWidth > 0 ? lbImgFit(lbImg.naturalWidth, lbImg.naturalHeight, true) : null;
+        if (fit) { lbImg.style.width = fit.w + 'px'; lbImg.style.height = fit.h + 'px'; }
       };
       const stretch = () => {
         if (settled || token !== lbImgToken) return;
@@ -973,7 +968,10 @@ function setLightboxImage(sub) {
         requestAnimationFrame(stretch);
       };
       requestAnimationFrame(stretch);
-      setTimeout(() => sizeStandIn(), LB_DIMS_WAIT);
+      // And the moment the thumbnail is decoded and the modal laid out, so it
+      // never shows for a frame at its own small size first.
+      lbImg.addEventListener('load', sizeStandIn, { once: true });
+      setTimeout(sizeStandIn, 0);
     }
   }
   const probe = url => lbProbeDims(url).then(d => { if (d && token === lbImgToken && !settled) { dims = d; sizeStandIn(); } });
@@ -1001,10 +999,9 @@ function setLightboxImage(sub) {
   if (pre.complete && pre.naturalWidth) show();
 }
 // The pixel size of a JPEG/PNG from its first bytes (one ranged request,
-// ~64 KB at most): the stand-in can be sized before the image itself has
-// arrived — and on browsers that only report naturalWidth at the very end.
+// ~64 KB at most): a small original's stand-in can be brought to size before
+// the image itself has arrived — and on browsers that only report naturalWidth at the very end.
 // Cached per URL, so a re-open is instant. Resolves null when it cannot tell.
-const LB_DIMS_WAIT = 700;
 const lbDimsCache = new Map();
 async function lbProbeDims(url) {
   if (!url) return null;
