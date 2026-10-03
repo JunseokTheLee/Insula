@@ -231,7 +231,7 @@ async function renderStats() {
 // in-page lightbox modal used by project.html/profile.html instead — see
 // recentListRowEl's onPlainClick param (common.js).
 function artworkListRowEl(sub) {
-  return recentListRowEl({
+  const row = recentListRowEl({
     href: artworkUrl(sub.id),
     thumbUrl: cdnUrl(sub.thumb_url || sub.image_url),
     title: sub.art_title || tr('untitledArtwork'),
@@ -240,6 +240,8 @@ function artworkListRowEl(sub) {
     metaText: fmtShortDate(sub.created_at),
     onPlainClick: () => openLightbox(sub),
   });
+  if (typeof warmLightbox === 'function') warmLightbox(row, sub);
+  return row;
 }
 function renderRecentArtworks(list) {
   const el = document.getElementById('recentArtworksList');

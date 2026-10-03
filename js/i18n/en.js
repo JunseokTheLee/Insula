@@ -194,6 +194,7 @@ const T = {
   adminPreviewImageBtn: 'Create share image', adminPreviewImageRedoBtn: 'Recreate share image', adminPreviewImageWorking: 'Creating the share image…', adminPreviewImageDone: 'Share image created', adminPreviewImageFailed: 'Could not create the share image',
   adminPreviewImageYes: 'share image ✓', adminPreviewImageNo: 'no share image (logo used)',
   adminPoolRunning: 'Placing pooled artworks…', adminPoolPlaced: '{n} piece(s) placed into campaigns', adminPoolNonePlaced: 'Nothing placed — no open cell in an active campaign matches these colors', adminPoolFailed: 'Could not run the placement',
+  adminDisplayWorking: 'Building display images… {done}/{total}', adminDisplayDone: 'Display images: {done} built · {skipped} skipped · {failed} failed',
   adminThumbsWorking: 'Rebuilding thumbnails… {done}/{total}', adminThumbsDone: 'Thumbnails made for {n} artwork(s)', adminThumbsFailed: '{done} done, {failed} failed (see console)',
   adminPiecesWorking: 'Cutting pieces… {done}/{total}', adminPiecesDone: 'Pieces cut for {n} artwork(s)', adminPiecesFailed: '{done} done, {failed} failed (see console)',
   adminPieceApplyTitle: 'Apply colour match to all', adminPieceApplyLabel: 'Apply', adminPieceApplyConfirm: 'Every piece is matched again at the current colour threshold: placed pieces beyond it are released, and all waiting pieces are tried again. Continue?',

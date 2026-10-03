@@ -333,6 +333,7 @@ function projectListCardEl(sub) {
   card.className = 'pv-card';
   card.href = artworkUrl(sub.id);
   interceptClick(card, () => openLightbox(sub));
+  if (typeof warmLightbox === 'function') warmLightbox(card, sub);
   const thumb = document.createElement('div');
   thumb.className = 'pv-card-thumb';
   const img = document.createElement('img');

@@ -194,6 +194,7 @@ const T = {
   adminPreviewImageBtn: '공유 이미지 생성', adminPreviewImageRedoBtn: '공유 이미지 다시 생성', adminPreviewImageWorking: '공유 이미지를 만드는 중…', adminPreviewImageDone: '공유 이미지를 만들었습니다', adminPreviewImageFailed: '공유 이미지를 만들 수 없습니다',
   adminPreviewImageYes: '공유 이미지 ✓', adminPreviewImageNo: '공유 이미지 없음 (로고 사용)',
   adminPoolRunning: '풀 작품을 배치하는 중…', adminPoolPlaced: '{n}개 조각을 캠페인에 배치했습니다', adminPoolNonePlaced: '배치된 작품이 없습니다 — 진행 중인 캠페인의 빈 칸과 색이 맞지 않습니다', adminPoolFailed: '배치를 실행할 수 없습니다',
+  adminDisplayWorking: '보기용 이미지 생성 중… {done}/{total}', adminDisplayDone: '보기용 이미지 {done}개 생성 · 건너뜀 {skipped} · 실패 {failed}',
   adminThumbsWorking: '썸네일 생성 중… {done}/{total}', adminThumbsDone: '{n}개 작품의 썸네일을 만들었습니다', adminThumbsFailed: '{done}개 완료, {failed}개 실패 (콘솔 확인)',
   adminPiecesWorking: '조각 생성 중… {done}/{total}', adminPiecesDone: '{n}개 작품의 조각을 만들었습니다', adminPiecesFailed: '{done}개 완료, {failed}개 실패 (콘솔 확인)',
   adminPieceApplyTitle: '색 기준 전체 적용', adminPieceApplyLabel: '적용', adminPieceApplyConfirm: '지금 설정된 색 일치 기준으로 모든 조각을 다시 맞춥니다. 기준을 넘는 배치 조각은 풀려나고, 대기 조각은 전부 다시 매칭됩니다. 계속할까요?',

@@ -962,9 +962,87 @@ function artworkDerivativesFromImage(img) {
 }
 function makeArtworkDerivatives(file) {
   const objectUrl = URL.createObjectURL(file);
-  return loadImageEl(objectUrl).then(artworkDerivativesFromImage)
-    .catch(() => ({ thumbBlob: null, thumbNeeded: true, micro: null }))
+  return loadImageEl(objectUrl)
+    .then(img => Promise.all([artworkDerivativesFromImage(img), artworkDisplayBlobFromImage(img)])
+      .then(([d, displayBlob]) => ({ ...d, displayBlob })))
+    .catch(() => ({ thumbBlob: null, thumbNeeded: true, micro: null, displayBlob: null }))
     .finally(() => URL.revokeObjectURL(objectUrl));
+}
+
+// ---------- lightbox "display" image (supabase_mosaic_display_image.sql) ----------
+// The lightbox used to sharpen only when the artist's original had arrived
+// (1.6 MB on average, up to 3 MB — seconds on a phone). It now loads this
+// copy instead: longer side ≤ DISPLAY_MAX_DIM, JPEG, a few hundred KB. The
+// original stays as uploaded; the lightbox swaps it in only on zoom or
+// full screen. The file's path follows from the original's, so the list
+// queries need no new column (artworkDisplayUrl) — an artwork without one
+// simply falls back to its original.
+const DISPLAY_MAX_DIM = 1600;
+function artworkDisplayBlobFromImage(img) {
+  const w0 = img.naturalWidth, h0 = img.naturalHeight;
+  if (!w0 || !h0) return Promise.resolve(null);
+  const scale = Math.min(1, DISPLAY_MAX_DIM / Math.max(w0, h0));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(w0 * scale));
+  canvas.height = Math.max(1, Math.round(h0 * scale));
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  // A transparent picture (PNG cut-out) would turn black as JPEG — keep
+  // showing its original instead. Checked on a 64 px copy: reading every
+  // pixel of the full canvas took over a second on a laptop.
+  try {
+    const probe = document.createElement('canvas');
+    probe.width = 64; probe.height = 64;
+    const pctx = probe.getContext('2d');
+    pctx.drawImage(img, 0, 0, 64, 64);
+    const px = pctx.getImageData(0, 0, 64, 64).data;
+    for (let i = 3; i < px.length; i += 4) if (px[i] < 250) return Promise.resolve(null);
+  } catch (e) { return Promise.resolve(null); }
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+}
+// artwork/<uid>/<name>.<ext> → display/<uid>/<name>.jpg (inside the bucket);
+// null for anything else (thumbnails, other buckets, old odd paths).
+function artworkDisplayPath(imageUrl) {
+  if (!imageUrl || !String(imageUrl).startsWith(SUPABASE_STORAGE_PREFIX)) return null;
+  const parts = String(imageUrl).slice(SUPABASE_STORAGE_PREFIX.length).split('?')[0].split('/');
+  if (parts.length !== 3 || parts[0] !== 'artwork' || parts[1] === 'thumb' || parts[1] === 'display') return null;
+  const base = parts[2].replace(/\.[^.]+$/, '');
+  return base ? `display/${parts[1]}/${base}.jpg` : null;
+}
+// The display image's public URL: the stored one when the row carries it,
+// none when the row says there is none (display_url null), else derived.
+function artworkDisplayUrl(sub) {
+  if (!sub) return null;
+  if (sub.display_url) return sub.display_url;
+  if (sub.display_url === null) return null;
+  const path = artworkDisplayPath(sub.image_url);
+  return path ? `${SUPABASE_STORAGE_PREFIX}artwork/${path}` : null;
+}
+// Uploads under the AUTHOR's display/ folder (an admin backfilling someone
+// else's artwork included). A file already there — an earlier, half-
+// finished run — counts as done.
+async function uploadDisplayBlob(blob, imageUrl) {
+  const path = artworkDisplayPath(imageUrl);
+  if (!blob || !path) return null;
+  const { error } = await sb.storage.from('artwork').upload(path, blob, { cacheControl: '31536000', contentType: 'image/jpeg' });
+  if (error && !/exist|duplicate/i.test(String(error.message || error.error || '')) && String(error.statusCode) !== '409') {
+    console.error('display image upload error:', error);
+    return null;
+  }
+  return sb.storage.from('artwork').getPublicUrl(path).data.publicUrl;
+}
+
+// Starts downloading an artwork's lightbox image before the click: on a
+// short hover (mouse), on press, or on keyboard focus. A press-to-click is
+// only ~100 ms, a hover often half a second — the download is that much
+// further along when the lightbox opens. Each image is fetched once.
+function warmLightbox(el, sub) {
+  let t = 0;
+  const go = () => { clearTimeout(t); if (typeof lbWarmImage === 'function') lbWarmImage(sub); };
+  el.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') t = setTimeout(go, 120); });
+  el.addEventListener('pointerleave', () => clearTimeout(t));
+  el.addEventListener('pointerdown', go);
+  el.addEventListener('focus', go);
 }
 // Thumbnails live in the same `artwork` bucket under thumb/<owner>/ — the
 // owner's folder, so account deletion cleans them up with the originals.
@@ -982,11 +1060,14 @@ async function uploadThumbBlob(blob, ownerId) {
 // blocked by it; the admin page lists such pieces and can rebuild them.
 async function uploadArtworkImage(file) {
   const url = await uploadImage(file);
-  if (!url) return { url: null, thumbUrl: null, microThumb: null };
+  if (!url) return { url: null, thumbUrl: null, microThumb: null, displayUrl: null };
   const d = await makeArtworkDerivatives(file);
-  if (!d.thumbNeeded) return { url, thumbUrl: url, microThumb: d.micro };
-  if (!d.thumbBlob) return { url, thumbUrl: null, microThumb: d.micro };
-  return { url, thumbUrl: await uploadThumbBlob(d.thumbBlob, me.id), microThumb: d.micro };
+  // The thumbnail and the lightbox display copy go up side by side.
+  const [thumbUrl, displayUrl] = await Promise.all([
+    !d.thumbNeeded ? url : d.thumbBlob ? uploadThumbBlob(d.thumbBlob, me.id) : null,
+    d.displayBlob ? uploadDisplayBlob(d.displayBlob, url) : null,
+  ]);
+  return { url, thumbUrl, microThumb: d.micro, displayUrl };
 }
 
 // ---------- liked artwork pool (mosaic_submission_likes) ----------

@@ -202,6 +202,7 @@ function itemEl(item, index) {
   el.appendChild(cap);
   if (isPfOwner()) el.appendChild(itemToolsEl(item, index));
   interceptClick(el, () => openLightbox(sub));
+  if (typeof warmLightbox === 'function') warmLightbox(el, sub);
   return el;
 }
 function itemToolsEl(item, index) {

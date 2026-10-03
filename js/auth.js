@@ -553,7 +553,7 @@ document.getElementById('ep-submit').onclick = async () => {
 // cleanup here shouldn't block the actual account deletion, so errors are
 // logged rather than surfaced.
 async function deleteMyStorageFiles() {
-  for (const prefix of [me.id, `thumb/${me.id}`]) {
+  for (const prefix of [me.id, `thumb/${me.id}`, `display/${me.id}`]) {
     const { data: entries, error: listErr } = await sb.storage.from('artwork').list(prefix);
     if (listErr) { console.error('list storage files error:', listErr); continue; }
     if (!entries || !entries.length) continue;

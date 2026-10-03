@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261003-150604">
-<link rel="stylesheet" href="/css/admin.css?v=20261003-150604">
+<link rel="stylesheet" href="/css/base.css?v=20261003-151825">
+<link rel="stylesheet" href="/css/admin.css?v=20261003-151825">
 </head>
 <body>
 
@@ -218,6 +218,17 @@
           <div class="admin-usage">
             <div class="admin-usage-tile"><div class="admin-usage-k">Missing thumbnail</div><div class="admin-usage-v" id="adminThumbsMissing">—</div></div>
             <div class="admin-usage-tile"><div class="admin-usage-k">Missing micro thumbnail</div><div class="admin-usage-v" id="adminMicroMissing">—</div></div>
+          </div>
+        </section>
+        <section class="admin-section" id="adminDisplaySection">
+          <div class="admin-section-head">
+            <h2>Display images</h2>
+            <button type="button" class="admin-btn primary" id="adminDisplayRunBtn" disabled>Build display images</button>
+          </div>
+          <p class="admin-help">The <strong>1600px display copy</strong> (a few hundred KB) an opened artwork (lightbox) shows instead of waiting for the original (1.6 MB on average). Artworks uploaded from 2026-10-03 get one at upload; build the older ones once with this button (this browser reads each original and makes it). An artwork without one still shows fine from its original, and zoom / full screen always use the original. Transparent pictures (PNG) are skipped so they don&rsquo;t turn black, and keep their original.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminDisplayUnavailable" style="display:none;">Not available yet — run <code>supabase_mosaic_display_image.sql</code> in the Supabase SQL editor first.</p>
+          <div class="admin-usage">
+            <div class="admin-usage-tile"><div class="admin-usage-k">Artworks without a display image</div><div class="admin-usage-v" id="adminDisplayMissing">—</div></div>
           </div>
         </section>
         <section class="admin-section" id="adminPixelSection">
@@ -791,15 +802,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261003-150604"></script>
-<script src="/js/i18n/en.js?v=20261003-150604"></script>
-<script src="/js/common.js?v=20261003-150604"></script>
-<script src="/js/auth.js?v=20261003-150604"></script>
-<script src="/js/notifications.js?v=20261003-150604"></script>
-<script src="/js/push.js?v=20261003-150604"></script>
-<script src="/js/color-engine.js?v=20261003-150604"></script>
-<script src="/js/pixel-board.js?v=20261003-150604"></script>
-<script src="/js/matching.js?v=20261003-150604"></script>
-<script src="/js/admin.js?v=20261003-150604"></script>
+<script src="/js/supabase-client.js?v=20261003-151825"></script>
+<script src="/js/i18n/en.js?v=20261003-151825"></script>
+<script src="/js/common.js?v=20261003-151825"></script>
+<script src="/js/auth.js?v=20261003-151825"></script>
+<script src="/js/notifications.js?v=20261003-151825"></script>
+<script src="/js/push.js?v=20261003-151825"></script>
+<script src="/js/color-engine.js?v=20261003-151825"></script>
+<script src="/js/pixel-board.js?v=20261003-151825"></script>
+<script src="/js/matching.js?v=20261003-151825"></script>
+<script src="/js/admin.js?v=20261003-151825"></script>
 </body>
 </html>

@@ -73,6 +73,7 @@ function artworkCardEl(sub, i) {
     e.preventDefault();
     openLightbox(sub);
   };
+  if (typeof warmLightbox === 'function') warmLightbox(card, sub);
   return card;
 }
 

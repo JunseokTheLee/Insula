@@ -25,6 +25,7 @@ function applyLbTransform() {
 }
 function setLbZoom(scale) {
   lbScale = Math.min(LB_MAX_ZOOM, Math.max(LB_MIN_ZOOM, scale));
+  if (lbScale > 1 && typeof lbUseOriginal === 'function') lbUseOriginal();
   if (lbScale === LB_MIN_ZOOM) { lbX = 0; lbY = 0; }
   applyLbTransform();
 }
@@ -900,6 +901,7 @@ function lbImgFit(w, h, upscale) {
 function clearLbImgSize() { lbImg.style.width = ''; lbImg.style.height = ''; }
 function setLightboxImage(sub) {
   const token = ++lbImgToken;
+  lbWantOriginal = false;
   const full = sub.image_url ? cdnUrl(sub.image_url) : null;
   const thumb = sub.thumb_url ? cdnUrl(sub.thumb_url) : null;
   // Whatever happens next, the previous artwork stops being on screen now.
@@ -935,15 +937,56 @@ function setLightboxImage(sub) {
       requestAnimationFrame(stretch);
     }
   }
-  pre.onload = () => {
+  // The sharp image is the display copy (≤1600 px, a few hundred KB) when
+  // there is one, not the original (supabase_mosaic_display_image.sql); a
+  // missing display file falls back to the original. Zoom and full screen
+  // swap the original in later (lbUseOriginal).
+  const display = typeof artworkDisplayUrl === 'function' ? artworkDisplayUrl(sub) : null;
+  let sharp = display ? cdnUrl(display) : full;
+  const show = () => {
     if (token !== lbImgToken) return;   // another artwork was opened meanwhile
-    lbImg.src = full;
+    lbImg.src = sharp;
     settle();
+    if (lbWantOriginal) lbUseOriginal();
   };
-  pre.onerror = settle;                 // broken original: keep the thumbnail
+  pre.onload = show;
+  pre.onerror = () => {
+    if (token !== lbImgToken) return;
+    if (sharp !== full) { sharp = full; pre.src = full; return; }   // no display file yet
+    settle();                           // broken original: keep the thumbnail
+  };
+  pre.src = sharp;
+  // Already cached (a re-open, a warmed hover, or the browser had it): no wait at all.
+  if (pre.complete && pre.naturalWidth) show();
+}
+// Zoom and full screen want every pixel: swap the original in (once loaded)
+// where the display copy is showing. Asked for while the image is still
+// loading, it runs right after it lands.
+let lbWantOriginal = false;
+function lbUseOriginal() {
+  lbWantOriginal = true;
+  const sub = lbCurrentSub;
+  if (!sub || !sub.image_url || lbImg.classList.contains('lb-img-loading')) return;
+  const full = cdnUrl(sub.image_url);
+  if (lbImg.getAttribute('src') === full) return;
+  const token = lbImgToken;
+  const pre = new Image();
+  pre.onload = () => { if (token === lbImgToken && lbCurrentSub === sub) lbImg.src = full; };
   pre.src = full;
-  // Already cached (a re-open, or the browser had it): no wait at all.
-  if (pre.complete && pre.naturalWidth) { lbImg.src = full; settle(); }
+}
+// Started from a card before its click (common.js warmLightbox): the same
+// image setLightboxImage will ask for, so the browser cache answers it.
+const lbWarmed = new Set();
+function lbWarmImage(sub) {
+  if (!sub || !sub.image_url) return;
+  const display = typeof artworkDisplayUrl === 'function' ? artworkDisplayUrl(sub) : null;
+  const url = cdnUrl(display || sub.image_url);
+  if (lbWarmed.has(url)) return;
+  if (lbWarmed.size > 60) lbWarmed.clear();
+  lbWarmed.add(url);
+  const im = new Image();
+  im.decoding = 'async';
+  im.src = url;
 }
 function populateLightboxContent(sub) {
   lbCurrentSub = sub;
@@ -996,6 +1039,7 @@ function setImgFullscreen(on) {
   if (!lbFsHost) return;
   clearTimeout(lbClickTimer); lbClickTimer = null; // drop any pending single-click toggle
   lbFsHost.classList.toggle('img-fs', on);
+  if (on) lbUseOriginal();
   document.body.classList.toggle('lb-img-fs-lock', on);
   if (!on) resetLbZoom();
 }

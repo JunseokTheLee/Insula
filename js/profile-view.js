@@ -552,6 +552,7 @@ function profileArtThumbEl(sub, pending, showBoardBtn) {
     el.appendChild(btn);
   }
   interceptClick(el, () => openLightbox(sub));
+  if (typeof warmLightbox === 'function') warmLightbox(el, sub);
   return el;
 }
 
@@ -1062,9 +1063,22 @@ document.getElementById('ua-submit').onclick = async () => {
     };
     if (meta.process) row.art_process = meta.process;
     if (!isPublic) row.is_public = false;   // the default is public; only say otherwise
+    // Optional columns, each from its own SQL file — micro_thumb
+    // (supabase_mosaic_micro_thumbs.sql), display_url
+    // (supabase_mosaic_display_image.sql). The lightbox finds the display
+    // file by its path either way; the column only lets the admin page count.
+    const extras = {};
+    if (uploaded.microThumb) extras.micro_thumb = uploaded.microThumb;
+    if (uploaded.displayUrl) extras.display_url = uploaded.displayUrl;
+    const hasExtras = Object.keys(extras).length > 0;
     let { data: inserted, error: insErr } = await sb.from('mosaic_submissions')
-      .insert(uploaded.microThumb ? { ...row, micro_thumb: uploaded.microThumb } : row).select('id').single();
-    if (insErr && uploaded.microThumb && isSchemaMismatchError(insErr)) {
+      .insert(hasExtras ? { ...row, ...extras } : row).select('id').single();
+    if (insErr && hasExtras && extras.display_url && isSchemaMismatchError(insErr)) {
+      // supabase_mosaic_display_image.sql not applied yet — keep micro_thumb.
+      delete extras.display_url;
+      ({ data: inserted, error: insErr } = await sb.from('mosaic_submissions').insert({ ...row, ...extras }).select('id').single());
+    }
+    if (insErr && hasExtras && isSchemaMismatchError(insErr)) {
       // supabase_mosaic_micro_thumbs.sql not applied yet — insert without it.
       ({ data: inserted, error: insErr } = await sb.from('mosaic_submissions').insert(row).select('id').single());
     }

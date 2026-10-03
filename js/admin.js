@@ -355,6 +355,55 @@ async function runAdminThumbs() {
 }
 document.getElementById('adminThumbsRunBtn').onclick = runAdminThumbs;
 
+// ---------- lightbox display images (supabase_mosaic_display_image.sql) ----------
+// Artworks without the ≤1600 px display copy the lightbox now sharpens with
+// — everything uploaded before 2026-10-03. Built one at a time in this
+// browser from the original (read through /img/, so the canvas can export),
+// uploaded under the AUTHOR's display/ folder at the path the lightbox
+// derives, then recorded with admin_set_submission_display. Until then
+// those artworks simply keep sharpening with their original.
+let adminDisplayRows = [];
+async function loadAdminDisplay() {
+  const btn = document.getElementById('adminDisplayRunBtn');
+  if (!btn) return;
+  const { data, error } = await fetchAllRows(() => sb.from('mosaic_submissions')
+    .select('id,author_id,image_url,display_url', { count: 'exact' }).is('display_url', null).is('parent_id', null));
+  if (error) {
+    if (!isSchemaMismatchError(error)) console.error('load display image status error:', error);
+    adminShow('adminDisplayUnavailable', true); // SQL not applied yet
+    btn.disabled = true;
+    return;
+  }
+  adminDisplayRows = (data || []).filter(r => artworkDisplayPath(r.image_url));
+  document.getElementById('adminDisplayMissing').textContent = String(adminDisplayRows.length);
+  btn.disabled = !adminDisplayRows.length;
+}
+async function runAdminDisplay() {
+  const btn = document.getElementById('adminDisplayRunBtn');
+  btn.disabled = true;
+  let done = 0, skipped = 0, failed = 0;
+  for (const row of adminDisplayRows) {
+    toast(tr('adminDisplayWorking', { done: done + skipped + failed, total: adminDisplayRows.length }));
+    try {
+      const img = await loadImageEl(cdnUrl(row.image_url));
+      const blob = await artworkDisplayBlobFromImage(img);
+      if (!blob) { skipped++; continue; }   // transparent picture: keeps its original
+      const url = await uploadDisplayBlob(blob, row.image_url);
+      if (!url) throw new Error('display image upload failed');
+      const { error } = await sb.rpc('admin_set_submission_display', { p_id: row.id, p_display_url: url });
+      if (error) throw error;
+      done++;
+    } catch (e) {
+      console.error(`display image build failed for #${row.id}:`, e);
+      failed++;
+    }
+  }
+  toast(tr('adminDisplayDone', { done, skipped, failed }));
+  btn.disabled = false;
+  loadAdminDisplay(); loadAdminUsage();
+}
+document.getElementById('adminDisplayRunBtn')?.addEventListener('click', runAdminDisplay);
+
 // ---------- pixel boards (colour-by-number, supabase_pixel_game.sql) ----------
 // A board is made in this browser from the artwork's thumbnail (same origin
 // via /img/) and stored through set_pixel_board (js/pixel-board.js).
@@ -1413,6 +1462,10 @@ function adminStoragePaths(sub) {
     const rest = String(url).slice(SUPABASE_STORAGE_PREFIX.length).split('?')[0];
     if (rest.startsWith('artwork/')) paths.add(decodeURIComponent(rest.slice('artwork/'.length)));
   }
+  // The lightbox display copy (supabase_mosaic_display_image.sql) — its path
+  // follows from the original; removing one that was never made is harmless.
+  const displayPath = typeof artworkDisplayPath === 'function' ? artworkDisplayPath(sub.image_url) : null;
+  if (displayPath) paths.add(decodeURIComponent(displayPath));
   return [...paths];
 }
 
@@ -1922,7 +1975,7 @@ const ADMIN_TAB_LOADERS = {
   artworks:  () => resetAdminArtworks(),
   comments:  () => resetAdminComments(),
   campaigns: () => loadAdminCampaigns(),
-  tools:     () => Promise.all([loadAdminPool(), loadAdminPieces(), loadAdminThumbs(), loadAdminPixel()]),
+  tools:     () => Promise.all([loadAdminPool(), loadAdminPieces(), loadAdminThumbs(), loadAdminDisplay(), loadAdminPixel()]),
   members:   () => Promise.all([loadAdminNewMembers(), loadAdminIncomplete(), loadAdminAdmins(), loadAdminBlocked(), loadAdminRankExcluded()]),
   games:     () => Promise.all([resetAdminGames(), loadAdminGameTop()]),
   broadcast: () => loadAdminBroadcast(),
