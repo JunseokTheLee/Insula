@@ -409,16 +409,44 @@ function fitWeavoStage(project) {
   // Cleared first so clientHeight reflects the CSS clamp alone.
   weavoWrap.style.maxWidth = '';
   if (ratio < 1) weavoWrap.style.maxWidth = `${Math.max(520, Math.round(weavoWrap.clientHeight * ratio + 280))}px`;
-  const availW = weavoWrap.clientWidth, availH = weavoWrap.clientHeight;
+  const { w: availW, h: availH } = weavoAvail();
   let w = availW, h = w / ratio;
   if (h > availH) { h = availH; w = h * ratio; }
   msBaseW = w; msBaseH = h;
   msStage.style.width = `${w}px`;
   msStage.style.height = `${h}px`;
 }
+// The stage's room: the wrap minus its padding. Only phones' full-screen
+// mode pads it (css/project.css) — top for the zoom bar, bottom for the
+// title card and view switch (--fs-bottom, kept by watchFsOverlay) — so the
+// mosaic fits between them instead of sliding under the card.
+function weavoAvail() {
+  const st = getComputedStyle(weavoWrap);
+  return {
+    w: weavoWrap.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight),
+    h: weavoWrap.clientHeight - parseFloat(st.paddingTop) - parseFloat(st.paddingBottom),
+  };
+}
+(function watchFsOverlay() {
+  const head = document.querySelector('.project-head');
+  if (!head || typeof ResizeObserver !== 'function') return;
+  let last = -1;
+  const update = () => {
+    // Fixed only in the phone full-screen mode; anywhere else no padding.
+    const fixed = getComputedStyle(head).position === 'fixed';
+    const px = fixed ? Math.max(0, Math.round(window.innerHeight - head.getBoundingClientRect().top + 8)) : 0;
+    if (px === last) return;
+    last = px;
+    weavoWrap.style.setProperty('--fs-bottom', px + 'px');
+    if (currentProject) fitWeavoStage(currentProject);
+  };
+  new ResizeObserver(update).observe(head);
+  addEventListener('resize', update);
+})();
 function clampMsPan() {
-  const maxX = Math.max(0, (msBaseW * msScale - weavoWrap.clientWidth) / 2);
-  const maxY = Math.max(0, (msBaseH * msScale - weavoWrap.clientHeight) / 2);
+  const room = weavoAvail();
+  const maxX = Math.max(0, (msBaseW * msScale - room.w) / 2);
+  const maxY = Math.max(0, (msBaseH * msScale - room.h) / 2);
   msX = Math.min(maxX, Math.max(-maxX, msX));
   msY = Math.min(maxY, Math.max(-maxY, msY));
 }
