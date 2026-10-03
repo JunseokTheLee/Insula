@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261003-164808">
-<link rel="stylesheet" href="/css/admin.css?v=20261003-164808">
+<link rel="stylesheet" href="/css/base.css?v=20261003-165725">
+<link rel="stylesheet" href="/css/admin.css?v=20261003-165725">
 </head>
 
 <body>
@@ -254,6 +254,14 @@
         </div>
 
         <div class="admin-panel" data-panel="games" role="tabpanel" hidden>
+        <section class="admin-section" id="adminRecentGamesSection">
+          <h2>최근 게임</h2>
+          <p class="admin-help">조각 찾기에서 끝까지 완주한 게임을 모든 캠페인에 걸쳐 최신순으로 보여줍니다(2026.10.3 게임 화면에서 이곳으로 옮김). 순위 제외 계정의 게임도 표시합니다. 중간에 그만둔 게임과 로그인하지 않은 플레이는 기록이 없어 나오지 않습니다.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminRecentGamesUnavailable" style="display:none;">아직 사용할 수 없습니다 — Supabase SQL 에디터에서 <code>supabase_game_admin_recent.sql</code> 을 먼저 실행하세요.</p>
+          <div class="admin-list" id="adminRecentGames"></div>
+          <p class="empty-note admin-empty" id="adminRecentGamesEmpty" style="display:none;">완주한 게임이 없습니다.</p>
+          <div class="admin-more"><button type="button" class="admin-btn" id="adminRecentGamesMore" style="display:none;">더 보기</button></div>
+        </section>
         <section class="admin-section" id="adminGamesSection">
           <div class="admin-section-head">
             <h2>게임 기록</h2>
@@ -497,13 +505,6 @@
               <div class="admin-setting admin-setting-range">
                 <label for="adminGameMedalMin">메달 <strong>최소 기록자 수</strong>: 한 작품에 이만큼의 사람이 기록을 남겨야 그 작품의 1~3위가 메달이 됩니다. 그 전에는 기록만 순번으로 보입니다. <em>(기본: 3명)</em></label>
                 <div class="admin-range"><input id="adminGameMedalMin" type="range" min="1" max="10" step="1" data-setting="gameMedalMinPlayers" disabled><output for="adminGameMedalMin" data-setting-output="gameMedalMinPlayers">3</output></div>
-              </div>
-              <div class="admin-setting">
-                <label><input type="checkbox" data-setting="gameRecentRunsEnabled" disabled> <strong>최근 게임 목록</strong> — 완주한 기록(누가·어느 작품·시간)을 명예의 전당 아래와 결과 화면에 보여줍니다. 순위 제외 계정은 나오지 않습니다.</label>
-              </div>
-              <div class="admin-setting admin-setting-range">
-                <label for="adminGameRecentCount">최근 게임 <strong>처음 표시 개수</strong>; "더 보기"로 50건까지 봅니다. <em>(기본: 10)</em></label>
-                <div class="admin-range"><input id="adminGameRecentCount" type="range" min="5" max="50" step="5" data-setting="gameRecentRunsCount" disabled><output for="adminGameRecentCount" data-setting-output="gameRecentRunsCount">10</output></div>
               </div>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameRandomOrder" disabled> <strong>작품 목록 무작위 순서</strong> — 끄면 최신 등록순으로 보입니다. 접속할 때마다 순서가 새로 섞입니다.</label>
@@ -906,16 +907,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261003-164808"></script>
-<script src="/js/i18n/ko.js?v=20261003-164808"></script>
-<script src="/js/common.js?v=20261003-164808"></script>
-<script src="/js/auth.js?v=20261003-164808"></script>
-<script src="/js/notifications.js?v=20261003-164808"></script>
-<script src="/js/push.js?v=20261003-164808"></script>
-<script src="/js/color-engine.js?v=20261003-164808"></script>
-<script src="/js/pixel-board.js?v=20261003-164808"></script>
-<script src="/js/matching.js?v=20261003-164808"></script>
-<script src="/js/admin.js?v=20261003-164808"></script>
+<script src="/js/supabase-client.js?v=20261003-165725"></script>
+<script src="/js/i18n/ko.js?v=20261003-165725"></script>
+<script src="/js/common.js?v=20261003-165725"></script>
+<script src="/js/auth.js?v=20261003-165725"></script>
+<script src="/js/notifications.js?v=20261003-165725"></script>
+<script src="/js/push.js?v=20261003-165725"></script>
+<script src="/js/color-engine.js?v=20261003-165725"></script>
+<script src="/js/pixel-board.js?v=20261003-165725"></script>
+<script src="/js/matching.js?v=20261003-165725"></script>
+<script src="/js/admin.js?v=20261003-165725"></script>
 
 </body>
 </html>

@@ -326,125 +326,12 @@
     return card;
   }
 
-  // ---------- recent games ----------
-  // Finished runs, newest first (game_recent_runs in
-  // supabase_game_medal_rules.sql): who, which artwork, how long, how long
-  // ago, and a medal when their standing on that artwork is one. Hidden
-  // while the RPC is not applied, the option is off, or nothing was played.
+  // How many players an artwork needs before its top three get medals
+  // (supabase_game_medal_rules.sql). The "recent games" list that used to
+  // live here moved to the admin page on 2026-10-03 (admin_recent_game_runs).
   function medalMinPlayers() {
     const n = Number(settings && settings.gameMedalMinPlayers);
     return Number.isFinite(n) && n >= 1 ? Math.round(n) : 3;
-  }
-  function fmtAgo(iso) {
-    const ms = Date.now() - new Date(iso).getTime();
-    if (!Number.isFinite(ms)) return '';
-    if (ms < 0) return tr('agoNow');   // clock skew between server and device
-    if (ms < 60 * 1000) return tr('agoNow');
-    if (ms < 60 * 60 * 1000) return tr('agoMin', { n: Math.floor(ms / 60000) });
-    if (ms < 24 * 60 * 60 * 1000) return tr('agoHour', { n: Math.floor(ms / 3600000) });
-    if (ms < 7 * 24 * 60 * 60 * 1000) return tr('agoDay', { n: Math.floor(ms / 86400000) });
-    return new Date(iso).toLocaleDateString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US', { month: 'short', day: 'numeric' });
-  }
-  async function loadRecentRuns(limit, offset, artworkId) {
-    if (!project || (settings && settings.gameRecentRunsEnabled === false)) return null;
-    try {
-      const { data, error } = await sb.rpc('game_recent_runs', { p_project_id: project.id, p_limit: limit, p_offset: offset, p_artwork_id: artworkId == null ? null : artworkId });
-      if (error) {
-        if (error.code !== 'PGRST202' && error.code !== '42883') console.error('game: recent runs error:', error);
-        return null;
-      }
-      return Array.isArray(data) ? data.filter(r => !isUserBlocked(r.user_id)) : [];
-    } catch (e) { console.error('game: recent runs threw:', e); return null; }
-  }
-  function recentRowEl(r, withArtwork) {
-    const li = document.createElement('li');
-    li.className = 'game-recent-row' + (me.id && r.user_id === me.id ? ' me' : '');
-    const name = r.username || tr('anonymous');
-    li.appendChild(miniAvatarEl(name, r.avatar_url, r.user_id));
-    const who = document.createElement('a');
-    who.className = 'gr-name';
-    who.href = profileUrl(r.username || r.user_id);
-    who.textContent = name;
-    li.appendChild(who);
-    if (withArtwork) {
-      const art = document.createElement('a');
-      art.className = 'gr-art';
-      art.href = artworkUrl(r.artwork_id);
-      const img = document.createElement('img');
-      img.loading = 'lazy'; img.decoding = 'async'; img.alt = '';
-      img.src = cdnUrl(r.thumb_url || r.image_url);
-      const t = document.createElement('span');
-      t.textContent = r.art_title || tr('untitledArtwork');
-      art.append(img, t);
-      bindArtworkLightbox(art, r.artwork_id);
-      li.appendChild(art);
-    }
-    const time = document.createElement('span');
-    time.className = 'gr-time';
-    time.textContent = fmtSec(r.elapsed_ms);
-    if (r.hint_count > 0) {
-      const h = document.createElement('small');
-      h.textContent = tr('gameHintsUsed', { n: r.hint_count });
-      time.appendChild(h);
-    }
-    li.appendChild(time);
-    const tail = document.createElement('span');
-    tail.className = 'gr-ago';
-    tail.textContent = fmtAgo(r.finished_at);
-    li.appendChild(tail);
-    // The standing belongs to the personal best, not to a slower rerun.
-    // Always present (empty otherwise) so the grid columns line up.
-    const st = document.createElement('span');
-    st.className = 'gr-st';
-    if (r.is_best && r.rank != null && settings.gameRankingEnabled !== false) {
-      if (r.medal && r.rank <= 3) {
-        st.classList.add('gr-medal');
-        st.textContent = ['🥇', '🥈', '🥉'][r.rank - 1];
-        st.title = tr(['gameGold', 'gameSilver', 'gameBronze'][r.rank - 1]);
-      } else {
-        st.classList.add('gr-rank');
-        st.textContent = tr('gameRankShort', { rank: r.rank });
-      }
-    }
-    li.appendChild(st);
-    // On the list screen a row also opens that artwork's start dialog
-    // (the thumbnail link keeps opening the lightbox).
-    if (withArtwork) {
-      const a = artworks.find(x => String(x.id) === String(r.artwork_id));
-      if (a) {
-        li.classList.add('clickable');
-        li.addEventListener('click', e => { if (!e.target.closest('a')) confirmStart(a); });
-      }
-    }
-    return li;
-  }
-  let recentShown = 0;
-  async function renderRecentRuns(reset) {
-    const box = $('gameRecent'), list = $('gameRecentList'), more = $('gameRecentMore');
-    if (!box || !list) return;
-    const page = Math.max(5, Math.min(50, Number(settings && settings.gameRecentRunsCount) || 10));
-    if (reset) { recentShown = 0; }
-    const rows = await loadRecentRuns(page, recentShown, null);
-    if (rows == null) { if (reset) box.hidden = true; return; }
-    if (reset) list.innerHTML = '';
-    for (const r of rows) list.appendChild(recentRowEl(r, true));
-    recentShown += rows.length;
-    box.hidden = recentShown === 0;
-    if (more) more.hidden = rows.length < page || recentShown >= 50;
-  }
-  if ($('gameRecentMore')) $('gameRecentMore').onclick = () => renderRecentRuns(false);
-  let resultRecentToken = 0;
-  async function renderResultRecent(artworkId) {
-    const box = $('gameResultRecent'), list = $('gameResultRecentList');
-    if (!box || !list) return;
-    box.hidden = true;
-    const token = ++resultRecentToken;
-    const rows = await loadRecentRuns(5, 0, artworkId);
-    if (token !== resultRecentToken) return;
-    if (!rows || !rows.length || !target || String(target.id) !== String(artworkId)) return;
-    list.innerHTML = '';
-    for (const r of rows) list.appendChild(recentRowEl(r, false));
-    box.hidden = false;
   }
 
   // ---------- hall of fame ----------
@@ -1030,7 +917,6 @@
 
     if (!me.id) {
       $('gameResultNote').textContent = tr('gameAnonNoRecord');
-      renderResultRecent(target.id);
       return;
     }
     if (!sessionId) {
@@ -1071,14 +957,11 @@
       showStarAward(!!data.first_record);
       // The list behind us is now stale for this artwork.
       await refreshStats();
-      renderRecentRuns(true);
     } catch (e) {
       console.error('game: finish_game failed:', e);
       note.textContent = tr('gameRecordFailed');
       $('gameResultRetry').hidden = false;
     }
-    // Recorded or not, the recent times on this artwork are worth a look.
-    if (target) renderResultRecent(target.id);
   }
 
   async function refreshStats() {
@@ -1336,7 +1219,6 @@
     wireStage();
     renderList(true);
     renderHall();   // its own request; the list never waits for it
-    renderRecentRuns(true);
     // A ?artwork= link (from a profile's medal strip) opens that artwork's
     // start dialog directly — but only if it is still in the live campaign,
     // because a medal outlives the campaign it was won in.

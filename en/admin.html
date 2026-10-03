@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261003-164808">
-<link rel="stylesheet" href="/css/admin.css?v=20261003-164808">
+<link rel="stylesheet" href="/css/base.css?v=20261003-165725">
+<link rel="stylesheet" href="/css/admin.css?v=20261003-165725">
 </head>
 <body>
 
@@ -249,6 +249,14 @@
         </div>
 
         <div class="admin-panel" data-panel="games" role="tabpanel" hidden>
+        <section class="admin-section" id="adminRecentGamesSection">
+          <h2>Recent games</h2>
+          <p class="admin-help">Find-the-piece runs played to the end, newest first, across every campaign (moved here from the game page on 2026-10-03). Runs by ranking-excluded accounts are shown too. Abandoned runs and signed-out play leave no record, so they never appear.</p>
+          <p class="admin-help admin-settings-unavailable" id="adminRecentGamesUnavailable" style="display:none;">Not available yet — run <code>supabase_game_admin_recent.sql</code> in the Supabase SQL editor first.</p>
+          <div class="admin-list" id="adminRecentGames"></div>
+          <p class="empty-note admin-empty" id="adminRecentGamesEmpty" style="display:none;">No finished games yet.</p>
+          <div class="admin-more"><button type="button" class="admin-btn" id="adminRecentGamesMore" style="display:none;">Load more</button></div>
+        </section>
         <section class="admin-section" id="adminGamesSection">
           <div class="admin-section-head">
             <h2>Game records</h2>
@@ -492,13 +500,6 @@
               <div class="admin-setting admin-setting-range">
                 <label for="adminGameMedalMin">Medal <strong>minimum recorders</strong>: the top three on an artwork count as medals only once this many people have a time on it. Below that the times are listed without medals. <em>(default: 3)</em></label>
                 <div class="admin-range"><input id="adminGameMedalMin" type="range" min="1" max="10" step="1" data-setting="gameMedalMinPlayers" disabled><output for="adminGameMedalMin" data-setting-output="gameMedalMinPlayers">3</output></div>
-              </div>
-              <div class="admin-setting">
-                <label><input type="checkbox" data-setting="gameRecentRunsEnabled" disabled> <strong>Recent games list</strong> — finished runs (who, which artwork, time) under the hall of fame and on the result screen. Excluded accounts never appear in it.</label>
-              </div>
-              <div class="admin-setting admin-setting-range">
-                <label for="adminGameRecentCount">Recent games <strong>shown at first</strong>; "Load more" goes up to 50. <em>(default: 10)</em></label>
-                <div class="admin-range"><input id="adminGameRecentCount" type="range" min="5" max="50" step="5" data-setting="gameRecentRunsCount" disabled><output for="adminGameRecentCount" data-setting-output="gameRecentRunsCount">10</output></div>
               </div>
               <div class="admin-setting">
                 <label><input type="checkbox" data-setting="gameRandomOrder" disabled> <strong>Random artwork order</strong> — off means newest first. The order is reshuffled on every visit.</label>
@@ -802,15 +803,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261003-164808"></script>
-<script src="/js/i18n/en.js?v=20261003-164808"></script>
-<script src="/js/common.js?v=20261003-164808"></script>
-<script src="/js/auth.js?v=20261003-164808"></script>
-<script src="/js/notifications.js?v=20261003-164808"></script>
-<script src="/js/push.js?v=20261003-164808"></script>
-<script src="/js/color-engine.js?v=20261003-164808"></script>
-<script src="/js/pixel-board.js?v=20261003-164808"></script>
-<script src="/js/matching.js?v=20261003-164808"></script>
-<script src="/js/admin.js?v=20261003-164808"></script>
+<script src="/js/supabase-client.js?v=20261003-165725"></script>
+<script src="/js/i18n/en.js?v=20261003-165725"></script>
+<script src="/js/common.js?v=20261003-165725"></script>
+<script src="/js/auth.js?v=20261003-165725"></script>
+<script src="/js/notifications.js?v=20261003-165725"></script>
+<script src="/js/push.js?v=20261003-165725"></script>
+<script src="/js/color-engine.js?v=20261003-165725"></script>
+<script src="/js/pixel-board.js?v=20261003-165725"></script>
+<script src="/js/matching.js?v=20261003-165725"></script>
+<script src="/js/admin.js?v=20261003-165725"></script>
 </body>
 </html>

@@ -667,6 +667,67 @@ async function voidSelectedGames(on) {
   await Promise.all([resetAdminGames(), loadAdminGameTop()]);
   if (adminTabsLoaded.has('log')) loadAdminLog();
 }
+// ---------- recent games (supabase_game_admin_recent.sql) ----------
+// Finished find-the-piece runs, newest first, every campaign — the list
+// that used to sit on the game page, moved here on 2026-10-03. Shows
+// ranking-excluded accounts too (flagged), which the public list hid.
+const ADMIN_RECENT_PAGE = 50;
+let adminRecentOffset = 0, adminRecentRun = 0;
+async function loadAdminRecentGames(reset) {
+  const list = document.getElementById('adminRecentGames');
+  const more = document.getElementById('adminRecentGamesMore');
+  if (!list) return;
+  if (reset) { adminRecentOffset = 0; list.innerHTML = ''; }
+  const run = ++adminRecentRun;
+  more.disabled = true;
+  const { data, error } = await sb.rpc('admin_recent_game_runs', { p_limit: ADMIN_RECENT_PAGE, p_offset: adminRecentOffset });
+  if (run !== adminRecentRun) return;
+  more.disabled = false;
+  if (error) {
+    if (!isSchemaMismatchError(error)) console.error('admin_recent_game_runs error:', error);
+    adminShow('adminRecentGamesUnavailable', true);
+    more.style.display = 'none';
+    return;
+  }
+  const rows = Array.isArray(data) ? data : [];
+  for (const r of rows) list.appendChild(adminRecentGameRowEl(r));
+  adminRecentOffset += rows.length;
+  adminShow('adminRecentGamesEmpty', adminRecentOffset === 0);
+  more.style.display = rows.length < ADMIN_RECENT_PAGE ? 'none' : '';
+}
+function adminRecentGameRowEl(r) {
+  const row = document.createElement('div');
+  row.className = 'admin-row admin-recent-game';
+  const name = r.username || tr('anonymous');
+  const target = document.createElement('div'); target.className = 'admin-target';
+  if (r.thumb_url || r.image_url) {
+    const img = document.createElement('img'); img.className = 'admin-thumb'; img.alt = ''; img.loading = 'lazy';
+    img.src = cdnUrl(r.thumb_url || r.image_url);
+    target.appendChild(img);
+  }
+  const meta = document.createElement('div'); meta.className = 'admin-meta';
+  const line = document.createElement('div'); line.className = 'admin-com-body';
+  const who = document.createElement('a');
+  who.className = 'admin-target-label'; who.href = profileUrl(r.username || r.user_id);
+  who.target = '_blank'; who.rel = 'noopener'; who.textContent = name;
+  const hints = r.hint_count > 0 ? ' ' + tr('adminRecentHints', { n: r.hint_count }) : '';
+  line.append(who, ` · ${adminFmtMs(r.elapsed_ms)}${hints} · `);
+  const art = document.createElement('a');
+  art.className = 'admin-target-label'; art.href = artworkUrl(r.artwork_id);
+  art.target = '_blank'; art.rel = 'noopener'; art.textContent = r.art_title || tr('adminNoTitle');
+  line.appendChild(art);
+  const sub = document.createElement('div'); sub.className = 'admin-sub';
+  sub.textContent = [adminFullDateTime(r.finished_at), r.campaign_title, tr('adminRecentPieces', { n: r.target_pieces })].filter(Boolean).join(' · ');
+  const badge = (text, cls) => { const b = document.createElement('span'); b.className = 'admin-badge' + (cls ? ' ' + cls : ''); b.textContent = text; sub.append(' ', b); };
+  if (r.is_best) badge(tr('adminRecentBest'));
+  if (r.is_best && r.best_voided) badge(tr('adminGameVoidedBadge'), 'admin-status-open');
+  if (r.ranking_excluded) badge(tr('adminRankBadge'));
+  meta.append(line, sub);
+  row.append(target, meta);
+  return row;
+}
+document.getElementById('adminRecentGamesMore')?.addEventListener('click', () => loadAdminRecentGames(false));
+
 async function loadAdminGameTop() {
   const list = document.getElementById('adminGameTop');
   if (!list) return;
@@ -1977,7 +2038,7 @@ const ADMIN_TAB_LOADERS = {
   campaigns: () => loadAdminCampaigns(),
   tools:     () => Promise.all([loadAdminPool(), loadAdminPieces(), loadAdminThumbs(), loadAdminDisplay(), loadAdminPixel()]),
   members:   () => Promise.all([loadAdminNewMembers(), loadAdminIncomplete(), loadAdminAdmins(), loadAdminBlocked(), loadAdminRankExcluded()]),
-  games:     () => Promise.all([resetAdminGames(), loadAdminGameTop()]),
+  games:     () => Promise.all([loadAdminRecentGames(true), resetAdminGames(), loadAdminGameTop()]),
   broadcast: () => loadAdminBroadcast(),
   design:    () => loadAdminSettings('adminDesignSettings', 'adminDesignUnavailable').then(initAdminDesign),
   app:       () => loadAdminSettings('adminAppSettings', 'adminAppUnavailable'),

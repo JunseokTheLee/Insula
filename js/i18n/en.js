@@ -26,6 +26,7 @@ const T = {
   couldNotDeleteArtwork: 'Could not delete artwork', artworkDeleted: 'Artwork deleted',
   noCommentsYet: 'No comments yet.',
   couldNotPostComment: 'Could not post comment', couldNotDeleteComment: 'Could not delete comment',
+  adminRecentHints: '(hints {n})', adminRecentPieces: '{n} pieces', adminRecentBest: 'Personal best',
   campaignIntroExpand: 'Expand description', campaignIntroCollapse: 'Collapse description',
   archivedBadge: 'Archived',
   viewingNetwork: "viewing {name}'s network",
