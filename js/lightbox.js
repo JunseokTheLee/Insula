@@ -902,7 +902,15 @@ function clearLbImgSize() { lbImg.style.width = ''; lbImg.style.height = ''; }
 function setLightboxImage(sub) {
   const token = ++lbImgToken;
   lbWantOriginal = false;
-  const full = sub.image_url ? cdnUrl(sub.image_url) : null;
+  // The sharp image (display copy / original) comes straight from Supabase
+  // Storage, NOT through the /img/ proxy (2026-10-03): from Korea the site
+  // is served by Cloudflare's LAX data centre on this plan, so a proxied
+  // image crossed the Pacific twice — 1 to 12+ s for 0.5 MB, measured —
+  // while Supabase's own CDN answers from ICN in ~0.1 s. The blurred stand-in
+  // stays on the proxy URL: the grid already loaded that exact URL, so it
+  // comes from the browser cache. Nothing reads these pixels into a canvas
+  // (that would need the same-origin proxy).
+  const full = sub.image_url || null;
   const thumb = sub.thumb_url ? cdnUrl(sub.thumb_url) : null;
   // Whatever happens next, the previous artwork stops being on screen now.
   lbImg.removeAttribute('src');
@@ -918,7 +926,7 @@ function setLightboxImage(sub) {
   };
   if (!full) { if (thumb) lbImg.src = thumb; settle(); return; }
   const pre = new Image();
-  if (thumb && thumb !== full) {
+  if (thumb && sub.thumb_url !== sub.image_url) {
     lbImg.src = thumb;
     if (lbImg.closest('.lightbox-overlay')) {
       lbImg.classList.add('lb-img-soft');
@@ -942,7 +950,7 @@ function setLightboxImage(sub) {
   // missing display file falls back to the original. Zoom and full screen
   // swap the original in later (lbUseOriginal).
   const display = typeof artworkDisplayUrl === 'function' ? artworkDisplayUrl(sub) : null;
-  let sharp = display ? cdnUrl(display) : full;
+  let sharp = display || full;
   const show = () => {
     if (token !== lbImgToken) return;   // another artwork was opened meanwhile
     lbImg.src = sharp;
@@ -967,7 +975,7 @@ function lbUseOriginal() {
   lbWantOriginal = true;
   const sub = lbCurrentSub;
   if (!sub || !sub.image_url || lbImg.classList.contains('lb-img-loading')) return;
-  const full = cdnUrl(sub.image_url);
+  const full = sub.image_url;   // direct, like setLightboxImage
   if (lbImg.getAttribute('src') === full) return;
   const token = lbImgToken;
   const pre = new Image();
@@ -980,7 +988,7 @@ const lbWarmed = new Set();
 function lbWarmImage(sub) {
   if (!sub || !sub.image_url) return;
   const display = typeof artworkDisplayUrl === 'function' ? artworkDisplayUrl(sub) : null;
-  const url = cdnUrl(display || sub.image_url);
+  const url = display || sub.image_url;   // the same direct URL setLightboxImage asks for
   if (lbWarmed.has(url)) return;
   if (lbWarmed.size > 60) lbWarmed.clear();
   lbWarmed.add(url);
