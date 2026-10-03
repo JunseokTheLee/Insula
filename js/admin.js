@@ -668,8 +668,9 @@ async function voidSelectedGames(on) {
   if (adminTabsLoaded.has('log')) loadAdminLog();
 }
 // ---------- recent games (supabase_game_admin_recent.sql) ----------
-// Finished find-the-piece runs, newest first, every campaign — the list
-// that used to sit on the game page, moved here on 2026-10-03. Shows
+// Finished find-the-piece runs and colour-by-number completions, newest
+// first, every campaign — the find list used to sit on the game page and
+// moved here on 2026-10-03, colouring joined it the same day. Shows
 // ranking-excluded accounts too (flagged), which the public list hid.
 const ADMIN_RECENT_PAGE = 50;
 let adminRecentOffset = 0, adminRecentRun = 0;
@@ -710,14 +711,23 @@ function adminRecentGameRowEl(r) {
   const who = document.createElement('a');
   who.className = 'admin-target-label'; who.href = profileUrl(r.username || r.user_id);
   who.target = '_blank'; who.rel = 'noopener'; who.textContent = name;
+  // Which game: a find-the-piece run has a time (and hints); a colouring
+  // completion has a level and the cells painted — colouring keeps no time.
+  const isColor = r.game === 'color';
+  const kind = document.createElement('span');
+  kind.className = 'admin-badge admin-game-kind' + (isColor ? ' is-color' : '');
+  kind.textContent = isColor
+    ? `${tr('adminRecentColor')} · ${tr(['adminRecentEasy', 'adminRecentNormal', 'adminRecentHard'][(r.level || 1) - 1] || 'adminRecentEasy')}`
+    : tr('adminRecentFind');
   const hints = r.hint_count > 0 ? ' ' + tr('adminRecentHints', { n: r.hint_count }) : '';
-  line.append(who, ` · ${adminFmtMs(r.elapsed_ms)}${hints} · `);
+  const detail = isColor ? tr('adminRecentCells', { n: r.cells || 0 }) : `${adminFmtMs(r.elapsed_ms)}${hints}`;
+  line.append(kind, ' ', who, ` · ${detail} · `);
   const art = document.createElement('a');
   art.className = 'admin-target-label'; art.href = artworkUrl(r.artwork_id);
   art.target = '_blank'; art.rel = 'noopener'; art.textContent = r.art_title || tr('adminNoTitle');
   line.appendChild(art);
   const sub = document.createElement('div'); sub.className = 'admin-sub';
-  sub.textContent = [adminFullDateTime(r.finished_at), r.campaign_title, tr('adminRecentPieces', { n: r.target_pieces })].filter(Boolean).join(' · ');
+  sub.textContent = [adminFullDateTime(r.finished_at), r.campaign_title, r.target_pieces ? tr('adminRecentPieces', { n: r.target_pieces }) : null].filter(Boolean).join(' · ');
   const badge = (text, cls) => { const b = document.createElement('span'); b.className = 'admin-badge' + (cls ? ' ' + cls : ''); b.textContent = text; sub.append(' ', b); };
   if (r.is_best) badge(tr('adminRecentBest'));
   if (r.is_best && r.best_voided) badge(tr('adminGameVoidedBadge'), 'admin-status-open');

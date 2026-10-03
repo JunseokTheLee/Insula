@@ -292,3 +292,7 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
 .design-row input[type="range"]{width:100%;accent-color:var(--primary);}
 .design-row input[type="color"]{width:56px;height:30px;padding:0;border:1px solid var(--border-strong);border-radius:6px;background:none;cursor:pointer;}
 .design-row output,.design-row span{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px;}
+
+/* Recent games: which game a row is (find-the-piece / colour-by-number). */
+.admin-game-kind{background:rgba(91,124,255,.12);color:#3F5BD8;}
+.admin-game-kind.is-color{background:rgba(224,112,78,.14);color:#B8502E;}

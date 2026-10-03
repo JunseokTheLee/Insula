@@ -26,6 +26,7 @@ const T = {
   couldNotDeleteArtwork: 'Could not delete artwork', artworkDeleted: 'Artwork deleted',
   noCommentsYet: 'No comments yet.',
   couldNotPostComment: 'Could not post comment', couldNotDeleteComment: 'Could not delete comment',
+  adminRecentFind: 'Find the Pieces', adminRecentColor: 'Color by Number', adminRecentEasy: 'Easy', adminRecentNormal: 'Normal', adminRecentHard: 'Hard', adminRecentCells: '{n} cells done',
   adminRecentHints: '(hints {n})', adminRecentPieces: '{n} pieces', adminRecentBest: 'Personal best',
   campaignIntroExpand: 'Expand description', campaignIntroCollapse: 'Collapse description',
   archivedBadge: 'Archived',

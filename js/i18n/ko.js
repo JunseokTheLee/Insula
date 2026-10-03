@@ -26,6 +26,7 @@ const T = {
   couldNotDeleteArtwork: '작품을 삭제할 수 없습니다', artworkDeleted: '작품이 삭제되었습니다',
   noCommentsYet: '아직 댓글이 없습니다.',
   couldNotPostComment: '댓글을 게시할 수 없습니다', couldNotDeleteComment: '댓글을 삭제할 수 없습니다',
+  adminRecentFind: '조각 찾기', adminRecentColor: '숫자 색칠', adminRecentEasy: '쉬움', adminRecentNormal: '보통', adminRecentHard: '어려움', adminRecentCells: '{n}칸 완성',
   adminRecentHints: '(힌트 {n})', adminRecentPieces: '조각 {n}개', adminRecentBest: '개인 최고',
   campaignIntroExpand: '설명 펼치기', campaignIntroCollapse: '설명 접기',
   archivedBadge: '보관됨',
