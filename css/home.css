@@ -368,9 +368,17 @@
 .progress-fill{height:100%;background:var(--gradient-primary);width:0%;border-radius:var(--r-full);transition:width .5s ease-out;}
 
 @media (max-width:640px){
-  .carousel-track-wrap{height:clamp(220px,42vh,340px);}
-  .carousel-card .info{padding:22px 24px 28px;}
-  .carousel-card .p-title{font-size:26px;}
+  /* Phones: the card is no longer a fixed-height box that the mosaic
+     shares with the text (the mosaic got only what the title, description
+     and progress left over — about 55px once descriptions arrived). The
+     mosaic gets its own height and the card grows to fit the text. */
+  .carousel-track-wrap{height:auto;}
+  .carousel-track{height:auto;align-items:stretch;}
+  .carousel-card,.carousel-card-inner{height:auto;}
+  .carousel-card .preview{flex:none;height:clamp(220px,62vw,340px);}
+  .carousel-card .info{padding:20px 22px 24px;}
+  .carousel-card .p-title{font-size:26px;margin-bottom:10px;}
+  .carousel-card .p-desc{font-size:14px;-webkit-line-clamp:2;margin-bottom:16px;}
   .hero{padding-left:16px;padding-right:16px;}
   .stats-bar{padding-left:16px;padding-right:16px;}
   .carousel-header{padding-left:16px;padding-right:16px;}
