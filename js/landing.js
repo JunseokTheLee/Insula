@@ -29,6 +29,7 @@ async function renderHeroPreview() {
   const link = document.getElementById('heroPreview');
   const featured = heroProjects[heroIndex];
   document.getElementById('heroArtNav').style.display = heroProjects.length > 1 ? '' : 'none';
+  renderHeroCampaign(featured);
   if (!featured) {
     canvas.style.display = 'none';
     emptyEl.style.display = '';
@@ -64,6 +65,28 @@ async function renderHeroPreview() {
   } catch (e) {
     console.error('hero preview error:', e);
   }
+}
+// The campaign on screen, named under its mosaic: title (a link to the
+// campaign), description (two lines, the full text on hover) and "1 / 3"
+// when there is more than one. Re-runs its fade-in on every switch.
+function renderHeroCampaign(p) {
+  const box = document.getElementById('heroCampaign');
+  if (!box) return;   // a cached old index.html without the block
+  if (!p) { box.hidden = true; return; }
+  const title = document.getElementById('heroCampaignTitle');
+  const desc = document.getElementById('heroCampaignDesc');
+  title.textContent = p.title || '';
+  title.href = projectUrl(p.id);
+  const text = (p.description || '').trim();
+  desc.textContent = text;
+  desc.title = text;
+  desc.hidden = !text;
+  document.getElementById('heroCampaignCount').textContent =
+    heroProjects.length > 1 ? `${heroIndex + 1} / ${heroProjects.length}` : '';
+  box.hidden = false;
+  box.classList.remove('in');
+  void box.offsetWidth;   // restart the fade-in
+  box.classList.add('in');
 }
 // "My pieces": how many of the campaign on screen's filled cells hold a
 // piece of the signed-in visitor's own work, and what share of the whole

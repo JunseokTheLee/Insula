@@ -122,8 +122,22 @@
 .hero-tagline span:nth-child(even){padding-left:22px;}
 /* The same base.css rule hits the <span>s directly, so they need it too. */
 .hero-art .hero-tagline span{font-family:'Caveat','Segoe Script','Brush Script MT',cursive !important;}
-.hero-art-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-top:16px;flex-shrink:0;}
-.hero-art-side{display:flex;flex-direction:column;align-items:flex-end;gap:12px;margin-left:auto;}
+.hero-art-foot{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-top:20px;flex-shrink:0;}
+.hero-art-side{display:flex;flex-direction:column;align-items:flex-end;gap:12px;margin-left:auto;flex-shrink:0;}
+/* The campaign on screen, under its mosaic (2026-10-03): a small "live"
+   label, the title as a link, two lines of description. */
+.hero-campaign{flex:1 1 auto;min-width:0;max-width:560px;padding-left:16px;border-left:3px solid var(--hero-blue);}
+.hero-campaign.in{animation:heroCampaignIn .35s ease-out;}
+@keyframes heroCampaignIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hero-campaign-tag{display:flex;align-items:center;gap:7px;font-family:'Pretendard',sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--hero-blue);margin-bottom:6px;}
+.hero-campaign-dot{width:7px;height:7px;border-radius:50%;background:#3DD68C;box-shadow:0 0 0 3px rgba(61,214,140,.18);animation:heroLive 2.4s ease-in-out infinite;}
+@keyframes heroLive{0%,100%{opacity:1}50%{opacity:.35}}
+.hero-campaign-count{margin-left:4px;font-weight:600;letter-spacing:.02em;color:var(--muted);}
+.hero-campaign-title{display:block;font-family:'Pretendard',sans-serif;font-size:clamp(20px,1.7vw,26px);font-weight:800;letter-spacing:-.02em;line-height:1.25;color:var(--hero-ink);text-decoration:none;word-break:keep-all;}
+.hero-campaign-title:hover{color:var(--hero-blue);}
+.hero-campaign-desc{font-family:'Pretendard',sans-serif;font-size:14px;line-height:1.65;color:var(--gray-700);margin:6px 0 0;word-break:keep-all;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+@media (prefers-reduced-motion:reduce){.hero-campaign.in,.hero-campaign-dot{animation:none;}}
 /* How many pieces the signed-in visitor has in this campaign: the second
    card on the stats row (right column), level with the progress card. */
 /* The artworks behind the mosaic: a horizontal strip under the whole hero
@@ -271,7 +285,10 @@
   .hero-preview:hover{transform:none;box-shadow:none;}
   .hero-preview canvas{width:100%;max-height:none;}
   .hero-art .hero-tagline{display:none;}
-  .hero-art-foot{flex-wrap:wrap;justify-content:flex-end;margin-top:12px;}
+  .hero-art-foot{flex-wrap:nowrap;justify-content:flex-end;align-items:flex-start;gap:12px;margin-top:14px;}
+  .hero-campaign{padding-left:12px;}
+  .hero-campaign-title{font-size:20px;}
+  .hero-campaign-desc{font-size:13.5px;}
   .hero-mine{border-radius:20px;box-shadow:var(--shadow-md);padding:18px 20px;}
   .hero-mine-icon{flex-basis:40px;width:40px;height:40px;}
   .hero-sprout{width:30px;height:30px;}
