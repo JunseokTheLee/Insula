@@ -1287,6 +1287,32 @@ async function toggleUserBlock(targetId, btn) {
   toast(wasBlocked ? tr('userUnblockedToast') : tr('userBlockedToast'));
 }
 
+// ---------- backdrop clicks that began inside the dialog (2026-10-03) ----------
+// Every dialog closes on a click on its backdrop ("e.target ===
+// e.currentTarget" in 15+ handlers). But a press inside the dialog and a
+// release outside it — selecting text in a field and dragging past the
+// edge, resizing a textarea — makes the browser fire the click on the
+// nearest common ancestor, which is the backdrop: the dialog closed and
+// took the typed text with it. One capture-phase guard here, ahead of all
+// those handlers, lets a backdrop click through only when the press and
+// the release were both on the backdrop itself. Keyboard clicks (no
+// pointer) pass untouched.
+(function guardBackdropClicks() {
+  const BACKDROP = '.modal-overlay, .sc-overlay, #lightboxStage';
+  let down = null, up = null;
+  window.addEventListener('pointerdown', e => { down = e.target; up = null; }, true);
+  window.addEventListener('pointerup', e => { up = e.target; }, true);
+  window.addEventListener('click', e => {
+    const t = e.target, pressed = down, released = up;
+    down = up = null;
+    if (!pressed || !(t instanceof Element) || !t.matches(BACKDROP)) return;
+    if (pressed !== t || (released && released !== t)) {
+      e.stopImmediatePropagation();
+      e.stopPropagation();
+    }
+  }, true);
+})();
+
 // ---------- freeze the page behind an open dialog ----------
 // base.css locks .main-scroll with :has(), which covers the pages where that
 // element is the scroller. On the rest the DOCUMENT scrolls, and there
