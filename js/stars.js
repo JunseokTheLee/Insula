@@ -254,6 +254,83 @@
   function stateOf(gi) { return gi < current ? 'done' : gi === current ? 'going' : 'locked'; }
   // A constellation's name is kept back until it is complete.
   function shownName(gi) { return stateOf(gi) === 'done' ? constellationName(gi) : tr('starsConHidden'); }
+  // ---------- which painting is under the pointer ----------
+  // The paintings are transparent WebPs; a press counts for a constellation
+  // only where its animal is actually painted. Each picture's alpha is read
+  // once into a small map (96 px on the long side — same-origin /sky/ files,
+  // so the canvas can be read), and the point is tested against the topmost
+  // painting first. A picture that cannot be read counts by its box.
+  const alphaMaps = new Map();
+  function alphaMap(src) {
+    if (!alphaMaps.has(src)) {
+      alphaMaps.set(src, loadImageEl(src).then(im => {
+        const w0 = im.naturalWidth, h0 = im.naturalHeight;
+        const k = 96 / Math.max(w0, h0);
+        const w = Math.max(1, Math.round(w0 * k)), h = Math.max(1, Math.round(h0 * k));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        const cx = cv.getContext('2d'); cx.drawImage(im, 0, 0, w, h);
+        return { w, h, w0, h0, data: cx.getImageData(0, 0, w, h).data };
+      }).catch(() => null));
+    }
+    return alphaMaps.get(src);
+  }
+  // The pointer in the photograph's pixels, through the pressed element's
+  // own screen matrix — `svg` here is a copy's <g> (no createSVGPoint), and
+  // the copy's offset is part of that matrix.
+  function svgPointOf(el, e) {
+    const root = el && el.ownerSVGElement;
+    const m = el && el.getScreenCTM && el.getScreenCTM();
+    if (!root || !m) return null;
+    const p = root.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+    return p.matrixTransform(m.inverse());
+  }
+  async function paintingAt(svg, e) {
+    const pt = svgPointOf(e.target, e);
+    if (!pt) return null;
+    // Finished paintings only: the others are drawn at 3% opacity — invisible
+    // — yet their files are fully painted, and one overlapping a finished
+    // animal took the press away from it.
+    const cons = [...svg.querySelectorAll('.st-con.done[data-gi]')].reverse();   // topmost first
+    for (const g of cons) {
+      const n = Number(g.dataset.gi);
+      const fig = SKY_FIGURES[constellationShape(n).key];
+      if (!fig || !fig.img) continue;
+      const [X, Y, S] = fig.at, sc = S / 100;
+      const [bx, by, bw, bh] = fig.img.box;
+      const lx = (pt.x - X) / sc, ly = (pt.y - Y) / sc;
+      if (lx < bx || ly < by || lx > bx + bw || ly > by + bh) continue;
+      const a = await alphaMap(fig.img.src);
+      if (!a) return n;
+      // where the picture sits in its box (preserveAspectRatio meet)
+      const k = Math.min(bw / a.w0, bh / a.h0);
+      const dw = a.w0 * k, dh = a.h0 * k, ox = bx + (bw - dw) / 2, oy = by + (bh - dh) / 2;
+      const u = (lx - ox) / dw, v = (ly - oy) / dh;
+      if (u < 0 || v < 0 || u >= 1 || v >= 1) continue;
+      // a little forgiveness around thin legs and wing tips: any painted
+      // pixel within two map pixels
+      const cx = Math.floor(u * a.w), cy = Math.floor(v * a.h);
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const x = cx + dx, y = cy + dy;
+        if (x < 0 || y < 0 || x >= a.w || y >= a.h) continue;
+        if (a.data[(y * a.w + x) * 4 + 3] > 40) return n;
+      }
+    }
+    return null;
+  }
+  // Finished paintings show a hand cursor only over the animal itself.
+  function wireHoverCursor(svg) {
+    let busy = false, last = 0;
+    svg.addEventListener('pointermove', async e => {
+      if (e.pointerType !== 'mouse' || busy || !e.target.classList || !e.target.classList.contains('st-con-hit')) return;
+      const now = performance.now();
+      if (now - last < 60) return;
+      last = now; busy = true;
+      const n = await paintingAt(svg, e);
+      busy = false;
+      e.target.style.cursor = n != null ? 'pointer' : '';
+    });
+  }
+
   function drawConstellation(svg, k, defs) {
     const gi = skyNo * SKY_SIZE + k;
     const c = constellationShape(gi);
@@ -264,17 +341,28 @@
     const state = stateOf(gi);
     const fresh = state === 'done' && reveal.has(k);   // lights up now, once
     const got = (groups[gi] && groups[gi].stars) || [];
-    const g = el('g', { class: `st-con ${state}` + (fresh ? ' reveal' : '') + (k === picked ? ' sel' : ''), 'data-k': k });
+    const g = el('g', { class: `st-con ${state}` + (fresh ? ' reveal' : '') + (k === picked ? ' sel' : ''), 'data-k': k, 'data-gi': gi });
     g.style.setProperty('--acc', c.accent);
 
     // Pressing the constellation's painting (not one of its stars — those
     // sit on top and open their artwork): a finished one turns into its
-    // tarot card, any other is just brought to the middle.
+    // tarot card, any other is just brought to the middle. A pointer press
+    // counts only on the painted animal itself (paintingAt reads the
+    // picture's own transparency): the square box around it is mostly empty
+    // sky and overlaps its neighbours, so "near the picture" opened cards
+    // and the wrong constellation took presses (2026-10-07). The keyboard
+    // (Enter / Space on the focused box) keeps working on the box.
     const pick = el('rect', { x: X, y: Y, width: S, height: S, class: 'st-con-hit', tabindex: '0', role: 'button' });
     pick.setAttribute('aria-label', state === 'done' ? tr('starsOpenTarot', { name: constellationName(gi) }) : tr('starsPickCon', { name: shownName(gi) }));
-    const press = () => { if (stateOf(gi) === 'done') openTarot(gi); else choose(k, true); };
-    pick.addEventListener('click', press);
-    pick.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); press(); } });
+    const pressGi = n => { if (stateOf(n) === 'done') openTarot(n); else choose(n % SKY_SIZE, true); };
+    pick.addEventListener('click', async e => {
+      const hit = await paintingAt(svg, e);
+      if (hit != null) pressGi(hit);
+      // An unfinished constellation's box still brings it to the middle, as
+      // before; empty sky inside a finished one's box does nothing.
+      else if (stateOf(gi) !== 'done') choose(k, true);
+    });
+    pick.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pressGi(gi); } });
     g.appendChild(pick);
 
     // A constellation completed since its owner last looked: a bloom of its
@@ -350,6 +438,7 @@
       const copy = el('g', { transform: `translate(${i * SKY_W} 0)` });
       resetAnim();
       for (const k of order) drawConstellation(copy, k, defs);
+      if (!copy.dataset.hoverWired) { copy.dataset.hoverWired = '1'; wireHoverCursor(copy); }
       svg.appendChild(copy);
     }
     wireTips($('stSkyWrap'), hits);

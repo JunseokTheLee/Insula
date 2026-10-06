@@ -21,8 +21,8 @@
 <meta name="robots" content="noindex,nofollow">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261007-021501">
-<link rel="stylesheet" href="/css/admin.css?v=20261007-021501">
+<link rel="stylesheet" href="/css/base.css?v=20261007-022921">
+<link rel="stylesheet" href="/css/admin.css?v=20261007-022921">
 </head>
 
 <body>
@@ -294,7 +294,12 @@
         <div class="admin-panel" data-panel="members" role="tabpanel" hidden>
         <section class="admin-section" id="adminNewMembersSection">
           <h2>신규 회원</h2>
-          <p class="admin-help">최근에 가입한 계정입니다. 사용자 이름을 아직 정하지 않은 계정(가입 절차를 끝내지 않은 경우)도 함께 보입니다. 기간은 "사이트 옵션"의 <strong>신규 회원 기간</strong>에서 바꿉니다.</p>
+          <p class="admin-help">최근에 가입한 계정입니다(<strong>보기</strong>에서 전체 회원으로 넓힐 수 있습니다, 최대 500명). <strong>유형</strong>으로 작가·일반 회원만 골라 보고, 줄마다 유형이 표시됩니다. 사용자 이름을 아직 정하지 않은 계정(가입 절차를 끝내지 않은 경우)도 함께 보입니다. 기간은 "사이트 옵션"의 <strong>신규 회원 기간</strong>에서 바꿉니다.</p>
+          <div class="admin-toolbar admin-member-filters">
+            <label class="admin-filter">보기 <select class="admin-select" id="adminMembersRange"><option value="recent">최근 가입</option><option value="all">전체 회원</option></select></label>
+            <label class="admin-filter">유형 <select class="admin-select" id="adminMembersType"><option value="">전체</option><option value="artist">작가</option><option value="member">일반 회원</option></select></label>
+            <span class="admin-sub" id="adminMemberTypeSummary"></span>
+          </div>
           <p class="admin-help" id="adminNewMembersCount"></p>
           <div class="admin-list" id="adminNewMembers"></div>
           <p class="empty-note admin-empty" id="adminNewMembersEmpty" style="display:none;">이 기간에 가입한 회원이 없습니다.</p>
@@ -907,16 +912,16 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261007-021501"></script>
-<script src="/js/i18n/ko.js?v=20261007-021501"></script>
-<script src="/js/common.js?v=20261007-021501"></script>
-<script src="/js/auth.js?v=20261007-021501"></script>
-<script src="/js/notifications.js?v=20261007-021501"></script>
-<script src="/js/push.js?v=20261007-021501"></script>
-<script src="/js/color-engine.js?v=20261007-021501"></script>
-<script src="/js/pixel-board.js?v=20261007-021501"></script>
-<script src="/js/matching.js?v=20261007-021501"></script>
-<script src="/js/admin.js?v=20261007-021501"></script>
+<script src="/js/supabase-client.js?v=20261007-022921"></script>
+<script src="/js/i18n/ko.js?v=20261007-022921"></script>
+<script src="/js/common.js?v=20261007-022921"></script>
+<script src="/js/auth.js?v=20261007-022921"></script>
+<script src="/js/notifications.js?v=20261007-022921"></script>
+<script src="/js/push.js?v=20261007-022921"></script>
+<script src="/js/color-engine.js?v=20261007-022921"></script>
+<script src="/js/pixel-board.js?v=20261007-022921"></script>
+<script src="/js/matching.js?v=20261007-022921"></script>
+<script src="/js/admin.js?v=20261007-022921"></script>
 
 </body>
 </html>

@@ -3,7 +3,8 @@
 // its stars light one by one, the lines draw between them, the painted
 // animal comes up out of the dark and a burst of sparks goes off.
 // Needs js/i18n/{en,ko}.js (tr), js/constellations.js and js/sky-figures.js
-// loaded first. Used by js/game.js and js/coloring.js (the result screens).
+// loaded first (js/tarot.js is optional — with it, "get the card" hands over
+// to the constellation's tarot card). Used by js/game.js and js/coloring.js.
 // No library: CSS keyframes for the figure, one canvas for the sparks.
 // prefers-reduced-motion shows the finished figure at once, with no sparks.
 "use strict";
@@ -129,7 +130,20 @@ function showConstellationCelebration(index) {
   close.className = 'sc-btn';
   close.textContent = tr('conCelebrateClose');
   close.onclick = closeConstellationCelebration;
-  actions.append(view, close);
+  // The constellation's tarot card (js/tarot.js, 2026-10-07): the
+  // celebration steps aside and the card flips in. Only when the page has
+  // tarot.js; "my sky" then becomes the secondary link.
+  if (typeof openTarotCard === 'function') {
+    const cardBtn = document.createElement('button');
+    cardBtn.type = 'button';
+    cardBtn.className = 'sc-btn sc-btn-primary';
+    cardBtn.textContent = tr('conCelebrateCard');
+    cardBtn.onclick = () => { closeConstellationCelebration(); openTarotCard(index, [index]); };
+    view.className = 'sc-btn';
+    actions.append(cardBtn, view, close);
+  } else {
+    actions.append(view, close);
+  }
   card.appendChild(actions);
   el.appendChild(card);
 

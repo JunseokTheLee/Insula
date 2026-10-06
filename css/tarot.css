@@ -7,7 +7,7 @@
   z-index:700;padding:16px;gap:12px;
   background:radial-gradient(ellipse 70% 60% at 50% 40%,rgba(48,54,108,.5),rgba(3,5,14,.94) 72%);
 }
-.tarot-stage{display:flex;align-items:center;justify-content:center;max-height:100%;overflow-y:auto;perspective:1400px;padding:6px 2px;overscroll-behavior:contain;}
+.tarot-stage{display:flex;flex-direction:column;align-items:center;justify-content:safe center;max-height:100%;overflow-y:auto;perspective:1400px;padding:6px 2px;overscroll-behavior:contain;}
 .tarot-card{
   --acc:#FFD98E;--gold:#E9D29A;
   position:relative;flex:none;width:min(360px,calc(100vw - 32px));border-radius:24px;padding:2px;
@@ -73,6 +73,13 @@
   .tarot-name{font-size:21px;}
   .tarot-inner{padding:16px 16px 18px;}
 }
+
+/* Save / share under the card. */
+.tarot-actions{display:flex;justify-content:center;margin-top:14px;flex:none;}
+.tarot-share{appearance:none;cursor:pointer;padding:10px 22px;border-radius:999px;border:1px solid rgba(233,210,154,.6);
+  background:rgba(10,14,30,.55);color:#F4E3B4;font-family:'Pretendard',sans-serif;font-size:14px;font-weight:700;}
+.tarot-share:hover{background:rgba(255,255,255,.1);}
+.tarot-share:disabled{opacity:.5;cursor:progress;}
 
 /* ---------- the small card (profile strip) ---------- */
 .tarot-mini{--acc:#FFD98E;display:block;width:96px;text-decoration:none;color:inherit;text-align:center;}

@@ -20,8 +20,8 @@
 <title>Admin | Weavo</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="/css/base.css?v=20261007-021501">
-<link rel="stylesheet" href="/css/admin.css?v=20261007-021501">
+<link rel="stylesheet" href="/css/base.css?v=20261007-022921">
+<link rel="stylesheet" href="/css/admin.css?v=20261007-022921">
 </head>
 <body>
 
@@ -289,7 +289,12 @@
         <div class="admin-panel" data-panel="members" role="tabpanel" hidden>
         <section class="admin-section" id="adminNewMembersSection">
           <h2>New members</h2>
-          <p class="admin-help">Accounts created recently, including ones that have not picked a username yet (sign-up left unfinished). Change the window under <strong>New member window</strong> in Site options.</p>
+          <p class="admin-help">Accounts created recently, including ones that have not picked a username yet (sign-up left unfinished). Change the window under <strong>New member window</strong> in Site options. <strong>Show</strong> widens the list to every member (up to 500) and <strong>Type</strong> narrows it to artists or members; each row says which it is.</p>
+          <div class="admin-toolbar admin-member-filters">
+            <label class="admin-filter">Show <select class="admin-select" id="adminMembersRange"><option value="recent">Recent sign-ups</option><option value="all">All members</option></select></label>
+            <label class="admin-filter">Type <select class="admin-select" id="adminMembersType"><option value="">All</option><option value="artist">Artists</option><option value="member">Members</option></select></label>
+            <span class="admin-sub" id="adminMemberTypeSummary"></span>
+          </div>
           <p class="admin-help" id="adminNewMembersCount"></p>
           <div class="admin-list" id="adminNewMembers"></div>
           <p class="empty-note admin-empty" id="adminNewMembersEmpty" style="display:none;">No accounts were created in this window.</p>
@@ -803,15 +808,15 @@
 
 <div id="toast"></div>
 
-<script src="/js/supabase-client.js?v=20261007-021501"></script>
-<script src="/js/i18n/en.js?v=20261007-021501"></script>
-<script src="/js/common.js?v=20261007-021501"></script>
-<script src="/js/auth.js?v=20261007-021501"></script>
-<script src="/js/notifications.js?v=20261007-021501"></script>
-<script src="/js/push.js?v=20261007-021501"></script>
-<script src="/js/color-engine.js?v=20261007-021501"></script>
-<script src="/js/pixel-board.js?v=20261007-021501"></script>
-<script src="/js/matching.js?v=20261007-021501"></script>
-<script src="/js/admin.js?v=20261007-021501"></script>
+<script src="/js/supabase-client.js?v=20261007-022921"></script>
+<script src="/js/i18n/en.js?v=20261007-022921"></script>
+<script src="/js/common.js?v=20261007-022921"></script>
+<script src="/js/auth.js?v=20261007-022921"></script>
+<script src="/js/notifications.js?v=20261007-022921"></script>
+<script src="/js/push.js?v=20261007-022921"></script>
+<script src="/js/color-engine.js?v=20261007-022921"></script>
+<script src="/js/pixel-board.js?v=20261007-022921"></script>
+<script src="/js/matching.js?v=20261007-022921"></script>
+<script src="/js/admin.js?v=20261007-022921"></script>
 </body>
 </html>

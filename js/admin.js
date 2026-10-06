@@ -966,10 +966,14 @@ function adminMemberRow(p, opts) {
   link.className = 'admin-target-label';
   link.href = profileUrl(p.username || p.id);
   link.textContent = name;
-  if (o.badge) {
+  // o.badge (one label) or o.badges ([text, extra class] pairs or plain text).
+  const badges = o.badges || (o.badge ? [o.badge] : []);
+  for (const b of badges) {
+    if (!b) continue;
+    const [text, cls] = Array.isArray(b) ? b : [b, ''];
     const badge = document.createElement('span');
-    badge.className = 'admin-badge';
-    badge.textContent = o.badge;
+    badge.className = 'admin-badge' + (cls ? ' ' + cls : '');
+    badge.textContent = text;
     link.appendChild(document.createTextNode(' '));
     link.appendChild(badge);
   }
@@ -987,30 +991,67 @@ function adminDateTime(iso) {
   return new Date(iso).toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US',
     { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
+// Recent sign-ups by default; the two filters (2026-10-07) widen it to
+// every member and narrow it to artists or members (supabase_member_type.sql
+// profiles.member_type). Each row says which it is. Without the column the
+// type filter is disabled and the list works as before.
 async function loadAdminNewMembers() {
   const list = document.getElementById('adminNewMembers');
   const empty = document.getElementById('adminNewMembersEmpty');
   const countEl = document.getElementById('adminNewMembersCount');
   if (!list) return;
+  const rangeSel = document.getElementById('adminMembersRange');
+  const typeSel = document.getElementById('adminMembersType');
+  const range = (rangeSel && rangeSel.value) || 'recent';
+  const type = (typeSel && typeSel.value) || '';
   const settings = await getSiteSettings();
   const days = Math.max(1, Math.min(30, Number(settings.adminNewMemberDays) || 5));
   const since = new Date(Date.now() - days * 86400000).toISOString();
-  const { data, error } = await sb.from('profiles')
-    .select('id,username,name,avatar_url,created_at,is_admin')
-    .gte('created_at', since)
-    .order('created_at', { ascending: false })
-    .limit(200);
+  const COLS = 'id,username,name,avatar_url,created_at,is_admin';
+  const build = typed => {
+    let q = sb.from('profiles').select(COLS + (typed ? ',member_type' : ''))
+      .order('created_at', { ascending: false }).limit(range === 'all' ? 500 : 200);
+    if (range !== 'all') q = q.gte('created_at', since);
+    if (typed && type) q = q.eq('member_type', type);
+    return q;
+  };
+  let { data, error } = await build(true);
+  let typed = !error;
+  if (error && isSchemaMismatchError(error)) { typed = false; ({ data, error } = await build(false)); }
   if (error) { console.error('load new members error:', error); return; }
+  if (typeSel) {
+    typeSel.disabled = !typed;
+    typeSel.title = typed ? '' : tr('adminMemberTypeUnavailable');
+  }
   const rows = data || [];
   list.innerHTML = '';
-  countEl.textContent = tr('adminNewMembersCount', { n: adminNum(rows.length), days });
+  countEl.textContent = range === 'all'
+    ? tr('adminAllMembersCount', { n: adminNum(rows.length) })
+    : tr('adminNewMembersCount', { n: adminNum(rows.length), days });
   for (const p of rows) {
     // Time as well as date here: five days is a short window and "어제 밤"
     // is the useful part of a brand-new sign-up.
-    list.appendChild(adminMemberRow(p, { withTime: true, badge: p.is_admin ? tr('adminRoleAdmin') : '' }));
+    const badges = [];
+    if (p.is_admin) badges.push(tr('adminRoleAdmin'));
+    if (typed && p.member_type) badges.push(p.member_type === 'artist' ? [tr('memberTypeArtist'), 'admin-badge-artist'] : [tr('memberTypeMember'), 'admin-badge-member']);
+    list.appendChild(adminMemberRow(p, { withTime: true, badges }));
   }
   empty.style.display = rows.length ? 'none' : '';
+  renderAdminMemberTypeSummary(typed);
 }
+// "Artists n · members m" over everyone who finished signing up (two head
+// counts, a few dozen bytes).
+async function renderAdminMemberTypeSummary(typed) {
+  const el = document.getElementById('adminMemberTypeSummary');
+  if (!el) return;
+  if (!typed) { el.textContent = tr('adminMemberTypeUnavailable'); return; }
+  const count = t => sb.from('profiles').select('id', { count: 'exact', head: true }).not('username', 'is', null).eq('member_type', t);
+  const [a, m] = await Promise.all([count('artist'), count('member')]);
+  if (a.error || m.error) { el.textContent = ''; return; }
+  el.textContent = tr('adminMemberTypeSummary', { a: adminNum(a.count || 0), m: adminNum(m.count || 0) });
+}
+document.getElementById('adminMembersRange')?.addEventListener('change', () => loadAdminNewMembers());
+document.getElementById('adminMembersType')?.addEventListener('change', () => loadAdminNewMembers());
 // ---------- incomplete sign-ups (supabase_admin_delete_incomplete.sql) ----------
 // People who signed in with Google/Apple and left the username form: a bare
 // profile row with no username. The one kind of account an admin may delete

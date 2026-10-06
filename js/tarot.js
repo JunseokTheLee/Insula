@@ -6,6 +6,10 @@
 // the sky page (tap a finished constellation — js/stars.js) and the profile
 // (the strip of small cards — js/profile-view.js), so both open the very
 // same card. ‹ › (and ←/→, swipe) step through the other cards passed in.
+// The game result's constellation celebration hands over to the card too
+// (js/star-celebrate.js), and "save / share" turns the card into a
+// 1080 × 1620 picture (tarotCardBlob — the paintings are same-origin, so
+// the canvas can be exported).
 //
 // Needs tr/CURRENT_LANG (js/i18n), escapeHtml (common.js) and
 // constellations.js (constellationShape/Name/Line, tarotFor) loaded first;
@@ -51,16 +55,19 @@ function buildTarotOverlay() {
   el.innerHTML = `
     <button type="button" class="tarot-x" data-tarot="close" aria-label="${escapeHtml(tr('tarotClose'))}">&times;</button>
     <button type="button" class="tarot-nav prev" data-tarot="prev" aria-label="${escapeHtml(tr('tarotPrev'))}">&lsaquo;</button>
-    <div class="tarot-stage"><article class="tarot-card" id="tarotCard"></article></div>
+    <div class="tarot-stage"><article class="tarot-card" id="tarotCard"></article>
+      <div class="tarot-actions"><button type="button" class="tarot-share" data-tarot="share">${escapeHtml(tr('tarotShare'))}</button></div></div>
     <button type="button" class="tarot-nav next" data-tarot="next" aria-label="${escapeHtml(tr('tarotNext'))}">&rsaquo;</button>`;
   el.addEventListener('click', e => {
     const act = e.target.closest('[data-tarot]');
     if (act) {
-      if (act.dataset.tarot === 'close') closeTarotCard();
-      else stepTarotCard(act.dataset.tarot === 'next' ? 1 : -1);
+      const what = act.dataset.tarot;
+      if (what === 'close') closeTarotCard();
+      else if (what === 'share') shareTarotCard(act);
+      else stepTarotCard(what === 'next' ? 1 : -1);
       return;
     }
-    if (e.target === el || e.target.classList.contains('tarot-stage')) closeTarotCard();
+    if (e.target === el || e.target.classList.contains('tarot-stage') || e.target.classList.contains('tarot-actions')) closeTarotCard();
   });
   // Swipe between cards on a touch screen.
   let x0 = null;
@@ -134,6 +141,168 @@ window.addEventListener('keydown', e => {
   e.preventDefault();
   e.stopImmediatePropagation();
 }, true);
+
+// ---------- the card as a picture (save / share) ----------
+// The same card drawn on a 1080 × 1620 canvas: frame, colour wash, number,
+// meaning, painting with its stars and lines, name, what it stands for, the
+// wish, keywords and the site. Text wraps on spaces (Korean is spaced too).
+function tarotWrap(ctx, text, maxW) {
+  const words = String(text || '').split(' ');
+  const lines = [];
+  let cur = '';
+  for (const w of words) {
+    const next = cur ? cur + ' ' + w : w;
+    if (ctx.measureText(next).width > maxW && cur) { lines.push(cur); cur = w; }
+    else cur = next;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+function tarotRound(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+async function tarotCardBlob(gi) {
+  const W = 1080, H = 1620;
+  const c = constellationShape(gi);
+  const t = typeof tarotFor === 'function' ? tarotFor(c.key) : null;
+  const name = constellationName(gi);
+  const acc = c.accent;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  const SANS = "Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif";
+  const SERIF = "Georgia, 'Times New Roman', serif";
+  // the gold edge, then the night inside it
+  const gold = ctx.createLinearGradient(0, 0, W, H);
+  gold.addColorStop(0, '#F4E3B4'); gold.addColorStop(.32, '#9D7B3D'); gold.addColorStop(.52, '#F6E8BE'); gold.addColorStop(.78, '#8A672B'); gold.addColorStop(1, '#E7CF95');
+  ctx.fillStyle = '#05070f'; ctx.fillRect(0, 0, W, H);
+  tarotRound(ctx, 24, 24, W - 48, H - 48, 56); ctx.fillStyle = gold; ctx.fill();
+  tarotRound(ctx, 32, 32, W - 64, H - 64, 50);
+  const night = ctx.createLinearGradient(0, 0, 0, H);
+  night.addColorStop(0, '#151b3c'); night.addColorStop(.62, '#0b1026'); night.addColorStop(1, '#120e28');
+  ctx.fillStyle = night; ctx.fill();
+  ctx.save(); tarotRound(ctx, 32, 32, W - 64, H - 64, 50); ctx.clip();
+  const wash = ctx.createRadialGradient(W / 2, 640, 20, W / 2, 640, 520);
+  wash.addColorStop(0, acc); wash.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalAlpha = .3; ctx.fillStyle = wash; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+  // a fixed scatter of specks (same picture every time)
+  let seed = 7 + gi * 13;
+  const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  ctx.fillStyle = '#fff';
+  for (let i = 0; i < 90; i++) { ctx.globalAlpha = .25 + rnd() * .6; ctx.beginPath(); ctx.arc(60 + rnd() * (W - 120), 60 + rnd() * (H - 120), .8 + rnd() * 1.8, 0, Math.PI * 2); ctx.fill(); }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  // inner double rule
+  ctx.strokeStyle = 'rgba(233,210,154,.6)'; ctx.lineWidth = 2;
+  tarotRound(ctx, 58, 58, W - 116, H - 116, 34); ctx.stroke();
+  ctx.strokeStyle = 'rgba(233,210,154,.25)';
+  tarotRound(ctx, 72, 72, W - 144, H - 144, 28); ctx.stroke();
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  // number, ornament, sky
+  ctx.fillStyle = '#E9D29A';
+  ctx.font = `32px ${SERIF}`;
+  ctx.textAlign = 'left'; ctx.fillText(t ? t.numeral : '', 110, 140);
+  const sky = Math.floor(gi / CONSTELLATIONS.length);
+  ctx.textAlign = 'right'; ctx.fillText(sky ? tr('tarotSkyN', { n: sky + 1 }) : '', W - 110, 140);
+  ctx.textAlign = 'center'; ctx.font = `44px ${SERIF}`; ctx.fillText('✦', W / 2, 146);
+  // the meaning
+  ctx.fillStyle = acc; ctx.font = `800 92px ${SANS}`;
+  ctx.fillText(t ? t.word : name, W / 2, 262);
+  // the painting, its lines and stars in a 660px square
+  const AX = (W - 660) / 2, AY = 300, AS = 660 / 100;
+  const img = tarotFigure(c.key);
+  if (img) {
+    try {
+      const im = await loadImageEl(img.src);
+      const [bx, by, bw, bh] = img.box;
+      const k = Math.min(bw / im.naturalWidth, bh / im.naturalHeight);
+      const dw = im.naturalWidth * k, dh = im.naturalHeight * k;
+      ctx.globalAlpha = .92;
+      ctx.drawImage(im, AX + (bx + (bw - dw) / 2) * AS, AY + (by + (bh - dh) / 2) * AS, dw * AS, dh * AS);
+      ctx.globalAlpha = 1;
+    } catch (e) { /* the stars alone */ }
+  }
+  const P = i => [AX + c.stars[i][0] * AS, AY + c.stars[i][1] * AS];
+  ctx.strokeStyle = acc; ctx.globalAlpha = .8; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  for (const [p, q] of c.links) { const [x1, y1] = P(p), [x2, y2] = P(q); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  ctx.globalAlpha = 1;
+  c.stars.forEach((_, i) => {
+    const [x, y] = P(i);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, 40);
+    g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(.3, acc); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = .55; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1; ctx.fillStyle = '#FFF8E2';
+    const r = 17, n = r * .26;
+    ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + n, y - n); ctx.lineTo(x + r, y); ctx.lineTo(x + n, y + n);
+    ctx.lineTo(x, y + r); ctx.lineTo(x - n, y + n); ctx.lineTo(x - r, y); ctx.lineTo(x - n, y - n); ctx.closePath(); ctx.fill();
+  });
+  // name and the line under it
+  let y = 1040;
+  ctx.fillStyle = '#fff'; ctx.font = `800 70px ${SANS}`; ctx.fillText(name, W / 2, y);
+  const sub = tarotSubtitle(t, name);
+  if (sub) { y += 54; ctx.fillStyle = '#E9D29A'; ctx.font = `italic 36px ${SERIF}`; ctx.fillText(sub, W / 2, y); }
+  if (t) {
+    y += 70; ctx.fillStyle = 'rgba(244,246,255,.86)'; ctx.font = `36px ${SANS}`;
+    for (const ln of tarotWrap(ctx, t.meaning, 840).slice(0, 3)) { ctx.fillText(ln, W / 2, y); y += 50; }
+    y += 14; ctx.fillStyle = '#fff'; ctx.font = `700 38px ${SANS}`;
+    for (const ln of tarotWrap(ctx, '“' + t.wish + '”', 860).slice(0, 2)) { ctx.fillText(ln, W / 2, y); y += 52; }
+    ctx.fillStyle = 'rgba(244,246,255,.62)'; ctx.font = `italic 32px ${SERIF}`; ctx.fillText(t.line, W / 2, y + 2); y += 76;
+    // keywords as pills
+    ctx.font = `600 32px ${SANS}`;
+    const pads = t.tags.map(x => ctx.measureText(x).width + 56);
+    let x = (W - (pads.reduce((a, b) => a + b, 0) + 20 * (pads.length - 1))) / 2;
+    t.tags.forEach((tag, i) => {
+      tarotRound(ctx, x, y - 44, pads[i], 62, 31);
+      ctx.fillStyle = 'rgba(255,255,255,.06)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(233,210,154,.6)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.fillText(tag, x + pads[i] / 2, y - 2);
+      x += pads[i] + 20;
+    });
+  }
+  ctx.fillStyle = 'rgba(233,210,154,.7)'; ctx.font = `italic 28px ${SERIF}`;
+  ctx.fillText('Pieces of People, A Brighter Sky · weavo.art', W / 2, H - 86);
+  return new Promise(res => cv.toBlob(res, 'image/png'));
+}
+// Phones: the share sheet with the picture. Elsewhere: copied to the
+// clipboard where allowed, and saved as a file either way.
+async function shareTarotCard(btn) {
+  const gi = TAROT.list[TAROT.at];
+  if (gi == null) return;
+  if (btn) btn.disabled = true;
+  try {
+    const blob = await tarotCardBlob(gi);
+    if (!blob) throw new Error('no image');
+    const key = constellationShape(gi).key;
+    const file = new File([blob], `weavo-card-${key}.png`, { type: 'image/png' });
+    const t = typeof tarotFor === 'function' ? tarotFor(key) : null;
+    const text = tr('tarotShareText', { name: constellationName(gi), word: t ? t.word : '' });
+    const url = `${location.origin}/${CURRENT_LANG}/stars`;
+    const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (coarse && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], text, url }); } catch (e) { /* cancelled */ }
+      return;
+    }
+    let copied = false;
+    if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+      try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); copied = true; }
+      catch (e) { console.warn('tarot: clipboard image copy refused:', e); }
+    }
+    const dl = document.createElement('a');
+    dl.href = URL.createObjectURL(blob);
+    dl.download = file.name;
+    document.body.appendChild(dl); dl.click(); dl.remove();
+    setTimeout(() => URL.revokeObjectURL(dl.href), 4000);
+    if (typeof toast === 'function') toast(tr(copied ? 'tarotCopied' : 'tarotSaved'));
+  } catch (e) {
+    console.error('tarot: share failed:', e);
+    if (typeof toast === 'function') toast(tr('tarotShareFailed'));
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
 
 // A small card for a strip (the profile): frame, number, painting, meaning
 // and name. A real link (href) for new-tab / crawlers; a plain click opens

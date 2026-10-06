@@ -300,8 +300,13 @@ body.stars-dark{
    lines in its own colour (--acc); and the first time its owner sees it
    complete it lights up all at once (.reveal, js/stars.js), a bloom of its
    colour swelling behind it. */
-.st-con-hit{fill:transparent;cursor:pointer;outline:none;}
+.st-con-hit{fill:transparent;cursor:default;outline:none;}
 .st-con-hit:focus-visible{stroke:#FFD98E;stroke-opacity:.7;stroke-width:1.5px;stroke-dasharray:6 6;vector-effect:non-scaling-stroke;}
+/* The painting, the lines and the name are drawn AFTER the constellation's
+   hit rectangle (.st-con-hit) and would take its clicks — so a tap on a
+   finished animal never reached the tarot card (2026-10-07). They let
+   pointers through; the stars keep their own hit circles (.st-hit). */
+.st-fig,.st-fig-art,.st-link,.st-con-label{pointer-events:none;}
 .st-fig-art{opacity:.03;transition:opacity .45s ease;}
 .st-con.done .st-fig-art{opacity:.94;}
 .st-con.done.sel .st-fig-art,.st-con.done .st-con-hit:focus-visible + .st-fig .st-fig-art{opacity:1;}

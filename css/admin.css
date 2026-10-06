@@ -296,3 +296,8 @@ a.admin-target-label:hover{color:var(--primary);text-decoration:underline;}
 /* Recent games: which game a row is (find-the-piece / colour-by-number). */
 .admin-game-kind{background:rgba(91,124,255,.12);color:#3F5BD8;}
 .admin-game-kind.is-color{background:rgba(224,112,78,.14);color:#B8502E;}
+
+/* Member type on the member rows and the filters above them (2026-10-07). */
+.admin-badge.admin-badge-artist{background:var(--primary-soft);color:var(--primary);}
+.admin-badge.admin-badge-member{background:var(--surface);color:var(--muted);}
+.admin-member-filters{flex-wrap:wrap;gap:10px 16px;align-items:center;}
