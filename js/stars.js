@@ -8,9 +8,10 @@
 // painted, translucent animals (js/sky-figures.js). Every finished artwork
 // lights the next star. Constellations already finished are bright and take
 // their own colour, the one being filled shows where its next star goes,
-// and the ones still ahead wait as faint ghosts. A caption card names the
-// chosen constellation and steps through them; "크게 보기" fills the screen
-// with the same sky.
+// and the ones still ahead wait as faint ghosts. Tapping a finished
+// constellation's painting turns it into a tarot card (its meaning, what it
+// stands for, a wish — constellations.js tarotFor; 2026-10-07, replacing the
+// caption card under the sky); "크게 보기" fills the screen with the same sky.
 //
 // PERFORMANCE is part of this page's job (2026-09-22, "버벅거린다"). There
 // are NO SVG filters: feGaussianBlur re-runs whenever what it wraps changes.
@@ -266,11 +267,14 @@
     const g = el('g', { class: `st-con ${state}` + (fresh ? ' reveal' : '') + (k === picked ? ' sel' : ''), 'data-k': k });
     g.style.setProperty('--acc', c.accent);
 
-    // Pressing the constellation (not one of its stars) chooses it.
+    // Pressing the constellation's painting (not one of its stars — those
+    // sit on top and open their artwork): a finished one turns into its
+    // tarot card, any other is just brought to the middle.
     const pick = el('rect', { x: X, y: Y, width: S, height: S, class: 'st-con-hit', tabindex: '0', role: 'button' });
-    pick.setAttribute('aria-label', tr('starsPickCon', { name: shownName(gi) }));
-    pick.addEventListener('click', () => choose(k, true));
-    pick.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(k, true); } });
+    pick.setAttribute('aria-label', state === 'done' ? tr('starsOpenTarot', { name: constellationName(gi) }) : tr('starsPickCon', { name: shownName(gi) }));
+    const press = () => { if (stateOf(gi) === 'done') openTarot(gi); else choose(k, true); };
+    pick.addEventListener('click', press);
+    pick.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); press(); } });
     g.appendChild(pick);
 
     // A constellation completed since its owner last looked: a bloom of its
@@ -475,35 +479,18 @@
     const svg = $('stSkyLayer');
     svg.querySelectorAll('.st-con.sel').forEach(n => n.classList.remove('sel'));
     svg.querySelectorAll(`.st-con[data-k="${picked}"]`).forEach(n => n.classList.add('sel'));
-    renderCaption();
     if (scroll) centerOn(picked, true);
     rememberScroll();
   }
-  function renderCaption() {
-    const gi = skyNo * SKY_SIZE + picked;
-    const c = constellationShape(gi);
-    const got = (groups[gi] && groups[gi].stars) || [];
-    const state = stateOf(gi);
-    // Until it is complete the caption keeps the constellation a secret too:
-    // no name, no group, no line that would give the animal away.
-    const done = state === 'done';
-    $('stSkyCap').style.setProperty('--cap-accent', c.accent);
-    $('stCapTag').textContent = done ? constellationGroup(gi) : '';
-    $('stCapNo').textContent = `${picked + 1} / ${SKY_SIZE}`;
-    $('stCapName').textContent = shownName(gi);
-    $('stCapLine').textContent = done ? constellationLine(gi)
-      : state === 'going' ? tr('starsConHiddenLine', { n: c.stars.length - got.length })
-      : tr('starsConLocked', { n: c.stars.length });
-    const pips = $('stCapPips');
-    pips.replaceChildren();
-    c.stars.forEach((_, i) => {
-      const p = document.createElement('span');
-      const s = got[i];
-      p.className = 'st-pip' + (s ? ' on' : '');
-      if (s) p.style.setProperty('--pip', s.source === 'find' ? FIND : COLOR);
-      pips.appendChild(p);
-    });
-    $('stCapCount').textContent = state === 'done' ? tr('starsConDone') : `${got.length} / ${c.stars.length}`;
+  // ---------- tarot card (js/tarot.js) ----------
+  // ‹ › on the card step through every finished constellation, in the
+  // order they were completed. An old cached page without tarot.js just
+  // brings the constellation to the middle.
+  function tarotDone() { return groups.filter(g => g && g.full).map(g => g.index); }
+  function openTarot(gi) {
+    hideTip();
+    if (typeof openTarotCard === 'function') openTarotCard(gi, tarotDone());
+    else choose(gi % SKY_SIZE, true);
   }
 
   // Dragging: mouse, pen and touch alike (touch-action:pan-y in the CSS
@@ -1068,8 +1055,6 @@
       if (t && t.closest && (t.closest('.st-hit') || t.closest('.st-tip'))) return;
       hideTip();
     });
-    $('stCapPrev').addEventListener('click', () => choose(picked - 1, true));
-    $('stCapNext').addEventListener('click', () => choose(picked + 1, true));
     $('stSkyBig').addEventListener('click', () => setFull(true));
     $('stSkyClose').addEventListener('click', () => setFull(false));
     addEventListener('keydown', e => {

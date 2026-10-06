@@ -5,7 +5,7 @@
 // finishes should `await authReady` (see below) before doing it.
 "use strict";
 
-let me = { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: [] };
+let me = { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: [], memberType: '' };
 
 async function signIn(provider = 'google') {
   // Land on the home page of the current language after the OAuth round
@@ -33,7 +33,7 @@ function meFromUser(u) {
   const name = u.user_metadata.full_name || u.user_metadata.name || (u.email ? u.email.split('@')[0] : tr('anonymous'));
   return {
     id: u.id, name, avatar: u.user_metadata.avatar_url || '',
-    isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: []
+    isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: [], memberType: ''
   };
 }
 // Whether profiles already has a row for this account — set by
@@ -41,7 +41,18 @@ function meFromUser(u) {
 let myProfileRowExists = false;
 async function loadMyProfile() {
   if (!me.id) return;
-  const { data } = await sb.from('profiles').select('is_admin,username,bio,links,avatar_url,country_id,disabilities').eq('id', me.id).maybeSingle();
+  // member_type (supabase_member_type.sql) is asked for separately-tolerant:
+  // without that column the whole select would fail, so it retries without
+  // it and memberType stays '' — "unknown", which gates nothing.
+  const PROFILE_COLS = 'is_admin,username,bio,links,avatar_url,country_id,disabilities';
+  let { data, error } = await sb.from('profiles').select(PROFILE_COLS + ',member_type').eq('id', me.id).maybeSingle();
+  // Any failure (missing column, network) leaves the type unknown rather
+  // than guessing 'member' and hiding someone's upload button.
+  const typeKnown = !error;
+  if (error && isSchemaMismatchError(error)) ({ data } = await sb.from('profiles').select(PROFILE_COLS).eq('id', me.id).maybeSingle());
+  // A brand-new account has no row yet: it is created with the column's
+  // default, 'member'.
+  me.memberType = typeKnown ? ((data && data.member_type) || 'member') : '';
   me.isAdmin = !!(data && data.is_admin);
   me.username = (data && data.username) || '';
   me.bio = (data && data.bio) || '';
@@ -278,6 +289,7 @@ function stashEditProfileDraftIfOpen() {
     countryId: document.getElementById('ep-country').value,
     links,
     disabilities: getCheckedDisabilities(),
+    memberType: epMemberTypeValue(),
   }));
 }
 // The page can go away without any of our code running first — a reload, a
@@ -397,6 +409,7 @@ function openEditProfileModal(profile, forced) {
     document.getElementById(`ep-link-${key}`).value = (profile.links && profile.links[key]) || '';
   }
   setCheckedDisabilities(profile.disabilities);
+  setEpMemberType(me.memberType, forced);
   const draftRaw = sessionStorage.getItem(EP_DRAFT_KEY);
   if (draftRaw) {
     sessionStorage.removeItem(EP_DRAFT_KEY);
@@ -409,6 +422,7 @@ function openEditProfileModal(profile, forced) {
         document.getElementById(`ep-link-${key}`).value = (draft.links && draft.links[key]) || '';
       }
       setCheckedDisabilities(draft.disabilities);
+      if (draft.memberType) setEpMemberType(draft.memberType, forced, true);
     } catch (e) { console.error('restore edit-profile draft error:', e); }
   }
   document.getElementById('ep-error').textContent = '';
@@ -446,6 +460,105 @@ function closeEditProfileModal() {
   if (profileEditRequired) return;
   document.getElementById('edit-profile-modal').classList.remove('open');
 }
+// ---------- member type: artist or member (supabase_member_type.sql) ----------
+// Chosen on the sign-up form (default: member) and changeable in profile
+// edit. The row is built here rather than in the 36 page copies of the
+// dialog, right after the username field, and stays hidden while the type
+// is unknown (me.memberType === '' — SQL not applied, or the read failed).
+function ensureEpMemberTypeRow() {
+  let row = document.getElementById('ep-member-type-row');
+  if (row) return row;
+  const unameInput = document.getElementById('ep-username');
+  const unameField = unameInput && unameInput.closest('.field');
+  if (!unameField) return null;
+  row = document.createElement('div');
+  row.className = 'field ep-member-type';
+  row.id = 'ep-member-type-row';
+  row.innerHTML = `<span class="ep-mt-label">${escapeHtml(tr('memberTypeLabel'))}</span>
+    <div class="ep-mt-options" role="radiogroup" aria-label="${escapeHtml(tr('memberTypeLabel'))}">
+      <label class="ep-mt-opt"><input type="radio" name="ep-member-type" value="member"><span><strong>${escapeHtml(tr('memberTypeMember'))}</strong><small>${escapeHtml(tr('memberTypeMemberHint'))}</small></span></label>
+      <label class="ep-mt-opt"><input type="radio" name="ep-member-type" value="artist"><span><strong>${escapeHtml(tr('memberTypeArtist'))}</strong><small>${escapeHtml(tr('memberTypeArtistHint'))}</small></span></label>
+    </div>
+    <div class="field-note ep-mt-note" id="ep-mt-note" hidden></div>`;
+  unameField.after(row);
+  return row;
+}
+function epMemberTypeValue() {
+  const row = document.getElementById('ep-member-type-row');
+  if (!row || row.hidden) return null;
+  const on = row.querySelector('input[name="ep-member-type"]:checked');
+  return on ? on.value : null;
+}
+let epMemberTypeRun = 0;
+function setEpMemberType(type, forced, fromDraft) {
+  const row = ensureEpMemberTypeRow();
+  if (!row) return;
+  row.hidden = !me.memberType;
+  if (row.hidden) return;
+  const want = type === 'artist' ? 'artist' : 'member';
+  row.querySelectorAll('input[name="ep-member-type"]').forEach(r => { r.checked = r.value === want; r.disabled = false; });
+  const note = document.getElementById('ep-mt-note');
+  note.hidden = true;
+  if (fromDraft || forced || me.memberType !== 'artist') return;
+  // Someone whose artworks are on the site stays an artist — as a member
+  // their profile would hide those artworks. Checked once per opening.
+  const run = ++epMemberTypeRun;
+  sb.from('mosaic_submissions').select('id', { count: 'exact', head: true }).eq('author_id', me.id).is('parent_id', null)
+    .then(({ count, error }) => {
+      if (error || run !== epMemberTypeRun || !(count > 0)) return;
+      row.querySelector('input[value="member"]').disabled = true;
+      note.textContent = tr('memberTypeLocked');
+      note.hidden = false;
+    });
+}
+
+// Upload entry points (home hero, campaign "participate", profile) call
+// this first: an artist goes straight on; a member is asked, kindly, to
+// become an artist (one tap); a visitor signs in. An unknown type (SQL not
+// applied) gates nothing — the site behaves as before.
+async function ensureArtist() {
+  if (!me.id) { openAuthModal(); return false; }
+  if (me.memberType !== 'member') return true;
+  const ok = await confirmDialog(tr('becomeArtistMessage'), { title: tr('becomeArtistTitle'), okLabel: tr('becomeArtistOk'), cancelLabel: tr('laterLabel') });
+  if (!ok) return false;
+  const { error } = await sb.from('profiles').update({ member_type: 'artist' }).eq('id', me.id);
+  if (error) { console.error('become artist error:', error); toast(tr('couldNotSaveTryAgain')); return false; }
+  me.memberType = 'artist';
+  toast(tr('becameArtistToast'));
+  document.dispatchEvent(new CustomEvent('weavo:membertype'));
+  return true;
+}
+// The upload form on the signed-in person's own profile: opened in place
+// when that profile is on screen, else reached by navigation
+// (profile-view.js opens it for #upload).
+function goToUpload() {
+  const btn = document.getElementById('profileUploadBtn');
+  if (btn && btn.dataset.owner === '1' && btn.offsetParent !== null) { btn.click(); return; }
+  location.href = profileUrl(me.id) + '#upload';
+}
+
+// An artist with no artwork yet is asked, politely, for a first one — once
+// per browser session (so at every sign-in, not on every page), and only
+// once the profile is complete: the sign-up form comes first.
+let artistNudgeAsked = false;
+async function maybeNudgeArtist(now) {
+  if (!me.id || me.memberType !== 'artist' || !me.username || !me.countryId) return;
+  if (!document.getElementById('confirm-modal')) return;   // 404 pages have no dialog
+  const key = 'weavoArtistNudge.' + me.id;
+  if (!now) {
+    if (artistNudgeAsked) return;
+    try { if (sessionStorage.getItem(key)) return; } catch (e) { /* private mode: once per page */ }
+  }
+  artistNudgeAsked = true;
+  try { sessionStorage.setItem(key, '1'); } catch (e) { /* private mode */ }
+  const { count, error } = await sb.from('mosaic_submissions').select('id', { count: 'exact', head: true }).eq('author_id', me.id).is('parent_id', null);
+  if (error || count > 0) return;
+  // Never over another dialog (a confirm already open, a form in progress).
+  if (document.querySelector('.modal-overlay.open')) return;
+  const ok = await confirmDialog(tr('artistNudgeMessage', { name: me.username }), { title: tr('artistNudgeTitle'), okLabel: tr('artistNudgeOk'), cancelLabel: tr('laterLabel') });
+  if (ok) goToUpload();
+}
+
 // ---------- onboarding exits ----------
 // The forced (first sign-in) modal cannot be dismissed — Esc, the backdrop
 // and the Cancel button are all disabled so nobody ends up signed in without
@@ -522,7 +635,14 @@ document.getElementById('ep-submit').onclick = async () => {
   const disabilities = getCheckedDisabilities();
   const payload = { id: me.id, username, bio: bio || null, links, country_id: countryId, disabilities };
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl;
-  const { error } = await sb.from('profiles').upsert(payload);
+  const memberType = epMemberTypeValue();   // null while the column is unknown (row hidden)
+  if (memberType) payload.member_type = memberType;
+  let { error } = await sb.from('profiles').upsert(payload);
+  if (error && memberType && isSchemaMismatchError(error)) {
+    // supabase_member_type.sql not applied yet: save everything else.
+    delete payload.member_type;
+    ({ error } = await sb.from('profiles').upsert(payload));
+  }
   btn.disabled = false;
   if (error) {
     console.error('profile upsert error:', error);
@@ -532,6 +652,8 @@ document.getElementById('ep-submit').onclick = async () => {
   me.username = username || '';
   me.countryId = countryId;
   me.disabilities = disabilities;
+  const becameArtist = payload.member_type === 'artist' && me.memberType !== 'artist';
+  if (payload.member_type) me.memberType = payload.member_type;
   if (avatarUrl !== undefined) me.avatar = avatarUrl || '';
   updateIdentityUI(); // the header shows the username now, so refresh it on every save, not just avatar changes
   const wasRequired = profileEditRequired;
@@ -540,6 +662,10 @@ document.getElementById('ep-submit').onclick = async () => {
   closeEditProfileModal();
   toast(wasRequired ? tr('welcomeToast') : tr('profileSavedToast'));
   if (typeof window.onProfileSaved === 'function') window.onProfileSaved();
+  if (payload.member_type) document.dispatchEvent(new CustomEvent('weavo:membertype'));
+  // A new artist with nothing uploaded yet is asked for a first artwork now,
+  // not only at the next sign-in.
+  if (becameArtist) maybeNudgeArtist(true);
 };
 
 // Removes every file this user has ever uploaded to the `artwork` bucket —
@@ -653,11 +779,12 @@ async function recordVisitOnce() {
 
 // ---------- boot ----------
 sb.auth.onAuthStateChange(async (_event, session) => {
-  me = session ? meFromUser(session.user) : { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: [] };
+  me = session ? meFromUser(session.user) : { id: '', name: '', avatar: '', isAdmin: false, username: '', bio: '', links: {}, countryId: null, disabilities: [], memberType: '' };
   if (!me.id) myBlockedIds = new Set();
   if (me.id) { await loadMyProfile(); upsertBaseProfile(); }
   updateIdentityUI();
   maybeRequireProfileSetup();
+  maybeNudgeArtist();
   if (_event === 'SIGNED_IN') recordVisitOnce(); // a guest who signs in now counts as a member too
   // Lets anything already on screen that keys off `me` (e.g. the lightbox's
   // owner-only Edit/Delete buttons) re-evaluate now that it may have flipped.
@@ -677,6 +804,7 @@ window.authReady = (async () => {
   else myBlockedIds = new Set();
   updateIdentityUI();
   maybeRequireProfileSetup();
+  maybeNudgeArtist();
   document.dispatchEvent(new CustomEvent('weavo:authchange'));
   recordVisitOnce(); // after the session is known, so a member is not counted as a guest
 })();

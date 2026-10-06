@@ -110,8 +110,8 @@ async function renderProfileMedalWorks(userId) {
 // Artworks this person finished in the colour-by-number game, newest first
 // (supabase_pixel_game.sql pixel_user_completions). Hidden while that SQL
 // is not applied or nothing is finished yet.
-// The newest completed constellations (supabase_stars.sql +
-// js/constellations.js), drawn small. Hidden when this person has none, or
+// The completed constellations (supabase_stars.sql + js/constellations.js)
+// as small tarot cards (js/tarot.js). Hidden when this person has none, or
 // hides their sky, or the SQL file is not applied yet.
 async function renderProfileStars(userId) {
   const box = document.getElementById('profileStars');
@@ -133,38 +133,26 @@ async function renderProfileStars(userId) {
 
   const groups = groupIntoConstellations(rows).filter(g => g.full);
   if (!groups.length) return;
-  const NS = 'http://www.w3.org/2000/svg';
   track.innerHTML = '';
   // Every finished constellation, newest first — the meta line below counts
-  // them all, so showing only the latest three made "4 constellations" look
-  // like one was missing. At most 13 per sky, and the strip wraps.
-  for (const g of groups.slice().reverse()) {
+  // them all. Each is a small tarot card (js/tarot.js, 2026-10-07): a plain
+  // click opens the full card, ‹ › step through the rest of this strip; the
+  // link itself still goes to the sky page (new tab, crawlers). Without
+  // tarot.js (an old cached page) it falls back to the old line drawing.
+  const href = `/${CURRENT_LANG}/stars` + (me.id === userId ? '' : `?user=${encodeURIComponent(userId)}`);
+  const shown = groups.slice().reverse();
+  const order = shown.map(g => g.index);
+  for (const g of shown) {
+    if (typeof tarotMiniEl === 'function') { track.appendChild(tarotMiniEl(g.index, href, order)); continue; }
     const shape = constellationShape(g.index);
-    const night = constellationNight(g.index);
     const a = document.createElement('a');
     a.className = 'pstar-item';
-    a.href = `/${CURRENT_LANG}/stars` + (me.id === userId ? '' : `?user=${encodeURIComponent(userId)}`);
-    const svg = document.createElementNS(NS, 'svg');
-    svg.setAttribute('viewBox', '0 0 100 100');
-    svg.setAttribute('aria-hidden', 'true');
-    for (const [p, q] of shape.links) {
-      const ln = document.createElementNS(NS, 'line');
-      ln.setAttribute('x1', shape.stars[p][0]); ln.setAttribute('y1', shape.stars[p][1]);
-      ln.setAttribute('x2', shape.stars[q][0]); ln.setAttribute('y2', shape.stars[q][1]);
-      ln.setAttribute('stroke', night.accent); ln.setAttribute('stroke-width', '1.2');
-      svg.appendChild(ln);
-    }
-    shape.stars.forEach(([x, y], i) => {
-      const st = g.stars[i];
-      const c = document.createElementNS(NS, 'circle');
-      c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', '3.2');
-      c.setAttribute('fill', st && st.source === 'find' ? '#FFD98E' : '#9EC7FF');
-      svg.appendChild(c);
-    });
+    a.href = href;
     const nm = document.createElement('span');
     nm.className = 'pstar-name';
     nm.textContent = constellationName(g.index);
-    a.append(svg, nm);
+    a.style.setProperty('--acc', shape.accent);
+    a.appendChild(nm);
     track.appendChild(a);
   }
   const meta = document.getElementById('profileStarsMeta');
@@ -435,7 +423,11 @@ function openNewCollectionModal() {
   document.getElementById('nc-error').textContent = '';
   document.getElementById('new-collection-modal').classList.add('open');
 }
-document.getElementById('newCollectionBtn').onclick = () => { if (!me.id) { openAuthModal(); return; } openNewCollectionModal(); };
+document.getElementById('newCollectionBtn').onclick = async () => {
+  if (!me.id) { openAuthModal(); return; }
+  if (typeof ensureArtist === 'function' && !(await ensureArtist())) return;
+  openNewCollectionModal();
+};
 document.getElementById('nc-cancel').onclick = () => document.getElementById('new-collection-modal').classList.remove('open');
 document.getElementById('new-collection-modal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
 document.getElementById('nc-submit').onclick = async () => {
@@ -832,7 +824,7 @@ async function loadProfileView(userId) {
 
   const isOwner = me.id && me.id === userId;
   const [{ data: profile }, artwork, liked, collections, followCounts, isFollowing] = await Promise.all([
-    sb.from('profiles').select('id,username,avatar_url,bio,links,country_id,disabilities,created_at').eq('id', userId).maybeSingle(),
+    fetchProfileRow(userId),
     fetchUserArtwork(userId),
     fetchLikedWeavoArt(userId),
     fetchUserCollections(userId),
@@ -907,6 +899,8 @@ async function loadProfileView(userId) {
 
   const uploadBtn = document.getElementById('profileUploadBtn');
   uploadBtn.style.display = isOwner ? '' : 'none';
+  pvView = { userId, isOwner: !!isOwner, memberType: profile.member_type || '', hasArtwork: artwork.length > 0 };
+  applyMemberTypeView();
 
   const followBtn = document.getElementById('profileFollowBtn');
   followBtn.style.display = isOwner ? 'none' : '';
@@ -954,14 +948,64 @@ async function loadProfileView(userId) {
   if (projectsSection && participatedProjects.length) initMfsPanel(projectsSection);
 }
 
+// ---------- artist or member (supabase_member_type.sql) ----------
+// A member's profile has no artworks, portfolios or campaigns to show, so
+// those three sections are left out (likes, stars, network and the rest
+// stay). Someone with artworks is always shown as an artist, whatever the
+// flag says, and an unknown type (SQL not applied) shows everything as
+// before. On one's own member profile the upload button becomes "become an
+// artist" (auth.js ensureArtist).
+let pvView = null;
+async function fetchProfileRow(userId) {
+  const cols = 'id,username,avatar_url,bio,links,country_id,disabilities,created_at';
+  let res = await sb.from('profiles').select(cols + ',member_type').eq('id', userId).maybeSingle();
+  if (res.error && isSchemaMismatchError(res.error)) res = await sb.from('profiles').select(cols).eq('id', userId).maybeSingle();
+  return res;
+}
+function applyMemberTypeView() {
+  if (!pvView) return;
+  const artistView = pvView.memberType !== 'member' || pvView.hasArtwork;
+  for (const id of ['profileSubmittedGrid', 'profileCollectionsGrid', 'profileProjectsGrid']) {
+    const sec = document.getElementById(id)?.closest('.profile-section');
+    if (sec) sec.hidden = !artistView;
+  }
+  // A small label next to the name: artist / member (nothing while unknown).
+  const nameEl = document.getElementById('profileName');
+  let badge = document.getElementById('profileTypeBadge');
+  if (!badge && nameEl) {
+    badge = document.createElement('span');
+    badge.id = 'profileTypeBadge';
+    nameEl.after(badge);
+  }
+  if (badge) {
+    badge.hidden = !pvView.memberType;
+    badge.className = 'profile-type-badge' + (artistView ? ' is-artist' : '');
+    badge.textContent = artistView ? tr('memberTypeArtist') : tr('memberTypeMember');
+  }
+  const uploadBtn = document.getElementById('profileUploadBtn');
+  if (!uploadBtn.dataset.label) uploadBtn.dataset.label = uploadBtn.textContent;
+  uploadBtn.dataset.owner = pvView.isOwner ? '1' : '';
+  uploadBtn.textContent = (pvView.isOwner && !artistView) ? tr('becomeArtistBtn') : uploadBtn.dataset.label;
+}
+// Became an artist (here or from the sign-up / edit form): show the
+// sections and the real upload button without reloading the page.
+document.addEventListener('weavo:membertype', () => {
+  if (!pvView || !pvView.isOwner) return;
+  pvView.memberType = me.memberType || pvView.memberType;
+  applyMemberTypeView();
+});
+
 // ---------- upload artwork (to the profile pool — not directly into a project) ----------
 // Placement happens separately: runPoolMatching() (js/matching.js) is
 // called right after the insert below and greedily matches every unmatched
 // pool piece (this one included) against open cells across every active
 // project, same as it's triggered after project creation/reshape/removal.
 const artPicker = setupPicker('art-picker');
-document.getElementById('profileUploadBtn').onclick = () => {
+document.getElementById('profileUploadBtn').onclick = async () => {
   if (!me.id) { openAuthModal(); return; }
+  // A member is offered to become an artist first (auth.js); declining
+  // leaves the form closed.
+  if (typeof ensureArtist === 'function' && !(await ensureArtist())) return;
   artPicker.reset();
   document.getElementById('ua-title').value = '';
   document.getElementById('ua-material').value = '';

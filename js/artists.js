@@ -45,12 +45,21 @@ async function loadArtists() {
   // is case-insensitively unique (supabase_profiles.sql) — a unique sort key
   // is what keeps rows from repeating or vanishing across page boundaries,
   // and it is the order this page wants anyway.
-  const { data, error } = await fetchAllRows(
-    () => sb.from('profiles')
-      .select('id,username,avatar_url,bio', { count: 'exact' })
-      .not('username', 'is', null),
+  // Artists only (supabase_member_type.sql, 2026-10-07): members who only
+  // look, like and play are not listed here — they are still reachable from
+  // the network, comments and follow lists. Without the column (SQL not
+  // applied) everyone is listed as before.
+  const query = artistsOnly => fetchAllRows(
+    () => {
+      const b = sb.from('profiles')
+        .select('id,username,avatar_url,bio', { count: 'exact' })
+        .not('username', 'is', null);
+      return artistsOnly ? b.eq('member_type', 'artist') : b;
+    },
     { orderBy: 'username' }
   );
+  let { data, error } = await query(true);
+  if (error && isSchemaMismatchError(error)) ({ data, error } = await query(false));
   if (error) { console.error('load artists error:', error); toast(tr('couldNotLoadArtists')); return; }
   allArtists = (data || []).filter(p => !isUserBlocked(p.id));
   renderArtists(filterArtists(document.getElementById('artistSearchInput').value));

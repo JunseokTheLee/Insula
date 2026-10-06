@@ -108,6 +108,9 @@ function renderHeroMine(filled, total) {
     myWorks.add(sub.parent_id != null ? `p${sub.parent_id}` : `s${sub.id}`);
   }
   const fmt = n => n.toLocaleString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US');
+  // A member (not an artist) with nothing in the mosaic has no "my pieces"
+  // to show — the card would only ever say 0 (supabase_member_type.sql).
+  if (!mine && me.memberType === 'member') { box.style.display = 'none'; return; }
   const pct = total ? (mine / total) * 100 : 0;
   // One piece of a 5,000-cell mosaic is 0.02% — a single decimal would
   // round a real contribution down to "0.0%", so go finer below 0.1%.
@@ -120,6 +123,7 @@ function renderHeroMine(filled, total) {
   box.style.display = '';
 }
 document.addEventListener('weavo:authchange', () => { if (heroMineFilled) renderHeroMine(heroMineFilled, heroMineTotal); });
+document.addEventListener('weavo:membertype', () => { if (heroMineFilled) renderHeroMine(heroMineFilled, heroMineTotal); });
 
 // ---------- the artworks behind the mosaic on screen ----------
 // One horizontal strip of thumbnails under the hero. The filled cells hold
@@ -274,8 +278,11 @@ async function loadRecentArtworks() {
 // exists on profile.html), so this just routes there — signed out, it opens
 // the auth modal instead. The #upload hash tells profile-view.js to pop the
 // upload modal straight away.
-document.getElementById('heroUploadBtn').onclick = () => {
+// A member (not an artist) is first offered to become one (auth.js
+// ensureArtist); an old cached auth.js without it just goes on as before.
+document.getElementById('heroUploadBtn').onclick = async () => {
   if (!me.id) { openAuthModal(); return; }
+  if (typeof ensureArtist === 'function' && !(await ensureArtist())) return;
   location.href = profileUrl(me.id) + '#upload';
 };
 

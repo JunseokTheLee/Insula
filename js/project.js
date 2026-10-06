@@ -571,9 +571,11 @@ document.getElementById('weavo-zoom-reset').onclick = () => setMsZoom(MS_MIN_ZOO
 // "Participate" — there's no per-project join flow (pool matching is
 // automatic/global, see js/matching.js), so this reuses the exact same
 // upload entry point the homepage's heroUploadBtn does.
-document.getElementById('projectParticipateBtn').onclick = () => {
-  if (me.id) location.href = `${profileUrl(me.id)}#upload`;
-  else openAuthModal();
+document.getElementById('projectParticipateBtn').onclick = async () => {
+  if (!me.id) { openAuthModal(); return; }
+  // A member is first offered to become an artist (auth.js ensureArtist).
+  if (typeof ensureArtist === 'function' && !(await ensureArtist())) return;
+  location.href = `${profileUrl(me.id)}#upload`;
 };
 document.getElementById('projectShareBtn').onclick = async () => {
   try {

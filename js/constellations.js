@@ -152,3 +152,80 @@ function starAwardLines(total, isNew) {
   }
   return out;
 }
+
+// ---------- tarot cards (2026-10-07, user decision) ----------
+// A finished constellation, tapped on the sky page, turns into a card with
+// one meaning (the word at the top), what it stands for, a wish and three
+// keywords. Both languages live here, next to the constellation they belong
+// to, rather than as 13 × 6 i18n keys; tarotFor() picks CURRENT_LANG. "en"
+// names are shown under the Korean name on the Korean page too, like the
+// reference cards. Order and keys match CONSTELLATIONS.
+const CONSTELLATION_TAROT = {
+  aries: {
+    en: { name: 'Aries', animal: 'Ram', word: 'Beginning', meaning: 'The courage that takes the first step before the fear does — every new start.', wish: 'May your first step open the way.', line: 'The first star opens the way.', tags: ['Beginning', 'Courage', 'First step'] },
+    ko: { word: '시작', meaning: '두려움보다 한 걸음이 먼저인 용기, 모든 새로운 시작을 상징합니다.', wish: '당신의 첫걸음이 길을 열어 주기를.', tags: ['시작', '용기', '첫걸음'] },
+  },
+  delphinus: {
+    en: { name: 'Delphinus', animal: 'Dolphin', word: 'Friendship', meaning: 'Good people met along the way — connection and the joy of being together.', wish: 'May good company stay close to you.', line: 'Meaningful connections make a brighter sky.', tags: ['Friendship', 'Connection', 'Together'] },
+    ko: { word: '우정', meaning: '좋은 사람들과의 만남과 연결, 함께하는 즐거움을 상징합니다.', wish: '좋은 인연이 당신 곁에 오래 머물기를.', tags: ['우정', '연결', '함께'] },
+  },
+  cancer: {
+    en: { name: 'Cancer', animal: 'Crab', word: 'Shelter', meaning: 'A warm heart inside a strong shell — the strength to keep yourself and your loved ones safe.', wish: 'May there always be a warm place to come home to.', line: 'A place you can always return to.', tags: ['Shelter', 'Rest', 'Family'] },
+    ko: { word: '보금자리', meaning: '단단한 껍데기 안의 따뜻한 마음, 나와 소중한 사람을 지키는 힘을 상징합니다.', wish: '언제든 돌아올 수 있는 따뜻한 자리가 있기를.', tags: ['보호', '안식', '가족'] },
+  },
+  capricornus: {
+    en: { name: 'Capricornus', animal: 'Sea-goat', word: 'Perseverance', meaning: 'Climbing even the steepest path one step at a time — patience that does not give up.', wish: 'May today’s small step become tomorrow’s summit.', line: 'Step by step, the summit comes.', tags: ['Patience', 'Steadiness', 'Achievement'] },
+    ko: { word: '인내', meaning: '가파른 길도 한 걸음씩 오르는 꾸준함과 끝까지 가는 끈기를 상징합니다.', wish: '오늘의 한 걸음이 내일의 정상이 되기를.', tags: ['인내', '꾸준함', '성취'] },
+  },
+  phoenix: {
+    en: { name: 'Phoenix', animal: 'Phoenix', word: 'Renewal', meaning: 'The strength to rise again — coming through hard times and blooming anew.', wish: 'May you shine again after every long night.', line: 'Every ending can be a new light.', tags: ['Renewal', 'Rebirth', 'Hope'] },
+    ko: { word: '회복', meaning: '다시 일어서는 힘, 어려움을 지나 새롭게 피어나는 회복을 상징합니다.', wish: '어떤 긴 밤 뒤에도 다시 빛나기를.', tags: ['회복', '다시 시작', '희망'] },
+  },
+  leo: {
+    en: { name: 'Leo', animal: 'Lion', word: 'Courage', meaning: 'Standing tall as yourself — bravery and a warm-hearted kind of leading.', wish: 'May your voice reach the world.', line: 'Courage for a wider tomorrow.', tags: ['Courage', 'Confidence', 'Leadership'] },
+    ko: { word: '용기', meaning: '나답게 당당히 서는 용기와 따뜻한 리더십을 상징합니다.', wish: '당신의 목소리가 세상에 닿기를.', tags: ['용기', '자신감', '이끄는 힘'] },
+  },
+  cygnus: {
+    en: { name: 'Cygnus', animal: 'Swan', word: 'Love', meaning: 'A sincerity that never changes — the quiet, graceful love we give each other.', wish: 'May your sincerity reach the heart it is meant for.', line: 'Love glides gently through any sky.', tags: ['Love', 'Grace', 'Sincerity'] },
+    ko: { word: '사랑', meaning: '변하지 않는 진심과 서로를 향한 아름다운 사랑을 상징합니다.', wish: '당신의 진심이 진심으로 닿기를.', tags: ['사랑', '우아함', '진심'] },
+  },
+  pavo: {
+    en: { name: 'Pavo', animal: 'Peacock', word: 'Self-expression', meaning: 'Spreading your own colours without hiding them — being wholly, proudly yourself.', wish: 'May your own colours shine most beautifully.', line: 'Your own colours are your beauty.', tags: ['Individuality', 'Expression', 'Pride'] },
+    ko: { word: '나다움', meaning: '저마다 다른 빛깔을 숨기지 않고 펼치는 나다움과 표현을 상징합니다.', wish: '당신만의 색이 가장 아름답게 빛나기를.', tags: ['개성', '표현', '자부심'] },
+  },
+  lepus: {
+    en: { name: 'Lepus', animal: 'Hare', word: 'Good fortune', meaning: 'A heart that leaps at small chances — luck that comes looking for you.', wish: 'May a little good luck find you every day.', line: 'A small step can change everything.', tags: ['Luck', 'Chance', 'Delight'] },
+    ko: { word: '행운', meaning: '작은 기회에도 설레는 마음, 찾아오는 행운을 상징합니다.', wish: '작은 행운이 매일 당신을 찾아오기를.', tags: ['행운', '기회', '설렘'] },
+  },
+  taurus: {
+    en: { name: 'Taurus', animal: 'Bull', word: 'Success', meaning: 'The harvest of work done quietly and steadily — fruition and abundance.', wish: 'May your effort bear a rich harvest.', line: 'Steady hands bring a rich harvest.', tags: ['Success', 'Abundance', 'Fruition'] },
+    ko: { word: '성공', meaning: '묵묵히 쌓아 온 노력이 맺는 결실과 풍요를 상징합니다.', wish: '흘린 땀만큼 풍성한 결실을 맺기를.', tags: ['성공', '풍요', '결실'] },
+  },
+  pegasus: {
+    en: { name: 'Pegasus', animal: 'Winged horse', word: 'Dream', meaning: 'Imagination that flies past every limit — the freedom to chase your dream.', wish: 'May your dream fly higher still.', line: 'Fly toward your own horizon.', tags: ['Dream', 'Freedom', 'Imagination'] },
+    ko: { word: '꿈', meaning: '한계를 넘어 날아오르는 상상력과 꿈을 향한 자유를 상징합니다.', wish: '당신의 꿈이 더 높이 날아오르기를.', tags: ['꿈', '자유', '상상'] },
+  },
+  pisces: {
+    en: { name: 'Pisces', animal: 'Fishes', word: 'Harmony', meaning: 'Two who are different, tied by one cord — harmony, empathy and togetherness.', wish: 'May our differences shine together in one sky.', line: 'Different, together, brighter.', tags: ['Harmony', 'Empathy', 'Together'] },
+    ko: { word: '조화', meaning: '서로 다른 둘이 하나로 이어지는 조화와 공감을 상징합니다.', wish: '다름이 함께 빛나는 하늘이 되기를.', tags: ['조화', '공감', '함께'] },
+  },
+  scorpius: {
+    en: { name: 'Scorpius', animal: 'Scorpion', word: 'Passion', meaning: 'A passion that goes deep — the power to keep changing and become someone new.', wish: 'May your passion bring a new you into bloom.', line: 'Passion transforms who you are.', tags: ['Passion', 'Change', 'Focus'] },
+    ko: { word: '열정', meaning: '깊이 몰입하는 열정과 스스로를 새롭게 바꾸어 가는 힘을 상징합니다.', wish: '당신의 열정이 새로운 나를 피워 내기를.', tags: ['열정', '변화', '몰입'] },
+  },
+};
+// The card for a constellation in the page's language: { name (Korean or
+// English), en (English name), animal, word, meaning, wish, line, tags,
+// numeral }. null for a key without a card.
+function tarotFor(key) {
+  const t = CONSTELLATION_TAROT[key];
+  if (!t) return null;
+  const i = CONSTELLATIONS.findIndex(c => c.key === key);
+  const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII'];
+  const local = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG === 'ko' && t.ko) ? t.ko : t.en;
+  return {
+    en: t.en.name, animal: t.en.animal,
+    word: local.word, meaning: local.meaning, wish: local.wish, tags: local.tags,
+    line: t.en.line, numeral: ROMAN[i] || '',
+  };
+}

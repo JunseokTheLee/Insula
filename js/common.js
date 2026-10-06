@@ -1225,7 +1225,7 @@ async function findPublicPortfolioFor(artworkId) {
 // that must match it exactly — used for the highest-stakes destructive
 // actions (e.g. deleting an account) where a plain OK/Cancel click is too
 // easy to hit by accident.
-function confirmDialog(message, { title = tr('areYouSure'), okLabel = tr('continueLabel'), confirmText = null } = {}) {
+function confirmDialog(message, { title = tr('areYouSure'), okLabel = tr('continueLabel'), confirmText = null, cancelLabel = null } = {}) {
   return new Promise(resolve => {
     document.getElementById('confirm-title').textContent = title;
     document.getElementById('confirm-message').textContent = message;
@@ -1233,6 +1233,10 @@ function confirmDialog(message, { title = tr('areYouSure'), okLabel = tr('contin
     const modal = document.getElementById('confirm-modal');
     const okBtn = document.getElementById('confirm-ok');
     const cancelBtn = document.getElementById('confirm-cancel');
+    // The page's own Cancel wording unless this dialog asks for another
+    // (e.g. "Later"); restored on the next call.
+    if (cancelBtn.dataset.label == null) cancelBtn.dataset.label = cancelBtn.textContent;
+    cancelBtn.textContent = cancelLabel || cancelBtn.dataset.label;
     const inputWrap = document.getElementById('confirm-input-wrap');
     const input = document.getElementById('confirm-input');
     const finish = result => { modal.classList.remove('open'); input.oninput = null; resolve(result); };

@@ -1,6 +1,8 @@
 // What the sky page shows for each constellation in js/constellations.js:
 // the painted animal, and where it sits on the panorama.
-// No DOM. Loaded by {en,ko}/stars.html and tools/sky-editor.html only.
+// No DOM. Loaded by {en,ko}/stars.html, the game and colouring pages (the
+// constellation celebration), {en,ko}/profile.html (the tarot strip,
+// js/tarot.js) and tools/sky-editor.html.
 //
 // SKY_W × SKY_H is the photograph's own size (sky/night-loop.webp) and every
 // position here is in its pixels, so an animal stays on the same patch of

@@ -276,3 +276,7 @@
 .pstar-all{font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;color:var(--primary);text-decoration:none;}
 .pstar-all:hover{text-decoration:underline;}
 .pstar-meta{font-family:'Pretendard',sans-serif;font-size:12.5px;color:var(--muted);margin-top:8px;}
+
+/* Artist / member label next to the name (profile-view.js, 2026-10-07). */
+.profile-type-badge{display:inline-block;vertical-align:middle;margin:0 0 6px;padding:3px 10px;border-radius:999px;font-family:'Pretendard',sans-serif;font-size:12px;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--border);}
+.profile-type-badge.is-artist{color:var(--primary);background:var(--primary-soft);border-color:rgba(26,60,43,.25);}

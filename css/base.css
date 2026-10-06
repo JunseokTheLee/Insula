@@ -1284,3 +1284,14 @@ html[lang="ko"] * {
 
 /* Lightbox edit dialog: the note under the "private" checkbox. */
 .lb-edit-private-hint{font-size:12px;color:var(--muted);line-height:1.45;margin:4px 0 0 24px;}
+
+/* ---------- member type on the sign-up / profile form (auth.js, 2026-10-07) ---------- */
+.ep-member-type .ep-mt-label{display:block;font-family:'Pretendard',sans-serif;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.ep-mt-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ep-mt-opt{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);cursor:pointer;background:var(--bg);transition:border-color .12s,background .12s;}
+.ep-mt-opt:has(input:checked){border-color:var(--primary);background:var(--primary-soft);}
+.ep-mt-opt:has(input:disabled){opacity:.5;cursor:not-allowed;}
+.ep-mt-opt input{margin-top:3px;accent-color:var(--primary);}
+.ep-mt-opt strong{display:block;font-size:14px;color:var(--text);}
+.ep-mt-opt small{display:block;margin-top:2px;font-size:12px;line-height:1.45;color:var(--muted);word-break:keep-all;}
+@media (max-width:420px){.ep-mt-options{grid-template-columns:1fr;}}
