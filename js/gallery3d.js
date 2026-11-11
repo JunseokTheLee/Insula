@@ -2,16 +2,20 @@
 //
 // The portfolio opens here by default (js/portfolio.js; "2D" leaves, and a
 // button on the page comes back). The hall is built from the portfolio's own
-// artworks. A few works make one room: the cover hangs in the middle of the
-// far wall under the portfolio's name, the rest go round the walls in the
-// portfolio's order. Every wall is the same plain white (2026-11-11: the
-// coloured title wall went, for a simpler room). More works make a suite of rooms
+// artworks. A few works make one room, 11 m by 12 m or more however few
+// they are: the cover hangs in the middle of the far wall under the
+// portfolio's name, the rest go round the walls in the portfolio's order.
+// Every wall is the same plain white (2026-11-11: the coloured title wall
+// went, for a simpler room). More works make a suite of rooms
 // ("Gallery 2, 3 …") joined by doorways that alternate right and left, so no
 // room ever sees past its neighbours and only those are drawn, however long
 // the suite gets. Every work hangs in a slim black frame on a white mat with
 // a soft shadow, under the pool of a track spot, with a label card beside it
 // whose lower edge is the "View large" button. The floor is polished white
-// marble that faintly mirrors the room; skylights run down the ceiling.
+// marble that faintly mirrors the room; skylights run down the ceiling. An
+// oak bench stands in the middle of a room and, where the walls leave space,
+// sculptures on plinths and a few stools (planProps, furnish), clear of
+// where a visitor stands to look at a work.
 //
 // Visitors walk (W A S D / arrow keys / wheel; a joystick on touch screens),
 // look round by dragging, tap the floor to walk there (through the doorways
@@ -51,7 +55,7 @@ const ART_H = 1.1, ART_W = 1.5, COVER_H = 1.4, COVER_W = 2.0;
 const MAT = 0.075, BORDER = 0.026, FRAME_D = 0.045, BEVEL = 0.006;
 const LABEL_W = 0.36, LABEL_H = 0.2, LABEL_GAP = 0.18, LABEL_Y = 1.3;
 const MIN_GAP = 0.9, CORNER = 1.0;
-const SINGLE_MAX_D = 12.5, HALL_W = 11, ROOM_D = 9.5;
+const SINGLE_MIN_D = 12, SINGLE_MAX_D = 14, HALL_W = 11, ROOM_D = 9.5;
 const WALK = 1.6, RUN = 2.8, TURN = 1.8;               // m/s, m/s, rad/s
 const KEEP_OFF = 0.5, EDGE_KEEP = 0.4;                 // never closer to a wall / to a doorway's edge
 const FOCUS_DIST = 4.5, FOCUS_COS = Math.cos(0.4);
@@ -115,6 +119,36 @@ function ringGeometry(ow, oh, iw, ih) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   return geo;
+}
+
+// Several shapes as one geometry, so one draw call: each part moved by its
+// own matrix and, when it has one, painted its colour (for a vertexColors
+// material). The parts are left as they were.
+function mergeShapes(list) {
+  const pos = [], nor = [], uv = [], col = [], index = [];
+  let base = 0;
+  for (const { geo, matrix, color } of list) {
+    const g = geo.clone().applyMatrix4(matrix);
+    const p = g.attributes.position, n = g.attributes.normal, t = g.attributes.uv;
+    for (let i = 0; i < p.count; i++) {
+      pos.push(p.getX(i), p.getY(i), p.getZ(i));
+      nor.push(n.getX(i), n.getY(i), n.getZ(i));
+      uv.push(t ? t.getX(i) : 0, t ? t.getY(i) : 0);
+      if (color) col.push(color.r, color.g, color.b);
+    }
+    if (g.index) for (let i = 0; i < g.index.count; i++) index.push(g.index.getX(i) + base);
+    else for (let i = 0; i < p.count; i++) index.push(base + i);
+    base += p.count;
+    g.dispose();
+  }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  out.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  if (col.length) out.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  out.setIndex(index);
+  out.computeBoundingSphere();
+  return out;
 }
 
 // ---------- pictures drawn on canvases ----------
@@ -354,6 +388,29 @@ function marbleCanvas() {
   }
   return c;
 }
+// Light oak for the bench and a stool: long fine grain with a few darker
+// streaks and pale flecks, drawn once.
+function woodCanvas() {
+  const W = 512, H = 128, c = makeCanvas(W, H), g = c.getContext('2d'), r = seeded(5);
+  g.fillStyle = '#d2b48b'; g.fillRect(0, 0, W, H);
+  for (let i = 0; i < 90; i++) {
+    let y = r() * H;
+    g.strokeStyle = r() < 0.78 ? `rgba(112,78,42,${0.05 + r() * 0.12})` : `rgba(255,242,220,${0.08 + r() * 0.1})`;
+    g.lineWidth = 0.5 + r() * 1.8;
+    g.beginPath(); g.moveTo(0, y);
+    for (let x = 32; x <= W; x += 32) { y += (r() - 0.5) * 2.6; g.lineTo(x, y); }
+    g.stroke();
+  }
+  return c;
+}
+// The soft shadow on the floor under a thing standing on it.
+function blobCanvas() {
+  const c = makeCanvas(128, 128), g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  [[0, 0.85], [0.35, 0.55], [0.7, 0.16], [1, 0]].forEach(([at, a]) => grad.addColorStop(at, `rgba(0,0,0,${a})`));
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  return c;
+}
 function placeholderCanvas() {
   const c = makeCanvas(256, 256), g = c.getContext('2d');
   g.fillStyle = '#d6d1c7'; g.fillRect(0, 0, 256, 256);
@@ -434,12 +491,14 @@ function shareOut(stretches, works) {
   }
   return groups;
 }
-// One room while it stays comfortable (up to 12.5 m deep); then a suite of
-// rooms 11 m wide, each taking the works in order in proportion to the wall
-// it has.
+// One room while it stays comfortable — 11 m wide and 12 to 14 m deep
+// however few the works (2026-11-11: three works in a 7 m room felt
+// cramped; the floor has a bench, sculptures and stools instead, see
+// planProps) — then a suite of rooms 11 m wide, each taking the works in
+// order in proportion to the wall it has.
 function planHall(cover, works) {
-  for (let D = 7; D <= SINGLE_MAX_D; D += 0.5) {
-    const W = clamp(Math.round(D * 1.7) / 2, 7, 11);
+  for (let D = SINGLE_MIN_D; D <= SINGLE_MAX_D; D += 0.5) {
+    const W = HALL_W;
     const stretches = roomStretches(W, D, 1, 0, [], cover);
     const groups = shareOut(stretches, works);
     if (groups) return { W, D, R: 1, Dr: D, partitions: [], stretches, groups, coverZ: -D / 2 };
@@ -469,6 +528,74 @@ function planHall(cover, works) {
     if (ok) return { W, D, R, Dr, partitions: parts, stretches, groups, coverZ: parts[0].z1 };
   }
   return null;
+}
+
+// ---------- things on the floor (2026-11-11) ----------
+// A gallery bench in the middle of each room and, where the walls leave
+// space, sculptures on plinths and a group of stools — a room with three
+// works should not feel bare. Nothing stands where a visitor steps back to
+// see a work whole (as far as the narrowest phone needs), in a doorway's
+// way through or where the visitor comes in, and every piece keeps
+// PROP_WALL clear of the walls and of the next piece, so there is always a
+// way round it (and round it is where a glide goes, aroundProps).
+const PROP_WALL = 1.6;
+const SCULPTURES = ['ring', 'stones', 'vessel', 'twist'];
+function planProps(W, D, R, parts, arts) {
+  const hx = W / 2, keep = [], out = [];
+  const box = (x0, z0, x1, z1) => ({ x0: Math.min(x0, x1), z0: Math.min(z0, z1), x1: Math.max(x0, x1), z1: Math.max(z0, z1) });
+  for (const a of arts) {
+    // a phone held upright sees about 0.29 of the way across per metre away:
+    // a wide work wants more room than viewDist there (approach, fitDistance)
+    const reach = Math.min(6, Math.max(a.viewDist, (a.fw / 2 + 0.2) / 0.29)) + 0.6;
+    const tx = a.nz, tz = -a.nx;                         // along the wall, towards its label
+    const lo = -(a.fw / 2 + 0.5), hi = a.fw / 2 + LABEL_GAP + LABEL_W + 0.5;
+    const xs = [lo, hi].flatMap(u => [a.x + tx * u, a.x + tx * u + a.nx * reach]);
+    const zs = [lo, hi].flatMap(u => [a.z + tz * u, a.z + tz * u + a.nz * reach]);
+    keep.push(box(Math.min(...xs), Math.min(...zs), Math.max(...xs), Math.max(...zs)));
+  }
+  for (const p of parts) keep.push(box(p.d0 - 0.6, p.zc - 2.8, p.d1 + 0.6, p.zc + 2.8));
+  keep.push(box(-2, D / 2 - 3.8, 2, D / 2));           // the way in, where the visitor starts
+  const fits = (b, top, bottom) => {
+    if (b.x0 < -hx + PROP_WALL || b.x1 > hx - PROP_WALL || b.z0 < bottom + PROP_WALL || b.z1 > top - PROP_WALL) return false;
+    if (keep.some(k => b.x0 < k.x1 && b.x1 > k.x0 && b.z0 < k.z1 && b.z1 > k.z0)) return false;
+    return !out.some(p => b.x0 < p.x1 + PROP_WALL && b.x1 > p.x0 - PROP_WALL && b.z0 < p.z1 + PROP_WALL && b.z1 > p.z0 - PROP_WALL);
+  };
+  const at = (kind, room, x, z, w, d, extra) => ({ kind, room, x, z, ...box(x - w / 2, z - d / 2, x + w / 2, z + d / 2), ...extra });
+  let sculpted = 0;
+  for (let r = 0; r < R; r++) {
+    const { top, bottom } = spanOf(r, R, D, parts), zc = (top + bottom) / 2;
+    // the bench: across the room at its middle, else as near it as fits,
+    // else along the room
+    let bench = null;
+    for (const along of [false, true]) {
+      for (let k = 0; k <= 20 && !bench; k++) {
+        const z = zc + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.25;
+        const b = at('bench', r, 0, z, along ? 0.5 : 1.9, along ? 1.9 : 0.5, { along });
+        if (fits(b, top, bottom)) bench = b;
+      }
+      if (bench) break;
+    }
+    if (bench) out.push(bench);
+    // sculptures and a group of stools: the far corners first (in view
+    // from the way in), then the near ones, then beside the side walls. A
+    // suite's rooms are full of works already, and two or three of them are
+    // drawn at once: one sculpture each there.
+    const sx = hx - 2.4;
+    const spots = [[-sx, bottom + 2.4], [sx, bottom + 2.4], [-sx, top - 2.4], [sx, top - 2.4], [-sx, zc], [sx, zc]];
+    const want = R > 1 ? ['sculpture'] : ['sculpture', 'sculpture', 'stools', 'sculpture'];
+    for (const [x, z] of spots) {
+      if (!want.length) break;
+      const kind = want[0], size = kind === 'stools' ? 1.3 : 0.5;
+      const b = at(kind, r, x, z, size, size, kind === 'sculpture'
+        ? { type: SCULPTURES[sculpted % SCULPTURES.length], turn: (x < 0 ? 0.5 : -0.5) + r * 0.7 }
+        : { turn: 0.35 + r * 1.1 + (x < 0 ? 0 : Math.PI) });
+      if (!fits(b, top, bottom)) continue;
+      out.push(b);
+      want.shift();
+      if (kind === 'sculpture') sculpted++;
+    }
+  }
+  return out;
 }
 // Does the segment a→b cross the box? (Liang–Barsky on the floor plan;
 // no allocation, it runs for every artwork on every frame.)
@@ -573,6 +700,8 @@ function createHall(opts) {
   let introOpen = true, introIsHelp = false;
   let renderer = null, scene = null, cam = null, aniso = 1, maxAniso = 1, envRT = null, floorMat = null;
   let lights = {}, mats = {};
+  let props = [];             // the things on the floor (planProps), solid to walk into
+  let envMats = [];           // materials showing the reflection map (given it again after a lost context)
   let W = 8, D = 8, R = 1, Dr = 8;
   let partitions = [], rooms = [], parts = [], mirrors = [];
   let curRoom = -1, visLo = -1, visHi = -1;
@@ -762,6 +891,7 @@ function createHall(opts) {
       }
     }
     arts.forEach(a => { a.viewDist = viewDistance(a); });
+    props = planProps(W, D, R, partitions, arts);
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(C.ceiling);     // also what the marble mirrors overhead
@@ -956,6 +1086,8 @@ function createHall(opts) {
       for (const m of [frame, mat, pic, label]) { m.userData.art = i; pickables.push(m); }
     });
 
+    furnish(add);
+
     // --- words on the walls ---
     const coverTop = COVER_HANG + coverArt.fh / 2;
     const tw = R > 1 ? Math.min(2 * (partitions[0].d0 - 0.35), 6.2) : Math.min(W - 2 * CORNER - 0.4, 6.2);
@@ -985,6 +1117,110 @@ function createHall(opts) {
     }
     curRoom = -1; visLo = visHi = -1;
   }
+  // The things on the floor (planProps), each with its reflection in the
+  // marble and a soft shadow under it; tapping one walks up beside it. All
+  // simple shapes made here — no file to fetch — each piece one or two
+  // meshes (its parts merged, their colours in the vertices) and a room's
+  // shadows one mesh: about twenty draw calls a room, reflections included.
+  function furnish(add) {
+    if (!props.length) return;
+    const env = envRT ? envRT.texture : null;
+    const std = o => new THREE.MeshStandardMaterial(o);
+    const wood = std({ map: canvasTexture(cachedCanvas('wood', woodCanvas)), roughness: 0.58 });
+    const steel = std({ color: 0x2a2825, roughness: 0.42, metalness: 0.7, envMap: env, envMapIntensity: 0.7 });
+    const plinth = std({ color: 0xf1eee8, roughness: 0.9 });
+    const brass = std({ color: 0xc6a76f, roughness: 0.18, metalness: 1, envMap: env, envMapIntensity: 1.25 });
+    const graphite = std({ color: 0x4a4743, roughness: 0.34, metalness: 0.25, envMap: env, envMapIntensity: 0.6 });
+    const clay = std({ color: 0x9c6550, roughness: 0.7 });
+    const painted = std({ vertexColors: true, roughness: 0.74 });         // the stools and the stones
+    envMats = [steel, brass, graphite];
+    const shade = new THREE.MeshBasicMaterial({ color: 0x000000, map: canvasTexture(cachedCanvas('blob', blobCanvas)), transparent: true, opacity: 0.34, depthWrite: false });
+    const lathe = pts => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), 40);
+    const Y = new THREE.Vector3(0, 1, 0), X = new THREE.Vector3(1, 0, 0);
+    const at = (x, y, z, ry = 0, sx = 1, sy = 1, sz = 1, axis = Y) =>
+      new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(axis, ry), new THREE.Vector3(sx, sy, sz));
+    const tone = hex => new THREE.Color(hex);       // in the working (linear) space, as vertex colours are read
+    const parts = [];                                // the shapes merged from, freed at the end
+    const part = g => { parts.push(g); return g; };
+    const seat = part(new THREE.BoxGeometry(1.9, 0.07, 0.5));
+    const leg = part(new THREE.BoxGeometry(0.06, 0.39, 0.42));
+    const stool = part(lathe([[0, 0], [0.155, 0], [0.168, 0.008], [0.176, 0.03], [0.18, 0.41], [0.184, 0.432], [0.178, 0.448], [0.165, 0.455], [0, 0.455]]));
+    const block = part(new THREE.BoxGeometry(0.5, 0.92, 0.5));
+    const ball = part(new THREE.SphereGeometry(1, 32, 18));
+    const flat = part(new THREE.PlaneGeometry(1, 1));
+    const shadows = new Map();                       // room → the shadows under its pieces
+    const shapes = {};                               // each kind's merged shape, made once and shared
+    const once = (key, make) => shapes[key] || (shapes[key] = make());
+    let p = null;
+    // The piece p as one mesh standing at its place, turned by ry, with its
+    // reflection; a tap on it walks up beside it.
+    const put = (g, m, ry = 0) => {
+      const mesh = new THREE.Mesh(g, m);
+      mesh.position.set(p.x, 0, p.z);
+      mesh.rotation.y = ry;
+      mesh.userData.floor = true;
+      add(mesh, rooms[p.room], true);
+      pickables.push(mesh);
+    };
+    const shadow = (x, z, w, d) => {
+      if (!shadows.has(p.room)) shadows.set(p.room, []);
+      shadows.get(p.room).push({ geo: flat, matrix: at(x, 0.0035, z, -Math.PI / 2, w, d, 1, X) });
+    };
+    // Each stands on a plinth 0.92 m high and rises 0.45–0.75 m above it.
+    const sculpture = {
+      // an upright brass ring on a little foot
+      ring: () => [mergeShapes([
+        { geo: part(new THREE.CylinderGeometry(0.11, 0.125, 0.04, 36)), matrix: at(0, 0.94, 0) },
+        { geo: part(new THREE.TorusGeometry(0.27, 0.058, 24, 72)), matrix: at(0, 0.96 + 0.058 + 0.27, 0) },
+      ]), brass],
+      // three river stones, balanced
+      stones: () => [mergeShapes([
+        { geo: ball, matrix: at(0, 1.028, 0, 0, 0.26, 0.11, 0.22), color: tone(0xd8ccb6) },
+        { geo: ball, matrix: at(0.02, 1.226, -0.012, 0.5, 0.185, 0.092, 0.16), color: tone(0x3c3a37) },
+        { geo: ball, matrix: at(-0.012, 1.38, 0.006, 1.1, 0.118, 0.066, 0.105), color: tone(0xd8ccb6) },
+      ]), painted],
+      // a clay vessel, turned
+      vessel: () => [mergeShapes([{ geo: part(lathe([[0, 0], [0.07, 0], [0.085, 0.012], [0.13, 0.08], [0.165, 0.2], [0.16, 0.3], [0.12, 0.4],
+        [0.076, 0.47], [0.07, 0.52], [0.084, 0.556], [0.075, 0.565], [0, 0.545]])), matrix: at(0, 0.92, 0, 0, 1.25, 1.25, 1.25) }]), clay],
+      // a graphite column, turned a quarter and more on its way up
+      twist: () => {
+        const g = part(new THREE.BoxGeometry(0.17, 0.74, 0.17, 1, 44, 1)), pos = g.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          const y = pos.getY(i), t = (y / 0.74 + 0.5) * Math.PI * 0.7, c = Math.cos(t), s = Math.sin(t);
+          const x0 = pos.getX(i), z0 = pos.getZ(i);
+          pos.setXYZ(i, x0 * c - z0 * s, y, x0 * s + z0 * c);
+        }
+        g.computeVertexNormals();
+        return [mergeShapes([{ geo: g, matrix: at(0, 0.92 + 0.37, 0) }]), graphite];
+      },
+    };
+    for (p of props) {
+      if (p.kind === 'bench') {
+        // an oak slab on two black steel legs
+        const ry = p.along ? Math.PI / 2 : 0;
+        put(once('seat', () => mergeShapes([{ geo: seat, matrix: at(0, 0.425, 0) }])), wood, ry);
+        put(once('legs', () => mergeShapes([{ geo: leg, matrix: at(-0.78, 0.195, 0) }, { geo: leg, matrix: at(0.78, 0.195, 0) }])), steel, ry);
+        shadow(p.x, p.z, p.along ? 0.95 : 2.5, p.along ? 2.5 : 0.95);
+      } else if (p.kind === 'stools') {
+        // three drum stools — oak, sage and clay — pulled up together
+        const spots = [[-0.33, 0.2, 0xc9a77c], [0.33, 0.22, 0x8b9783], [0.02, -0.34, 0x9c6550]];
+        put(once('stools', () => mergeShapes(spots.map(([x, z, hex]) => ({ geo: stool, matrix: at(x, 0, z), color: tone(hex) })))), painted, p.turn);
+        const c = Math.cos(p.turn), s = Math.sin(p.turn);   // as rotation.y turns them
+        for (const [x, z] of spots) shadow(p.x + x * c + z * s, p.z - x * s + z * c, 0.62, 0.62);
+      } else {
+        put(once('plinth', () => mergeShapes([{ geo: block, matrix: at(0, 0.46, 0) }])), plinth, p.turn * 0.15);
+        shadow(p.x, p.z, 0.9, 0.9);
+        const [g, m] = once(p.type, sculpture[p.type]);
+        put(g, m, p.turn);
+      }
+    }
+    for (const [room, list] of shadows) {
+      const m = new THREE.Mesh(mergeShapes(list), shade);
+      m.renderOrder = 2;                       // after the marble, like the walls' foot shade
+      rooms[room].g.add(m);
+    }
+    for (const g of parts) g.dispose();
+  }
   function teardownScene() {
     if (!scene) return;
     const keep = new Set(thumbCache.values()), done = new Set();
@@ -1003,7 +1239,7 @@ function createHall(opts) {
     for (const a of arts) { a.stale = true; if (a.hi) { a.hi.dispose(); a.hi = null; } }
     if (envRT) { envRT.dispose(); envRT = null; }
     scene = null; floorMat = null;
-    arts = []; pickables = []; rooms = []; parts = []; mirrors = []; partitions = [];
+    arts = []; pickables = []; rooms = []; parts = []; mirrors = []; partitions = []; props = []; envMats = [];
   }
 
   // ---------- rooms: only the near ones are drawn ----------
@@ -1127,6 +1363,14 @@ function createHall(opts) {
         if (m === x - x0) x = x0; else if (m === x1 - x) x = x1; else if (m === z1 - z) z = z1; else z = z0;
       }
     }
+    // and out of the bench, the plinths and the stools (planProps keeps
+    // them PROP_WALL from walls and each other, so this never pushes into one)
+    for (let i = 0; i < props.length; i++) {
+      const p = props[i], x0 = p.x0 - KEEP_OFF, x1 = p.x1 + KEEP_OFF, z0 = p.z0 - KEEP_OFF, z1 = p.z1 + KEEP_OFF;
+      if (x <= x0 || x >= x1 || z <= z0 || z >= z1) continue;
+      const m = Math.min(x - x0, x1 - x, z1 - z, z - z0);
+      if (m === x - x0) x = x0; else if (m === x1 - x) x = x1; else if (m === z1 - z) z = z1; else z = z0;
+    }
     return [clamp(x, xMin, xMax), clamp(z, zMin, zMax)];
   }
   // In steps of 0.2 m at most: one big step (a fast wheel sends 0.6 m at
@@ -1191,9 +1435,56 @@ function createHall(opts) {
     pts.push([tx, tz]);
     return pts;
   }
+  // A glide is not stopped by what stands on the floor (it does not settle
+  // as it goes): where a leg of its way would cross a piece, it goes round
+  // the piece's nearer side, by its corners.
+  function propOn(a, b) {
+    // a little inside where settle stops a visitor, so standing right
+    // beside a piece is not taken for walking into it
+    const pad = KEEP_OFF - 0.05;
+    let best = null, bestD = Infinity;
+    for (const p of props) {
+      if (!segmentHitsBox(a[0], a[1], b[0], b[1], p.x0 - pad, p.z0 - pad, p.x1 + pad, p.z1 + pad)) continue;
+      const d = Math.hypot((p.x0 + p.x1) / 2 - a[0], (p.z0 + p.z1) / 2 - a[1]);
+      if (d < bestD) { bestD = d; best = p; }
+    }
+    return best;
+  }
+  function cornersRound(p, a, b) {
+    const m = KEEP_OFF + 0.18;
+    const cs = [[p.x0 - m, p.z0 - m], [p.x1 + m, p.z0 - m], [p.x1 + m, p.z1 + m], [p.x0 - m, p.z1 + m]];
+    const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1;
+    const along = c => ((c[0] - a[0]) * dx + (c[1] - a[1]) * dz) / L;
+    const sides = [[], []];
+    for (const c of cs) sides[dx * (c[1] - a[1]) - dz * (c[0] - a[0]) > 0 ? 0 : 1].push(c);
+    const length = list => {
+      if (!list.length) return Infinity;
+      let d = 0, q = a;
+      for (const c of list) { d += Math.hypot(c[0] - q[0], c[1] - q[1]); q = c; }
+      return d + Math.hypot(b[0] - q[0], b[1] - q[1]);
+    };
+    for (const s of sides) s.sort((c1, c2) => along(c1) - along(c2));
+    return (length(sides[0]) <= length(sides[1]) ? sides[0] : sides[1]).map(c => settle(c[0], c[1]));
+  }
+  function aroundProps(path) {
+    if (!props.length) return path;
+    const out = [path[0]];
+    let budget = 16;                     // corners at most: a guard, never reached in a planned room
+    const leg = (a, b, depth) => {
+      const p = depth < 4 && budget > 0 ? propOn(a, b) : null;
+      if (!p) { out.push(b); return; }
+      const via = cornersRound(p, a, b);
+      budget -= via.length;
+      let from = a;
+      for (const c of via) { leg(from, c, depth + 1); from = c; }
+      leg(from, b, depth + 1);
+    };
+    for (let i = 1; i < path.length; i++) leg(out[out.length - 1], path[i], 0);
+    return out;
+  }
   function glideTo(tx, tz, tyaw, tpitch, after) {
     [tx, tz] = settle(tx, tz);
-    const path = [[px, pz], ...route(tx, tz)];
+    const path = aroundProps([[px, pz], ...route(tx, tz)]);
     const segs = [];
     let L = 0;
     for (let i = 1; i < path.length; i++) {
@@ -1856,8 +2147,7 @@ function createHall(opts) {
     // reflection map lived only on the GPU and is rendered again.
     if (envRT) envRT.dispose();
     envRT = makeEnvironment();
-    floorMat.envMap = envRT.texture;
-    floorMat.needsUpdate = true;
+    for (const m of [floorMat, ...envMats]) { m.envMap = envRT.texture; m.needsUpdate = true; }
     wake();
   }
 
@@ -2024,6 +2314,8 @@ function createHall(opts) {
       tapFloor: (x, z) => glideTo(x, z, null, null, null),
       artRoom: i => (arts[i] ? arts[i].room : null),
       doors: () => partitions.map(p => ({ zc: p.zc, doorX: p.doorX })),
+      props: () => props.map(p => ({ kind: p.kind, room: p.room, x: +p.x.toFixed(2), z: +p.z.toFixed(2), type: p.type || null, along: !!p.along, box: [p.x0, p.z0, p.x1, p.z1].map(v => +v.toFixed(2)) })),
+      path: (x, z) => aroundProps([[px, pz], ...route(...settle(x, z))]).map(q => q.map(v => +v.toFixed(2))),
       setTier: t => setTier(t),
       tune: o => {
         if (!scene) return;
