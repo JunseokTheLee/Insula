@@ -76,6 +76,8 @@ const T = {
   g3dLoadFailed: "Couldn't load the 3D hall",
   g3dLost: 'The 3D view stopped — back to the 2D view',
   g3dEmpty: 'No artworks to show yet',
+  g3dRoomN: 'Gallery {n}',
+  g3dRoomOf: 'Gallery {n} of {total}',
   campaignIntroExpand: 'Expand description', campaignIntroCollapse: 'Collapse description',
   archivedBadge: 'Archived',
   viewingNetwork: "viewing {name}'s network",

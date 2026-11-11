@@ -233,6 +233,9 @@ function renderWorks() {
   document.getElementById('pfEmptyText').textContent = isPfOwner() ? tr('pfEmptyOwner') : tr('pfEmptyVisitor');
   document.getElementById('pfEmptyAdd').hidden = !isPfOwner();
   document.getElementById('pfSlideshowBtn').disabled = pfItems.length === 0;
+  const hallBtn = document.getElementById('pfHallBtn');
+  hallBtn.hidden = !hallSupported();
+  hallBtn.disabled = pfItems.length === 0;
   document.querySelectorAll('#pfLayouts button').forEach(b => b.classList.toggle('active', b.dataset.layout === pfLayout()));
   document.getElementById('pfLayouts').hidden = !isPfOwner();
   revealItems();
@@ -648,12 +651,22 @@ function wireShow() {
   // button still said "Pause". The Pause button is the way to stop.
 }
 
-// ---------- 3D exhibition hall (stage 0: ?view=3d, not linked yet) ----------
+// ---------- 3D exhibition hall ----------
+// The portfolio's default view (2026-11-11): the hall opens over this page
+// by itself once the works are in, unless the address says ?view=2d (the
+// visitor left it, and a reload keeps their choice), the visit came for one
+// artwork (?artwork=, shown in the lightbox instead), the connection asks
+// to save data, or the visitor is a crawler (to which the hall would look
+// like a screen laid over the page). The "3D hall" button brings it back.
 // js/gallery3d.js is an ES module loaded only from here. It and its
 // stylesheet carry this file's own ?v=, so a release swaps them together
 // with the page (the bump tool rewrites only the tags in the HTML).
 const PF_ASSET_QS = (() => { try { return new URL(document.currentScript.src).search; } catch (e) { return ''; } })();
-let pfHallOpening = false;
+let pfHall = null, pfHallOpening = false, pfHallTried = false, pfHallWanted = false, pfActedAt = 0;
+// When the visitor last used the page (a click, a key, the wheel) — the hall
+// opening by itself must not land on top of someone already busy in 2D.
+for (const t of ['pointerdown', 'keydown', 'wheel']) addEventListener(t, () => { pfActedAt = performance.now(); }, { capture: true, passive: true });
+function hallSupported() { return typeof WebGL2RenderingContext !== 'undefined'; }
 function loadHallCss() {
   if (document.getElementById('g3dCss')) return Promise.resolve();
   return new Promise(resolve => {
@@ -664,30 +677,68 @@ function loadHallCss() {
     setTimeout(resolve, 4000);
   });
 }
-async function openPortfolioHall() {
-  if (pfHallOpening || !pf) return;
-  if (!pfItems.length) { toast(tr('g3dEmpty')); return; }
-  if (typeof WebGL2RenderingContext === 'undefined') { toast(tr('g3dUnsupported')); return; }
+function hallOptions() {
+  // &g3dtest=N fills the hall up to N works (repeats), for a device test.
+  const test = Math.min(80, Number(new URLSearchParams(location.search).get('g3dtest')) || 0);
+  return {
+    title: pf.title,
+    artist: (pfOwner && pfOwner.username) || tr('anonymous'),
+    description: pf.description || '',
+    accent: getComputedStyle(document.body).getPropertyValue('--pf-accent').trim(),
+    works: pfItems.map(i => i.mosaic_submissions).filter(Boolean),
+    coverId: (pfCoverSub() || {}).id,
+    testFill: test,
+    debug: test > 0,
+  };
+}
+// A dialog, the lightbox or the slideshow of the 2D page is in use.
+function pageBusy() {
+  const showEl = document.getElementById('pfShow');
+  return !!document.querySelector('.modal-overlay.open, #lightbox-modal.open') || !!(showEl && !showEl.hidden);
+}
+// auto: opened by the page itself — quietly (no toast when it cannot), and
+// without a history entry, so Back still leaves the page as it always did.
+async function openPortfolioHall(auto) {
+  if (pfHall || !pf) return;
+  // The button pressed while the page is still fetching the hall by itself:
+  // it then comes as if from the button (Back returns to 2D).
+  if (pfHallOpening) { if (!auto) pfHallWanted = true; return; }
+  if (!pfItems.length) { if (!auto) toast(tr('g3dEmpty')); return; }
+  if (!hallSupported()) { if (!auto) toast(tr('g3dUnsupported')); return; }
   pfHallOpening = true;
+  pfHallWanted = !auto;
+  const since = performance.now();
   try {
     await loadHallCss();
     const mod = await import('/js/gallery3d.js' + PF_ASSET_QS);
-    // &g3dtest=N fills the hall up to N works (repeats), for a device test.
-    const test = Math.min(80, Number(new URLSearchParams(location.search).get('g3dtest')) || 0);
-    await mod.openGallery3D({
-      title: pf.title,
-      artist: (pfOwner && pfOwner.username) || tr('anonymous'),
-      description: pf.description || '',
-      accent: getComputedStyle(document.body).getPropertyValue('--pf-accent').trim(),
-      works: pfItems.map(i => i.mosaic_submissions),
-      coverId: (pfCoverSub() || {}).id,
-      testFill: test,
-      debug: test > 0,
+    if (pfHall || !pf || !pfItems.length) return;
+    const byHand = pfHallWanted;
+    // By itself it can arrive late (three.js is ~190 KB): once the visitor
+    // has started on the 2D page, it must not cover what they are doing or
+    // take their keyboard focus.
+    if (!byHand && (pfActedAt > since || pageBusy())) return;
+    const hall = mod.openGallery3D({
+      ...hallOptions(),
+      quiet: !byHand,
+      history: byHand,
+      onClose: h => { if (pfHall === h) pfHall = null; },
     });
+    pfHall = hall.closed() ? null : hall;
   } catch (e) {
     console.error('3D hall failed to load:', e);
-    toast(tr('g3dLoadFailed'));
-  } finally { pfHallOpening = false; }
+    if (pfHallWanted) toast(tr('g3dLoadFailed'));
+  } finally { pfHallOpening = false; pfHallWanted = false; }
+}
+function maybeOpenHallByDefault() {
+  if (pfHallTried) return;
+  pfHallTried = true;
+  const q = new URLSearchParams(location.search), view = q.get('view');
+  if (view === '2d' || q.get('artwork')) return;
+  if (view !== '3d') {
+    if (/bot|crawl|spider|slurp|lighthouse|headless/i.test(navigator.userAgent || '')) return;
+    if (navigator.connection && navigator.connection.saveData) return;
+  }
+  openPortfolioHall(true);
 }
 
 // ---------- more by this artist ----------
@@ -736,12 +787,14 @@ async function openPortfolio(id) {
     const hit = pfItems.find(i => String(i.submission_id) === String(wanted));
     if (hit) openLightbox(hit.mosaic_submissions);
   }
-  // The 3D hall, stage 0: only ?view=3d opens it — no button yet.
-  if (new URLSearchParams(location.search).get('view') === '3d') openPortfolioHall();
+  // The 3D hall: the default view, opened once; an open hall follows edits.
+  if (pfHall) pfHall.update(hallOptions());
+  else maybeOpenHallByDefault();
 }
 
 document.getElementById('pfShareBtn').onclick = sharePortfolio;
 document.getElementById('pfSlideshowBtn').onclick = () => openShow(0);
+document.getElementById('pfHallBtn').onclick = () => openPortfolioHall(false);
 document.getElementById('pfEditBtn').onclick = openEditModal;
 document.getElementById('pfAddBtn').onclick = openAddModal;
 document.getElementById('pfEmptyAdd').onclick = openAddModal;

@@ -76,6 +76,8 @@ const T = {
   g3dLoadFailed: '3D 전시장을 불러오지 못했어요',
   g3dLost: '3D 화면이 멈춰 2D 보기로 돌아왔어요',
   g3dEmpty: '아직 전시할 작품이 없어요',
+  g3dRoomN: '제{n}전시실',
+  g3dRoomOf: '전시실 {n}/{total}',
   campaignIntroExpand: '설명 펼치기', campaignIntroCollapse: '설명 접기',
   archivedBadge: '보관됨',
   viewingNetwork: '{name}님의 네트워크 보는 중',
