@@ -539,6 +539,7 @@ function planHall(cover, works) {
 // PROP_WALL clear of the walls and of the next piece, so there is always a
 // way round it (and round it is where a glide goes, aroundProps).
 const PROP_WALL = 1.6;
+const PROP_TOP = 1.25;                 // no piece higher: under the eye (EYE) and a work's middle (HANG)
 const SCULPTURES = ['ring', 'stones', 'vessel', 'twist'];
 function planProps(W, D, R, parts, arts) {
   const hx = W / 2, keep = [], out = [];
@@ -1145,7 +1146,13 @@ function createHall(opts) {
     const seat = part(new THREE.BoxGeometry(1.9, 0.07, 0.5));
     const leg = part(new THREE.BoxGeometry(0.06, 0.39, 0.42));
     const stool = part(lathe([[0, 0], [0.155, 0], [0.168, 0.008], [0.176, 0.03], [0.18, 0.41], [0.184, 0.432], [0.178, 0.448], [0.165, 0.455], [0, 0.455]]));
-    const block = part(new THREE.BoxGeometry(0.5, 0.92, 0.5));
+    // Nothing on the floor comes up to the eye (1.6 m) or to a work's middle
+    // (1.5 m): a plinth 0.8 m high and a sculpture of at most 0.45 m on it,
+    // PROP_TOP in all, so from wherever a visitor stands no piece hides a
+    // work (2026-11-11, the user: no piece so big that it blocks the view —
+    // at first they came to 1.66 m, eye height).
+    const PLINTH_H = 0.8;
+    const block = part(new THREE.BoxGeometry(0.46, PLINTH_H, 0.46));
     const ball = part(new THREE.SphereGeometry(1, 32, 18));
     const flat = part(new THREE.PlaneGeometry(1, 1));
     const shadows = new Map();                       // room → the shadows under its pieces
@@ -1159,6 +1166,7 @@ function createHall(opts) {
       mesh.position.set(p.x, 0, p.z);
       mesh.rotation.y = ry;
       mesh.userData.floor = true;
+      mesh.userData.prop = p.type || p.kind;
       add(mesh, rooms[p.room], true);
       pickables.push(mesh);
     };
@@ -1166,32 +1174,33 @@ function createHall(opts) {
       if (!shadows.has(p.room)) shadows.set(p.room, []);
       shadows.get(p.room).push({ geo: flat, matrix: at(x, 0.0035, z, -Math.PI / 2, w, d, 1, X) });
     };
-    // Each stands on a plinth 0.92 m high and rises 0.45–0.75 m above it.
+    // Each rises from the plinth's top (PLINTH_H) to PROP_TOP at most.
+    const H = PLINTH_H;
     const sculpture = {
       // an upright brass ring on a little foot
       ring: () => [mergeShapes([
-        { geo: part(new THREE.CylinderGeometry(0.11, 0.125, 0.04, 36)), matrix: at(0, 0.94, 0) },
-        { geo: part(new THREE.TorusGeometry(0.27, 0.058, 24, 72)), matrix: at(0, 0.96 + 0.058 + 0.27, 0) },
+        { geo: part(new THREE.CylinderGeometry(0.075, 0.085, 0.03, 32)), matrix: at(0, H + 0.015, 0) },
+        { geo: part(new THREE.TorusGeometry(0.17, 0.04, 20, 64)), matrix: at(0, H + 0.03 + 0.04 + 0.17, 0) },
       ]), brass],
       // three river stones, balanced
       stones: () => [mergeShapes([
-        { geo: ball, matrix: at(0, 1.028, 0, 0, 0.26, 0.11, 0.22), color: tone(0xd8ccb6) },
-        { geo: ball, matrix: at(0.02, 1.226, -0.012, 0.5, 0.185, 0.092, 0.16), color: tone(0x3c3a37) },
-        { geo: ball, matrix: at(-0.012, 1.38, 0.006, 1.1, 0.118, 0.066, 0.105), color: tone(0xd8ccb6) },
+        { geo: ball, matrix: at(0, H + 0.0915, 0, 0, 0.221, 0.0935, 0.187), color: tone(0xd8ccb6) },
+        { geo: ball, matrix: at(0.017, H + 0.2592, -0.01, 0.5, 0.157, 0.0782, 0.136), color: tone(0x3c3a37) },
+        { geo: ball, matrix: at(-0.01, H + 0.3905, 0.005, 1.1, 0.1, 0.0561, 0.089), color: tone(0xd8ccb6) },
       ]), painted],
       // a clay vessel, turned
       vessel: () => [mergeShapes([{ geo: part(lathe([[0, 0], [0.07, 0], [0.085, 0.012], [0.13, 0.08], [0.165, 0.2], [0.16, 0.3], [0.12, 0.4],
-        [0.076, 0.47], [0.07, 0.52], [0.084, 0.556], [0.075, 0.565], [0, 0.545]])), matrix: at(0, 0.92, 0, 0, 1.25, 1.25, 1.25) }]), clay],
+        [0.076, 0.47], [0.07, 0.52], [0.084, 0.556], [0.075, 0.565], [0, 0.545]])), matrix: at(0, H, 0, 0, 0.79, 0.79, 0.79) }]), clay],
       // a graphite column, turned a quarter and more on its way up
       twist: () => {
-        const g = part(new THREE.BoxGeometry(0.17, 0.74, 0.17, 1, 44, 1)), pos = g.attributes.position;
+        const h = 0.44, g = part(new THREE.BoxGeometry(0.12, h, 0.12, 1, 32, 1)), pos = g.attributes.position;
         for (let i = 0; i < pos.count; i++) {
-          const y = pos.getY(i), t = (y / 0.74 + 0.5) * Math.PI * 0.7, c = Math.cos(t), s = Math.sin(t);
+          const y = pos.getY(i), t = (y / h + 0.5) * Math.PI * 0.7, c = Math.cos(t), s = Math.sin(t);
           const x0 = pos.getX(i), z0 = pos.getZ(i);
           pos.setXYZ(i, x0 * c - z0 * s, y, x0 * s + z0 * c);
         }
         g.computeVertexNormals();
-        return [mergeShapes([{ geo: g, matrix: at(0, 0.92 + 0.37, 0) }]), graphite];
+        return [mergeShapes([{ geo: g, matrix: at(0, H + h / 2, 0) }]), graphite];
       },
     };
     for (p of props) {
@@ -1208,8 +1217,8 @@ function createHall(opts) {
         const c = Math.cos(p.turn), s = Math.sin(p.turn);   // as rotation.y turns them
         for (const [x, z] of spots) shadow(p.x + x * c + z * s, p.z - x * s + z * c, 0.62, 0.62);
       } else {
-        put(once('plinth', () => mergeShapes([{ geo: block, matrix: at(0, 0.46, 0) }])), plinth, p.turn * 0.15);
-        shadow(p.x, p.z, 0.9, 0.9);
+        put(once('plinth', () => mergeShapes([{ geo: block, matrix: at(0, PLINTH_H / 2, 0) }])), plinth, p.turn * 0.15);
+        shadow(p.x, p.z, 0.82, 0.82);
         const [g, m] = once(p.type, sculpture[p.type]);
         put(g, m, p.turn);
       }
@@ -2316,6 +2325,16 @@ function createHall(opts) {
       doors: () => partitions.map(p => ({ zc: p.zc, doorX: p.doorX })),
       props: () => props.map(p => ({ kind: p.kind, room: p.room, x: +p.x.toFixed(2), z: +p.z.toFixed(2), type: p.type || null, along: !!p.along, box: [p.x0, p.z0, p.x1, p.z1].map(v => +v.toFixed(2)) })),
       path: (x, z) => aroundProps([[px, pz], ...route(...settle(x, z))]).map(q => q.map(v => +v.toFixed(2))),
+      // the highest point of each kind of piece, against PROP_TOP
+      heights: () => {
+        const out = { limit: PROP_TOP }, box = new THREE.Box3();
+        scene.traverse(o => {
+          if (!o.userData.prop || !o.parent || o.parent.scale.y < 0) return;   // not the reflections
+          box.setFromObject(o);
+          out[o.userData.prop] = Math.max(out[o.userData.prop] || 0, +box.max.y.toFixed(3));
+        });
+        return out;
+      },
       setTier: t => setTier(t),
       tune: o => {
         if (!scene) return;
