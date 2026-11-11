@@ -684,7 +684,6 @@ function hallOptions() {
     title: pf.title,
     artist: (pfOwner && pfOwner.username) || tr('anonymous'),
     description: pf.description || '',
-    accent: getComputedStyle(document.body).getPropertyValue('--pf-accent').trim(),
     works: pfItems.map(i => i.mosaic_submissions).filter(Boolean),
     coverId: (pfCoverSub() || {}).id,
     testFill: test,

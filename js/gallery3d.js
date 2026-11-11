@@ -2,9 +2,10 @@
 //
 // The portfolio opens here by default (js/portfolio.js; "2D" leaves, and a
 // button on the page comes back). The hall is built from the portfolio's own
-// artworks. A few works make one room: the cover hangs on a dark title wall
-// at the far end under the portfolio's name, the rest go round the white
-// walls in the portfolio's order. More works make a suite of rooms
+// artworks. A few works make one room: the cover hangs in the middle of the
+// far wall under the portfolio's name, the rest go round the walls in the
+// portfolio's order. Every wall is the same plain white (2026-11-11: the
+// coloured title wall went, for a simpler room). More works make a suite of rooms
 // ("Gallery 2, 3 …") joined by doorways that alternate right and left, so no
 // room ever sees past its neighbours and only those are drawn, however long
 // the suite gets. Every work hangs in a slim black frame on a white mat with
@@ -90,42 +91,6 @@ function seeded(seed) {
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
-}
-// Any CSS colour (the viewer's hsl() accent included) to an rgb triple.
-function cssRgb(css, fallback) {
-  try {
-    const g = document.createElement('canvas').getContext('2d');
-    g.fillStyle = fallback; g.fillStyle = css || fallback;
-    const m = /^#([0-9a-f]{6})$/i.exec(g.fillStyle);
-    if (m) { const n = parseInt(m[1], 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
-  } catch (e) { /* fall through */ }
-  return [201, 180, 138];
-}
-// The title wall: the cover's hue — the same hue the 2D page takes for its
-// accent (portfolio.js accentFromRgb), so the two views share a colour —
-// deep and quiet whatever the cover is; a warm charcoal for a truly grey one.
-function featureColor(css) {
-  const [r, g, b] = cssRgb(css, '#c9b48a');
-  const hsl = {};
-  // HSL in sRGB terms: three.js would otherwise read them in its linear
-  // working space, where "0.2 light" shows as a middling tone.
-  new THREE.Color(`rgb(${r},${g},${b})`).getHSL(hsl, THREE.SRGBColorSpace);
-  const grey = hsl.s < 0.01;
-  return new THREE.Color().setHSL(grey ? 0.08 : hsl.h, grey ? 0.05 : 0.3, 0.21, THREE.SRGBColorSpace);
-}
-// A picture's average colour (CORS-open images only), as CSS.
-function averageCss(img) {
-  try {
-    const c = makeCanvas(16, 16), g = c.getContext('2d');
-    g.drawImage(img, 0, 0, 16, 16);
-    const d = g.getImageData(0, 0, 16, 16).data;
-    let r = 0, gg = 0, b = 0, n = 0;
-    for (let i = 0; i < d.length; i += 4) {
-      if (d[i + 3] < 128) continue;
-      r += d[i]; gg += d[i + 1]; b += d[i + 2]; n++;
-    }
-    return n ? `rgb(${Math.round(r / n)},${Math.round(gg / n)},${Math.round(b / n)})` : null;
-  } catch (e) { return null; }
 }
 // Squeezes a geometry's v coordinates into [v0, v1], so a piece of wall
 // carries its own slice of the wall's top-to-bottom shading.
@@ -234,9 +199,9 @@ function labelCanvas(sub, artist) {
   g.fillText(tr('g3dView'), bx + 54, by + bh / 2 + 1);
   return c;
 }
-// The words over the cover, light on the dark title wall, laid out in
-// metres for a wall area wM × hM: artist · count, the title, a gold rule
-// and — when there is room — two lines of the description.
+// The words over the cover, dark on the white wall, laid out in metres for
+// a wall area wM × hM: artist · count, the title, a gold rule and — when
+// there is room — two lines of the description.
 function titleCanvas(title, kicker, desc, wM, hM) {
   const PX = 400, Wc = Math.round(wM * PX), Hc = Math.round(hM * PX);
   const c = makeCanvas(Wc, Hc), g = c.getContext('2d');
@@ -251,15 +216,15 @@ function titleCanvas(title, kicker, desc, wM, hM) {
   if (height() > Hc * 0.92) lines = lines.slice(0, 1);
   if (height() > Hc * 0.92) lines = [];
   let y = Math.max(0, (Hc - height()) / 2);
-  g.fillStyle = '#cdb98c'; g.font = `600 ${kick}px ${FONT}`;
+  g.fillStyle = '#8f7a52'; g.font = `600 ${kick}px ${FONT}`;
   spacedText(g, kicker, Wc / 2, y + kick / 2, kick * 0.16);
   y += kick + gap1;
-  g.fillStyle = '#f5f0e7'; g.font = `700 ${size}px ${FONT}`;
+  g.fillStyle = '#23201c'; g.font = `700 ${size}px ${FONT}`;
   g.fillText(wrapText(g, title, Wc * 0.96, 1)[0] || '', Wc / 2, y + size / 2);
   y += size + gap2;
-  g.fillStyle = '#cdb98c'; g.fillRect(Wc / 2 - 0.15 * PX, y, 0.3 * PX, rule);
+  g.fillStyle = '#b39a6a'; g.fillRect(Wc / 2 - 0.15 * PX, y, 0.3 * PX, rule);
   y += rule + gap3;
-  g.fillStyle = 'rgba(245,240,231,.74)'; g.font = `400 ${0.068 * PX}px ${FONT}`;
+  g.fillStyle = 'rgba(35,32,28,.66)'; g.font = `400 ${0.068 * PX}px ${FONT}`;
   lines.forEach((l, i) => g.fillText(l, Wc / 2, y + line * (i + 0.5)));
   return c;
 }
@@ -535,7 +500,7 @@ let current = null;
 const hist = typeof screenHistory === 'function' ? screenHistory(() => (current ? current.back() : false)) : null;
 
 // Opens the hall over the page and returns it at once; it loads behind its
-// intro card. opts: title, artist, description, accent, works (rows),
+// intro card. opts: title, artist, description, works (rows),
 // coverId, quiet (the page opened it by itself: no toasts), history (Back
 // closes the hall rather than leaving the page), onClose(hall), testFill,
 // debug.
@@ -820,11 +785,7 @@ function createHall(opts) {
     // --- walls ---
     const shade = canvasTexture(cachedCanvas('wallShade', wallShadeCanvas));
     const wallMat = new THREE.MeshLambertMaterial({ color: C.wall, map: shade });
-    // From the cover itself: the page's own accent may not be worked out
-    // yet when the hall opens with the page.
-    const coverTint = coverArt.tex !== placeholder ? averageCss(coverArt.tex.image) : null;
-    const featMat = new THREE.MeshLambertMaterial({ color: featureColor(coverTint || opts.accent), map: shade });
-    mats = { wall: wallMat, feat: featMat };
+    mats = { wall: wallMat };
     const gapMat = new THREE.MeshBasicMaterial({ color: C.gap });
     const floorShadeMat = new THREE.MeshBasicMaterial({ map: canvasTexture(cachedCanvas('floorShade', floorShadeCanvas)), transparent: true, depthWrite: false });
     // The foot of a wall: a dark shadow gap, and a little darkness on the floor.
@@ -864,9 +825,10 @@ function createHall(opts) {
     const head = new THREE.Mesh(new THREE.BoxGeometry(ENTRY_W + 2 * cw, cw, 0.04), casingMat);
     head.position.set(0, ENTRY_H + cw / 2, hz - 0.02);
     add(head, rooms[0], true);
-    // the far wall: in a single room, the title wall itself
-    wallPlane(W, 0, -hz, 0, 1, R > 1 ? wallMat : featMat, rooms[R - 1]);
-    // the walls between rooms; the first one's face towards the entrance is the title wall
+    // the far wall: in a single room, the one with the cover and the title
+    wallPlane(W, 0, -hz, 0, 1, wallMat, rooms[R - 1]);
+    // the walls between rooms; the first one's face towards the entrance
+    // carries the cover and the title
     partitions.forEach((p, i) => {
       const where = parts[i];
       const piece = (x0, x1, y0, y1) => {
@@ -878,19 +840,6 @@ function createHall(opts) {
       };
       for (const [x0, x1] of p.solids) piece(x0, x1, 0, ROOM_H);
       piece(p.d0, p.d1, DOOR_H, ROOM_H);            // over the doorway
-      if (p.index === 0) {
-        // The title wall's dark face: one piece round the doorway — pieces
-        // meeting mid-wall leave hairline cracks that show the white behind.
-        const sh = new THREE.Shape();
-        sh.moveTo(-hx, 0); sh.lineTo(p.d0, 0); sh.lineTo(p.d0, DOOR_H); sh.lineTo(p.d1, DOOR_H);
-        sh.lineTo(p.d1, 0); sh.lineTo(hx, 0); sh.lineTo(hx, ROOM_H); sh.lineTo(-hx, ROOM_H); sh.closePath();
-        const fg = new THREE.ShapeGeometry(sh);
-        const fp = fg.attributes.position, fu = fg.attributes.uv;
-        for (let k = 0; k < fu.count; k++) fu.setXY(k, (fp.getX(k) + hx) / W, fp.getY(k) / ROOM_H);
-        const f = new THREE.Mesh(fg, featMat);
-        f.position.set(0, 0, p.z1 + 0.002);
-        add(f, where, true); pickables.push(f);
-      }
       for (const [x0, x1] of p.solids) {
         baseLine(x1 - x0, (x0 + x1) / 2, p.z1, 0, 1, where);
         baseLine(x1 - x0, (x0 + x1) / 2, p.z0, 0, -1, where);
@@ -976,7 +925,6 @@ function createHall(opts) {
     const haloTex = canvasTexture(cachedCanvas('halo', haloCanvas));
     const shadowTex = canvasTexture(cachedCanvas('shadow', shadowCanvas));
     const haloMat = new THREE.MeshBasicMaterial({ map: haloTex, color: 0xfff1da, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
-    const haloDark = haloMat.clone(); haloDark.opacity = 0.2;     // on the dark title wall
     const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, map: shadowTex, transparent: true, opacity: 0.3, depthWrite: false });
     const labelShadowMat = shadowMat.clone(); labelShadowMat.opacity = 0.14;
     const matMat = new THREE.MeshBasicMaterial({ color: C.mat, toneMapped: false });
@@ -989,7 +937,7 @@ function createHall(opts) {
         add(mesh, where, mirror);
         return mesh;
       };
-      put(new THREE.Mesh(new THREE.PlaneGeometry(a.fw + 1.3, a.fh + 1.7), a.feature ? haloDark : haloMat), Z_HALO, a.cy + 0.22, false).renderOrder = 3;
+      put(new THREE.Mesh(new THREE.PlaneGeometry(a.fw + 1.3, a.fh + 1.7), haloMat), Z_HALO, a.cy + 0.22, false).renderOrder = 3;
       put(new THREE.Mesh(new THREE.PlaneGeometry(a.fw * SHADOW_K, a.fh * SHADOW_K), shadowMat), Z_SHADOW, a.cy - 0.04, false).renderOrder = 3;
       a.frameMat = new THREE.MeshLambertMaterial({ color: C.frame });
       const frame = put(new THREE.Mesh(new THREE.BoxGeometry(a.fw, a.fh, FRAME_D), a.frameMat), Z_FRAME + FRAME_D / 2, a.cy, true);
@@ -1009,16 +957,21 @@ function createHall(opts) {
     const tw = R > 1 ? Math.min(2 * (partitions[0].d0 - 0.35), 6.2) : Math.min(W - 2 * CORNER - 0.4, 6.2);
     const th = clamp(ROOM_H - 0.3 - (coverTop + 0.22), 0.5, 1.6);
     const kicker = [artistName(), countText()].filter(Boolean).join(' · ');
+    // Lettering is a see-through decal on the wall: it writes no depth (its
+    // empty part cut the spot's light on the wall off in a straight line)
+    // and is drawn after that light, so the light never washes the letters.
     const title = new THREE.Mesh(new THREE.PlaneGeometry(tw, th),
-      new THREE.MeshBasicMaterial({ map: canvasTexture(titleCanvas(opts.title || '', kicker, opts.description || '', tw, th)), transparent: true, toneMapped: false }));
+      new THREE.MeshBasicMaterial({ map: canvasTexture(titleCanvas(opts.title || '', kicker, opts.description || '', tw, th)), transparent: true, depthWrite: false, toneMapped: false }));
     title.position.set(0, coverTop + 0.22 + th / 2, coverZ + Z_LABEL);
     add(title, rooms[0], true);
+    title.renderOrder = 4;            // after the light; its reflection keeps 0, before the floor
     for (let r = 1; r < R; r++) {
       const { bottom } = spanOf(r, R, D, partitions);
       const x = r < R - 1 ? (partitions[r].hang[0] + partitions[r].hang[1]) / 2 : 0;
       const tag = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2 * 160 / 1024),
-        new THREE.MeshBasicMaterial({ map: canvasTexture(roomCanvas(tr('g3dRoomN', { n: r + 1 }))), transparent: true, toneMapped: false }));
+        new THREE.MeshBasicMaterial({ map: canvasTexture(roomCanvas(tr('g3dRoomN', { n: r + 1 }))), transparent: true, depthWrite: false, toneMapped: false }));
       tag.position.set(x, 3.4, bottom + Z_LABEL);
+      tag.renderOrder = 4;
       add(tag, rooms[r], false);
     }
 
@@ -1705,7 +1658,6 @@ function createHall(opts) {
         if (o.env != null) floorMat.envMapIntensity = o.env;
         if (o.rough != null) floorMat.roughness = o.rough;
         if (o.wall != null) mats.wall.color.set(o.wall);
-        if (o.feat != null) mats.feat.color.set(o.feat);
         wake();
       },
       info: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries }),
