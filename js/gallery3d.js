@@ -628,8 +628,9 @@ let current = null;
 // from the 2D page — or, with an artwork open large, closes just that.
 const hist = typeof screenHistory === 'function' ? screenHistory(() => (current ? current.back() : false)) : null;
 
-// Opens the hall over the page and returns it at once; it loads behind its
-// intro card. opts: title, artist, description, works (rows),
+// Opens the hall over the page and returns it at once; it loads behind a
+// thin progress bar and comes straight in when ready (no card to press
+// through, 2026-11-12). opts: title, artist, description, works (rows),
 // coverId, quiet (the page opened it by itself: no toasts), history (Back
 // closes the hall rather than leaving the page), onClose(hall), testFill,
 // debug.
@@ -660,6 +661,7 @@ function createHall(opts) {
   const chevron = d => `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   root.innerHTML = `
     <canvas class="g3d-canvas" aria-hidden="true"></canvas>
+    <div class="g3d-loading" role="status"><div class="g3d-loading-bar"><i></i></div><div class="g3d-loading-text"></div></div>
     <div class="g3d-top">
       <button type="button" class="g3d-btn g3d-exit">${chevron('M14.5 5.5 8 12l6.5 6.5')}<span>${escapeHtml(tr('g3dExit'))}</span></button>
       <div class="g3d-name"><div class="g3d-name-in"><b></b><span></span></div></div>
@@ -672,7 +674,7 @@ function createHall(opts) {
       <button type="button" class="g3d-btn g3d-round g3d-next" aria-label="${escapeHtml(tr('g3dNext'))}">${chevron('m9.5 5.5 6.5 6.5-6.5 6.5')}</button>
     </div>
     <div class="g3d-stick off"${coarse ? '' : ' hidden'}><div class="g3d-knob"></div></div>
-    <div class="g3d-intro">
+    <div class="g3d-intro out" hidden>
       <div class="g3d-card">
         <div class="g3d-card-cover" hidden><img alt="" decoding="async"></div>
         <div class="g3d-card-body">
@@ -682,7 +684,7 @@ function createHall(opts) {
           <p class="g3d-card-desc"></p>
           <ul class="g3d-card-help"></ul>
           <div class="g3d-card-actions">
-            <button type="button" class="g3d-btn g3d-enter" disabled><i class="g3d-enter-fill"></i><span class="g3d-enter-label"></span></button>
+            <button type="button" class="g3d-btn g3d-enter">${escapeHtml(tr('g3dContinue'))}</button>
             <button type="button" class="g3d-btn g3d-flat g3d-to2d">${escapeHtml(tr('g3dExit'))}</button>
           </div>
         </div>
@@ -698,7 +700,7 @@ function createHall(opts) {
   const stickEl = $('.g3d-stick'), knob = $('.g3d-knob');
 
   let closed = false, ready = false, paused = false, lost = false;
-  let introOpen = true, introIsHelp = false;
+  let introOpen = false;      // the help card ("?") is up
   let renderer = null, scene = null, cam = null, aniso = 1, maxAniso = 1, envRT = null, floorMat = null;
   let lights = {}, mats = {};
   let props = [];             // the things on the floor (planProps), solid to walk into
@@ -726,7 +728,7 @@ function createHall(opts) {
   const realWorks = () => (opts.works || []).filter(Boolean);
   const countText = () => (typeof collectionItemCountText === 'function' ? collectionItemCountText(realWorks().length) : '');
 
-  // ---------- intro card (also the help card) ----------
+  // ---------- the help card ("?"): the portfolio, and how to move ----------
   function fillIntro() {
     $('.g3d-card-title').textContent = opts.title || '';
     $('.g3d-card-artist').textContent = [artistName(), countText()].filter(Boolean).join(' · ');
@@ -751,24 +753,33 @@ function createHall(opts) {
     if (R > 1 && curRoom >= 0) bits.push(tr('g3dRoomOf', { n: curRoom + 1, total: R }));
     $('.g3d-name span').textContent = bits.filter(Boolean).join(' · ');
   }
+  // While the hall loads, a thin bar in the middle of the dark (the bars at
+  // the top and bottom stay usable: "Back to 2D" leaves at once).
   function setProgress(n, total) {
-    $('.g3d-enter-fill').style.transform = `scaleX(${total ? (n / total).toFixed(3) : 0})`;
-    $('.g3d-enter-label').textContent = tr('g3dPreparing', { n, total });
+    $('.g3d-loading-bar i').style.transform = `scaleX(${total ? (n / total).toFixed(3) : 0})`;
+    // (an i18n file a deploy older, without the key, gives the key back: no words then)
+    const plain = tr('g3dLoading');
+    $('.g3d-loading-text').textContent = total ? tr('g3dPreparing', { n, total }) : (plain === 'g3dLoading' ? '' : plain);
   }
-  function setReady() {
-    const b = $('.g3d-enter');
-    b.classList.add('ready');
-    b.disabled = false;
-    $('.g3d-enter-label').textContent = introIsHelp ? tr('g3dContinue') : tr('g3dEnter');
+  // Ready: straight into the hall — no card to press through first
+  // (2026-11-12, the user: no "Enter" step; the controls are on "?"). The
+  // bar fades once the first frame is drawn.
+  function enterHall() {
+    stickEl.classList.remove('off');
+    const el = $('.g3d-loading');
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (closed) return;
+      el.classList.add('out');
+      introTimer = setTimeout(() => { el.hidden = true; }, still ? 0 : 500);
+    }));
   }
   function showIntro() {
     if (!ready || introOpen) return;
-    introOpen = true; introIsHelp = true;
+    introOpen = true;
     keys.clear(); stickRelease(); cancelGlide();
     clearTimeout(introTimer);
     const el = $('.g3d-intro');
     el.hidden = false;
-    $('.g3d-enter-label').textContent = tr('g3dContinue');
     requestAnimationFrame(() => { if (introOpen) el.classList.remove('out'); });
     $('.g3d-enter').focus({ preventScroll: true });
   }
@@ -2100,7 +2111,7 @@ function createHall(opts) {
       if (vw) { viewerKey(e); return; }      // an artwork open large has the keys
       if (e.key === 'Escape') {
         e.preventDefault(); e.stopPropagation();
-        if (introOpen && introIsHelp) hideIntro();
+        if (introOpen) hideIntro();
         else close();
         return;
       }
@@ -2220,8 +2231,7 @@ function createHall(opts) {
     ro.observe(root);
     disposers.push(() => ro.disconnect());
     resize();
-    setReady();
-    if (introOpen && (document.activeElement === root || document.activeElement === document.body)) $('.g3d-enter').focus({ preventScroll: true });
+    enterHall();
     if (opts.debug) window.__g3d = debugHandle();
   }
   // New data (an artwork edited or removed while the hall is open): rebuilt

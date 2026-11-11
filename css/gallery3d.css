@@ -91,7 +91,20 @@ html.g3d-open .main-scroll{overflow:hidden;}
   background:rgba(250,248,244,.88);box-shadow:0 3px 10px rgba(0,0,0,.3);will-change:transform;pointer-events:none;
 }
 
-/* ---------- the intro (and help) card: the hall loads behind it ---------- */
+/* ---------- loading: a thin bar in the middle of the dark ----------
+   No card to press through any more (2026-11-12): the hall comes straight
+   in when it is ready and this fades away (opacity only, then hidden). The
+   bars above and below stay on top of it, so "Back to 2D" works at once. */
+.g3d-loading{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  pointer-events:none;transform:translateZ(0);transition:opacity .45s ease;
+}
+.g3d-loading.out{opacity:0;}
+.g3d-loading-bar{width:180px;height:2px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden;}
+.g3d-loading-bar i{display:block;height:100%;background:var(--g3d-gold);transform:scaleX(0);transform-origin:left center;transition:transform .25s ease;}
+.g3d-loading-text{min-height:1.3em;font-size:12.5px;letter-spacing:.02em;color:rgba(245,241,234,.6);}
+
+/* ---------- the help card ("?"): the portfolio, and how to move ---------- */
 .g3d-intro{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));
@@ -118,18 +131,13 @@ html.g3d-open .main-scroll{overflow:hidden;}
 .g3d-card-help li + li{margin-top:4px;}
 .g3d-card-help li::before{content:'';position:absolute;left:0;top:.66em;width:5px;height:5px;border-radius:50%;background:var(--g3d-gold);opacity:.75;}
 .g3d-card-actions{display:grid;gap:8px;margin-top:20px;}
-/* "Enter" is its own progress bar while the hall loads behind the card. */
+/* "Keep looking": back to the hall. */
 .g3d-enter{
-  position:relative;overflow:hidden;width:100%;height:48px;
-  border-color:rgba(215,191,143,.5);background:rgba(215,191,143,.08);color:var(--g3d-gold);
-  font-size:14.5px;font-weight:700;box-shadow:none;
+  width:100%;height:48px;box-shadow:none;
+  background:linear-gradient(90deg,#e7d2a4,#c9ab72);border-color:transparent;color:#1b1813;
+  font-size:14.5px;font-weight:800;
 }
-.g3d-enter:disabled{opacity:1;cursor:progress;}
-.g3d-enter-fill{position:absolute;inset:0;background:rgba(215,191,143,.22);transform:scaleX(0);transform-origin:left center;transition:transform .25s ease;}
-.g3d-enter-label{position:relative;}
-.g3d-enter.ready{background:linear-gradient(90deg,#e7d2a4,#c9ab72);border-color:transparent;color:#1b1813;font-weight:800;}
-.g3d-enter.ready .g3d-enter-fill{opacity:0;}
-@media (hover:hover){.g3d-enter.ready:hover{background:linear-gradient(90deg,#eddab0,#d1b47c);}}
+@media (hover:hover){.g3d-enter:hover{background:linear-gradient(90deg,#eddab0,#d1b47c);}}
 .g3d-flat{width:100%;background:transparent;border-color:rgba(255,255,255,.16);box-shadow:none;color:rgba(245,241,234,.86);}
 @media (hover:hover){.g3d-flat:hover{background:rgba(255,255,255,.06);}}
 @media (max-height:700px){
@@ -172,6 +180,6 @@ html.g3d-open .main-scroll{overflow:hidden;}
 .g3d-viewer.on .g3d-vw-close{opacity:1;}
 
 @media (prefers-reduced-motion:reduce){
-  .g3d-intro,.g3d-caption,.g3d-stick,.g3d-btn,.g3d-enter-fill{transition:none;}
+  .g3d-intro,.g3d-caption,.g3d-stick,.g3d-btn,.g3d-loading,.g3d-loading-bar i{transition:none;}
   .g3d-vw-bg,.g3d-vw-hi,.g3d-vw-close,.g3d-vw-pic.fly,.g3d-vw-pic.back,.g3d-vw-pic.snap,.g3d-vw-pic.fade{transition:none;}
 }
