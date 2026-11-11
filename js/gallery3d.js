@@ -16,8 +16,9 @@
 // Visitors walk (W A S D / arrow keys / wheel; a joystick on touch screens),
 // look round by dragging, tap the floor to walk there (through the doorways
 // when it is another room), and tap an artwork or its label to walk up to it
-// — the page's own lightbox then shows it large, with its stories, likes and
-// comments. ‹ › step from work to work in hanging order.
+// — it then rises out of its frame to fill the screen, the picture alone
+// (2026-11-11: no longer the page's lightbox with its stories, likes and
+// comments). ‹ › step from work to work in hanging order.
 //
 // An ES module loaded on demand: three.js (jsDelivr's one-file bundle,
 // pinned) arrives only when a hall opens. &g3dtest=N repeats the works up to
@@ -30,9 +31,9 @@
 // while something moves; and a device that turns out too slow drops the
 // floor's reflection, then resolution, by itself.
 //
-// Needs tr, fmtCompletedYear and collectionItemCountText (js/i18n),
-// escapeHtml, toast, screenHistory and artworkDisplayUrl (common.js) and
-// openLightbox and closeLightbox (lightbox.js) loaded first.
+// Needs tr, fmtCompletedYear and collectionItemCountText (js/i18n) and
+// escapeHtml, toast, screenHistory and artworkDisplayUrl (common.js) loaded
+// first.
 // Styles: css/gallery3d.css.
 
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.187.0/+esm';
@@ -519,8 +520,6 @@ export function openGallery3D(opts) {
 function createHall(opts) {
   const coarse = media('(pointer: coarse)');
   const still = media('(prefers-reduced-motion: reduce)');
-  const lbModal = document.getElementById('lightbox-modal');
-  const lightboxOpen = () => !!lbModal && lbModal.classList.contains('open');
   const usesHistory = !!(hist && opts.history);
   const adapt = !opts.debug;
 
@@ -560,6 +559,11 @@ function createHall(opts) {
           </div>
         </div>
       </div>
+    </div>
+    <div class="g3d-viewer" role="dialog" aria-modal="true" hidden>
+      <div class="g3d-vw-bg"></div>
+      <div class="g3d-vw-pic"><img class="g3d-vw-lo" alt="" crossorigin="anonymous" draggable="false"><img class="g3d-vw-hi" alt="" crossorigin="anonymous" draggable="false" aria-hidden="true"></div>
+      <button type="button" class="g3d-btn g3d-round g3d-vw-close" aria-label="${escapeHtml(tr('g3dViewClose'))}"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     </div>`;
   const $ = sel => root.querySelector(sel);
   const canvas = $('.g3d-canvas');
@@ -1103,6 +1107,7 @@ function createHall(opts) {
     cam.aspect = w / h;
     cam.fov = w < h ? 72 : 60;      // a phone held upright sees too narrow a slice at 60°
     cam.updateProjectionMatrix();
+    if (vw) refitViewer();          // the picture open large follows a turned phone
     wake();
   }
 
@@ -1215,27 +1220,397 @@ function createHall(opts) {
     const tp = clamp(Math.atan2(a.cy - EYE, Math.hypot(a.x - tx, a.z - tz)), -PITCH_MAX, PITCH_MAX);
     glideTo(tx, tz, Math.atan2(a.nx, a.nz), tp, open ? () => openArtwork(i) : null);
   }
-  function openArtwork(i) {
-    const a = arts[i];
-    if (!a || closed || typeof openLightbox !== 'function' || !lbModal) return;
-    paused = true;
-    keys.clear(); stickRelease();
-    // The lightbox is the page's own, outside the hall: the hall steps out of
-    // the way of keyboard focus and screen readers until it closes.
-    root.inert = true;
-    try { openLightbox(a.sub); }
-    catch (e) {
-      console.error('3D hall: lightbox failed to open:', e);
-      root.inert = false; paused = false; wake();
-      return;
-    }
-    const x = document.getElementById('lightbox-close');
-    if (x) x.focus({ preventScroll: true });
-  }
   function navigate(dir) {
     if (!arts.length || !ready || introOpen) return;
     const from = focus >= 0 ? focus : (dir > 0 ? -1 : arts.length);
     approach((from + dir + arts.length) % arts.length, false);
+  }
+
+  // ---------- an artwork, large (2026-11-11) ----------
+  // Only the picture, edge to edge on a dark ground: no stories, likes or
+  // comments (its label on the wall says what it is), and nothing fetched
+  // but the image. It rises out of its frame on the wall and goes back into
+  // it on closing. Pinch, double-tap, the wheel, a click or + − zoom in (up
+  // to 4×); a drag or the arrow keys move round a zoomed picture; ×, Escape,
+  // Back or a tap on the dark ground close it. The hall rests underneath.
+  // Android (the top of this file): its layers — the ground, the picture,
+  // the sharper picture over it and × — come into being together when it
+  // opens and stay as they are until it is hidden again, and it moves by
+  // transform and opacity only. The picture starts exactly over the one on
+  // the wall, so a layer drawn a frame late shows nothing amiss.
+  const viewer = $('.g3d-viewer'), vwPic = $('.g3d-vw-pic'), vwLo = $('.g3d-vw-lo'), vwHi = $('.g3d-vw-hi'), vwClose = $('.g3d-vw-close');
+  const VIEW_MAX = 4, VIEW_TAP = 2.5;
+  const FULL_FROM = 1590;     // a display copy this long was cut down from a bigger original (common.js DISPLAY_MAX_DIM)
+  let vw = null;              // the open artwork and where its picture is
+  let vwEntry = false;        // the history entry the picture took (see openArtwork)
+  let vwGesture = null, vwLastTap = null, vwToggledAt = 0;
+  let vwTapTimer = 0, vwSharpTimer = 0, vwDoneTimer = 0;
+  const vwPointers = new Map();
+  const corner = new THREE.Vector3();
+  function setHallInert(on) { for (const el of root.children) if (el !== viewer) el.inert = on; }
+  // The same file? (The browser hands a src back resolved and percent-encoded.)
+  function sameUrl(p, q) {
+    if (!p || !q) return false;
+    try { return new URL(p, location.href).href === new URL(q, location.href).href; } catch (e) { return p === q; }
+  }
+  // Where the picture on the wall is on screen (the visitor has just walked
+  // up to it and faces it), in the viewer's pixels; null when out of view.
+  function wallRect(a) {
+    if (!cam || !a) return null;
+    syncCamera();
+    const r = canvas.getBoundingClientRect(), o = viewer.getBoundingClientRect();
+    const tx = a.nz, tz = -a.nx;               // along the wall
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const [u, w] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      corner.set(a.x + a.nx * Z_PIC + tx * u * a.w / 2, a.cy + w * a.h / 2, a.z + a.nz * Z_PIC + tz * u * a.w / 2).project(cam);
+      if (!(Math.abs(corner.z) <= 1)) return null;
+      const sx = r.left - o.left + (corner.x + 1) / 2 * r.width, sy = r.top - o.top + (1 - corner.y) / 2 * r.height;
+      x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
+    }
+    return x1 - x0 > 8 && y1 - y0 > 8 ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : null;
+  }
+  // The picture fitted into the viewer's padding box (the padding is the
+  // breathing room round it, css/gallery3d.css).
+  function fitViewer() {
+    const v = vw, st = getComputedStyle(viewer), o = viewer.getBoundingClientRect();
+    const pl = parseFloat(st.paddingLeft) || 0, pr = parseFloat(st.paddingRight) || 0;
+    const pt = parseFloat(st.paddingTop) || 0, pb = parseFloat(st.paddingBottom) || 0;
+    const W = viewer.clientWidth || window.innerWidth, H = viewer.clientHeight || window.innerHeight;
+    const bw = Math.max(1, W - pl - pr), bh = Math.max(1, H - pt - pb);
+    const k = Math.min(bw / v.iw, bh / v.ih);
+    v.box = { W, H, pl, pt, bw, bh, ox: o.left, oy: o.top };
+    v.fw = v.iw * k; v.fh = v.ih * k;
+    vwPic.style.width = v.fw + 'px';
+    vwPic.style.height = v.fh + 'px';
+  }
+  // Centred while it fits the screen; past that, never pulled in from an edge.
+  function axis(pos, size, start, avail, full) {
+    return size <= full ? start + (avail - size) / 2 : clamp(pos, full - size, 0);
+  }
+  // mode: 'fly' (rising from the wall), 'snap' (an eased zoom) or none (under a finger).
+  function placePic(mode) {
+    const v = vw;
+    if (!v) return;
+    const b = v.box;
+    v.x = axis(v.x, v.fw * v.s, b.pl, b.bw, b.W);
+    v.y = axis(v.y, v.fh * v.s, b.pt, b.bh, b.H);
+    vwPic.classList.toggle('fly', mode === 'fly');
+    vwPic.classList.toggle('back', false);
+    vwPic.classList.toggle('snap', mode === 'snap');
+    vwPic.classList.toggle('zoomed', v.s > 1.001);
+    vwPic.style.transform = `translate3d(${v.x.toFixed(2)}px,${v.y.toFixed(2)}px,0) scale(${v.s.toFixed(4)})`;
+  }
+  // The picture laid exactly over the rectangle r (on the wall).
+  function rectTransform(r, v) {
+    return `translate3d(${r.x.toFixed(2)}px,${r.y.toFixed(2)}px,0) scale(${(r.w / v.fw).toFixed(4)},${(r.h / v.fh).toFixed(4)})`;
+  }
+  // Zoom to s with the picture's point under (cx, cy) staying there.
+  function zoomAt(cx, cy, s, mode) {
+    const v = vw;
+    s = clamp(s, 1, VIEW_MAX);
+    const ix = (cx - v.x) / v.s, iy = (cy - v.y) / v.s;
+    v.s = s; v.x = cx - ix * s; v.y = cy - iy * s;
+    placePic(mode);
+  }
+  function toggleZoom(cx, cy) {
+    const now = performance.now();
+    if (now - vwToggledAt < 350) return;      // a double click is one toggle, not two
+    vwToggledAt = now;
+    if (vw.s > 1.001) { vw.s = 1; placePic('snap'); }
+    else zoomAt(cx, cy, VIEW_TAP, 'snap');
+    sharpSoon();
+  }
+  function refitViewer() {
+    const v = vw;
+    if (!v || !v.box || v.closing) return;
+    // keep the point of the picture at the middle of the screen in the middle
+    const b = v.box, cw = v.fw * v.s, ch = v.fh * v.s;
+    const u = (b.W / 2 - v.x) / cw, w = (b.H / 2 - v.y) / ch;
+    fitViewer();
+    v.x = v.box.W / 2 - u * v.fw * v.s;
+    v.y = v.box.H / 2 - w * v.fh * v.s;
+    placePic(null);
+  }
+
+  function openArtwork(i) {
+    const a = arts[i];
+    if (!a || closed || vw) return;
+    // The best the hall already has shows at once: the display image of a
+    // work close by, else the thumbnail on the wall.
+    const has = t => (t && t.image && t.image.src && t.image.naturalWidth ? t.image : null);
+    const shown = has(a.hi) || has(a.tex);
+    const loUrl = shown ? shown.src : thumbUrl(a.sub);
+    if (!loUrl) return;
+    cancelGlide(); keys.clear(); stickRelease();
+    paused = true;
+    // What that is: a thumbnail, or — for a work without one, whose wall is
+    // made of it — the display copy or the original itself.
+    const level = !shown ? 'thumb' : sameUrl(loUrl, a.sub.image_url) ? 'full' : sameUrl(loUrl, artworkDisplayUrl(a.sub)) ? 'display' : 'thumb';
+    const v = {
+      a, i, s: 1, x: 0, y: 0, fw: 1, fh: 1, box: null, closing: false, loading: null, fullFailed: false,
+      iw: (shown && shown.naturalWidth) || a.w, ih: (shown && shown.naturalHeight) || a.h,
+      loUrl, level,
+      best: level !== 'thumb' ? { w: shown.naturalWidth, h: shown.naturalHeight } : null,
+      back: document.activeElement,
+    };
+    vw = v;
+    clearTimeout(vwDoneTimer);
+    const title = a.sub.art_title || tr('untitledArtwork');
+    viewer.setAttribute('aria-label', title);
+    vwLo.alt = title;
+    vwLo.src = loUrl;
+    vwHi.removeAttribute('src');
+    vwHi.classList.remove('in');
+    viewer.classList.remove('on', 'dragging');
+    viewer.hidden = false;
+    setHallInert(true);
+    // Back closes the picture. A hall the page opened by itself has no
+    // history entry of its own, so the picture takes one (Back would leave
+    // the page otherwise); a hall from the button already has its entry.
+    if (hist && !usesHistory) { hist.enter(); vwEntry = true; }
+    fitViewer();
+    const from = still ? null : wallRect(a);
+    vwPic.classList.remove('fly', 'back', 'snap', 'fade');
+    if (from) {
+      vwPic.style.transform = rectTransform(from, v);
+      void vwPic.offsetWidth;                 // where it starts from
+    }
+    placePic(from ? 'fly' : null);
+    viewer.classList.add('on');
+    vwClose.focus({ preventScroll: true });
+    sharpenViewer(v);
+  }
+  // instant: no way back to the wall (the hall itself is going, or rebuilt).
+  // Returns whether it took the picture's history entry back off.
+  function closeViewer(how) {
+    const v = vw;
+    if (!v || v.closing) return false;
+    v.closing = true;
+    const fromHistory = !!(how && how.fromHistory), instant = still || !!(how && how.instant);
+    clearTimeout(vwTapTimer); clearTimeout(vwSharpTimer); clearTimeout(vwDoneTimer);
+    vwLastTap = null; vwPointers.clear(); vwGesture = null;
+    viewer.classList.remove('dragging');
+    let popped = false;
+    if (vwEntry) { vwEntry = false; if (!fromHistory) { popped = true; hist.leave(); } }
+    // The hall is drawn again under the fading ground (a resize while it
+    // rested left its canvas blank).
+    paused = false;
+    wake();
+    const to = instant ? null : wallRect(v.a);
+    viewer.classList.remove('on');
+    vwPic.classList.remove('fly', 'snap');
+    if (to) {
+      vwPic.classList.add('back');
+      vwPic.style.transform = rectTransform(to, v);
+    } else if (!instant) vwPic.classList.add('fade');   // its frame out of sight: it just fades
+    const done = () => {
+      if (vw !== v) return;
+      vw = null;
+      viewer.hidden = true;
+      vwPic.classList.remove('fly', 'back', 'snap', 'zoomed', 'fade');
+      vwLo.removeAttribute('src'); vwHi.removeAttribute('src');
+      vwHi.classList.remove('in');
+      setHallInert(false);
+      // back where the keyboard was: the "View large" button, else the hall
+      const b = v.back;
+      if (b && b !== root && root.contains(b) && !b.disabled && b.offsetParent !== null) b.focus({ preventScroll: true });
+      else root.focus({ preventScroll: true });
+      armLostTimer();
+      wake();
+    };
+    if (instant) done();
+    else vwDoneTimer = setTimeout(done, 380);
+    return popped;
+  }
+
+  // ---------- its picture, sharper ----------
+  // Decoded before it goes in, so the swap never shows an empty frame. The
+  // same direct Supabase URLs as the walls (CORS-open), so the browser's
+  // cache answers what the hall has already fetched.
+  async function decoded(url) {
+    const im = new Image();
+    im.crossOrigin = 'anonymous';
+    im.decoding = 'async';
+    im.src = url;
+    await im.decode();
+    return im;
+  }
+  async function showSharper(v, url, level) {
+    if (v.loading) return false;
+    v.loading = url;
+    try {
+      const im = await decoded(url);
+      if (vw !== v || v.closing) return true;
+      const w = im.naturalWidth, h = im.naturalHeight;
+      // What showed until now goes underneath: a frame the new picture is
+      // late for still shows the same picture, never a blurrier one.
+      const prev = vwHi.classList.contains('in') ? vwHi.getAttribute('src') : null;
+      if (prev) vwLo.src = prev;
+      vwHi.src = url;
+      v.level = level;
+      v.best = { w, h };
+      // the hall could not know its shape (no thumbnail): fit it now
+      if (w && h && Math.abs(w / h - v.iw / v.ih) > 0.02 * (v.iw / v.ih)) { v.iw = w; v.ih = h; refitViewer(); }
+      vwHi.classList.add('in');
+      return true;
+    } catch (e) {
+      if (level === 'full') v.fullFailed = true;
+      return false;
+    } finally {
+      if (v.loading === url) v.loading = null;
+    }
+  }
+  // The display copy (≤1600 px, a few hundred KB) over the thumbnail; the
+  // original only when the screen needs more pixels than that (a zoom, a
+  // large high-density screen) — for most views on a phone it never comes.
+  async function sharpenViewer(v) {
+    const sub = v.a.sub, display = artworkDisplayUrl(sub), full = sub.image_url;
+    if (v.level === 'thumb') {
+      let ok = false;
+      if (display && !sameUrl(display, v.loUrl)) ok = await showSharper(v, display, 'display');
+      if (vw !== v) return;
+      if (!ok && full && !sameUrl(full, v.loUrl)) await showSharper(v, full, 'full');
+      if (vw !== v) return;
+    }
+    maybeOriginal(v);
+  }
+  function maybeOriginal(v) {
+    if (vw !== v || v.closing || v.level === 'full' || v.loading || v.fullFailed || !v.best) return;
+    const full = v.a.sub.image_url;
+    if (!full) return;
+    const long = Math.max(v.best.w, v.best.h);
+    if (long < FULL_FROM) { v.level = 'full'; return; }   // the display copy is the original's own size
+    const need = Math.max(v.fw, v.fh) * v.s * Math.min(2, window.devicePixelRatio || 1);
+    if (need > long * 1.15) showSharper(v, full, 'full');
+  }
+  function sharpSoon() {
+    clearTimeout(vwSharpTimer);
+    const v = vw;
+    vwSharpTimer = setTimeout(() => maybeOriginal(v), 180);
+  }
+
+  // ---------- its input ----------
+  function pinchOf() {
+    const [p, q] = vwPointers.values();
+    return { d: Math.max(1, Math.hypot(p.x - q.x, p.y - q.y)), x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 };
+  }
+  function startPinch() {
+    const p = pinchOf();
+    vwGesture = { kind: 'pinch', d0: p.d, cx: p.x, cy: p.y, s0: vw.s, x0: vw.x, y0: vw.y };
+    clearTimeout(vwTapTimer); vwLastTap = null;
+  }
+  function onViewerDown(e) {
+    const v = vw;
+    if (!v || v.closing || e.target.closest('.g3d-vw-close')) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const x = e.clientX - v.box.ox, y = e.clientY - v.box.oy;
+    vwPointers.set(e.pointerId, { x, y });
+    try { viewer.setPointerCapture(e.pointerId); } catch (err) { /* not capturable: plain events still arrive */ }
+    if (vwPointers.size === 2) startPinch();
+    else if (vwPointers.size === 1) {
+      vwGesture = { kind: 'press', id: e.pointerId, sx: x, sy: y, x0: v.x, y0: v.y, t: performance.now(), moved: false, mouse: e.pointerType === 'mouse' };
+    }
+  }
+  function onViewerMove(e) {
+    const v = vw, p = vwPointers.get(e.pointerId), g = vwGesture;
+    if (!v || v.closing || !p || !g) return;
+    p.x = e.clientX - v.box.ox; p.y = e.clientY - v.box.oy;
+    if (g.kind === 'pinch') {
+      if (vwPointers.size < 2) return;
+      const q = pinchOf(), s = clamp(g.s0 * q.d / g.d0, 1, VIEW_MAX);
+      const ix = (g.cx - g.x0) / g.s0, iy = (g.cy - g.y0) / g.s0;
+      v.s = s; v.x = q.x - ix * s; v.y = q.y - iy * s;
+      placePic(null);
+    } else if (e.pointerId === g.id) {
+      if (!g.moved && Math.hypot(p.x - g.sx, p.y - g.sy) > (g.mouse ? 4 : 8)) g.moved = true;
+      if (g.moved && v.s > 1.001) {
+        v.x = g.x0 + p.x - g.sx; v.y = g.y0 + p.y - g.sy;
+        placePic(null);
+        viewer.classList.add('dragging');
+      }
+    }
+  }
+  function onViewerUp(e) {
+    if (!vwPointers.has(e.pointerId)) return;
+    vwPointers.delete(e.pointerId);
+    const v = vw, g = vwGesture;
+    viewer.classList.remove('dragging');
+    if (!v || v.closing || !g) return;
+    if (g.kind === 'pinch') {
+      if (vwPointers.size >= 2) startPinch();
+      else if (vwPointers.size === 1) {
+        // the finger left behind goes on moving the picture, never a tap
+        const [[id, p]] = vwPointers;
+        vwGesture = { kind: 'press', id, sx: p.x, sy: p.y, x0: v.x, y0: v.y, t: 0, moved: true, mouse: false };
+      } else vwGesture = null;
+      sharpSoon();
+      return;
+    }
+    if (e.pointerId !== g.id) return;
+    vwGesture = null;
+    if (e.type === 'pointerup' && !g.moved && performance.now() - g.t < 500) tapViewer(g.sx, g.sy, g.mouse);
+  }
+  // A click on the picture zooms in or out, on the dark ground closes. On a
+  // touch screen a single tap on the picture does nothing (it is easily
+  // made by accident), two zoom, and one on the ground closes once the
+  // moment a second tap would take has passed.
+  function tapViewer(x, y, mouse) {
+    const v = vw;
+    const onPic = x >= v.x && x <= v.x + v.fw * v.s && y >= v.y && y <= v.y + v.fh * v.s;
+    if (mouse) { if (onPic) toggleZoom(x, y); else closeViewer(); return; }
+    const now = performance.now(), prev = vwLastTap;
+    if (prev && now - prev.t < 320 && Math.hypot(x - prev.x, y - prev.y) < 40) {
+      vwLastTap = null;
+      clearTimeout(vwTapTimer);
+      if (prev.onPic || onPic || v.s > 1.001) toggleZoom(x, y);
+      return;
+    }
+    vwLastTap = { t: now, x, y, onPic };
+    clearTimeout(vwTapTimer);
+    if (!onPic) vwTapTimer = setTimeout(() => { vwLastTap = null; if (vw === v && !v.closing) closeViewer(); }, 300);
+  }
+  function onViewerWheel(e) {
+    e.preventDefault();
+    const v = vw;
+    if (!v || v.closing) return;
+    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+    const k = Math.exp(-clamp(e.deltaY * unit, -400, 400) * (e.ctrlKey ? 0.01 : 0.0016));
+    zoomAt(e.clientX - v.box.ox, e.clientY - v.box.oy, v.s * k, null);
+    sharpSoon();
+  }
+  // Keys while it is open (the hall's own wait until it closes): Escape
+  // closes, Tab stays on ×, + − 0 zoom, the arrows move round a zoomed picture.
+  function viewerKey(e) {
+    const v = vw, k = e.key;
+    if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); closeViewer(); return; }
+    if (k === 'Tab') { e.preventDefault(); vwClose.focus({ preventScroll: true }); return; }
+    // Enter held down to walk up here must not press × the moment it opens.
+    if (e.repeat && (k === 'Enter' || k === ' ')) { e.preventDefault(); return; }
+    if (v.closing || e.altKey || e.ctrlKey || e.metaKey) return;
+    const b = v.box;
+    let used = true;
+    if (k === '+' || k === '=') { zoomAt(b.W / 2, b.H / 2, v.s * 1.5, 'snap'); sharpSoon(); }
+    else if (k === '-' || k === '_') zoomAt(b.W / 2, b.H / 2, v.s / 1.5, 'snap');
+    else if (k === '0') { v.s = 1; placePic('snap'); }
+    else if (v.s > 1.001 && (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown')) {
+      if (k === 'ArrowLeft') v.x += b.W * 0.18;
+      else if (k === 'ArrowRight') v.x -= b.W * 0.18;
+      else if (k === 'ArrowUp') v.y += b.H * 0.18;
+      else v.y -= b.H * 0.18;
+      placePic('snap');
+    } else used = false;
+    if (used) { e.preventDefault(); e.stopPropagation(); }
+  }
+  function wireViewer() {
+    listen(vwLo, 'error', () => { if (vwLo.getAttribute('src')) { vwLo.removeAttribute('src'); vwLo.alt = ''; } });
+    listen(vwClose, 'click', () => closeViewer());
+    listen(viewer, 'pointerdown', onViewerDown);
+    listen(viewer, 'pointermove', onViewerMove);
+    listen(viewer, 'pointerup', onViewerUp);
+    listen(viewer, 'pointercancel', onViewerUp);
+    listen(viewer, 'wheel', onViewerWheel, { passive: false });
+    listen(viewer, 'contextmenu', e => e.preventDefault());
+    listen(viewer, 'dragstart', e => e.preventDefault());
   }
 
   // ---------- what the visitor is looking at ----------
@@ -1417,15 +1792,15 @@ function createHall(opts) {
     // dialogs) and the page's own key handlers.
     listen(document, 'keydown', e => {
       if (closed) return;
+      if (vw) { viewerKey(e); return; }      // an artwork open large has the keys
       if (e.key === 'Escape') {
-        if (lightboxOpen()) return;          // the lightbox closes first
         e.preventDefault(); e.stopPropagation();
         if (introOpen && introIsHelp) hideIntro();
         else close();
         return;
       }
       // Tab stays inside the hall: the card's buttons while it is up, else the bars'.
-      if (e.key === 'Tab' && !lightboxOpen()) {
+      if (e.key === 'Tab') {
         const items = [...root.querySelectorAll(introOpen ? '.g3d-intro button' : '.g3d-top button, .g3d-bottom button')]
           .filter(b => !b.disabled && b.offsetParent !== null);
         if (!items.length) { e.preventDefault(); return; }
@@ -1436,7 +1811,7 @@ function createHall(opts) {
         if (to) { e.preventDefault(); to.focus(); }
         return;
       }
-      if (lightboxOpen() || !ready || introOpen || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (!ready || introOpen || e.altKey || e.ctrlKey || e.metaKey) return;
       if (MOVE_KEYS.has(e.code)) { e.preventDefault(); keys.add(e.code); cancelGlide(); wake(); }
       else if (e.key === 'Shift') keys.add('Shift');
       else if (e.key === 'Enter' && focus >= 0 && (document.activeElement === root || document.activeElement === document.body)) {
@@ -1459,15 +1834,6 @@ function createHall(opts) {
     $('.g3d-next').onclick = () => navigate(1);
     $('.g3d-view').onclick = () => { if (focus >= 0) approach(focus, true); };
   }
-  // The lightbox closing hands the walk back.
-  const lbObserver = lbModal ? new MutationObserver(() => {
-    if (closed || !paused || lightboxOpen()) return;
-    paused = false;
-    root.inert = false;
-    root.focus({ preventScroll: true });
-    wake();
-  }) : null;
-
   // ---------- a lost GPU context (Android does this to background apps) ----------
   function onContextLost(e) {
     e.preventDefault();             // ask the browser to give it back
@@ -1476,9 +1842,10 @@ function createHall(opts) {
     armLostTimer();
   }
   // Not back within a few seconds of being looked at again: the 2D page.
+  // (Not while an artwork is open large — that needs no GPU; armed again on closing.)
   function armLostTimer() {
     clearTimeout(lostTimer);
-    if (!lost || closed || document.hidden) return;
+    if (!lost || closed || document.hidden || vw) return;
     lostTimer = setTimeout(() => { if (lost && !closed && !document.hidden) { toast(tr('g3dLost')); close(); } }, 4000);
   }
   function onContextRestored() {
@@ -1502,7 +1869,6 @@ function createHall(opts) {
     fillIntro();
     setProgress(0, 0);
     wireControls();
-    if (lbObserver) lbObserver.observe(lbModal, { attributes: true, attributeFilter: ['class'] });
     // Opened from the 2D page: Back returns there. The entry underneath says
     // 2D (a reload after Back stays there); the hall's own entry is the plain
     // address, where the hall is the default.
@@ -1545,6 +1911,7 @@ function createHall(opts) {
     px = 0; pz = D / 2 - 1.8; yaw = 0; pitch = 0;
     ready = true;
     wireInput();
+    wireViewer();
     const ro = new ResizeObserver(resize);
     ro.observe(root);
     disposers.push(() => ro.disconnect());
@@ -1558,6 +1925,7 @@ function createHall(opts) {
   async function update(next) {
     Object.assign(opts, next || {});
     if (closed) return;
+    if (vw) closeViewer({ instant: true });   // its artwork may be gone, its frame is rebuilt
     fillIntro();
     if (!ready) return;
     try {
@@ -1584,12 +1952,12 @@ function createHall(opts) {
   }
   function close(how) {
     if (closed) return;
+    const poppedViewer = vw ? closeViewer({ instant: true }) : false;
     closed = true;
     if (current === hall) current = null;
     cancelAnimationFrame(raf); raf = 0;
-    for (const t of [lodTimer, hoverTimer, residTimer, lostTimer, introTimer]) clearTimeout(t);
+    for (const t of [lodTimer, hoverTimer, residTimer, lostTimer, introTimer, vwTapTimer, vwSharpTimer, vwDoneTimer]) clearTimeout(t);
     disposers.forEach(off => { try { off(); } catch (e) { /* already gone */ } });
-    if (lbObserver) lbObserver.disconnect();
     teardownScene();
     for (const t of thumbCache.values()) t.dispose();
     thumbCache.clear();
@@ -1603,6 +1971,7 @@ function createHall(opts) {
     // Back to the 2D page: through history when the hall came by it (its
     // entry is popped), else the address now says 2D, for a reload.
     if (usesHistory) { if (!(how && how.fromHistory)) hist.leave(); }
+    else if (poppedViewer) setTimeout(() => setViewParam('2d'), 250);   // once the picture's entry is off
     else setViewParam('2d');
     try { if (previousFocus && previousFocus.focus && document.contains(previousFocus)) previousFocus.focus({ preventScroll: true }); } catch (e) { /* gone */ }
     if (typeof opts.onClose === 'function') {
@@ -1610,8 +1979,10 @@ function createHall(opts) {
     }
   }
   function back() {
-    if (lightboxOpen()) {
-      if (typeof closeLightbox === 'function') closeLightbox();
+    if (vw && !vw.closing) {
+      const own = vwEntry;
+      closeViewer({ fromHistory: true });
+      if (own) return false;           // that was the picture's own entry; the hall keeps none
       // Staying: screenHistory pushes the hall's entry again, with the
       // address Back has just shown (?view=2d); the hall's own is the plain
       // one, so a reload there opens the hall.
@@ -1624,7 +1995,14 @@ function createHall(opts) {
   // Test hook (&g3dtest only): where things are, for automated checks.
   function debugHandle() {
     return {
-      state: () => ({ px, pz, yaw, pitch, focus, W, D, R, room: curRoom, vis: [visLo, visHi], tier, works: arts.length, ready, paused, intro: introOpen, hires: arts.filter(a => a.hi).length, buildMs }),
+      state: () => ({ px, pz, yaw, pitch, focus, W, D, R, room: curRoom, vis: [visLo, visHi], tier, works: arts.length, ready, paused, intro: introOpen, hires: arts.filter(a => a.hi).length, buildMs, viewer: !!vw }),
+      viewer: () => (vw ? {
+        open: true, closing: vw.closing, art: vw.i, s: +vw.s.toFixed(3), x: Math.round(vw.x), y: Math.round(vw.y),
+        fw: Math.round(vw.fw), fh: Math.round(vw.fh), level: vw.level, entry: vwEntry,
+        lo: vwLo.getAttribute('src'), hi: vwHi.getAttribute('src'), hiIn: vwHi.classList.contains('in'),
+        image: vw.a.sub.image_url, display: artworkDisplayUrl(vw.a.sub),
+      } : { open: false, entry: vwEntry }),
+      open: i => openArtwork(i),
       arts: () => arts.map(a => ({ room: a.room, x: +a.x.toFixed(2), z: +a.z.toFixed(2), nx: a.nx, nz: a.nz, cover: !!a.isCover, title: a.sub.art_title })),
       screenOf: i => {
         const a = arts[i];

@@ -78,6 +78,7 @@ const T = {
   g3dEmpty: 'No artworks to show yet',
   g3dRoomN: 'Gallery {n}',
   g3dRoomOf: 'Gallery {n} of {total}',
+  g3dViewClose: 'Close',
   campaignIntroExpand: 'Expand description', campaignIntroCollapse: 'Collapse description',
   archivedBadge: 'Archived',
   viewingNetwork: "viewing {name}'s network",

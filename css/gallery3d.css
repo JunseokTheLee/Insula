@@ -1,7 +1,7 @@
 /* 3D exhibition hall (js/gallery3d.js) — stage 0 and stage 1, 2026-11-11.
    Loaded by js/portfolio.js only when the hall opens, with
-   portfolio.js's own ?v=. Over the portfolio page (z-index 180) and under
-   the lightbox (200) that opens from it.
+   portfolio.js's own ?v=. Over the portfolio page (z-index 180); an
+   artwork opens large inside it (.g3d-viewer), not in the page's lightbox.
    Android lessons (css/tarot.css): every control sits on a layer of its own
    from the start (translateZ) and is shown or hidden by opacity while the
    hall is walked, so nothing is re-layered — and redrawn a frame late. No
@@ -137,6 +137,41 @@ html.g3d-open .main-scroll{overflow:hidden;}
   .g3d-card-title{font-size:21px;}
   .g3d-card-help{font-size:12.5px;line-height:1.55;}
 }
+
+/* ---------- an artwork, large (2026-11-11) ----------
+   Only the picture, over the hall (js/gallery3d.js openArtwork): the dark
+   ground fades in while the picture rises from its frame on the wall. Its
+   layers — the ground and the sharper picture (will-change:opacity), the
+   picture (always a 3D transform) and × (.g3d-btn) — exist from the moment
+   it is shown until it is hidden, so nothing is re-layered while it is open.
+   The padding is the room the picture is fitted into; on a wide screen the
+   sides keep clear of ×. */
+.g3d-viewer{
+  position:absolute;inset:0;z-index:5;box-sizing:border-box;overflow:hidden;cursor:zoom-out;
+  padding:calc(10px + env(safe-area-inset-top,0px)) calc(10px + env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) calc(10px + env(safe-area-inset-left,0px));
+}
+@media (min-width:700px) and (min-height:500px){
+  .g3d-viewer{padding:calc(28px + env(safe-area-inset-top,0px)) calc(68px + env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) calc(68px + env(safe-area-inset-left,0px));}
+}
+.g3d-vw-bg{position:absolute;inset:0;background:#0c0b0a;opacity:0;will-change:opacity;transition:opacity .32s ease-out;}
+.g3d-viewer.on .g3d-vw-bg{opacity:1;}
+.g3d-vw-pic{position:absolute;left:0;top:0;transform-origin:0 0;transform:translate3d(0,0,0);cursor:zoom-in;}
+.g3d-vw-pic.zoomed{cursor:grab;}
+.g3d-viewer.dragging,.g3d-viewer.dragging .g3d-vw-pic{cursor:grabbing;}
+.g3d-vw-pic.fly{transition:transform .46s cubic-bezier(.2,.7,.16,1);}
+.g3d-vw-pic.back{transition:transform .34s cubic-bezier(.45,0,.2,1);}
+.g3d-vw-pic.snap{transition:transform .26s cubic-bezier(.22,.7,.2,1);}
+.g3d-vw-pic.fade{opacity:0;transition:opacity .3s ease;}
+.g3d-vw-pic img{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none;}
+.g3d-vw-hi{opacity:0;will-change:opacity;transition:opacity .3s ease;}
+.g3d-vw-hi.in{opacity:1;}
+.g3d-vw-close{
+  position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:calc(14px + env(safe-area-inset-right,0px));
+  opacity:0;transition:opacity .25s ease,background-color .15s linear,border-color .15s linear;
+}
+.g3d-viewer.on .g3d-vw-close{opacity:1;}
+
 @media (prefers-reduced-motion:reduce){
   .g3d-intro,.g3d-caption,.g3d-stick,.g3d-btn,.g3d-enter-fill{transition:none;}
+  .g3d-vw-bg,.g3d-vw-hi,.g3d-vw-close,.g3d-vw-pic.fly,.g3d-vw-pic.back,.g3d-vw-pic.snap,.g3d-vw-pic.fade{transition:none;}
 }

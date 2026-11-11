@@ -78,6 +78,7 @@ const T = {
   g3dEmpty: '아직 전시할 작품이 없어요',
   g3dRoomN: '제{n}전시실',
   g3dRoomOf: '전시실 {n}/{total}',
+  g3dViewClose: '닫기',
   campaignIntroExpand: '설명 펼치기', campaignIntroCollapse: '설명 접기',
   archivedBadge: '보관됨',
   viewingNetwork: '{name}님의 네트워크 보는 중',
