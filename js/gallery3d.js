@@ -540,7 +540,7 @@ function planHall(cover, works) {
 // way round it (and round it is where a glide goes, aroundProps).
 const PROP_WALL = 1.6;
 const PROP_TOP = 1.25;                 // no piece higher: under the eye (EYE) and a work's middle (HANG)
-const SCULPTURES = ['ring', 'stones', 'vessel', 'twist'];
+const SCULPTURES = ['ring', 'stones', 'seed', 'twist'];
 function planProps(W, D, R, parts, arts) {
   const hx = W / 2, keep = [], out = [];
   const box = (x0, z0, x1, z1) => ({ x0: Math.min(x0, x1), z0: Math.min(z0, z1), x1: Math.max(x0, x1), z1: Math.max(z0, z1) });
@@ -1132,9 +1132,9 @@ function createHall(opts) {
     const plinth = std({ color: 0xf1eee8, roughness: 0.9 });
     const brass = std({ color: 0xc6a76f, roughness: 0.18, metalness: 1, envMap: env, envMapIntensity: 1.25 });
     const graphite = std({ color: 0x4a4743, roughness: 0.34, metalness: 0.25, envMap: env, envMapIntensity: 0.6 });
-    const clay = std({ color: 0x9c6550, roughness: 0.7 });
+    const bronze = std({ color: 0x3d3128, roughness: 0.24, metalness: 0.9, envMap: env, envMapIntensity: 1.3 });
     const painted = std({ vertexColors: true, roughness: 0.74 });         // the stools and the stones
-    envMats = [steel, brass, graphite];
+    envMats = [steel, brass, graphite, bronze];
     const shade = new THREE.MeshBasicMaterial({ color: 0x000000, map: canvasTexture(cachedCanvas('blob', blobCanvas)), transparent: true, opacity: 0.34, depthWrite: false });
     const lathe = pts => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), 40);
     const Y = new THREE.Vector3(0, 1, 0), X = new THREE.Vector3(1, 0, 0);
@@ -1188,9 +1188,14 @@ function createHall(opts) {
         { geo: ball, matrix: at(0.017, H + 0.2592, -0.01, 0.5, 0.157, 0.0782, 0.136), color: tone(0x3c3a37) },
         { geo: ball, matrix: at(-0.01, H + 0.3905, 0.005, 1.1, 0.1, 0.0561, 0.089), color: tone(0xd8ccb6) },
       ]), painted],
-      // a clay vessel, turned
-      vessel: () => [mergeShapes([{ geo: part(lathe([[0, 0], [0.07, 0], [0.085, 0.012], [0.13, 0.08], [0.165, 0.2], [0.16, 0.3], [0.12, 0.4],
-        [0.076, 0.47], [0.07, 0.52], [0.084, 0.556], [0.075, 0.565], [0, 0.545]])), matrix: at(0, H, 0, 0, 0.79, 0.79, 0.79) }]), clay],
+      // a dark bronze bud, leaning a little, on a thin bronze disc (2026-11-12:
+      // in place of a clay vessel the user found too big and oddly coloured)
+      seed: () => [mergeShapes([
+        { geo: part(new THREE.CylinderGeometry(0.11, 0.115, 0.016, 40)), matrix: at(0, H + 0.008, 0) },
+        { geo: part(lathe([[0, 0], [0.025, 0.004], [0.05, 0.02], [0.07, 0.05], [0.082, 0.09], [0.086, 0.13], [0.083, 0.17],
+          [0.074, 0.21], [0.06, 0.25], [0.043, 0.285], [0.025, 0.315], [0.01, 0.335], [0, 0.342]])),
+          matrix: at(0, H + 0.016, 0, 0.12, 1, 1, 1, new THREE.Vector3(0, 0, 1)) },
+      ]), bronze],
       // a graphite column, turned a quarter and more on its way up
       twist: () => {
         const h = 0.44, g = part(new THREE.BoxGeometry(0.12, h, 0.12, 1, 32, 1)), pos = g.attributes.position;
