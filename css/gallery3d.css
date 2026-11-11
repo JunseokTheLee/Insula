@@ -1,0 +1,89 @@
+/* 3D exhibition hall (js/gallery3d.js) — stage 0, 2026-11-11. Loaded by
+   js/portfolio.js only when the hall opens. Over the portfolio page and
+   under the lightbox (z-index 200) that opens from it.
+   Android lessons (css/tarot.css): every control sits on a layer of its own
+   from the start (translateZ), so nothing is re-layered — and redrawn a
+   frame late — while the hall is walked through. */
+html.g3d-open,html.g3d-open body{overflow:hidden;}
+html.g3d-open .main-scroll{overflow:hidden;}
+
+.g3d{
+  position:fixed;inset:0;z-index:180;background:#0c0c0e;color:#fff;outline:none;
+  touch-action:none;overscroll-behavior:contain;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+  font-family:'Pretendard',sans-serif;
+}
+.g3d-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none;}
+.g3d-canvas.dragging{cursor:grabbing;}
+.g3d-canvas.pick{cursor:pointer;}
+
+.g3d-btn{
+  appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:44px;padding:0 18px;border-radius:999px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.28);background:rgba(14,14,18,.66);color:#fff;
+  font:600 14px 'Pretendard',sans-serif;white-space:nowrap;
+  touch-action:manipulation;transform:translateZ(0);
+}
+.g3d-btn:hover{background:rgba(40,40,46,.8);}
+.g3d-btn:disabled{opacity:.45;cursor:default;}
+.g3d-btn:focus-visible{outline:2px solid #ffd98e;outline-offset:2px;}
+.g3d-round{width:44px;padding:0;font-size:22px;line-height:1;}
+
+.g3d-top{
+  position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;
+  padding:calc(12px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-right,0px)) 12px calc(14px + env(safe-area-inset-left,0px));
+  pointer-events:none;transform:translateZ(0);
+}
+.g3d-top > .g3d-btn{pointer-events:auto;}
+.g3d-name{flex:1;min-width:0;text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.65);}
+.g3d-name b{display:block;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.g3d-name span{display:block;font-size:12px;opacity:.82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.g3d-bottom{
+  position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  display:flex;gap:10px;transform:translateX(-50%) translateZ(0);
+}
+.g3d-caption{
+  position:absolute;left:50%;bottom:calc(72px + env(safe-area-inset-bottom,0px));
+  max-width:min(560px,calc(100vw - 32px));padding:8px 14px;border-radius:12px;
+  background:rgba(14,14,18,.66);font-size:14px;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;
+  transform:translateX(-50%) translateZ(0);
+}
+/* Always there, only see-through when nothing is in front: showing it by
+   `hidden` made a new layer each time a work came into view. */
+.g3d-caption.off{opacity:0;}
+
+/* Walking on a touch screen. */
+.g3d-stick{
+  position:absolute;left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(88px + env(safe-area-inset-bottom,0px));
+  width:116px;height:116px;border-radius:50%;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.32);
+  touch-action:none;transform:translateZ(0);
+}
+.g3d-knob{
+  position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;
+  background:rgba(255,255,255,.78);box-shadow:0 2px 8px rgba(0,0,0,.35);will-change:transform;pointer-events:none;
+}
+
+/* Intro (and help) card: loads behind it, then "Enter". */
+.g3d-intro{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));
+  background:rgba(8,8,10,.62);transform:translateZ(0);
+}
+.g3d-card{
+  width:min(440px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;
+  background:#16161b;border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:24px 22px 22px;
+  box-shadow:0 24px 60px rgba(0,0,0,.5);user-select:text;-webkit-user-select:text;
+}
+.g3d-card-kicker{font-size:12px;font-weight:700;letter-spacing:.12em;color:#ffd98e;}
+.g3d-card-title{margin:8px 0 2px;font-size:22px;font-weight:800;line-height:1.3;word-break:keep-all;}
+.g3d-card-artist{font-size:14px;color:rgba(255,255,255,.75);}
+.g3d-card-desc{margin:12px 0 0;font-size:14px;line-height:1.6;color:rgba(255,255,255,.82);white-space:pre-line;word-break:keep-all;}
+.g3d-card-help{margin:16px 0 0;padding:14px 16px 14px 32px;border-radius:14px;background:rgba(255,255,255,.06);font-size:13.5px;line-height:1.75;color:rgba(255,255,255,.88);}
+.g3d-card-progress{margin-top:16px;display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,.75);}
+.g3d-bar{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;}
+.g3d-bar i{display:block;height:100%;width:0;background:#ffd98e;}
+.g3d-enter{width:100%;margin-top:18px;background:#ffd98e;border-color:#ffd98e;color:#1d1b18;font-weight:800;font-size:15px;}
+.g3d-enter:hover{background:#ffe2a8;}

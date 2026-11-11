@@ -648,6 +648,48 @@ function wireShow() {
   // button still said "Pause". The Pause button is the way to stop.
 }
 
+// ---------- 3D exhibition hall (stage 0: ?view=3d, not linked yet) ----------
+// js/gallery3d.js is an ES module loaded only from here. It and its
+// stylesheet carry this file's own ?v=, so a release swaps them together
+// with the page (the bump tool rewrites only the tags in the HTML).
+const PF_ASSET_QS = (() => { try { return new URL(document.currentScript.src).search; } catch (e) { return ''; } })();
+let pfHallOpening = false;
+function loadHallCss() {
+  if (document.getElementById('g3dCss')) return Promise.resolve();
+  return new Promise(resolve => {
+    const link = document.createElement('link');
+    link.id = 'g3dCss'; link.rel = 'stylesheet'; link.href = '/css/gallery3d.css' + PF_ASSET_QS;
+    link.onload = link.onerror = () => resolve();
+    document.head.appendChild(link);
+    setTimeout(resolve, 4000);
+  });
+}
+async function openPortfolioHall() {
+  if (pfHallOpening || !pf) return;
+  if (!pfItems.length) { toast(tr('g3dEmpty')); return; }
+  if (typeof WebGL2RenderingContext === 'undefined') { toast(tr('g3dUnsupported')); return; }
+  pfHallOpening = true;
+  try {
+    await loadHallCss();
+    const mod = await import('/js/gallery3d.js' + PF_ASSET_QS);
+    // &g3dtest=N fills the hall up to N works (repeats), for a device test.
+    const test = Math.min(80, Number(new URLSearchParams(location.search).get('g3dtest')) || 0);
+    await mod.openGallery3D({
+      title: pf.title,
+      artist: (pfOwner && pfOwner.username) || tr('anonymous'),
+      description: pf.description || '',
+      accent: getComputedStyle(document.body).getPropertyValue('--pf-accent').trim(),
+      works: pfItems.map(i => i.mosaic_submissions),
+      coverId: (pfCoverSub() || {}).id,
+      testFill: test,
+      debug: test > 0,
+    });
+  } catch (e) {
+    console.error('3D hall failed to load:', e);
+    toast(tr('g3dLoadFailed'));
+  } finally { pfHallOpening = false; }
+}
+
 // ---------- more by this artist ----------
 async function renderMoreBy() {
   const box = document.getElementById('pfMore');
@@ -694,6 +736,8 @@ async function openPortfolio(id) {
     const hit = pfItems.find(i => String(i.submission_id) === String(wanted));
     if (hit) openLightbox(hit.mosaic_submissions);
   }
+  // The 3D hall, stage 0: only ?view=3d opens it — no button yet.
+  if (new URLSearchParams(location.search).get('view') === '3d') openPortfolioHall();
 }
 
 document.getElementById('pfShareBtn').onclick = sharePortfolio;

@@ -84,7 +84,9 @@
 # repeated here to avoid emitting them twice. Content-Security-Policy is
 # deliberately left out for now — it needs an allowlist drawn up for the
 # external CDNs the site loads (jsdelivr, Google Fonts, Fontshare, and
-# googletagmanager for Google Analytics) first.
+# googletagmanager for Google Analytics) first. jsdelivr also serves three.js
+# as an ES module (js/gallery3d.js, the 3D hall), so a future policy needs it
+# in script-src for module imports too.
 /*
   X-Frame-Options: SAMEORIGIN
   Strict-Transport-Security: max-age=31536000; includeSubDomains
